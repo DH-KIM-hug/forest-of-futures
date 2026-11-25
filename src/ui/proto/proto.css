@@ -289,3 +289,18 @@
   .pa-walkin, .pa-pop, .pr-cutin .bust, .pr-end .polaroid { animation-name: fadeIn !important; }
   .pa-cut { animation: none !important; transform: scaleX(var(--left, 0)); }
 }
+
+/* 수익 인증서 물음(스티커) */
+.pr-profit { position: absolute; left: 14px; right: 14px; top: calc(118px + env(safe-area-inset-top, 0px)); z-index: 40; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: 18px; background: var(--card); border: 2.5px solid var(--o); box-shadow: 0 0 0 3px #fff, 0 8px 16px rgba(40, 40, 20, .32); font-family: var(--dsp); animation: profitIn .35s cubic-bezier(.34, 1.56, .64, 1); }
+.pr-profit .tx { flex: 1 1 150px; display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.pr-profit .tx b { font-weight: 400; font-size: 17px; }
+.pr-profit .tx small { font-size: 13px; color: var(--sub); }
+.pr-profit .bt { display: flex; gap: 8px; }
+.pr-profit button { font-family: var(--dsp); font-size: 16px; min-height: 44px; padding: 0 16px; border-radius: 14px; border: 2.5px solid var(--o); cursor: pointer; color: var(--o); box-shadow: var(--drop); }
+.pr-profit button:active { transform: scale(.94); }
+.pr-profit .yes { background: var(--mint); }
+.pr-profit .no { background: var(--paper); }
+.pr-profit button:disabled { opacity: .6; cursor: default; }
+.pr-profit .th { width: 96px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid var(--o); background: #fff; }
+@keyframes profitIn { from { transform: translateY(24px) scale(.92); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pr-profit { animation: none; } }

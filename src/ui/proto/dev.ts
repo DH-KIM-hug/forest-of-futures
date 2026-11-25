@@ -3,7 +3,7 @@ import { useGame, persistFlag } from '../../store/gameStore';
 import { buildScenario } from '../dev';
 import { useProto, type Tab } from './protoStore';
 import { createGame, clone, stepMut } from '../../engine/game';
-import { balance } from '../../engine/data';
+import { balance, marketById } from '../../engine/data';
 import { pdev } from './config';
 
 /** 새 게임으로 시작(저장 읽기 없음). 정산 간격 덮어쓰기는 이 앞에서 끝나 있어야 한다. */
@@ -42,6 +42,11 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
         p.entry = px * (1 - 0.0094);
       }
       g = clone(g);
+      return g;
+    }
+    case 'profit': {
+      const g = ready();
+      P.patch({ wins: 2, closes: 3, profit: { coin: marketById.DTC.name, dir: 1, lev: 50, roe: 128.4, pnl: 38520, entry: 0.8421, exit: 0.8441, heldSec: 187, wins: 2, closes: 3, gen: 2, date: new Date() } });
       return g;
     }
     case 'debt': { const g = ready(); g.run.settleIn = 2; return g; }

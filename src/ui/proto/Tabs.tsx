@@ -10,7 +10,7 @@ import { gateLines } from '../vm/trade';
 import { lenderById, DEBT_IDS } from '../../engine/data';
 import { interestDue, lenderLimit } from '../../engine/selectors';
 import type { LenderId } from '../../engine/types';
-import { TradeScreen } from '../trade/TradeScreen';
+import { ProtoTrade } from './Trade';
 import { RowIcon } from './art';
 
 /** 강화 탭: 한 번만 사는 카드. 탭 해금이 여기서 일어난다(U-4·U-5). */
@@ -107,12 +107,7 @@ export function MapTab() {
   );
 }
 
-/** 폰 탭: 기존 거래 화면을 그대로 쓴다(.app 틀 안에 넣어 기존 CSS 가 먹게 한다). */
+/** 폰 탭: 주인공의 폰 속 거래 앱(Trade.tsx). */
 export function PhoneTab() {
-  const pc = useGame((s) => s.g.settings.priceColors);
-  return (
-    <div className="pr-pane phonewrap"><div className="app pr-phone" data-tab="trade" data-time="1" data-pc={pc}>
-      <div className="content"><TradeScreen /></div>
-    </div></div>
-  );
+  return <ProtoTrade />;
 }

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useUI } from '../uiStore';
 import { useProto } from './protoStore';
-import { lotRows, WHEEL_COIN, type Row } from './model';
+import { lotRows, WHEEL_COIN, isNearLiq, type Row } from './model';
 import { say } from './watch';
 import { comma } from '../../engine/util';
 import { marketById } from '../../engine/data';
@@ -31,7 +31,7 @@ export function useOpenPositions(): PositionView[] {
 
 function PinRow({ p }: { p: PositionView }) {
   const setTab = useProto((s) => s.setTab);
-  const call = p.liqDistPct < 5;
+  const call = isNearLiq(p);
   const m = marketById[p.market];
   return (
     <button className={'pr-pin' + (call ? ' call' : '') + (p.roe >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 폰에서 보기`}>
@@ -72,7 +72,7 @@ export function Lot() {
   const pos = useOpenPositions();
   const run = g.run;
   const rows = lotRows(g);
-  const near = pos.some((p) => p.liqDistPct < 5);
+  const near = pos.some((p) => isNearLiq(p));
   const tapTimer = useRef<number | undefined>(undefined);
   const [tapKey, setTapKey] = useState(0);
 

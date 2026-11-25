@@ -3,12 +3,13 @@ import '@fontsource/jua/latin-400.css';
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Tab } from './protoStore';
-import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT } from './model';
+import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq } from './model';
 import { startWatch } from './watch';
 import { startHistory } from '../priceHistory';
 import { Lot, useOpenPositions } from './Lot';
 import { UpgTab, MapTab, PhoneTab } from './Tabs';
 import { EndingFlow } from './Ending';
+import { ProfitPrompt } from './ProfitPrompt';
 import { BOSS_NAME } from './text';
 import { isFast } from './config';
 import { clone } from '../../engine/game';
@@ -87,7 +88,7 @@ function TabBar() {
   const pos = useOpenPositions();
   const [shake, setShake] = useState<string | null>(null);
   const open = (id: Tab) => id === 'lot' || !!un[id];
-  const near = pos.find((p) => p.liqDistPct < 5);
+  const near = pos.find((p) => isNearLiq(p));
   const overdue = DEBT_IDS.some((id) => g.run.debts[id].overdue > 0);
   const badge = (id: Tab): { t: string; hot: boolean } | null => {
     if (id === 'lot' && tab !== 'lot') return { t: mmss(Math.max(0, g.run.settleIn)), hot: g.run.settleIn <= 10 };
@@ -202,7 +203,7 @@ function DevBar() {
 export function ProtoApp() {
   const tab = useProto((s) => s.tab);
   const toast = useProto((s) => s.toast);
-  const dark = useOpenPositions().some((p) => p.liqDistPct < 5);
+  const dark = useOpenPositions().some((p) => isNearLiq(p));
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)
@@ -225,6 +226,7 @@ export function ProtoApp() {
       <CutIn />
       <LiqStamp onShake={shake} />
       <EndingFlow />
+      <ProfitPrompt />
     </div>
   );
 }

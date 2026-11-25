@@ -5,7 +5,17 @@ import { currentGoal } from './model';
 import { perSettle } from './model';
 import { DEBT_IDS, marketById } from '../../engine/data';
 import { fx } from './fx';
+import { closeBack, pnlOf, roePct } from '../../engine/futures';
 import type { GameState } from '../../engine/types';
+
+/** 포지션이 닫힌 것을 보고 이번 생 승률을 올리고, 이익이면 수익 인증서 물음을 띄운다(한 번 닫을 때 한 번). */
+export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: number; pnl: number; entry: number; exit: number; heldSec: number; gen: number }): void {
+  const P = useProto.getState();
+  const win = c.pnl > 0;
+  const wins = P.wins + (win ? 1 : 0);
+  const closes = P.closes + 1;
+  P.patch({ wins, closes, profit: win ? { coin: marketById[c.market]?.name ?? c.market, dir: c.dir, lev: c.lev, roe: c.roe, pnl: c.pnl, entry: c.entry, exit: c.exit, heldSec: c.heldSec, wins, closes, gen: c.gen, date: new Date() } : P.profit });
+}
 
 const overdueSum = (g: GameState): number => DEBT_IDS.reduce((a, id) => a + g.run.debts[id].overdue, 0);
 const FULL_CUTINS = 5;
@@ -50,6 +60,16 @@ export function startWatch(): void {
     if (lc && lc.liq && (!prev.run.lastClose || prev.run.lastClose.tick !== lc.tick || prev.run.lastClose.market !== lc.market)) {
       fx.emit({ kind: 'liq', market: marketById[lc.market]?.name ?? lc.market });
     }
+    // 포지션이 닫혔다(청산 제외 이익 판정은 noteClose 가 한다)
+    if (lc && (!prev.run.lastClose || prev.run.lastClose.tick !== lc.tick || prev.run.lastClose.market !== lc.market)) {
+      const p = prev.run.positions[lc.market];
+      if (p && !g.run.positions[lc.market]) {
+        const log = g.run.tradeLog[g.run.tradeLog.length - 1] as { price?: number } | undefined;
+        const exit = log?.price ?? g.run.prices[lc.market];
+        const pnl = lc.liq ? -p.margin0 : closeBack(p, exit) - p.margin0 - p.feesPaid;
+        noteClose({ market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: g.family.generation });
+      }
+    }
     // 탭 해금·목표
     const un = { ...useProto.getState().everUnlocked };
     const before = JSON.stringify(un);
@@ -65,3 +85,4 @@ export function startWatch(): void {
   });
 }
 void perSettle;
+void pnlOf;

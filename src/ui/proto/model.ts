@@ -102,3 +102,8 @@ export function squirrel(g: GameState, tapping: boolean, nearLiq: boolean): Squi
 }
 
 export const debtLine = (g: GameState): number => totalDebt(g.run);
+
+/** 청산 임박: 진입 때 청산까지 거리(약 100/배율 %)의 30% 아래로 줄었을 때. 최대 5%. 높은 배율에서 늘 울리지 않게. */
+export function isNearLiq(p: { liqDistPct: number; lev: number }): boolean {
+  return p.liqDistPct < Math.min(5, 30 / Math.max(1, p.lev));
+}
