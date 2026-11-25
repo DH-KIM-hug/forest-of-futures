@@ -99,7 +99,6 @@ function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: Po
   const data = hist.slice(-120);
   const n = data.length;
   const cm = chartModel(data);
-  const rising = n < 2 || data[n - 1] >= data[0];
   let lo = cm.dataLo, hi = cm.dataHi;
   if (pos) { lo = Math.min(lo, pos.entry); hi = Math.max(hi, pos.entry); }
   // 청산가는 시세 선이 납작해지지 않을 때만 화면 안에 넣는다. 아니면 축 띠 끝에 꼬리표만.
@@ -138,7 +137,7 @@ function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: Po
   const dz = pos && liqIn ? (pos.dir === 1 ? { y: Y(pos.liq), hgt: 100 - Y(pos.liq) } : { y: 0, hgt: Y(pos.liq) }) : null;
 
   return (
-    <div className={'pt-chart' + (rising ? ' up' : ' down')} data-chart={market}>
+    <div className="pt-chart" data-chart={market}>
       <div className="plot" ref={box} role="img" aria-label={`${marketById[market].name} 최근 2분 시세`}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[25, 50, 75].map((y) => <line key={y} className="grid" x1="0" x2="100" y1={y} y2={y} />)}
@@ -158,7 +157,7 @@ function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: Po
         {lims && <span className="lim" style={{ bottom: 2 }}>{fmtPrice(market, lo)}</span>}
         {h > 0 && placed.map((t) => (
           <span key={t.key} className={'tag ' + t.cls + (t.edge ? ' edge' : '')} style={{ top: t.y }}>
-            {t.edge && <Tri up={t.edge === 'up'} size={8} />}{t.label && <b>{t.label}</b>}<span>{fmtPrice(market, t.price)}</span>
+            {t.label && <b>{t.label}</b>}<span>{fmtPrice(market, t.price)}</span>
           </span>
         ))}
       </div>
@@ -167,11 +166,12 @@ function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: Po
 }
 
 // ── 화면 ────────────────────────────────────────────────────────────────
-type Sheet = null | { k: 'open'; dir: 1 | -1 | 0 } | { k: 'pos' };
-interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; roe: number; name: string; dirText: string; lev: number }
+/** 시트는 손절·익절 하나뿐이다. 진입은 시트 없이 한 번에 한다. */
+type Sheet = null | 'stops';
+interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number }
 
 const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-/** 화면 확인용(?pshot=…): up=수익 중, win/loss=방금 정리, long/short/set/edit=시트 열림. 시세 기록도 2분어치 채운다. */
+/** 화면 확인용(?pshot=…): up=수익 중, win/loss=방금 정리, stops=손절·익절 시트, arm=정리 확인. 시세 기록도 2분어치 채운다. */
 const PSHOT = q.get('pshot');
 
 function devPrepare(market: string): void {
@@ -248,10 +248,7 @@ export function ProtoTrade() {
     if (d.step === 0) {
       d.step = 1;
       window.setTimeout(() => {
-        if (PSHOT === 'long') setSheet({ k: 'open', dir: 1 });
-        if (PSHOT === 'short') setSheet({ k: 'open', dir: -1 });
-        if (PSHOT === 'set') setSheet({ k: 'open', dir: 0 });
-        if (PSHOT === 'edit') setSheet({ k: 'pos' });
+        if (PSHOT === 'stops' || PSHOT === 'edit') setSheet('stops');
         if (PSHOT === 'arm') setArm(true);
       }, 60);
     }
@@ -266,8 +263,7 @@ export function ProtoTrade() {
   const tab = tabs.find((t) => t.id === market)!;
   const lev = pos ? pos.lev : tr.lev ?? run.futures.defaultLev;
   const pct = tr.pct;
-  const sheetDir: 1 | -1 = pos ? pos.dir : sheet?.k === 'open' && sheet.dir !== 0 ? sheet.dir : 1;
-  const prev = orderPreview(g, market, sheetDir, lev, pct);
+  const prev = orderPreview(g, market, pos ? pos.dir : 1, lev, pct);
   const ruler = levRuler(g);
   const mood = marketMood(g, market, hist);
   const cm = chartModel(hist);
@@ -279,8 +275,8 @@ export function ProtoTrade() {
   const ins = m.minable ? shortInsurance(run, market) : null;
   const call = !!pos && isNearLiq(pos);
   const rawPos = run.positions[market];
-  /** 지금 정리하면 남는 것(수수료까지 뺀 값). 결과 카드에 뜨는 숫자와 같다. */
-  const netNow = pos && rawPos ? pos.back - rawPos.margin0 - rawPos.feesPaid : 0;
+  /** 지금 정리하면 넣은 돈(증거금)에 더해지거나 빠지는 돈. 넣은 돈 + 이 값 = 돌려받는 돈(closeBack). 결과 카드도 같은 셈이다. */
+  const netNow = pos && rawPos ? pos.back - rawPos.margin0 : 0;
 
   // 포지션이 사라지면(정리·손절·익절·청산) 결과를 손익 줄 자리에 잠깐 보여 준다.
   const raw = run.positions[market];
@@ -289,12 +285,12 @@ export function ProtoTrade() {
     if (!raw && was && was.market === market) {
       const lc = run.lastClose;
       const liq = !!lc && lc.liq && lc.market === market && lc.tick >= was.tick;
-      const pnl = liq ? -(was.p.margin0 + was.p.feesPaid) : closeBack(was.p, px) - was.p.margin0 - was.p.feesPaid;
+      const pnl = liq ? -was.p.margin0 : closeBack(was.p, px) - was.p.margin0; // 넣은 돈 + pnl = 돌려받은 돈
       const kind: Result['kind'] = liq ? 'liq' : manual.current ? 'close' : pnl >= 0 ? 'tp' : 'sl';
       manual.current = false;
       setArm(false);
       setSheet(null);
-      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev }));
+      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev }));
       window.clearTimeout(resT.current);
       resT.current = window.setTimeout(() => setResult(null), 5200);
       if (!liq) play(pnl > 0 ? 'close_profit' : 'close_loss'); // 청산 소리는 watch.ts 가 낸다
@@ -443,63 +439,43 @@ export function ProtoTrade() {
   );
   const noteLine = note && <div key={note.k} className={'pt-note' + (note.bad ? ' bad' : '')} role="status">{note.text}</div>;
 
-  let lower: ReactNode;
-  if (sheet?.k === 'open' && !pos) {
-    const d = sheet.dir;
-    lower = (
-      <section className={'pt-sheet' + (d === 1 ? ' long' : d === -1 ? ' short' : '')} aria-label="주문 조건">
-        <div className="sh-top">
-          <div className="pt-seg" role="radiogroup" aria-label="방향">
-            <button role="radio" aria-checked={d === 1} className={'long' + (d === 1 ? ' on' : '')} onClick={() => setSheet({ k: 'open', dir: 1 })}><Tri up size={11} />롱<small>오른다</small></button>
-            <button role="radio" aria-checked={d === -1} className={'short' + (d === -1 ? ' on' : '')} onClick={() => setSheet({ k: 'open', dir: -1 })}><Tri up={false} size={11} />숏<small>내린다</small></button>
-          </div>
-          <button className="pt-x" aria-label="주문 조건 닫기" onClick={() => setSheet(null)}><Cross /></button>
+  // 주문 조건은 늘 펼쳐져 있다: 배율 눈금자(포지션이 없을 때) + 증거금 칩 + 위험 한 줄. 롱·숏을 누르면 바로 들어간다.
+  const liqAbs = Math.abs(prev.liqPct).toFixed(Math.abs(prev.liqPct) < 10 ? 1 : 0);
+  const order = (
+    <div className="pt-order">
+      {!pos && (
+        <div className="pt-ruler" role="radiogroup" aria-label="배율">
+          {ruler.map((nt) => (
+            <button key={nt.lev} role="radio" aria-checked={nt.lev === lev} aria-label={`${nt.lev}배${nt.locked ? ' 잠김' : ''}`}
+              className={'nt' + (nt.lev === lev ? ' on' : '') + (nt.hot ? ' hot' : '') + (nt.locked ? ' locked' : '')}
+              onClick={() => { if (nt.locked) say(nt.lockText!, false); else setTrade({ lev: nt.lev }); }}>
+              <i>{nt.locked && <Lock size={12} />}</i><b>{nt.lev}{nt.lev === lev ? '배' : ''}</b>
+            </button>
+          ))}
         </div>
-        <div className="sh-row">
-          <div className="sh-lb"><span>배율</span><b>{lev}배</b><em>{d === -1 ? '오르면' : '내리면'} {Math.abs(prev.liqPct).toFixed(Math.abs(prev.liqPct) < 10 ? 1 : 0)}%에 청산</em></div>
-          <div className="pt-ruler" role="radiogroup" aria-label="배율">
-            {ruler.map((nt) => (
-              <button key={nt.lev} role="radio" aria-checked={nt.lev === lev} aria-label={`${nt.lev}배${nt.locked ? ' 잠김' : ''}`}
-                className={'nt' + (nt.lev === lev ? ' on' : '') + (nt.hot ? ' hot' : '') + (nt.locked ? ' locked' : '')}
-                onClick={() => { if (nt.locked) say(nt.lockText!, false); else setTrade({ lev: nt.lev }); }}>
-                <i>{nt.locked && <Lock size={12} />}</i><b>{nt.lev}</b>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="sh-row">
-          <div className="sh-lb"><span>증거금</span><em>수수료 {comma(prev.fee)}</em></div>
-          {marginChips}
-        </div>
-        {stops}
-        {noteLine}
-        {d === 0 ? (
-          <button className="pt-btn cta" onClick={() => setSheet(null)}><span>이 조건으로 두기</span></button>
-        ) : (
-          <button className={'pt-btn ' + (d === 1 ? 'long' : 'short')} disabled={!!prev.reason} onClick={() => doOpen(d)}>
-            <span><Tri up={d === 1} size={13} />{d === 1 ? '롱' : '숏'} 진입</span>
-            <small>{prev.reason ?? `증거금 ${comma(prev.margin)} · 청산가 ${fmtPrice(market, prev.liq)}`}</small>
-          </button>
+      )}
+      {marginChips}
+      <div className={'pt-risk' + (prev.reason ? ' bad' : '') + (pos ? ' add' : '')} role="status">
+        {prev.reason ? <span>{prev.reason}</span> : (
+          <>
+            <span>{pos ? '추가 ' : ''}증거금 {comma(prev.margin)} · 수수료 {comma(prev.fee)}</span>
+            {pos ? <span>배율 {pos.lev}배 그대로</span> : <b>청산 약 −{liqAbs}%</b>}
+          </>
         )}
-      </section>
-    );
-  } else if (sheet?.k === 'pos' && pos) {
+      </div>
+    </div>
+  );
+
+  let lower: ReactNode;
+  if (sheet === 'stops') {
     lower = (
-      <section className={'pt-sheet ' + (pos.dir === 1 ? 'long' : 'short')} aria-label="포지션 조건">
+      <section className="pt-sheet" aria-label="손절·익절">
         <div className="sh-top">
-          <div className="sh-title"><Coin id={market} size={22} /><b>{m.name} {pos.dirText} {pos.lev}배</b></div>
-          <button className="pt-x" aria-label="조건 닫기" onClick={() => setSheet(null)}><Cross /></button>
+          <div className="sh-title"><b>손절·익절</b><span>{pos ? `${m.name} ${pos.dirText} ${pos.lev}배` : '다음 진입에 걸린다'}</span></div>
+          <button className="pt-x" aria-label="손절·익절 닫기" onClick={() => setSheet(null)}><Cross /></button>
         </div>
         {stops}
-        <div className="sh-row">
-          <div className="sh-lb"><span>추가 증거금</span><em>배율은 {pos.lev}배 그대로 · 수수료 {comma(prev.fee)}</em></div>
-          {marginChips}
-        </div>
         {noteLine}
-        <button className={'pt-btn ' + (pos.dir === 1 ? 'long' : 'short')} disabled={!!prev.reason} onClick={doAdd}>
-          <span><Tri up={pos.dir === 1} size={13} />추가 진입</span>
-          <small>{prev.reason ?? `증거금 ${comma(prev.margin)} 더 넣기`}</small>
-        </button>
       </section>
     );
   } else {
@@ -510,7 +486,7 @@ export function ProtoTrade() {
             <img className="me" src={heroFront} alt="" />
             <div className="big">
               <div className="roe">{money(result.pnl)}</div>
-              <div className="sub"><b>ROE {roeTxt(result.roe)}</b> <span className="xtra">{result.dirText} {result.lev}배</span></div>
+              <div className="sub">넣은 돈 {comma(Math.round(result.margin))} <b className={result.pnl >= 0 ? 'up' : 'down'}>{money(result.pnl)}</b><span className="xtra">ROE {roeTxt(result.roe)} · {result.dirText} {result.lev}배</span></div>
             </div>
             <div className="stamp">{result.kind === 'liq' ? '강제 청산' : result.kind === 'tp' ? '익절' : result.kind === 'sl' ? '손절' : '정리 완료'}</div>
           </div>
@@ -539,33 +515,32 @@ export function ProtoTrade() {
               {pos.tags.length > 0 && <span className="tg">{pos.tags.join(', ')}</span>}
             </div>
           </div>
-        ) : (
-          <div className="pt-pl empty">
-            <img className="me" src={heroFront} alt="" />
-            <div className="big"><div className="none">포지션 없음</div><div className="sub">{tut ?? '오를까, 내릴까. 방향을 고르면 조건이 올라온다.'}</div></div>
-          </div>
-        )}
-        <button className="pt-cond" onClick={() => setSheet(pos ? { k: 'pos' } : { k: 'open', dir: 0 })}>
+        ) : tut ? (
+          <p className="pt-tut"><img src={heroFront} alt="" />{tut}</p>
+        ) : null}
+        {order}
+        <button className="pt-cond" onClick={() => setSheet('stops')}>
           <span className="vals">
-            {!pos && <><span>{lev}배</span><span>증거금 {pct === 100 ? '전부' : `${pct}%`}</span></>}
             {curSl === null && curTp === null ? <span>손절·익절 없음</span> : <><span className={curSl !== null ? 'set' : ''}>손절 {slTxt}</span><span className={curTp !== null ? 'set' : ''}>익절 {tpTxt}</span></>}
           </span>
-          <span className="more">{pos ? '조건 바꾸기' : '바꾸기'}<Chev size={11} /></span>
+          <span className="more">바꾸기<Chev size={11} /></span>
         </button>
         {noteLine}
         <div className="pt-orders">
           {pos ? (
             <>
-              <button className="pt-btn add" onClick={() => setSheet({ k: 'pos' })}><span>추가 진입</span><small>{pos.dirText} {pos.lev}배</small></button>
+              <button className={'pt-btn ' + (pos.dir === 1 ? 'long' : 'short')} disabled={!!prev.reason} onClick={doAdd}>
+                <span><Tri up={pos.dir === 1} size={13} />추가 진입</span><small>+{comma(prev.margin)}</small>
+              </button>
               <button className={'pt-btn close' + (arm ? ' arm' : '') + (netNow >= 0 ? ' gain' : '')} onClick={doClose}>
                 <span>{arm ? '한 번 더 누르면 정리' : '정리하기'}</span>
-                <small>{arm ? `손실 ${money(netNow)} 확정` : `${comma(pos.back)} 돌려받음`}</small>
+                <small>{rawPos ? comma(Math.round(rawPos.margin0)) : ''} <b className={arm ? '' : netNow >= 0 ? 'up' : 'down'}>{money(netNow)}</b>{arm ? ' 확정' : ''}</small>
               </button>
             </>
           ) : (
             <>
-              <button className="pt-btn long" onClick={() => setSheet({ k: 'open', dir: 1 })}><span><Tri up size={13} />롱</span><small>오른다</small></button>
-              <button className="pt-btn short" onClick={() => setSheet({ k: 'open', dir: -1 })}><span><Tri up={false} size={13} />숏</span><small>내린다</small></button>
+              <button className="pt-btn long" disabled={!!prev.reason} onClick={() => doOpen(1)}><span><Tri up size={13} />롱</span><small>오른다 · {lev}배</small></button>
+              <button className="pt-btn short" disabled={!!prev.reason} onClick={() => doOpen(-1)}><span><Tri up={false} size={13} />숏</span><small>내린다 · {lev}배</small></button>
             </>
           )}
         </div>

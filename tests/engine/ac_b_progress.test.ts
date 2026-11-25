@@ -23,10 +23,10 @@ describe('B. 진행 단계·도토리 줍기', () => {
     expect(g.run.stats.laborTaps).toBe(13);
   });
 
-  it('AC-v2-11 줍기 199회엔 구매 버튼이 없고 200회에 팻말 + [도토코인 쳇바퀴 10,000] + 안내 말풍선 한 번', () => {
+  it('AC-v2-11 줍기 29회엔 구매 버튼이 없고 30회에 팻말 + [도토코인 쳇바퀴 10,000] + 안내 말풍선 한 번', () => {
     const g = fresh();
-    tapN(g, 199);
-    expect(g.run.acornTaps).toBe(199);
+    tapN(g, 29);
+    expect(g.run.acornTaps).toBe(29);
     expect(wheelOffers(g)).toHaveLength(0);
     expect(g.run.notices.some((n) => n.id === 'hint:firstWheel')).toBe(false);
     tapN(g, 1);
@@ -41,7 +41,7 @@ describe('B. 진행 단계·도토리 줍기', () => {
 
   it('AC-v2-12 쳇바퀴를 사면 현금 -10,000, 단계 1, 지갑 알약 생김, 탭은 코인을 캔다', () => {
     const g = fresh();
-    tapN(g, 200);
+    tapN(g, 30);
     const before = g.run.cash;
     expect(A(g, { type: 'buyWheel', coin: 'DTC' }).ok).toBe(true);
     expect(g.run.cash).toBe(before - 10000);
@@ -56,7 +56,7 @@ describe('B. 진행 단계·도토리 줍기', () => {
 
   it('AC-v2-12 현금이 모자라면 못 산다', () => {
     const g = fresh();
-    tapN(g, 200);
+    tapN(g, 30);
     g.run.cash = 9999;
     const r = A(g, { type: 'buyWheel', coin: 'DTC' });
     expect(r.ok).toBe(false);

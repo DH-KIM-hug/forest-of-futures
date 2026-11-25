@@ -41,7 +41,7 @@
   "progression": {
     "acornPerTap": 27,
     "maxTapsPerSec": 12,
-    "firstWheelUnlockTaps": 200,
+    "firstWheelUnlockTaps": 30,
     "futures": {
       "minedValueRequired": 50000,
       "depositCheck": 30000,

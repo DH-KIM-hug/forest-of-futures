@@ -1,5 +1,7 @@
 // 시제품 화면의 읽기 모델(순수 함수). 엔진 값을 그대로 읽고 새 규칙은 만들지 않는다.
-import { tierDefs, tierById, wheelByCoin } from '../../engine/data';
+import { tierDefs, tierById, wheelByCoin, balance } from '../../engine/data';
+
+const FIRST_WHEEL_TAPS: number = balance.mining?.firstWheelUnlockTaps ?? balance.firstWheelUnlockTaps ?? 30;
 import { equipGross, equipPower, nextTierCost, tierBlockReason, unitsOfTier } from '../../engine/equipment';
 import { futuresGate, wheelStatus } from '../../engine/progression';
 import { ceilS } from '../../engine/rng';
@@ -19,7 +21,7 @@ export function goalAt(g: GameState, i: number, f: GoalFlags): Goal {
   const mk = (label: string, cur: number, need: number): Goal => ({ label, cur: Math.min(cur, need), need, done: cur >= need });
   const gate = futuresGate(g).conditions[0];
   switch (i) {
-    case 0: return mk('줍기 200회 (팻말이 선다)', run.acornTaps, 200);
+    case 0: return mk(`줍기 ${FIRST_WHEEL_TAPS}회 (팻말이 선다)`, run.acornTaps, FIRST_WHEEL_TAPS);
     case 1: return mk('첫 쳇바퀴 사기', ownedCoins(run).length, 1);
     case 2: return mk('첫 설비 사기', run.equipment.length, 1);
     case 3: return mk('선물 계좌 열기 (누적 채굴)', run.futures.open ? gate.need : gate.current, gate.need);
@@ -62,7 +64,7 @@ export function lotRows(g: GameState): Row[] {
   if (owned.length === 0) {
     const st = wheelStatus(g, WHEEL_COIN);
     if (!st.unlocked) {
-      rows.push({ key: 'wheel', kind: 'locked', name: '????', sub: `줍기 ${run.acornTaps}/${st.progress?.need ?? 200}이면 보인다`, price: w.cost, income: null, canBuy: false, progress: Math.min(1, run.acornTaps / (st.progress?.need ?? 200)) });
+      rows.push({ key: 'wheel', kind: 'locked', name: '????', sub: `줍기 ${run.acornTaps}/${st.progress?.need ?? FIRST_WHEEL_TAPS}이면 보인다`, price: w.cost, income: null, canBuy: false, progress: Math.min(1, run.acornTaps / (st.progress?.need ?? FIRST_WHEEL_TAPS)) });
     } else {
       rows.push({ key: 'wheel', kind: 'wheel', name: w.name, sub: '줍기가 코인으로 바뀐다 · 설비를 달 수 있다', price: w.cost, income: null, canBuy: st.canBuy, progress: prog(w.cost) });
     }

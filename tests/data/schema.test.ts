@@ -30,7 +30,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
     expect(b.living.byHouse).toEqual([1000, 8000, 30000, 140000, 650000]);
     expect(b.progression.acornPerTap).toBe(27);
     expect(b.progression.maxTapsPerSec).toBe(12);
-    expect(b.progression.firstWheelUnlockTaps).toBe(200);
+    expect(b.progression.firstWheelUnlockTaps).toBe(30);
     expect(b.progression.stage0OfflineSettlements).toBe(0);
     expect(b.progression.futures.levCaps.map((c: any) => c.cap)).toEqual([10, 50, 200]);
     expect(b.mining.autoShare).toBe(0.54);

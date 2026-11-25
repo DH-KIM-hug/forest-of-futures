@@ -24,7 +24,7 @@ describe('sim_v3 (엔진 직접 호출)', () => {
     // 한이 실제로 쌓이고 쓰였다
     expect(runs.every((r) => r[0].han > 0 && Object.keys(r[0].treeAfter).length > 0)).toBe(true);
     // 첫 쳇바퀴·선물 계좌 측정이 들어 있다
-    expect(runs.every((r) => r[0].firstWheelOnlineSec! > 100 && r[0].futuresH !== null)).toBe(true);
+    expect(runs.every((r) => r[0].firstWheelOnlineSec! > 10 && r[0].futuresH !== null)).toBe(true);
   }, 60000);
 
   it('같은 시드·같은 입력이면 같은 결과', async () => {

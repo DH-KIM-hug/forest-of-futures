@@ -320,3 +320,4 @@
 .pr-lab li b { font-size: 14px; }
 .pr-lab li i { font-style: normal; font-size: 11.5px; opacity: .65; }
 .pr-lab li p { margin: 3px 0 0; font-size: 11.5px; line-height: 1.35; opacity: .8; font-family: system-ui, sans-serif; }
+.pr.tab-phone .pr-profit { top: auto; bottom: calc(300px + env(safe-area-inset-bottom, 0px)); }
