@@ -14,6 +14,7 @@ import { ensureTag, removeTags, seizeFor } from './seizure';
 import { interestDue, livingDue, netWorth, ownedCoins, price, refPrice } from './selectors';
 import { bump } from './stats';
 import { lendersMeta } from './data';
+import { onTaxPaid } from './generation';
 import { refreshShark2Open } from './loans';
 import { comma, logEvent, notify } from './util';
 import type { CoinId, DebtId, GameState, PayId } from './types';
@@ -81,7 +82,9 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
     if (run.rolloverPending[id] && run.debts[id].principal > 0) {
       const raw = i;
       i = 0;
-      run.debts[id].principal += ceilS(raw * (1 + lendersMeta.rollover.addPct));
+      const add = ceilS(raw * (1 + lendersMeta.rollover.addPct));
+      run.debts[id].principal += add;
+      bump(run, `capInt.${id}`, add);
       rollIds.push(id);
     }
     due[id] = i;
@@ -137,6 +140,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   } else if (taxDue > 0) {
     run.debts.tax.principal = 0;
     run.taxDueIn = null;
+    onTaxPaid(g);
   }
 
   // 7. 연체 처리
@@ -149,6 +153,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
     } else if (due[id] > 0 && unpaid[id] > 0) {
       d.principal += unpaid[id];
       bump(run, 'capitalizedInterest', unpaid[id]);
+      bump(run, `capInt.${id}`, unpaid[id]);
       d.overdue += 1;
       bump(run, 'odTotal', 1);
       if (id === 'bank' || id === 'capital') bump(run, 'odInstitution', 1);

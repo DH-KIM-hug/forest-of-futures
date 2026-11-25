@@ -2,6 +2,7 @@
 import { balance, COINS, endingsMeta } from './data';
 import { equipAppraisalSum, houseValue, netWorth, ownedCoins, sharkDebt, stage, walletValue, walletValueOf, friendDebtTotal } from './selectors';
 import { mineConcentration } from './equipment';
+import { estateSurplus } from './estate';
 import { levCapNow, positionList } from './futures';
 import { lastLogKinds } from './util';
 import type { GameState, PayId } from './types';
@@ -72,7 +73,7 @@ export function buildSnapshot(g: GameState, ctx: SnapCtx): Record<string, any> {
     walletShare: run.cash + wv + eq > 0 ? (wv / (run.cash + wv + eq)) * 100 : 0,
     walletTopShare: wv > 0 ? (Math.max(...tops) / wv) * 100 : 0,
     mineConcentration: conc.pct, mineTopCoin: conc.coin, wheelsOwned: ownedCoins(run).length,
-    laborTaps: n(st.laborTaps), pawned: n(st.pawned), pawnedHeirloomAge: st.pawnedHeirloomAge ?? null, soldForTax: n(st.soldForTax),
+    laborTaps: n(st.laborTaps), pawned: n(st.pawned), pawnedHeirloomAge: st.pawnedHeirloomAge ?? (st.pawnedAtSettle != null ? run.settleNo - st.pawnedAtSettle : null), soldForTax: n(st.soldForTax),
     upgradesBought: n(st.upgradesBought),
     // 거래(마지막 포지션)
     lev: lp?.lev ?? null, dir: lp ? (lp.dir === 1 ? 'long' : 'short') : null, holdSettles: lp?.holdSettles ?? null,
@@ -103,7 +104,7 @@ export function buildSnapshot(g: GameState, ctx: SnapCtx): Record<string, any> {
     grudge: Object.entries(f.lenderRelations).filter(([, v]) => v === 'grudge').map(([k]) => k),
     grudgeCount: Object.values(f.lenderRelations).filter((v) => v === 'grudge').length,
     'inheritedDebt.shark': run.debts.shark1.inherited + run.debts.shark2.inherited, inheritedPaid: n(st.inheritedPaid),
-    estateNet: st.estateNet ?? null, han: f.han,
+    estateNet: st.estateNet ?? estateSurplus(run), han: f.han,
     // 가문
     'fam.bankruptcies': n(f.stats.bankruptcies) + 1, 'fam.bankruptcies.TIP': n(f.stats['bankruptcies.TIP']) + (cause === 'TIP' ? 1 : 0),
     'fam.sameCauseStreak.FRIEND': streak('FRIEND'), 'fam.sameCauseStreak.SHARK': streak('SHARK'), 'fam.simpleStreak': f.pending.simpleStreak,

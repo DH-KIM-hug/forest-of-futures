@@ -91,3 +91,27 @@ AC-v2-45(숏 보험), AC-v2-61(포지션 꼬리표), AC-v2-72(실제 청산에�
 
 ### 닫은 연기 항목
 AC-v2-125 의 "엔진 통계에 있음"(`missingKeys(buildSnapshot) = []`), 엔딩 200개 각각이 "조건을 만족하는 상태를 만들면 후보에 든다"(`tests/data/endings_generated.test.ts`, 원인 여러 개면 원인마다).
+
+## M4 세대·가훈·가문 특성·저장 v2
+
+새 파일: `generation.ts`(한 계산·세 갈래·다음 세대 만들기·명세서 미리보기·트리 구매·은퇴·전당·고리 끊기), `estate.ts`(경매 잉여금), `save.ts`(저장 v2·어댑터·마이그레이션). 행동: `retire` `estateNext` `inherit` `buyTree` `nextGeneration` `pawn`. 흐름: 파산 → `estate.step` 카드 → 명세서 → 트리 → 다음 세대(`GameState.estate`, 저장되므로 어디서 꺼도 이어짐, AC-v2-148). 은퇴는 명세서에서 시작.
+
+### 해석·벗어난 것
+- **`GameState.estate`**: GDD 5.1 의 `SaveV2` 에 없던 칸. `{kind, step, chosen, award, calc, maxim, simpleStreakBefore, cause, surplus}`. 엔딩 카드 → 명세서 → 트리 단계를 저장하려고 `pendingEnding` 옆에 두었다.
+- **GDD 의 `tree_`(가계도)는 코드에서 `lineage`** (M0 때부터). 저장 키는 코드 이름 그대로.
+- **다음 세대의 `tick`은 이어진다**: 새 판의 `run.tick`·`lastSeenTick`·`mkt`(정산 봉)는 부모에서 이어받는다(정보 규칙의 봉 번호가 어긋나지 않게). `settleNo`·정산 카운트다운·사건·제안은 새로. 세대 시작가(`refPrice`)는 그때의 시세.
+- **AC-v2-110 과 3.14 표의 충돌**: 표는 한정승인만 "사전교육 1장", AC 는 상속포기도 1장. AC 를 따라 둘 다 `balance.inheritance.edu` = 1장.
+- **갈래가 고르는 순서**: `chooseBranch` 가 가문(가훈·이월·기질·유품·원한/연줄)을 바꾸고 `step:'tree'`, `startNextGeneration` 이 새 판을 만든다(트리에서 산 `seed`·`heirwheel` 이 시작에 반영되도록). 명세서 카드는 `previewBranch` 가 상태를 복제해 같은 경로를 돌린 값이라 고른 결과와 같다.
+- **2세대 이후 갈래**: 파산 뒤 포기·한정·단순, 은퇴는 증여만. 2세대(첫 플레이)가 끝나는 때에도 같은 명세서(3세대부터 고른다 = 3세대의 시작을 고른다).
+- **쌓인 성과의 최고 순자산**: `max(이월분, 이번 판 최고, 지금 순자산)`, 0 아래로 내려가지 않는다. 단순승인·증여는 `pending` 에 최댓값·합을 남기고 `simpleStreak`(단순만 +1, 증여는 그대로).
+- **경매(한정승인·상속포기)**: 현금 + 포지션(시가 정리값) + 지갑 90% + 설비·쳇바퀴 50% + 집 70% 를 모아 `payOrder`(독사 → 오소리 → 캐피탈 → 조합)대로 갚는다. 못 갚은 채권처 = 원한. 한정승인은 남는 돈이 현금(`잉여금`), 상속포기는 갚을 만큼만 갚고 끝(현금은 7만 고정). 친구 빚은 세대가 바뀌면 지워진다(승계하지 않는다). 한정승인이 지키는 설비는 가장 낮은 단계 1대(가장 싼 것)이고 도토코인 쳇바퀴로 옮겨 붙인다.
+- **단순승인 빚**: 조합·캐피탈은 원금 그대로, 오소리·독사는 `원금 − 연체로 얹힌 이자`(`stats['capInt.<id>']`, 정산의 이자 연체·이자 미루기가 쌓는다). 합이 상한(30만 × min(3, 1 + 연속 단순승인))을 넘으면 비율대로 줄이고 각각 반올림. 승계 몫(`inherited`)에만 금리 상한 4%(`DebtState.rateCap`, `interestDue` 가 승계 몫과 새 몫을 나눠 계산), 이자 유예 3회, 연줄(`tie`). 세금: 순재산(현금 + 지갑 + 설비·쳇바퀴 평가 80% + 집 평가 90% − 승계 빚)의 30만 초과분 × 30% + 부모의 남은 세금 빚, 기한 8회. 합이 20만에 못 미치면 학자금(캐피탈)으로 채운다. 연줄의 "첫 대출의 첫 이자 면제"와 원한의 "독사 전단지 두 배"는 연결하지 않았다(문구만).
+- **증여(은퇴)**: 오두막 이상 + 총부채 0(세무서 포함). 현금은 그대로(+3만 없음), 도토코인 쳇바퀴·가업 간판을 **더하지 않는다**(단순승인만 더한다). 기질 '금수저'(원인 코드 `GIFT`). 은퇴한 판은 `run.over = true` 이고 `pendingEnding` 이 없다.
+- **기질**: 부모 원인의 기질 1개 + 이전 부모의 기질(조부모) 1개, 같은 원인이 이어지면 하나만 두고 `deepBlood`. 새 판이 시작되기 전(`chooseBranch`)에 가문에 반영된다. 기질 효과 가운데 `hideStatementLine`(명세서 한 줄 가림)은 `statement().hiddenLine` 플래그만, `showTipHitRate`·`friendTipHalf`·`tagEarly`·`feeMulAtLev100`·`keepAll` 은 연결하지 않았다(화면·후속). `brokenStartTrust`(외톨이)는 연결: 부모 때 절교한 친구가 신뢰 60에서 시작.
+- **유품**: `family.heirlooms[id] = {level, pawnedTo, lostCount?}`. 세대가 끝날 때 장부의 원인별 엔딩 수로 단계를 다시 계산한다. 전당(`pawn`)은 한도와 별개로 5만/15만/40만을 오소리·독사 원금에 얹고(독사는 골목이 열려 있어야), 그 채권처의 원금이 0이 되면 돌아온다. 맡긴 채 파산하면 0단계(`lostCount` = 그때 장부 수, 그 원인의 엔딩이 하나 더 모이면 다시 올라간다).
+- **고리 끊기(AC-v2-117)**: 장부(엔딩 id 만 들어가는 곳)에 넣을 수 없어 `family.chainBroken = true` + 흔적 `chain_broken`. 조건: 이번 판의 갈래가 증여이고 `retireStreak ≥ 2` 인 판에서 세금이 기한 안에 0 이 되는 순간(도장으로 완납하거나, 기한 정산에 현금으로 다 냄).
+- **`estateNet`(엔딩 조건)**: 부모가 망하는 순간 경매 잉여금(`estateSurplus`, 음수 가능). `parentInherit`(부모가 시작한 갈래)·`parentCause`·`houseInherited`(이사하면 꺼짐)·`inheritedPaid`(승계 빚에 찍은 도장 합)·`pawned`·`pawnedHeirloomAge`(전당 뒤 정산 수)를 채웠다. `grudge`·연줄은 `family.lenderRelations`.
+- **트리 효과 숫자**: `grip`(+10%)·`craft`(+5%) 등 일부는 M1 부터 코드에 상수로 들어 있다(data 의 `effect` 와 같은 값). 시뮬로 값을 바꾸려면 코드 상수도 함께 고쳐야 한다.
+- **가훈 문구**: `maxims.byCause[원인]` 의 줄을 `generation % 줄 수` 로 고르고 `{points}` 를 받은 가훈(0이면 쌓인 성과)으로 채워 `estate.maxim` 에 둔다. 문구는 M1 때의 임시 1줄씩 그대로.
+- **저장 v2**: `fof.save.v2`. `StorageAdapter` 는 비동기(`get/set/remove`)라 `preferencesAdapter(Preferences)` 로 Capacitor 에 그대로 붙는다. 버전 사슬은 `MIGRATIONS[0]`(없음 → v2, 모자란 칸은 기본값으로 채움). 깨진 저장은 `fof.save.broken` + 새 시작 + 안내 한 줄, v1 저장은 `encyclopedia` 에서 엔딩 id 만 장부로(세대 표시 "옛 기록" = gen 0). `savedAt` 은 호출한 쪽이 시각을 넘긴다(엔진은 시계를 읽지 않는다). 디버그 스토어는 행동 직후와 정산마다 저장하고 시작할 때 읽는다.
+- **디버그 화면**: 은퇴 버튼, 엔딩 카드 → 명세서(세 갈래 카드와 [상속포기][한정승인][단순승인] 버튼) → 가훈 트리 구매 → [다음 세대 시작]. 버튼만.

@@ -4,6 +4,7 @@ import { brokenCount } from './friends';
 import { ownedCoins, totalDebt, walletValue } from './selectors';
 import { logEvent, notify } from './util';
 import { finalizeEnding } from './endings';
+import { openEstate } from './generation';
 import type { GameState, PayId } from './types';
 
 export interface BankruptCtx {
@@ -44,6 +45,7 @@ export function declareBankruptcy(g: GameState, ctx: BankruptCtx): void {
   run.bankruptcy = { cause, lastLender: ctx.lastLender, shortfall: ctx.shortfall, tick: run.tick, settleNo: run.settleNo, immediate: !!ctx.immediate, offline: false };
   run.bankruptcy.offline = run.report !== null;
   finalizeEnding(g, { cause, lastLender: ctx.lastLender, shortfall: ctx.shortfall });
+  g.estate = openEstate('bankrupt', cause);
   logEvent(run, 'bankrupt', `파산(${cause})`);
   notify(run, '파산', 'warn', 'bankrupt');
 }

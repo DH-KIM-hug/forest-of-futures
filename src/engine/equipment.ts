@@ -101,6 +101,7 @@ export function buyEquip(g: GameState, tier: string, coin: CoinId, boughtWithLoa
   run.uidSeq += 1;
   run.equipment.push({ uid: `e${run.uidSeq}`, tier, coin, on: true, cost, tagBy: null, boughtWithLoan, inheritedSign: false, boughtTick: run.tick });
   bump(run, 'assetsEver', 1);
+  run.stats.maxTierEver = Math.max(run.stats.maxTierEver ?? -1, tierDefs.findIndex((t) => t.id === tier));
   logEvent(run, `buy:${tier}`, `${tierById[tier].name} 구매`, cost);
   notify(run, tierById[tier].seenAs, 'info');
   return { ok: true, amount: cost };

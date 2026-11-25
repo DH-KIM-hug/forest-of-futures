@@ -69,7 +69,7 @@ export function createGame(opts: NewGameOpts = {}): GameState {
   const seed = opts.seed ?? 1;
   const g: GameState = {
     version: SAVE_VERSION, savedAt: 0, deviceId: opts.deviceId ?? 'dev', family: newFamily(),
-    run: newRun(seed, opts.prices), settings: defaultSettings(), pendingEnding: null,
+    run: newRun(seed, opts.prices), settings: defaultSettings(), pendingEnding: null, estate: null,
   };
   g.run.peakNetWorth = netWorth(g.run);
   void friendDefs;

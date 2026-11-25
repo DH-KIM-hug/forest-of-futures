@@ -175,7 +175,18 @@
     },
     "tie": {
       "limitMul": 1.2
-    }
+    },
+    "retireMinHouse": 1,
+    "chainStreak": 2,
+    "edu": {
+      "limited": 1,
+      "renounce": 1
+    },
+    "studentLoanLenderId": "capital",
+    "guaranteeLenderId": "shark1",
+    "giftCash": 0,
+    "keepBodyHalf": 0.5,
+    "_doc": "세대 넘기기(GDD_v2 3.14). retireMinHouse=은퇴 가능한 최소 집 단계, chainStreak=고리 끊기에 필요한 연속 은퇴 수, edu=시작 사전교육 장 수(AC-v2-110 은 상속포기도 1장), giftCash=증여로 더해 주는 현금(0)"
   },
   "ranking": {
     "metric": "peakNetWorth",

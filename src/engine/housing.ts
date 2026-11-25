@@ -39,6 +39,7 @@ export function moveTo(g: GameState, to: number): Res {
   run.upkeepArrears = 0;
   run.stats.cyclesSinceMove = 0;
   run.stats.netWorthAtMove = netWorth(run);
+  run.stats.houseInherited = false;
   logEvent(run, `move_${dir}`, `${houseDefs[to].name}(으)로 이사`, cost);
   refreshShark2Open(g);
   return { ok: true, amount: cost };

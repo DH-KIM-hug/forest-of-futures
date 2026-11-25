@@ -10,6 +10,8 @@ import { upgradeTracks } from './engine/data';
 import { previewEnding } from './engine/endings';
 import { futuresGate } from './engine/progression';
 import { levCapNow, roePct, liqPrice } from './engine/futures';
+import { statement, treeStatus, canRetire } from './engine/generation';
+import { legacy } from './engine/data';
 
 const TIME = ['아침', '낮', '저녁', '밤'];
 
@@ -21,6 +23,7 @@ export default function App() {
   return (
     <div style={{ padding: 12, fontFamily: 'sans-serif', fontSize: 14, maxWidth: 760 }}>
       <h1 style={{ fontSize: 18 }}>선물의 숲 — 엔진 디버그 (GDD v2 M1)</h1>
+      <Inheritance />
       <p>
         단계 {stage(run)} · {TIME[timeOfDay(run)]} · 정산 {run.settleNo}회 (다음까지 {run.settleIn}초) · 현금 {comma(run.cash)} · 순자산 {comma(netWorth(run))} · 총부채 {comma(totalDebt(run))}
         {run.over && <b style={{ color: 'crimson' }}> · 파산 {run.bankruptcy?.cause}</b>}
@@ -142,6 +145,66 @@ export default function App() {
       <h3>속보·기록</h3>
       <ul>{run.notices.slice(-5).reverse().map((n, i) => <li key={i}>{n.text}</li>)}</ul>
       <ul style={{ color: '#666' }}>{run.eventLog.slice().reverse().map((e, i) => <li key={i}>{e.kind} {e.text} {e.amount ?? ''}</li>)}</ul>
+    </div>
+  );
+}
+
+/** 세대 끝 -> 엔딩 카드 -> 재산 명세서(세 갈래) -> 가문 특성 트리 -> 다음 세대. 임시 디버그 버튼(M9 에서 화면으로). */
+function Inheritance() {
+  const { g, act } = useGame();
+  const btn = { margin: 2, padding: '6px 8px', minHeight: 36 } as const;
+  const e = g.estate;
+  const f = g.family;
+  const treeBox = (
+    <div>
+      <b>가문 특성 트리</b> — 가진 {legacy.currency.name} {f.han} (쓴 {f.hanSpent})
+      {treeStatus(g).map((t) => (
+        <div key={t.id}>
+          {t.name} {t.level}/{t.max} {t.cost !== null && <button style={btn} disabled={!t.canBuy} onClick={() => act({ type: 'buyTree', id: t.id })}>{t.cost} 사기</button>}
+        </div>
+      ))}
+    </div>
+  );
+  if (!g.run.over && !e) {
+    return (
+      <div>
+        {canRetire(g) && <button style={btn} onClick={() => act({ type: 'retire' })}>은퇴하고 물려주기</button>}
+        <details><summary>가문 특성 트리 ({legacy.currency.name} {f.han})</summary>{treeBox}</details>
+      </div>
+    );
+  }
+  if (!e) return null;
+  return (
+    <div style={{ border: '1px solid #999', padding: 8, margin: '8px 0' }}>
+      <b>{f.generation}세대 끝</b> ({e.kind === 'retire' ? '은퇴' : '파산'})
+      {e.step === 'card' && (
+        <div>
+          {g.pendingEnding && <p>{g.pendingEnding.id} {g.pendingEnding.title} — {g.pendingEnding.line}</p>}
+          <button style={btn} onClick={() => act({ type: 'estateNext' })}>재산 명세서로</button>
+        </div>
+      )}
+      {e.step === 'statement' && (() => {
+        const st = statement(g);
+        return (
+          <div>
+            <p>부모가 남긴 것: 현금 {comma(st.parent.cash)} · 지갑 {comma(st.parent.wallet)} · 쳇바퀴 {st.parent.coins.length} · 설비 {st.parent.equipment} · 집 {st.parent.house} · 빚 {Object.entries(st.parent.debts).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${comma(v)}`).join(', ') || '없음'}</p>
+            {st.cards[0] && <p>쌓인 성과 {st.cards[0].calc.score} × 장부 {st.cards[0].calc.ledgerMul.toFixed(2)} × 반복 {st.cards[0].calc.repeatMul.toFixed(2)} × 족보 {st.cards[0].calc.crestMul.toFixed(2)}</p>}
+            {st.cards.map((c) => (
+              <div key={c.branch}>
+                <button style={btn} onClick={() => act({ type: 'inherit', branch: c.branch })}>{({ renounce: '상속포기', limited: '한정승인', simple: '단순승인', gift: '증여' } as any)[c.branch]}</button>
+                받는 {legacy.currency.name} +{c.han} · 남는 것: {c.keeps.join(', ') || '없음'} · 시작 빚 {comma(c.startDebt)}{c.tax ? ` + 세금 ${comma(c.tax)}` : ''} · 현금 {comma(c.startCash)} · 첫 정산 수지 {comma(c.firstNet)} · 단계 {c.stage}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+      {e.step === 'tree' && (
+        <div>
+          <p>{e.chosen} 선택 · 받은 {legacy.currency.name} +{e.award} {e.maxim && `— ${e.maxim}`}</p>
+          {treeBox}
+          <button style={btn} onClick={() => act({ type: 'nextGeneration' })}>다음 세대 시작</button>
+        </div>
+      )}
     </div>
   );
 }

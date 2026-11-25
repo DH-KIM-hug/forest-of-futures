@@ -80,6 +80,10 @@ export function interestDue(g: GameState, id: DebtId): number {
   const rate = lenderById[id].rate + (g.family.lenderRelations[id] === 'grudge' ? balance.inheritance.grudge.ratePlus : 0);
   let base = d.principal;
   let extra = 0;
+  // 승계 몫에만 금리 상한(단순승인 4%)
+  const capRate = d.rateCap != null && d.inherited > 0 ? Math.min(rate, d.rateCap) : rate;
+  const inh = capRate < rate ? Math.min(d.inherited, d.principal) : 0;
+  const inhSave = inh * (rate - capRate);
   const promo = run.promos[id] ?? [];
   const cfg = promoCfg();
   for (const p of promo) {
@@ -88,7 +92,7 @@ export function interestDue(g: GameState, id: DebtId): number {
     const f = p.n < cfg.halfSettlements ? cfg.halfMul : p.n < cfg.halfSettlements + cfg.doubleSettlements ? cfg.doubleMul : 1;
     extra += amt * rate * f;
   }
-  return ceilS((base * rate + extra) * rateMult(g));
+  return ceilS((base * rate + extra - inhSave) * rateMult(g));
 }
 import { offerById } from './data';
 function promoCfg() {

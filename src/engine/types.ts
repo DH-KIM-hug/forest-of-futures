@@ -28,6 +28,7 @@ export interface DebtState {
   inherited: number; // 승계 빚(원금 중 물려받은 몫). 통계 `inheritedDebt.*`
   overdue: number;
   graceLeft: number; // 남은 이자 유예 정산 수
+  rateCap?: number | null; // 승계 몫(inherited)에만 적용되는 금리 상한(단순승인 4%)
 }
 
 export interface FriendState {
@@ -229,7 +230,7 @@ export interface FamilyState {
   peakNetWorth: number;
   barehandPeak: number;
   tipBook: Record<string, { said: number; hit: number }>;
-  heirlooms: Record<string, { level: number; pawnedTo: string | null }>;
+  heirlooms: Record<string, { level: number; pawnedTo: string | null; lostCount?: number }>;
   traits: string[]; // 최대 2 (기질 id)
   deepBlood: boolean;
   lenderRelations: Record<string, 'tie' | 'grudge' | null>;
@@ -355,6 +356,23 @@ export interface Settings {
   guides: Record<string, boolean>;
 }
 
+/** 세대가 끝난 뒤 엔딩 카드 -> 재산 명세서 -> 가문 특성 트리 -> 다음 세대 시작. 저장되므로 어디서 꺼도 이어진다(AC-v2-148). */
+export interface HanCalc {
+  peak: number; mined: number; endingPoints: number; peakTerm: number; minedTerm: number; score: number;
+  ledgerMul: number; repeatMul: number; crestMul: number; branchMul: number; award: number;
+}
+export interface Estate {
+  kind: 'bankrupt' | 'retire';
+  step: 'card' | 'statement' | 'tree';
+  chosen: Branch | null;
+  award: number;
+  calc: HanCalc | null;
+  maxim: string | null;
+  simpleStreakBefore: number;
+  cause: string;
+  surplus: number; // 상속 개시 때 경매 잉여금(한정승인 현금)
+}
+
 export interface GameState {
   version: 2;
   savedAt: number;
@@ -363,6 +381,7 @@ export interface GameState {
   run: RunState;
   settings: Settings;
   pendingEnding: PendingEnding | null;
+  estate: Estate | null;
 }
 
 /** 행동의 결과. s 는 항상 새 상태(실패하면 원래 상태 그대로). */

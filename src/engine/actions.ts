@@ -10,6 +10,7 @@ import { buyUpgrade } from './upgrades';
 import type { CoinId, GameState, LenderId, DebtId, Res, Dir } from './types';
 import { eduPage, mockTrade, openAccount, signWaiver } from './progression';
 import { addToPosition, closePosition, openPosition, setStops } from './futures';
+import { buyTree, chooseBranch, estateNext, pawn, retire, startNextGeneration, type ChoiceBranch } from './generation';
 import { onBackground, onForeground, visit } from './offline';
 
 export type Action =
@@ -44,7 +45,13 @@ export type Action =
   | { type: 'stampFriend'; friend: string; mult?: Mult }
   | { type: 'move'; to: number }
   | { type: 'acceptOffer'; id: string }
-  | { type: 'declineOffer'; id: string };
+  | { type: 'declineOffer'; id: string }
+  | { type: 'retire' }
+  | { type: 'estateNext' }
+  | { type: 'inherit'; branch: ChoiceBranch }
+  | { type: 'buyTree'; id: string }
+  | { type: 'nextGeneration' }
+  | { type: 'pawn'; heirloom: string; lender: 'shark1' | 'shark2' };
 
 export function act(g: GameState, a: Action): Res {
   switch (a.type) {
@@ -80,5 +87,11 @@ export function act(g: GameState, a: Action): Res {
     case 'move': return moveTo(g, a.to);
     case 'acceptOffer': return acceptOffer(g, a.id);
     case 'declineOffer': return declineOffer(g, a.id);
+    case 'retire': return retire(g);
+    case 'estateNext': return estateNext(g);
+    case 'inherit': return chooseBranch(g, a.branch);
+    case 'buyTree': return buyTree(g, a.id);
+    case 'nextGeneration': return startNextGeneration(g);
+    case 'pawn': return pawn(g, a.heirloom, a.lender);
   }
 }

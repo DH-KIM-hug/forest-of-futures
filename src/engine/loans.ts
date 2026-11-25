@@ -2,6 +2,7 @@
 import { balance, lenderById, lendersMeta } from './data';
 import { ceilS, floorS } from './rng';
 import { traitVal } from './legacy';
+import { onTaxPaid, returnPawn } from './generation';
 import { lenderLimit, sharkDebt, totalDebt, interestDue } from './selectors';
 import { addToSet, bump, stat } from './stats';
 import { isNight, logEvent, notify } from './util';
@@ -105,6 +106,10 @@ export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {
   if (amt <= 0) return refuse('cash', '현금 부족');
   run.cash -= amt;
   d.principal -= amt;
+  if (d.inherited > 0) {
+    bump(run, 'inheritedPaid', amt);
+    d.inherited = Math.min(d.inherited, d.principal);
+  }
   bump(run, 'stamps', Math.max(1, ceilS(amt / l.stampUnit)));
   if (id === 'shark2') bump(run, 'stamps.shark2', 1);
   run.stats.lastStampAmount = amt;
@@ -113,7 +118,11 @@ export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {
   logEvent(run, `stamp:${id}`, `${l.name}에 도장`, amt);
   const cleared = d.principal === 0;
   if (cleared) {
-    if (id === 'tax') run.taxDueIn = null;
+    if (id === 'tax') {
+      run.taxDueIn = null;
+      onTaxPaid(g);
+    }
+    returnPawn(g, id);
     notify(run, `${l.name} 완납`, 'info');
   }
   return { ok: true, paid: amt, cleared };
