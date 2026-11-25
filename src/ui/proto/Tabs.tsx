@@ -28,7 +28,7 @@ export function UpgTab() {
   };
   return (
     <div className="pr-pane">
-      <div className="pr-title"><b>공터 등급 {lvSum + 1}</b><span>강화 {lvSum}/{maxSum}</span></div>
+      <div className="pr-title"><b>집 등급 {lvSum + 1}</b><span>강화 {lvSum}/{maxSum}</span></div>
       <div className="pr-bar"><i style={{ width: `${maxSum ? (lvSum / maxSum) * 100 : 0}%` }} /></div>
       <p className="pr-note left">지금 가진 것을 더 잘 돌게 하는 강화. 살수록 값이 오른다.</p>
       {rows.map((r) => (

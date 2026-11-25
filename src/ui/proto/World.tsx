@@ -8,6 +8,7 @@ import { comma } from '../../engine/util';
 import { C, O, Dia, Cube, Room, Tent, Tree, Wheel, Hamster, Badger, Squirrel, Spiky, Round, Device } from './art';
 import { useFx, flyAcorns, flyIcons, coinSvg, tintAt, useClock } from './fx';
 import { sellFeeRate } from '../../engine/mining';
+import { houseDefs } from '../../engine/data';
 import heroFront from './img/hero_front.png';
 import heroSide from './img/hero_side.png';
 import { COLLECTOR_NAME } from './text';
@@ -168,9 +169,11 @@ export function World({ near }: { near: boolean }) {
     ) });
   }
   items.sort((a, b) => a.y - b.y);
+  const houseName = houseDefs[run.house]?.name ?? '공터 텐트';
 
   return (
-    <div className={'pr-world' + (near ? ' near' : '') + (tint.night ? ' night' : '')} aria-label="공터" role="img">
+    <div className={'pr-world' + (near ? ' near' : '') + (tint.night ? ' night' : '')} aria-label={houseName} role="img">
+      <div className="pr-place" aria-hidden="true">{houseName}</div>
       <svg viewBox="0 0 390 432" preserveAspectRatio="xMidYMax slice" className="pr-world-svg">
         <g className="pr-cam" style={{ transform: `translate(195px, 432px) scale(${cam.z}) translate(${-cam.fx}px, -432px)` }}>
         <rect x={-100} y={-300} width={590} height={700} fill={C.grass} />

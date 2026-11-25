@@ -25,7 +25,7 @@ export function checklist(g: GameState): CheckRow[] {
   const m = gate.conditions[0], d = gate.conditions[1];
   const eN = eduNeeded(g), mN = mockNeeded(g);
   return [
-    { id: 'mined', label: '채굴 실적', cur: Math.min(m.current, m.need), need: m.need, ok: m.met, where: '공터에서 쳇바퀴를 돌린다' },
+    { id: 'mined', label: '채굴 실적', cur: Math.min(m.current, m.need), need: m.need, ok: m.met, where: '집에서 쳇바퀴를 돌린다' },
     { id: 'edu', label: '사전 교육', cur: Math.min(f.edu, eN), need: eN, ok: f.edu >= eN, where: '이 앱에서 읽는다' },
     { id: 'mock', label: '모의 거래', cur: f.mock || mN === 0 ? mN : 0, need: mN, ok: f.mock || mN === 0, where: '이 앱에서 해 본다' },
     { id: 'deposit', label: '예탁금 확인', cur: Math.min(d.current, d.need), need: d.need, ok: f.open, where: '지도 → 숲속 캐피탈 창구' },

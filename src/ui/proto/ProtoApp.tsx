@@ -29,7 +29,7 @@ import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
 import './proto.css';
 
 const TABS: { id: Tab; label: string; col: string }[] = [
-  { id: 'lot', label: '공터', col: '#BCD48E' },
+  { id: 'lot', label: '집', col: '#BCD48E' },
   { id: 'people', label: '인맥', col: '#F2C9A0' },
   { id: 'upg', label: '강화', col: '#E7D27A' },
   { id: 'phone', label: '폰', col: '#9AD0C2' },

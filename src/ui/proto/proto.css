@@ -88,6 +88,8 @@
 .pa-bubble { transform-box: fill-box; transform-origin: 10% 100%; animation: popIn .3s .8s cubic-bezier(.34, 1.56, .64, 1) both; }
 .pa-firefly { animation: firefly 3s ease-in-out infinite; }
 
+/* 지금 사는 집 이름 팻말(첫 탭 = 집) */
+.pr-place { position: absolute; left: 12px; bottom: 34px; z-index: 2; padding: 2px 10px; font-weight: 700; font-size: 13px; color: var(--o); background: #F6E7C8; border: 2px solid var(--o); border-radius: 8px; pointer-events: none; }
 /* ── 공터: 아래 판 ─────────────────────────────────── */
 .pr-panel { position: relative; z-index: 2; flex: 1; min-height: 0; margin-top: -18px; display: flex; flex-direction: column; background: var(--panel); border-top: 2.5px solid var(--o); border-radius: 20px 20px 0 0; box-shadow: 0 -4px 10px rgba(40, 50, 20, .15); }
 .pr-hint { flex: 0 0 auto; height: 26px; display: flex; align-items: center; justify-content: center; font-family: var(--dsp); font-size: 14px; color: var(--red-ink); }

@@ -49,7 +49,7 @@ export function PeopleTab() {
   return (
     <div className="pr-pane">
       <div className="pr-title"><b>인맥</b><span>아는 사이 {1 + (bearMet ? 1 : 0)}명</span></div>
-      <p className="pr-note left">돈을 빌려주는 사람, 정보를 주는 사람. 알바 햄스터는 공터에서 구한다.</p>
+      <p className="pr-note left">돈을 빌려주는 사람, 정보를 주는 사람. 알바 햄스터는 집 탭에서 구한다.</p>
 
       <div className={'pr-card plc person' + (fs.broken ? ' gone' : '')}>
         <div className="plc-top"><div className="ic"><RowIcon kind="squirrel" /></div><div className="mid">

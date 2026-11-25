@@ -9,7 +9,7 @@ import { Badger, BearFace, Squirrel, O } from './art';
 import { play } from './audio';
 import { say } from './watch';
 
-const TAB_LABEL: Record<string, string> = { map: '지도', people: '인맥', upg: '강화', phone: '폰', lot: '공터' };
+const TAB_LABEL: Record<string, string> = { map: '지도', people: '인맥', upg: '강화', phone: '폰', lot: '집' };
 import heroFront from './img/hero_front.png';
 
 /** 오소리 대부 반신. win=웃음, 아니면 정색 */
