@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A young male squirrel dreamer in a hoodie, holding a phone that shows a rising chart, eager expression, full body, centered, plain solid cream background, no text, no border. Base style: pastel soft cel shading, smooth pastel colour blocks, soft two-tone cel shadows, thin light highlight, polished warm mobile game art. Variation P4: pastel but muted and greyer, subtle fur detail texture, cool cold city light from the side, more grounded and less cute.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P4_muted-grounded.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P4_muted-grounded.png.raw.png",
+  "raw_bytes": 1607494,
+  "elapsed_seconds": 51.749,
+  "model": null,
+  "session_id": "01a20e2a-288a-77e0-bd0d-330b9cf670c9",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P4.json"
+}

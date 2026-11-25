@@ -1,0 +1,23 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A young squirrel, an anxious young dreamer chasing a quick fortune, standing and holding a phone. Full body, centered, plain neutral background, no text, no border. Let the art style fully define the look; outfit and details are yours to decide in this style. Art family F3: loose pen-and-ink sketch, hatched line drawing on cream paper, quick expressive lines, sketchbook feel.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-families/F3_penink.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-families/F3_penink.png.raw.png",
+  "raw_bytes": 3203411,
+  "elapsed_seconds": 44.198,
+  "model": null,
+  "session_id": "01a20e29-06f8-70e1-af1a-9d56f6db0241",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-families/F3.json"
+}

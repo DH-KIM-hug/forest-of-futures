@@ -1,0 +1,115 @@
+{
+ "_doc": "2026-11-25 굵은 선 스타일 시험 묶음 10장: 엔딩 원인 8개 대표 + 건물 1 + 집 1. 판정 기준: 같은 캐릭터인가, 작게 봐도 읽히나, 블랙코미디로 웃긴가, 매번 비슷한 품질인가.",
+ "jobs": [
+  {
+   "id": "pilot_END-196",
+   "out": "docs/art/pilot-bold/END-196.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: Inside a small patched tent at pale blue dawn, the chipmunk just lifting its head from a blanket, staring at a little phone screen that lit up by itself at the pillow showing a plunging red chart line and a red warning banner shape."
+  },
+  {
+   "id": "pilot_END-074",
+   "out": "docs/art/pilot-bold/END-074.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: A grey village square, the chipmunk frozen stiff holding a sheet of paper, a big speech bubble from the shadow of a large bear giving a thumbs-up at the edge of the frame, and a wooden chart board behind showing a line crashing downward."
+  },
+  {
+   "id": "pilot_END-092",
+   "out": "docs/art/pilot-bold/END-092.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: A grey dawn fishing harbour, the chipmunk in an oversized orange work raincoat on the deck of an old fishing boat holding a mop, a folded contract paper left on the wooden pier with a stone on it."
+  },
+  {
+   "id": "pilot_END-003",
+   "out": "docs/art/pilot-bold/END-003.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: In front of a small log cabin under cold white light, the chipmunk sitting slumped on the doorstep, a blank auction notice paper nailed to the door and a big brown envelope on the ground."
+  },
+  {
+   "id": "pilot_END-134",
+   "out": "docs/art/pilot-bold/END-134.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: At night in front of a huge dark wooden gate of an old mansion, the tiny chipmunk standing small, a mailbox overflowing with bills and reminder envelopes."
+  },
+  {
+   "id": "pilot_END-051",
+   "out": "docs/art/pilot-bold/END-051.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: An empty dirt work yard, the chipmunk standing with paws down watching the back of a small wooden seizure cart rolling away, the cart carrying burlap acorn sacks with red seizure tags on them."
+  },
+  {
+   "id": "pilot_END-144",
+   "out": "docs/art/pilot-bold/END-144.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: Evening in front of a closed round wooden door of a friend's burrow house, the chipmunk standing alone holding a little note that was slipped in the door gap, the windows dark."
+  },
+  {
+   "id": "pilot_END-024",
+   "out": "docs/art/pilot-bold/END-024.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Game ending card illustration, portrait 3:4, medium-close shot: the chipmunk is the clear focus and fills about half of the image height, 1 or 2 story props, simple uncluttered background. The world and background are in cool blue and grey tones while the chipmunk stays warm orange. Tragic and quietly funny, deadpan; no blood, no injury, no dead bodies; no text, no letters, no numbers on any paper or sign. Scene: A rain-washed clearing with an old patched tent, the chipmunk holding an official envelope letter, a bark mailbox stuffed with three months of reminder letters."
+  },
+  {
+   "id": "pilot_shark1",
+   "out": "docs/art/pilot-bold/bld_shark1.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "chroma_key": "magenta",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped, same camera and ground patch as the reference building. No characters, no text, no letters, no numbers, every sign is a blank plate. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the subject. Subject: a shabby old two-storey log loan office with an outside wooden staircase to the second floor door, a dim yellow-lit window with half-closed blinds, a hanging blank wooden signboard, a boarded-up ground floor, a rain barrel, moss on the roof."
+  },
+  {
+   "id": "pilot_tent",
+   "out": "docs/art/pilot-bold/house_0_tent.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "chroma_key": "magenta",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a cozy temperate forest village of animals (oak and beech trees, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped, same camera and ground patch as the reference building. No characters, no text, no letters, no numbers, every sign is a blank plate. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the subject. Subject: the poorest home: a small patched canvas tent under a leafy oak tree, a tiny campfire pot, a wooden crate table, a small wooden mailbox, ferns and rocks."
+  }
+ ]
+}

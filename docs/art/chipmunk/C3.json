@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks, no outlines, cute chubby CHIPMUNK (not a squirrel): orange-tan fur with dark brown stripes running along the back and head, cream belly, small round ears, cheek pouches slightly puffed, short bushy tail. Standing upright on two legs like a small character, expressive face with eyebrows and a small knowing smile. Full body, centered, plain solid cream background, no text, no border. Variant C3: a small red neck ribbon as the only accessory, eyebrows raised eagerly, tail curled.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk/C3_ribbon.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk/C3_ribbon.png.raw.png",
+  "raw_bytes": 1375826,
+  "elapsed_seconds": 46.53,
+  "model": null,
+  "session_id": "01a20e34-e143-7cd2-b780-a29539786be1",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>선물의 숲 그림체 계열 비교</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>그림체 계열 4종 비교</h1>
+  <p class="lead">이번에는 캐릭터 디자인을 고정하지 않고, 그림체 계열 자체가 다른 4가지로 뽑았습니다. 같은 캐릭터가 계열에 따라 어떻게 달라지는지 보는 용도입니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="F1_pixel16.png" alt="F1 16비트 픽셀">
+      <figcaption><span class="tag">F1</span>16비트 픽셀아트<div class="desc">레트로 휴대용 게임 느낌. 작은 화면에서 강함.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="F2_clay3d.png" alt="F2 클레이 3D">
+      <figcaption><span class="tag">F2</span>클레이 3D<div class="desc">무광 점토 질감, 스톱모션 인형 느낌.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="F3_penink.png" alt="F3 펜화 스케치">
+      <figcaption><span class="tag">F3</span>펜화 스케치<div class="desc">빠른 선과 해칭. 손으로 그린 메모 같은 질감.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="F4_oil.png" alt="F4 유화">
+      <figcaption><span class="tag">F4</span>유화<div class="desc">두꺼운 붓터치와 명암 대비. 가장 무겁고 드라마틱.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 빚과 파산의 무게를 담는지, 방치형 화면에서 읽히는지, 개발과 생산 부담이 맞는지.
+    계열 하나를 고르면 그 계열 안에서 캐릭터 디자인을 다시 잡고 표정 5종을 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

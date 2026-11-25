@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, smooth pastel color blocks, soft two-tone cel shadows, a thin light highlight, polished warm mobile game character art. Same character as the reference image: orange-brown squirrel with cream muzzle and belly, round chubby body, big dark eyes, rough tan patched tunic. Full body, centered, same size and proportions as the reference, plain solid cream background, no text, no border. Expression: crying, tears streaming down, sad downturned mouth, hunched shoulders, holding a torn leaf piece.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-expressions/04_crying.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-expressions/04_crying.png.raw.png",
+  "raw_bytes": 1393817,
+  "elapsed_seconds": 50.154,
+  "model": null,
+  "session_id": "01a20e1b-651c-72a2-83d5-15c9fd469917",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

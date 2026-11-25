@@ -1,0 +1,27 @@
+{
+ "_doc": "2026-11-25 사용자 요청: 바위 매달려 바다로, 닭모이 분쇄기 직전. 만화식 '직전' 장면, 강요된 상황이 분명하게(자살로 읽히지 않게), 피·부상 없음",
+ "jobs": [
+  {
+   "id": "rocks_sea",
+   "out": "docs/art/style-bold/despair/rocks_sea.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Game ending card illustration, portrait 3:4. Classic cartoon gangster black-comedy trope, the moment BEFORE, exaggerated slapstick tension like an old cartoon; no blood, no injury, no gore, no death shown, no text. The world is in cool blue and grey, the chipmunk stays warm orange. Scene: night on dark choppy sea, a small wooden boat. The chipmunk is wrapped in a coil of rope with several round grey rocks tied to it, tipping backwards over the edge of the boat, eyes wide in horror with tears flying, mouth open in a scream. Two big badger thugs in dark suits on the boat, one giving a lazy shove with a paw, the other reading a debt ledger with a flashlight. Clearly forced by the thugs. "
+  },
+  {
+   "id": "feed_grinder",
+   "out": "docs/art/style-bold/despair/feed_grinder.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Game ending card illustration, portrait 3:4. Classic cartoon gangster black-comedy trope, the moment BEFORE, exaggerated slapstick tension like an old cartoon; no blood, no injury, no gore, no death shown, no text. The world is in cool blue and grey, the chipmunk stays warm orange. Scene: inside a dim chicken farm barn at night, a big old rusty chicken-feed grinder machine with a wide funnel hopper on top (blades not visible, closed metal machine). A big badger thug in a dark suit holds the chipmunk up by its red neck ribbon, dangling it above the open hopper; the chipmunk flails its little legs, eyes brimming with tears, sweat drops flying, mouth in a trembling wail. A few chickens watch blankly. Clearly forced by the thug. "
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A young male red squirrel, a restless debt-ridden university-age dreamer: worn hoodie over a plain shirt, a phone in hand showing a falling chart, tired but eager eyes. Keep it a squirrel with realistic fur, not a cute mascot. Full body, centered, plain neutral background, no text, no border. Style R2: gritty noir ink illustration, limited palette of warm grey with one muted orange accent, heavy line work, editorial graphic novel look.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R2_noir-ink.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R2_noir-ink.png.raw.png",
+  "raw_bytes": 2669428,
+  "elapsed_seconds": 43.429,
+  "model": null,
+  "session_id": "01a20e27-34d2-76d0-94f8-08d58924599e",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

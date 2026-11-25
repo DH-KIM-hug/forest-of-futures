@@ -1,0 +1,49 @@
+{
+ "_doc": "2026-11-25 사용자 '표정이 더 절망적이어야' → 절망 표정 범위 시험 4종",
+ "jobs": [
+  {
+   "id": "d1_tears",
+   "out": "docs/art/style-bold/despair/d1_tears.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "chroma_key": "magenta",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Keep it cute and simple. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks. Expression: utter despair, big glossy dot eyes brimming with tears that are about to spill, trembling wavy mouth line, a drip of snot, eyebrows tilted up in anguish. Pose: kneeling on the ground, paws limp in the lap, shoulders slumped. Full body, centered, no text. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the character."
+  },
+  {
+   "id": "d2_hollow",
+   "out": "docs/art/style-bold/despair/d2_hollow.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "chroma_key": "magenta",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Keep it cute and simple. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks. Expression: hollow empty white eyes with no pupils, mouth slightly open, a dark shadow under the eyes, completely broken and dazed. Pose: sitting with legs out, back hunched, ribbon loose and crooked. Full body, centered, no text. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the character."
+  },
+  {
+   "id": "d3_forced",
+   "out": "docs/art/style-bold/despair/d3_forced.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "chroma_key": "magenta",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Keep it cute and simple. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks. Expression: a forced trembling smile while tears stream down the cheeks, many cold sweat drops, eyes squeezed into upside-down arcs. Pose: standing stiffly holding up a tiny white flag of surrender. Full body, centered, no text. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the character."
+  },
+  {
+   "id": "d4_wail",
+   "out": "docs/art/style-bold/despair/d4_wail.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "chroma_key": "magenta",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Keep it cute and simple. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks. Expression: wailing loudly, mouth wide open in a big sob, two streams of tears, eyes shut tight. Pose: lying face-down hugging an empty burlap acorn sack. Full body, centered, no text. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the character."
+  }
+ ]
+}

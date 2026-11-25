@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>선물의 숲 현실풍 그림체 시안</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>현실풍 그림체 시안 4종</h1>
+  <p class="lead">다람쥐 캐릭터는 그대로 두고 그림체만 바꿨습니다. 젊은 남성, 후드, 휴대폰으로 차트를 보는 장면으로 통일했습니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="R1_watercolor-real.png" alt="R1 사실적 수채">
+      <figcaption><span class="tag">R1</span>사실적 수채<div class="desc">차분한 자연색, 결이 살아 있는 붓터치. 진지한 톤.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="R2_noir-ink.png" alt="R2 누아르 잉크">
+      <figcaption><span class="tag">R2</span>누아르 잉크<div class="desc">흑백에 가까운 색, 강한 선. 빚과 파산의 무게를 가장 세게 보여 줌.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="R3_3d-semireal.png" alt="R3 준실사 3D">
+      <figcaption><span class="tag">R3</span>준실사 3D<div class="desc">부드러운 스튜디오 조명, 털과 옷감 디테일. 시네마틱.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="R4_webtoon-real.png" alt="R4 리얼 웹툰">
+      <figcaption><span class="tag">R4</span>리얼 웹툰<div class="desc">깔끔한 선, 차가운 도시 조명. 표정과 연출이 살아 있음.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 현실 세계관에 맞는지, 파산과 빚의 무게가 느껴지는지, 방치형 UI 위에서도 읽히는지.
+    하나 고르면 그 그림체를 스타일 고정문으로 동결하고 표정 5종을 다시 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

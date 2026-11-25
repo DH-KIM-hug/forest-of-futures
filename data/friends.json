@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "_doc": "대출 사다리 5단계. 이자는 없지만 신뢰가 깎인다. 마을의 '친구네 골목'에 집 5채로 놓인다.",
+  "friends": [
+    {
+      "id": "squirrel",
+      "name": "단짝 다람쥐",
+      "species": "다람쥐",
+      "relation": "어릴 때부터 단짝",
+      "maxLoan": 50000,
+      "borrowUnit": 25000,
+      "stampUnit": 5000,
+      "onBreak": "forgive",
+      "breakLine": "빚은 안 갚아도 돼. 대신 다시는 연락하지 마."
+    },
+    {
+      "id": "raccoon",
+      "name": "절친 너구리",
+      "species": "너구리",
+      "relation": "가장 친한 친구",
+      "maxLoan": 100000,
+      "borrowUnit": 50000,
+      "stampUnit": 10000,
+      "onBreak": "sellClaim",
+      "breakLine": "너한테 실망했다. 다시는 연락하지 마라."
+    },
+    {
+      "id": "rabbit",
+      "name": "이웃 토끼",
+      "species": "토끼",
+      "relation": "10년 지기 이웃",
+      "maxLoan": 150000,
+      "borrowUnit": 75000,
+      "stampUnit": 15000,
+      "onBreak": "sellClaim",
+      "breakLine": "우리 우정은 여기까지야."
+    },
+    {
+      "id": "fox",
+      "name": "여우 선배",
+      "species": "여우",
+      "relation": "잘나가는 선배",
+      "maxLoan": 300000,
+      "borrowUnit": 150000,
+      "stampUnit": 30000,
+      "onBreak": "sellClaim",
+      "breakLine": "경비실에 얘기해 뒀다. 찾아오지 마."
+    },
+    {
+      "id": "bear",
+      "name": "곰 형",
+      "species": "곰",
+      "relation": "동네 형",
+      "maxLoan": 600000,
+      "borrowUnit": 300000,
+      "stampUnit": 60000,
+      "onBreak": "sellClaim",
+      "breakLine": "형이라고 부르지 마라."
+    }
+  ],
+  "rules": {
+    "trustStart": 100,
+    "trustMax": 100,
+    "minTrustToBorrow": 40,
+    "trustPerBorrow": -20,
+    "dueCycles": 5,
+    "trustPerOverdueSettlement": -20,
+    "trustPerStamp": 5,
+    "trustOnFullRepay": 20,
+    "trustRecoveryPerCleanSettlement": 2,
+    "contactCollectionTrustPerSettlement": -30,
+    "interestRate": 0,
+    "borrow": "신뢰 >= minTrustToBorrow 이고 잔액 + borrowUnit <= maxLoan 일 때 빌릴 수 있다. 조건이 안 되면 거절하고 friendRefusals +1. 잔액이 0에서 처음 생긴 정산 회차를 기준으로 dueCycles 뒤가 갚기로 한 날.",
+    "overdue": "갚기로 한 날이 지난 뒤 잔액이 남아 있으면 정산마다 신뢰 -20, odFriends +1.",
+    "break": "신뢰가 0 이하가 되면 절교. 그 회차 동안 그 집 문은 닫힌다. friendsBroken +1, brokenFriendIds에 추가. onBreak가 sellClaim이면 남은 잔액을 독사 대부 원금으로 옮기고(claimsSold += 잔액, 선이자 없음) 독사 골목을 연다. forgive면 잔액을 0으로 지운다.",
+    "socialBankruptcy": "friendsBroken >= balance.json bankruptcy.friendsBrokenLimit(3) 이면 다음 정산 때 원인 'friends'로 파산한다."
+  }
+}

@@ -1,0 +1,16 @@
+{
+ "_doc": "2026-11-25 사용자 요청: 뒷산에 파묻히는 모습(직전, 강요가 분명하게)",
+ "jobs": [
+  {
+   "id": "buried_hill",
+   "out": "docs/art/style-bold/despair/buried_hill.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Game ending card illustration, portrait 3:4. Classic cartoon gangster black-comedy trope, the moment BEFORE, exaggerated slapstick tension like an old cartoon; no blood, no injury, no gore, no death shown, no text. The world is in cool blue and grey, the chipmunk stays warm orange. Scene: night on a lonely wooded hillside behind the village under a pale moon. The chipmunk stands waist-deep in a freshly dug hole, only its upper body sticking out of the dirt, tears brimming in its dot eyes, mouth trembling, paws pressed together begging. Two big badger thugs in dark suits with shovels are tossing dirt into the hole, one yawning; a lantern on the ground and a parked old truck at the edge. Clearly forced by the thugs. "
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, smooth pastel color blocks, soft two-tone cel shadows, a thin light highlight, polished warm mobile game character art. Same species and style as the reference image: orange-brown squirrel with cream muzzle and belly, big dark eyes, round chubby body. Full body, centered, plain solid cream background, no text, no border. Calm neutral face. Design variant V1: poor squirrel wearing a rough tan patched tunic, carrying a small woven acorn bag on one shoulder.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-variants/V1_bag.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-variants/V1_bag.png.raw.png",
+  "raw_bytes": 1413500,
+  "elapsed_seconds": 48.504,
+  "model": null,
+  "session_id": "01a20e1d-2e0a-7590-8b97-40ad97f4326d",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks, the chubby cute squirrel from the reference image (same character, same proportions, cute face kept). The scene is harsh and realistic in its consequences: dark cold muted background tones, shadowy debt-collector silhouettes, real ruin shown plainly. No blood, no gore, no injuries, no text, no captions. The cute squirrel contrasts with the grim situation. Ending END-180 'dropped to the street': the cute squirrel sits on cold pavement with an empty wallet and a cardboard sign, rain falling, a dark city street behind, the stillness of ruin.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E180_street.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E180_street.png.raw.png",
+  "raw_bytes": 2235751,
+  "elapsed_seconds": 66.856,
+  "model": null,
+  "session_id": "01a20e2f-1ff7-7e51-a490-4cc786a1b4bb",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E180.json"
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>칩멍크 2D 플랫 시안</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 760px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>칩멍크 2D 플랫 시안</h1>
+  <p class="lead">비율은 코지 3D 시안과 같고, 2D 플랫 일러스트로 그렸습니다. 입체 질감과 광택은 뺐습니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="Z2_flat-phone.png" alt="Z2 휴대폰 들기 2D">
+      <figcaption><span class="tag">Z2</span>휴대폰 들기<div class="desc">휴대폰으로 차트를 보는 핵심 행동. 플랫 색면과 간단한 셀 그림자.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="Z3_flat-ribbon.png" alt="Z3 빨간 목끈 2D">
+      <figcaption><span class="tag">Z3</span>빨간 목끈<div class="desc">포인트 소품은 목끈 하나. 들뜬 표정.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 3D 같은 부피감 없이도 귀엽게 읽히는지, 소품 하나가 충분히 포인트가 되는지.
+    나머지 두 자세(맨몸, 두 손 모음)는 한도가 풀리거나 다른 생성 방법을 정한 뒤 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

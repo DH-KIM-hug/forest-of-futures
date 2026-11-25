@@ -1,0 +1,99 @@
+{
+ "_doc": "2026-11-25 시험 묶음 2차: endings_direction.csv의 새 연출(결과 뒤의 삶 + 절망 표정)로 8장 다시",
+ "jobs": [
+  {
+   "id": "p2_END-003",
+   "out": "docs/art/pilot-bold-v2/END-003.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png",
+    "docs/art/style-bold/despair/d1_tears.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. wide shot, small figure; a cute round chipmunk with dot eyes; seen from behind looking in through the window of what used to be its own place, warm light inside, cold outside; a log cabin lit by its new owner, a stranger flowerpot on the sill; face seen reflected in the window glass: dot eyes each with a big teardrop welling at the lower rim, tiny wobbling mouth; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-024",
+   "out": "docs/art/pilot-bold-v2/END-024.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png",
+    "docs/art/style-bold/despair/d1_tears.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. close-up; a small child chipmunk; a small child chipmunk standing alone hugging a debt ledger as tall as itself, the parent absent; a bark mailbox by an old tent, the mother unused teacup on a crate; face: dot eyes each with a big teardrop welling at the lower rim, tiny wobbling mouth; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-051",
+   "out": "docs/art/pilot-bold-v2/END-051.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png",
+    "docs/art/style-bold/despair/d4_wail.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. close-up; a cute round chipmunk with dot eyes; crouched picking up acorn crumbs others dropped on an emptied market ground; gathering acorns into the hem of its shirt because its sack is gone, the seizure cart rolling away behind; face: tears streaming in two lines, a small drop of snot, mouth wide open in a wail; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-074",
+   "out": "docs/art/pilot-bold-v2/END-074.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png",
+    "docs/art/style-bold/despair/d4_wail.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. close-up; a cute round chipmunk with dot eyes; scrubbing the floor of a shop that belongs to someone else; the bear friend own shop, the bear cheerfully pointing at a chart for a new customer, a cardboard-box bed behind the counter; face: tears streaming in two lines, a small drop of snot, mouth wide open in a wail; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-092",
+   "out": "docs/art/pilot-bold-v2/END-092.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. wide shot, small figure; a cute round chipmunk with dot eyes; hauling a wet net on a deep-sea fishing boat deck, months into the voyage, numbered work vest; tally marks crowding the deck post, nothing but horizon, harbor long gone; face: dot eyes with dark hatched shadows beneath, mouth a short line pulled down at both ends; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-134",
+   "out": "docs/art/pilot-bold-v2/END-134.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. wide shot, small figure; a cute round chipmunk with dot eyes; huddled in the rain beside its household goods dumped on the street; outside the great gate its parents kept all their lives, a wardrobe and a family photo frame soaking in the rain, auction notice on the gate; face: dot eyes, mouth drawn as a wavy trembling line, cheeks tight; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-144",
+   "out": "docs/art/pilot-bold-v2/END-144.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png",
+    "docs/art/style-bold/despair/d1_tears.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. close-up; a cute round chipmunk with dot eyes; sitting slumped against a door that will not open, unlit window, late night; the best friend dark house, a bowl of acorn porridge gone cold on the step, frost gathered overnight; face: dot eyes each with a big teardrop welling at the lower rim, tiny wobbling mouth; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  },
+  {
+   "id": "p2_END-196",
+   "out": "docs/art/pilot-bold-v2/END-196.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png",
+    "docs/art/style-bold/despair/d2_hollow.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Setting is a temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus. Game ending card illustration, portrait 3:4. The world in cool blue and grey tones, the chipmunk stays warm orange. Despairing but still cute; no blood, no injury, no dead bodies; no text, no letters, no numbers. close-up; a cute round chipmunk with dot eyes; lying in a cardboard-box bed under a bridge at night; a cardboard box covered with its old tent sheet, a dead screen kept by the pillow, dunning letters stuffed in the gaps against the wind, pre-dawn frost; face: blank white circle eyes with no pupils, small slack mouth; bold black outline style, character in warm colors against a cold desaturated background; no blood, no wounds, no text"
+  }
+ ]
+}

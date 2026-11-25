@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks, no outlines, cute chubby squirrel. A middle point between animal and character: standing upright on two legs like a small character, chubby round body, bushy tail, a readable expressive face with eyebrows and a small knowing smile. Full body, centered, plain solid cream background, no text, no border. Variant M1: no clothes at all, just the squirrel's own fur, one paw resting on its hip, expressive half-smile.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-middle/M1_upright-bare.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-middle/M1_upright-bare.png.raw.png",
+  "raw_bytes": 1308444,
+  "elapsed_seconds": 39.323,
+  "model": null,
+  "session_id": "01a20e31-f242-74b1-959e-ba974f3cedce",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

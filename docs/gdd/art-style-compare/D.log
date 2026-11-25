@@ -1,0 +1,23 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A cute squirrel character, a poor small squirrel with a calm neutral face, standing in front of a simple leaf tent in a quiet forest clearing. Simple background: a few round trees and grass. Cute pastel storybook mood for a mobile game. Full body, centered, same composition and proportions. Plain solid light cream background, no text, no border. Style: pastel soft cel shading. Smooth pastel color blocks with soft two-tone cel shadows, a thin light highlight, gentle and warm, polished mobile game character art.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png.raw.png",
+  "raw_bytes": 1584498,
+  "elapsed_seconds": 45.309,
+  "model": null,
+  "session_id": "01a20e16-8f7e-7b71-8948-bcaa310ed41f",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D.json"
+}

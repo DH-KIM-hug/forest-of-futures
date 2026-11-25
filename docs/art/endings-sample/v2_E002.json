@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks, the chubby cute squirrel from the reference image (same character, same proportions, cute face kept). The scene is harsh and realistic in its consequences: dark cold muted background tones, shadowy debt-collector silhouettes, real ruin shown plainly. No blood, no gore, no injuries, no text, no captions. The cute squirrel contrasts with the grim situation. Ending END-002 'house seized': the cute squirrel stands alone on a doorstep as a large official seizure notice is pasted over a dark golden gate, belongings in a small bag, the sky grey.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E002_seized.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E002_seized.png.raw.png",
+  "raw_bytes": 2262626,
+  "elapsed_seconds": 79.012,
+  "model": null,
+  "session_id": "01a20e2f-1ff7-7ce3-b894-e85caf299b57",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

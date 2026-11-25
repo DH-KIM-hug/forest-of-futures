@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, smooth pastel color blocks, soft two-tone cel shadows, a thin light highlight, polished warm mobile game character art. Same species and style as the reference image: orange-brown squirrel with cream muzzle and belly, big dark eyes, round chubby body. Full body, centered, plain solid cream background, no text, no border. Calm neutral face. Design variant V2: squirrel with a red knitted scarf and a worn straw hat, otherwise same tan patched tunic.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-variants/V2_scarf-hat.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-variants/V2_scarf-hat.png.raw.png",
+  "raw_bytes": 1428194,
+  "elapsed_seconds": 47.357,
+  "model": null,
+  "session_id": "01a20e1d-2e0a-7231-a2cf-84af45bb4673",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-variants/V2.json"
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks, the chubby cute squirrel from the reference image (same character, same proportions, cute face kept). The scene is harsh and realistic in its consequences: dark cold muted background tones, shadowy debt-collector silhouettes, real ruin shown plainly. No blood, no gore, no injuries, no text, no captions. The cute squirrel contrasts with the grim situation. Ending END-042 'contacts leaked': the cute squirrel sits in a dark room, phone screen glowing with a flood of hostile messages from friends, a shadowy snake silhouette watching from the doorway.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E042_exposed.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/v2_E042_exposed.png.raw.png",
+  "raw_bytes": 1942709,
+  "elapsed_seconds": 69.361,
+  "model": null,
+  "session_id": "01a20e2f-1ff7-72d2-ab6d-7a0cf9b33723",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

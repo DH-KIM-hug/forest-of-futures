@@ -1,0 +1,23 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A young male red squirrel, a restless debt-ridden university-age dreamer: worn hoodie over a plain shirt, a phone in hand showing a falling chart, tired but eager eyes. Keep it a squirrel with realistic fur, not a cute mascot. Full body, centered, plain neutral background, no text, no border. Style R3: semi-realistic 3D render, soft studio lighting, detailed fur and fabric, shallow depth of field, cinematic but calm.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R3_3d-semireal.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R3_3d-semireal.png.raw.png",
+  "raw_bytes": 2228321,
+  "elapsed_seconds": 45.59,
+  "model": null,
+  "session_id": "01a20e27-34d2-7120-99f2-d67fba403048",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R3.json"
+}

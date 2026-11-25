@@ -1,0 +1,47 @@
+{
+ "_doc": "2026-11-25 굵은 선 스타일 기준 그림 시험(탐욕·파산 표정, 은행, 엔딩 1장)",
+ "jobs": [
+  {
+   "id": "bx_greed",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines, bright fresh yellow-green, lime, warm orange and sky-blue palette. Pose: leaning forward, both paws pressing a big round button, eyes turned into tiny shiny acorn shapes, a single bead of sweat, mouth a thin excited grin; greedy trader moment. Full body, centered, plenty of margin, no text. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the character.",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "out": "docs/art/style-bold/bx_greed.png",
+   "transparent": true,
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bx_bankrupt",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines, bright fresh yellow-green, lime, warm orange and sky-blue palette. Pose: sitting on the ground hugging knees, a red paper seizure tag stuck on the ribbon, dot eyes blank and staring forward, a tiny gray cloud above the head; totally dazed after going bankrupt, still cute, no tears flood, no injury. Full body, centered, plenty of margin, no text. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the character.",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "out": "docs/art/style-bold/bx_bankrupt.png",
+   "transparent": true,
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bx_bank",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines, bright fresh yellow-green, lime, warm orange and sky-blue palette. Subject: the forest village's bank, a sturdy cut tree stump building with clean stone columns, a heavy wooden door, a small ticket-number lamp by the door, tidy and cold-looking, three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters, no text, no letters, no numbers, blank signboard. Background: one perfectly flat uniform pure magenta (#FF00FF). Do not use magenta or pink on the subject.",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg"
+   ],
+   "out": "docs/art/style-bold/bx_bank.png",
+   "transparent": true,
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bx_ending",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon; very simple deadpan face with tiny black dot eyes, small black nose, tiny mouth line, no blush. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines, bright fresh yellow-green, lime, warm orange and sky-blue palette. Scene for a game ending card, portrait 3:4: in heavy rain at night, the chipmunk stands holding a torn patched tent canvas outside a small forest bank whose door is shut, a red seizure notice pinned on the tent pole, puddles and moss on beige dirt, cool blue and grey world colours while the chipmunk stays warm orange; deadpan face, tragic but quietly funny, no blood, no injury, no text.",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "out": "docs/art/style-bold/bx_ending.png",
+   "transparent": false
+  }
+ ]
+}

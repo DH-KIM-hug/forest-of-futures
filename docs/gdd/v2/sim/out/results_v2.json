@@ -1,0 +1,1395 @@
+{
+ "runs": 2000,
+ "exp1": [
+  {
+   "policy": "idle",
+   "bankruptDay1": 100,
+   "bankrupt": 100,
+   "bkQ": [
+    153,
+    167,
+    245
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 0,
+   "medBlack": null,
+   "medEndNWAlive": null,
+   "rich1m": 0,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SHARK": 100
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "labor_normal",
+   "bankruptDay1": 100,
+   "bankrupt": 100,
+   "bkQ": [
+    78,
+    157,
+    169
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 0,
+   "medBlack": null,
+   "medEndNWAlive": null,
+   "rich1m": 0,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "BANK": 100
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "engine_casual",
+   "bankruptDay1": 0.4,
+   "bankrupt": 17.9,
+   "bkQ": [
+    571,
+    789,
+    1255
+   ],
+   "debtFree": 31.1,
+   "medDebtFree": 1199,
+   "black": 68.8,
+   "medBlack": 730,
+   "medEndNWAlive": 54717.268701782246,
+   "rich1m": 0.3,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 17.9
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "engine_normal",
+   "bankruptDay1": 0.2,
+   "bankrupt": 0.2,
+   "bkQ": [
+    233,
+    302,
+    305
+   ],
+   "debtFree": 99.8,
+   "medDebtFree": 718,
+   "black": 99.8,
+   "medBlack": 240,
+   "medEndNWAlive": 1021725.3074208633,
+   "rich1m": 54.1,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 0.2
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "engine_day1",
+   "bankruptDay1": 0.1,
+   "bankrupt": 0.1,
+   "bkQ": [
+    233,
+    239,
+    239
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 92.8,
+   "medBlack": 238,
+   "medEndNWAlive": -98790.30670110462,
+   "rich1m": 0,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 0.1
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "mine_hold",
+   "bankruptDay1": 0.2,
+   "bankrupt": 0.2,
+   "bkQ": [
+    247,
+    298,
+    300
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 99.9,
+   "medBlack": 301,
+   "medEndNWAlive": 666404.1829354801,
+   "rich1m": 2.2,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 0.2
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "mine_hold_doge",
+   "bankruptDay1": 0.4,
+   "bankrupt": 0.4,
+   "bkQ": [
+    235,
+    248,
+    304
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 99.6,
+   "medBlack": 299,
+   "medEndNWAlive": 684095.6075124228,
+   "rich1m": 2.2,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 0.4
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "bankruptDay1": 0.2,
+   "bankrupt": 0.2,
+   "bkQ": [
+    245,
+    246,
+    306
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 99.9,
+   "medBlack": 472,
+   "medEndNWAlive": 628375.2271643531,
+   "rich1m": 0.8,
+   "medTrades": 7,
+   "medTradePnl": 64.38954748593096,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 0.2
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "expander",
+   "bankruptDay1": 0.6,
+   "bankrupt": 18.4,
+   "bkQ": [
+    560,
+    791,
+    1259
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 68.9,
+   "medBlack": 731,
+   "medEndNWAlive": 27939.459510331973,
+   "rich1m": 3.5,
+   "medTrades": 0,
+   "medTradePnl": 0,
+   "liqsPerRun": 0,
+   "liqsOfflinePct": null,
+   "causes": {
+    "SEIZE": 18.4
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "mixed_reader",
+   "bankruptDay1": 0.2,
+   "bankrupt": 0.2,
+   "bkQ": [
+    232,
+    247,
+    249
+   ],
+   "debtFree": 99.8,
+   "medDebtFree": 785,
+   "black": 99.8,
+   "medBlack": 240,
+   "medEndNWAlive": 724159.4263739069,
+   "rich1m": 21.8,
+   "medTrades": 6,
+   "medTradePnl": -24228,
+   "liqsPerRun": 0.42,
+   "liqsOfflinePct": 93.4,
+   "causes": {
+    "SEIZE": 0.2
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "mixed_bold",
+   "bankruptDay1": 0,
+   "bankrupt": 0.2,
+   "bkQ": [
+    482,
+    552,
+    727
+   ],
+   "debtFree": 96.5,
+   "medDebtFree": 969,
+   "black": 100,
+   "medBlack": 240,
+   "medEndNWAlive": 526002.7237939783,
+   "rich1m": 10.5,
+   "medTrades": 25,
+   "medTradePnl": -97222.40793530425,
+   "liqsPerRun": 17.72,
+   "liqsOfflinePct": 93.2,
+   "causes": {
+    "TIP": 0.2
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "trader_swing",
+   "bankruptDay1": 89,
+   "bankrupt": 100,
+   "bkQ": [
+    236,
+    298,
+    482
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 0,
+   "medBlack": null,
+   "medEndNWAlive": null,
+   "rich1m": 0,
+   "medTrades": 2,
+   "medTradePnl": -2003.4753095176854,
+   "liqsPerRun": 0.03,
+   "liqsOfflinePct": 100,
+   "causes": {
+    "BANK": 5.9,
+    "SHARK": 90.5,
+    "TIP": 3.7
+   },
+   "offlineEnd": 1.2
+  },
+  {
+   "policy": "trader_only",
+   "bankruptDay1": 84.7,
+   "bankrupt": 99.6,
+   "bkQ": [
+    162,
+    249,
+    489
+   ],
+   "debtFree": 0.5,
+   "medDebtFree": 559,
+   "black": 0,
+   "medBlack": null,
+   "medEndNWAlive": 110181.27312386084,
+   "rich1m": 0.1,
+   "medTrades": 7,
+   "medTradePnl": -23747.375923094267,
+   "liqsPerRun": 0.35,
+   "liqsOfflinePct": 93.9,
+   "causes": {
+    "SHARK": 71.9,
+    "TIP": 20.8,
+    "BANK": 6.9
+   },
+   "offlineEnd": 5.4
+  },
+  {
+   "policy": "trader_200",
+   "bankruptDay1": 92,
+   "bankrupt": 99.4,
+   "bkQ": [
+    27,
+    168,
+    327
+   ],
+   "debtFree": 0.7,
+   "medDebtFree": 244,
+   "black": 0,
+   "medBlack": null,
+   "medEndNWAlive": 53542.16326314348,
+   "rich1m": 0.1,
+   "medTrades": 5,
+   "medTradePnl": -40276.95967193836,
+   "liqsPerRun": 3.88,
+   "liqsOfflinePct": 90.5,
+   "causes": {
+    "SHARK": 37.2,
+    "TIP": 61.2,
+    "BANK": 1.1
+   },
+   "offlineEnd": 55
+  },
+  {
+   "policy": "tip_believer",
+   "bankruptDay1": 1,
+   "bankrupt": 17.3,
+   "bkQ": [
+    557,
+    784,
+    1212
+   ],
+   "debtFree": 5.4,
+   "medDebtFree": 1208,
+   "black": 68.8,
+   "medBlack": 729,
+   "medEndNWAlive": -48963.683247014706,
+   "rich1m": 0,
+   "medTrades": 8,
+   "medTradePnl": 0,
+   "liqsPerRun": 4.62,
+   "liqsOfflinePct": 98,
+   "causes": {
+    "SEIZE": 17.2,
+    "TIP": 0.1
+   },
+   "offlineEnd": 0
+  },
+  {
+   "policy": "reckless_200",
+   "bankruptDay1": 99.5,
+   "bankrupt": 100,
+   "bkQ": [
+    4,
+    11,
+    170
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 0,
+   "medBlack": null,
+   "medEndNWAlive": null,
+   "rich1m": 0.3,
+   "medTrades": 1,
+   "medTradePnl": -55471.20000000008,
+   "liqsPerRun": 0.72,
+   "liqsOfflinePct": 85.9,
+   "causes": {
+    "LIQ": 64.7,
+    "SHARK": 35.4
+   },
+   "offlineEnd": 56.1
+  },
+  {
+   "policy": "greedy",
+   "bankruptDay1": 0,
+   "bankrupt": 0.8,
+   "bkQ": [
+    713,
+    1036,
+    1127
+   ],
+   "debtFree": 0,
+   "medDebtFree": null,
+   "black": 100,
+   "medBlack": 169,
+   "medEndNWAlive": 199622.56981875,
+   "rich1m": 11.4,
+   "medTrades": 27,
+   "medTradePnl": -206180.16099800996,
+   "liqsPerRun": 17.32,
+   "liqsOfflinePct": 93.7,
+   "causes": {
+    "TIP": 0.8
+   },
+   "offlineEnd": 0
+  }
+ ],
+ "exp2": [
+  {
+   "id": "wire_break",
+   "name": "속보: 고가·저가 갱신 + 거래량 급증",
+   "n": 792,
+   "win": 24.2,
+   "stopped": 75.3,
+   "roe": -16.1,
+   "first": -15.1,
+   "second": -17.3,
+   "reverse": -16.8
+  },
+  {
+   "id": "wire_flow",
+   "name": "속보: 대량 매수·매도 체결",
+   "n": 560,
+   "win": 23.9,
+   "stopped": 75.4,
+   "roe": -17.1,
+   "first": -14.2,
+   "second": -20.5,
+   "reverse": -16.7
+  },
+  {
+   "id": "fox",
+   "name": "여우 선배의 소문",
+   "n": 714,
+   "win": 23.4,
+   "stopped": 75.5,
+   "roe": -18.6,
+   "first": -18.3,
+   "second": -18.9,
+   "reverse": -21.5
+  },
+  {
+   "id": "raccoon",
+   "name": "절친 너구리의 소문",
+   "n": 875,
+   "win": 22.5,
+   "stopped": 76.9,
+   "roe": -19.3,
+   "first": -20.2,
+   "second": -18.3,
+   "reverse": -17.7
+  },
+  {
+   "id": "weasel",
+   "name": "족제비 대표 추천 종목",
+   "n": 438,
+   "win": 20.3,
+   "stopped": 78.8,
+   "roe": -22.9,
+   "first": -22.2,
+   "second": -23.7,
+   "reverse": -4.2
+  },
+  {
+   "id": "bear",
+   "name": "곰 형의 소문",
+   "n": 237,
+   "win": 18.6,
+   "stopped": 79.7,
+   "roe": -29.4,
+   "first": -26,
+   "second": -33.5,
+   "reverse": -10.2
+  },
+  {
+   "id": "viper",
+   "name": "독사 대부의 확실한 정보",
+   "n": 560,
+   "win": 26.4,
+   "stopped": 72,
+   "roe": -16.7,
+   "first": -19.3,
+   "second": -13.6,
+   "reverse": -17.1
+  },
+  {
+   "id": "leadroom",
+   "name": "리딩방 전단지",
+   "n": 1637,
+   "win": 24.7,
+   "stopped": 74.2,
+   "roe": -17.2,
+   "first": -17.4,
+   "second": -17.1,
+   "reverse": -15.9
+  },
+  {
+   "id": "none",
+   "name": "정보 없이 무작위 진입",
+   "n": 1645,
+   "win": 25.9,
+   "stopped": 72.6,
+   "roe": -15.5,
+   "first": -14.4,
+   "second": -16.6,
+   "reverse": -19.3
+  }
+ ],
+ "exp3": [
+  {
+   "coin": "도토코인",
+   "lev": 25,
+   "m30": 0.1,
+   "h2": 1.7,
+   "h8": 8.8,
+   "h24": 24.8,
+   "med": 210
+  },
+  {
+   "coin": "도토코인",
+   "lev": 50,
+   "m30": 1.4,
+   "h2": 9.2,
+   "h8": 31,
+   "h24": 58.9,
+   "med": 151
+  },
+  {
+   "coin": "도토코인",
+   "lev": 100,
+   "m30": 7.7,
+   "h2": 28,
+   "h8": 59.9,
+   "h24": 82.4,
+   "med": 72
+  },
+  {
+   "coin": "도토코인",
+   "lev": 200,
+   "m30": 29.7,
+   "h2": 60.5,
+   "h8": 84.5,
+   "h24": 93.2,
+   "med": 21
+  },
+  {
+   "coin": "밤더리움",
+   "lev": 25,
+   "m30": 0.3,
+   "h2": 2.7,
+   "h8": 11.7,
+   "h24": 33.6,
+   "med": 219
+  },
+  {
+   "coin": "밤더리움",
+   "lev": 50,
+   "m30": 2.2,
+   "h2": 11.9,
+   "h8": 39.2,
+   "h24": 67.8,
+   "med": 127
+  },
+  {
+   "coin": "밤더리움",
+   "lev": 100,
+   "m30": 10,
+   "h2": 34.2,
+   "h8": 63.5,
+   "h24": 84.2,
+   "med": 57
+  },
+  {
+   "coin": "밤더리움",
+   "lev": 200,
+   "m30": 35.3,
+   "h2": 64.5,
+   "h8": 84.9,
+   "h24": 93.2,
+   "med": 17
+  },
+  {
+   "coin": "삼솔전자",
+   "lev": 25,
+   "m30": 0.3,
+   "h2": 2.2,
+   "h8": 11.6,
+   "h24": 34.9,
+   "med": 253
+  },
+  {
+   "coin": "삼솔전자",
+   "lev": 50,
+   "m30": 2,
+   "h2": 11.6,
+   "h8": 42.9,
+   "h24": 64.9,
+   "med": 111
+  },
+  {
+   "coin": "삼솔전자",
+   "lev": 100,
+   "m30": 12,
+   "h2": 39.2,
+   "h8": 67.7,
+   "h24": 84.8,
+   "med": 45
+  },
+  {
+   "coin": "삼솔전자",
+   "lev": 200,
+   "m30": 41,
+   "h2": 67.6,
+   "h8": 84.4,
+   "h24": 93.6,
+   "med": 14
+  },
+  {
+   "coin": "멍도토",
+   "lev": 25,
+   "m30": 0.2,
+   "h2": 1.9,
+   "h8": 9.5,
+   "h24": 24.5,
+   "med": 224
+  },
+  {
+   "coin": "멍도토",
+   "lev": 50,
+   "m30": 1.3,
+   "h2": 10.7,
+   "h8": 35.4,
+   "h24": 61.3,
+   "med": 130
+  },
+  {
+   "coin": "멍도토",
+   "lev": 100,
+   "m30": 11.1,
+   "h2": 34.7,
+   "h8": 64.1,
+   "h24": 85.1,
+   "med": 59
+  },
+  {
+   "coin": "멍도토",
+   "lev": 200,
+   "m30": 36.9,
+   "h2": 65.4,
+   "h8": 84.5,
+   "h24": 93.6,
+   "med": 17
+  }
+ ],
+ "exp4": [
+  {
+   "policy": "engine_casual",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 16.4
+    },
+    "simple": {
+     "n": 654,
+     "bankrupt": 55.5
+    },
+    "gift": {
+     "n": 1846,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 445,
+   "offlineEnd": 0,
+   "famPeakMed": 569702587.6328166,
+   "famPeakP90": 670820923.0225816,
+   "minStart": 199999.99999999997,
+   "maxInherited": 304660.85483087477
+  },
+  {
+   "policy": "engine_casual",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 16.4
+    },
+    "renounce": {
+     "n": 441,
+     "bankrupt": 0.7
+    },
+    "gift": {
+     "n": 2059,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 85,
+   "offlineEnd": 0,
+   "famPeakMed": 238787631.5414995,
+   "famPeakP90": 637154357.0441483,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "engine_casual",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 16.4
+    },
+    "renounce": {
+     "n": 147,
+     "bankrupt": 2
+    },
+    "simple": {
+     "n": 274,
+     "bankrupt": 0
+    },
+    "gift": {
+     "n": 2079,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 85,
+   "offlineEnd": 0,
+   "famPeakMed": 560096062.0988958,
+   "famPeakP90": 667196452.3335717,
+   "minStart": 199999.99999999997,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "mine_hold",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "simple": {
+     "n": 2500,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 4990975.854242599,
+   "famPeakP90": 7427807.799808733,
+   "minStart": 226213.30100853893,
+   "maxInherited": 300981.6093987279
+  },
+  {
+   "policy": "mine_hold",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "renounce": {
+     "n": 2500,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 788131.1525399713,
+   "famPeakP90": 928835.4335547714,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "mine_hold",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "simple": {
+     "n": 2499,
+     "bankrupt": 0
+    },
+    "renounce": {
+     "n": 1,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 4990975.854242599,
+   "famPeakP90": 7427807.799808733,
+   "minStart": 223957.61165990203,
+   "maxInherited": 300981.6093987279
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "simple": {
+     "n": 2500,
+     "bankrupt": 0.7
+    }
+   },
+   "causes": {
+    "SEIZE": 55.6,
+    "SHARK": 38.9,
+    "LIQ": 5.6
+   },
+   "bankruptGens": 18,
+   "offlineEnd": 0,
+   "famPeakMed": 8281934.995282805,
+   "famPeakP90": 14753490.18598598,
+   "minStart": 226312.7474191524,
+   "maxInherited": 900000.0000000001
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "renounce": {
+     "n": 2500,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 739776.577092164,
+   "famPeakP90": 868613.329212341,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "simple": {
+     "n": 2482,
+     "bankrupt": 0.2
+    },
+    "renounce": {
+     "n": 18,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 16.7,
+    "SHARK": 66.7,
+    "LIQ": 16.7
+   },
+   "bankruptGens": 6,
+   "offlineEnd": 0,
+   "famPeakMed": 8281934.995282805,
+   "famPeakP90": 14753490.18598598,
+   "minStart": 222597.17720355734,
+   "maxInherited": 900000.0000000001
+  },
+  {
+   "policy": "expander",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 19
+    },
+    "simple": {
+     "n": 2500,
+     "bankrupt": 17.8
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 541,
+   "offlineEnd": 0,
+   "famPeakMed": 992336215.0565954,
+   "famPeakP90": 1100993373.0839443,
+   "minStart": 199999.99999999997,
+   "maxInherited": 900000
+  },
+  {
+   "policy": "expander",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 19
+    },
+    "renounce": {
+     "n": 2500,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 96,
+   "offlineEnd": 0,
+   "famPeakMed": 1037056.5408419359,
+   "famPeakP90": 1842783.607517791,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "expander",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 19
+    },
+    "simple": {
+     "n": 2351,
+     "bankrupt": 0
+    },
+    "renounce": {
+     "n": 149,
+     "bankrupt": 0.7
+    }
+   },
+   "causes": {
+    "SEIZE": 100
+   },
+   "bankruptGens": 96,
+   "offlineEnd": 0,
+   "famPeakMed": 990134062.0736622,
+   "famPeakP90": 1100993373.0839443,
+   "minStart": 199999.99999999997,
+   "maxInherited": 900000
+  },
+  {
+   "policy": "mixed_bold",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "gift": {
+     "n": 2475,
+     "bankrupt": 0
+    },
+    "simple": {
+     "n": 25,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "TIP": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 738340012.5159115,
+   "famPeakP90": 846415253.1046408,
+   "minStart": 199999.99999999997,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "mixed_bold",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "gift": {
+     "n": 2463,
+     "bankrupt": 0
+    },
+    "renounce": {
+     "n": 37,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "TIP": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 734634363.9243556,
+   "famPeakP90": 846009845.7820231,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "mixed_bold",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 0.2
+    },
+    "gift": {
+     "n": 2475,
+     "bankrupt": 0
+    },
+    "simple": {
+     "n": 24,
+     "bankrupt": 0
+    },
+    "renounce": {
+     "n": 1,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "TIP": 100
+   },
+   "bankruptGens": 1,
+   "offlineEnd": 0,
+   "famPeakMed": 738340012.5159115,
+   "famPeakP90": 846415253.1046408,
+   "minStart": 199999.99999999997,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "trader_only",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 99
+    },
+    "simple": {
+     "n": 2497,
+     "bankrupt": 100
+    },
+    "gift": {
+     "n": 3,
+     "bankrupt": 100
+    }
+   },
+   "causes": {
+    "SHARK": 64,
+    "BANK": 11.7,
+    "TIP": 24.3
+   },
+   "bankruptGens": 2995,
+   "offlineEnd": 5.5,
+   "famPeakMed": -202752.61289789734,
+   "famPeakP90": -165221.75284134233,
+   "minStart": 200000,
+   "maxInherited": 355927.12645381934
+  },
+  {
+   "policy": "trader_only",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 99
+    },
+    "renounce": {
+     "n": 2482,
+     "bankrupt": 95.9
+    },
+    "gift": {
+     "n": 18,
+     "bankrupt": 88.9
+    }
+   },
+   "causes": {
+    "SHARK": 11.8,
+    "BANK": 54.8,
+    "TIP": 33.4
+   },
+   "bankruptGens": 2891,
+   "offlineEnd": 19.1,
+   "famPeakMed": -91221.57441698748,
+   "famPeakP90": 15053.235972324037,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "trader_only",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 99
+    },
+    "renounce": {
+     "n": 2476,
+     "bankrupt": 95.9
+    },
+    "gift": {
+     "n": 18,
+     "bankrupt": 88.9
+    },
+    "simple": {
+     "n": 6,
+     "bankrupt": 50
+    }
+   },
+   "causes": {
+    "SHARK": 11.8,
+    "BANK": 54.7,
+    "TIP": 33.4
+   },
+   "bankruptGens": 2888,
+   "offlineEnd": 19.1,
+   "famPeakMed": -91221.57441698748,
+   "famPeakP90": 15053.235972324037,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "greedy",
+   "mode": "simple",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 1.4
+    },
+    "simple": {
+     "n": 2500,
+     "bankrupt": 1
+    }
+   },
+   "causes": {
+    "TIP": 65.6,
+    "SEIZE": 31.3,
+    "UPKEEP": 3.1
+   },
+   "bankruptGens": 32,
+   "offlineEnd": 0,
+   "famPeakMed": 919006168.5188878,
+   "famPeakP90": 1034891545.3016388,
+   "minStart": 199999.99999999997,
+   "maxInherited": 900000
+  },
+  {
+   "policy": "greedy",
+   "mode": "renounce",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 1.4
+    },
+    "renounce": {
+     "n": 2500,
+     "bankrupt": 0.4
+    }
+   },
+   "causes": {
+    "TIP": 81.3,
+    "SEIZE": 18.8
+   },
+   "bankruptGens": 16,
+   "offlineEnd": 0,
+   "famPeakMed": 2052950.584134716,
+   "famPeakP90": 3897484.951387373,
+   "minStart": 200000,
+   "maxInherited": 300000
+  },
+  {
+   "policy": "greedy",
+   "mode": "smart",
+   "byStart": {
+    "2세대": {
+     "n": 500,
+     "bankrupt": 1.4
+    },
+    "simple": {
+     "n": 2488,
+     "bankrupt": 0.8
+    },
+    "renounce": {
+     "n": 12,
+     "bankrupt": 0
+    }
+   },
+   "causes": {
+    "TIP": 77.8,
+    "SEIZE": 18.5,
+    "UPKEEP": 3.7
+   },
+   "bankruptGens": 27,
+   "offlineEnd": 0,
+   "famPeakMed": 919006168.5188878,
+   "famPeakP90": 1034891545.3016388,
+   "minStart": 199999.99999999997,
+   "maxInherited": 900000
+  }
+ ],
+ "exp1b": [
+  {
+   "policy": "engine_normal",
+   "bucket": "내린 3분의 1",
+   "coinRet": -6.3,
+   "bankrupt": 0.6,
+   "medNW": 842212.0059235725,
+   "forced": 13233.988893500362
+  },
+  {
+   "policy": "engine_normal",
+   "bucket": "가운데",
+   "coinRet": -2.6,
+   "bankrupt": 0,
+   "medNW": 1017218.2919480343,
+   "forced": 12816.171864781296
+  },
+  {
+   "policy": "engine_normal",
+   "bucket": "오른 3분의 1",
+   "coinRet": 0.1,
+   "bankrupt": 0,
+   "medNW": 1308496.620107912,
+   "forced": 12272.378441714052
+  },
+  {
+   "policy": "mine_hold",
+   "bucket": "내린 3분의 1",
+   "coinRet": -6.1,
+   "bankrupt": 0.5,
+   "medNW": 579848.4047978516,
+   "forced": 57989.69072164949
+  },
+  {
+   "policy": "mine_hold",
+   "bucket": "가운데",
+   "coinRet": -2.4,
+   "bankrupt": 0,
+   "medNW": 680310.6683886426,
+   "forced": 57989.69072164949
+  },
+  {
+   "policy": "mine_hold",
+   "bucket": "오른 3분의 1",
+   "coinRet": 0.5,
+   "bankrupt": 0,
+   "medNW": 746495.6843710424,
+   "forced": 57989.69072164949
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "bucket": "내린 3분의 1",
+   "coinRet": -5.7,
+   "bankrupt": 0.5,
+   "medNW": 563552.6651155958,
+   "forced": 71391.4556701031
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "bucket": "가운데",
+   "coinRet": -2.3,
+   "bankrupt": 0,
+   "medNW": 633632.6460086766,
+   "forced": 71391.4556701031
+  },
+  {
+   "policy": "mine_hold_hedge",
+   "bucket": "오른 3분의 1",
+   "coinRet": 0.2,
+   "bankrupt": 0,
+   "medNW": 694087.6610612177,
+   "forced": 64635.55993402123
+  },
+  {
+   "policy": "mine_hold_doge",
+   "bucket": "내린 3분의 1",
+   "coinRet": -7.7,
+   "bankrupt": 0.2,
+   "medNW": 565384.1453585126,
+   "forced": 63144.32989690722
+  },
+  {
+   "policy": "mine_hold_doge",
+   "bucket": "가운데",
+   "coinRet": -1.7,
+   "bankrupt": 1.1,
+   "medNW": 684797.536496884,
+   "forced": 57989.69072164949
+  },
+  {
+   "policy": "mine_hold_doge",
+   "bucket": "오른 3분의 1",
+   "coinRet": 2.5,
+   "bankrupt": 0,
+   "medNW": 769750.7281908374,
+   "forced": 57989.69072164949
+  }
+ ],
+ "exp1c": [
+  {
+   "policy": "engine_normal",
+   "shock": -0.2,
+   "bankrupt": 0.6,
+   "debtFree": 96.1,
+   "medNW": 320467.7319604162
+  },
+  {
+   "policy": "engine_normal",
+   "shock": -0.35,
+   "bankrupt": 16.3,
+   "debtFree": 41.4,
+   "medNW": 87718.29213982362
+  },
+  {
+   "policy": "engine_normal",
+   "shock": -0.5,
+   "bankrupt": 74.2,
+   "debtFree": 3.5,
+   "medNW": -56147.94605402862
+  },
+  {
+   "policy": "engine_casual",
+   "shock": -0.2,
+   "bankrupt": 91.9,
+   "debtFree": 1.5,
+   "medNW": -56755.50586964193
+  },
+  {
+   "policy": "engine_casual",
+   "shock": -0.35,
+   "bankrupt": 99.6,
+   "debtFree": 0.1,
+   "medNW": -116044.49115162816
+  },
+  {
+   "policy": "engine_casual",
+   "shock": -0.5,
+   "bankrupt": 100,
+   "debtFree": 0,
+   "medNW": null
+  },
+  {
+   "policy": "mine_hold",
+   "shock": -0.2,
+   "bankrupt": 2,
+   "debtFree": 0,
+   "medNW": 288246.16122424067
+  },
+  {
+   "policy": "mine_hold",
+   "shock": -0.35,
+   "bankrupt": 39.9,
+   "debtFree": 0.1,
+   "medNW": -118190.70077020943
+  },
+  {
+   "policy": "mine_hold",
+   "shock": -0.5,
+   "bankrupt": 97.1,
+   "debtFree": 0,
+   "medNW": -141752.12685803167
+  }
+ ]
+}

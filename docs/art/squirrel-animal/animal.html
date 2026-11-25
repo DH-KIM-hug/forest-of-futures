@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>동물다운 다람쥐 캐릭터 시안</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>동물다운 다람쥐 캐릭터 시안</h1>
+  <p class="lead">옷과 소품, 사람 같은 손동작을 뺐습니다. 다람쥐 본래의 몸과 자세로 귀여움을 보여 주는 방향입니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="A1_sitting-acorn.png" alt="A1 앉아서 도토리 들기">
+      <figcaption><span class="tag">A1</span>앉아서 도토리 들기<div class="desc">뒷다리로 앉고 도토리를 두 발로 쥠. 가장 다람쥐답다.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="A2_all-fours.png" alt="A2 네 발로 서기">
+      <figcaption><span class="tag">A2</span>네 발로 서기<div class="desc">고개를 살짝 기울인 기본 자세. 가장 중립적.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="A3_worried-tuck.png" alt="A3 발을 모은 걱정 자세">
+      <figcaption><span class="tag">A3</span>걱정 자세<div class="desc">발을 가슴에 모으고 꼬리로 발을 감음. 파산 직전 연출에 맞음.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="A4_scurry.png" alt="A4 황급히 달리기">
+      <figcaption><span class="tag">A4</span>황급히 달리기<div class="desc">낮게 웅크린 자세, 귀를 뒤로 젖힘. 추심을 피해 도망치는 장면용.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 동물 특유의 귀여움이 나는지, 사람 같은 표정이 과하지 않은지, 작은 화면에서 누구인지 알아보는지.
+    하나 고르면 그 자세를 기본형으로 정하고, 표정 5종을 같은 몸으로 다시 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

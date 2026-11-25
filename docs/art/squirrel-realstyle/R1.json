@@ -1,0 +1,22 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A young male red squirrel, a restless debt-ridden university-age dreamer: worn hoodie over a plain shirt, a phone in hand showing a falling chart, tired but eager eyes. Keep it a squirrel with realistic fur, not a cute mascot. Full body, centered, plain neutral background, no text, no border. Style R1: realistic watercolor illustration, muted natural tones, soft detailed fur, painterly brush texture, grounded and serious.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R1_watercolor-real.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-realstyle/R1_watercolor-real.png.raw.png",
+  "raw_bytes": 2926597,
+  "elapsed_seconds": 44.323,
+  "model": null,
+  "session_id": "01a20e27-34d3-7763-9371-f7d8ea10b534",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

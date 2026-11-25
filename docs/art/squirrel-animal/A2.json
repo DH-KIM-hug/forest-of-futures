@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks, no outlines, cute chubby squirrel with a real animal body. Keep it an animal: NO clothes, NO accessories, NO hoodie, NO bag, NO human hands gestures, natural squirrel anatomy with a bushy tail and small paws, natural animal posture. Cute animal charm, round face, big shiny eyes. Full body, centered, plain solid cream background, no text, no border. Variant A2: standing on all four paws, head slightly tilted, tail fluffy and upright, wide cute eyes.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-animal/A2_all-fours.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-animal/A2_all-fours.png.raw.png",
+  "raw_bytes": 1378788,
+  "elapsed_seconds": 37.045,
+  "model": null,
+  "session_id": "01a20e30-a6ae-7153-93eb-e6a2cd88d166",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

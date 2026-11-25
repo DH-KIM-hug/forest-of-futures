@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "_doc": "노동은 마을 탭 '일터'에서만 한다. payPerTap = 한 번 누를 때 받는 도토리. wagePerSettlement = 그 일을 하고 있을 때 정산마다 자동으로 들어오는 급여(방치·오프라인 수입). 조건을 만족한 일 가운데 order가 가장 높은 것이 자동으로 현재 일이 된다. laborTaps는 이번 회차 누적 노동 횟수.",
+  "jobs": [
+    {
+      "id": "pickup",
+      "order": 1,
+      "name": "길바닥 도토리 줍기",
+      "buttonLabel": "도토리 줍기",
+      "payPerTap": 60,
+      "wagePerSettlement": 0,
+      "unlock": {
+        "type": "always"
+      },
+      "note": "시작부터 가능. 급여 없음."
+    },
+    {
+      "id": "flyer",
+      "order": 2,
+      "name": "전단지 돌리기",
+      "buttonLabel": "전단지 돌리기",
+      "payPerTap": 90,
+      "wagePerSettlement": 1500,
+      "unlock": {
+        "type": "stat",
+        "stat": "laborTaps",
+        "op": ">=",
+        "value": 150
+      },
+      "note": "노동 150회를 채우면 일거리가 들어온다."
+    },
+    {
+      "id": "cvs",
+      "order": 3,
+      "name": "편의점 야간 알바",
+      "buttonLabel": "계산대 찍기",
+      "payPerTap": 130,
+      "wagePerSettlement": 4000,
+      "unlock": {
+        "type": "stat",
+        "stat": "laborTaps",
+        "op": ">=",
+        "value": 500
+      },
+      "note": "노동 500회."
+    },
+    {
+      "id": "logistics",
+      "order": 4,
+      "name": "물류센터 상하차",
+      "buttonLabel": "상자 나르기",
+      "payPerTap": 200,
+      "wagePerSettlement": 8000,
+      "unlock": {
+        "type": "stat",
+        "stat": "laborTaps",
+        "op": ">=",
+        "value": 1200
+      },
+      "note": "노동 1,200회."
+    },
+    {
+      "id": "contract",
+      "order": 5,
+      "name": "삼솔전자 협력사 계약직",
+      "buttonLabel": "서류 처리",
+      "payPerTap": 400,
+      "wagePerSettlement": 20000,
+      "unlock": {
+        "type": "stat",
+        "stat": "houseStage",
+        "op": ">=",
+        "value": 1
+      },
+      "note": "주소지가 있어야 채용된다(오두막 이상)."
+    },
+    {
+      "id": "fulltime",
+      "order": 6,
+      "name": "잣스닥 상장사 정규직",
+      "buttonLabel": "결재 올리기",
+      "payPerTap": 1500,
+      "wagePerSettlement": 100000,
+      "unlock": {
+        "type": "stat",
+        "stat": "houseStage",
+        "op": ">=",
+        "value": 3
+      },
+      "note": "별장 이상."
+    }
+  ],
+  "rules": {
+    "maxTapsPerSec": 12,
+    "garnishRate": 0.3,
+    "garnish": "오소리 대부 연체 streak >= 1 인 동안 노동·급여 수입의 30%는 현금으로 오지 않고 오소리 원금에서 깎인다. garnished 통계에 더한다.",
+    "feedback": "누를 때마다 +금액이 떠오르고 주인공이 통통 튄다. 캐릭터에만 귀여운 동작."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, smooth pastel color blocks, soft two-tone cel shadows, a thin light highlight, polished warm mobile game character art. Same species and style as the reference image: orange-brown squirrel with cream muzzle and belly, big bright eyes, round body. Make it a young male squirrel, a restless university-age dreamer chasing a quick fortune: eager, lively, a little reckless, always grinning at the next big win. Not a kind saint, not an anime heroine, not a copy of any existing character. Full body, centered, plain solid cream background, no text, no border. Variant D3: leaning forward with a bright eager grin, one hand holding a golden acorn coin up, cap worn backwards, patched tan jacket.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-dreamer/D3_cap-coin.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-dreamer/D3_cap-coin.png.raw.png",
+  "raw_bytes": 1552750,
+  "elapsed_seconds": 52.863,
+  "model": null,
+  "session_id": "01a20e25-3636-70c0-8391-3a52cfd7fb34",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

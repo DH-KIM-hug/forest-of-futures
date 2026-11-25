@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>선물의 숲 주인공 시안 6종</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>주인공 다람쥐 시안 6종</h1>
+  <p class="lead">스타일 D(파스텔 소프트 셀)로 뽑은 디자인 변형입니다. 종은 같고 옷과 소품, 자세만 바꿨습니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="V1_bag.png" alt="V1 주머니형">
+      <figcaption><span class="tag">V1</span>도토리 주머니형<div class="desc">기본형에 어깨 주머니 추가</div></figcaption>
+    </figure>
+    <figure>
+      <img src="V2_scarf-hat.png" alt="V2 목도리 모자형">
+      <figcaption><span class="tag">V2</span>목도리·밀짚모자형<div class="desc">빨간 목도리로 포인트, 캐주얼한 인상</div></figcaption>
+    </figure>
+    <figure>
+      <img src="V3_glasses-ledger.png" alt="V3 안경 장부형">
+      <figcaption><span class="tag">V3</span>안경·장부형<div class="desc">계산하는 금융 피해자 느낌</div></figcaption>
+    </figure>
+    <figure>
+      <img src="V4_overalls-cart.png" alt="V4 작업복 수레형">
+      <figcaption><span class="tag">V4</span>작업복·수레형<div class="desc">노동 클릭과 짐수레 연결</div></figcaption>
+    </figure>
+    <figure>
+      <img src="V5_grey-soft.png" alt="V5 회색 부드러운형">
+      <figcaption><span class="tag">V5</span>회색 부드러운형<div class="desc">색을 빼서 더 귀엽고 차분한 인상</div></figcaption>
+    </figure>
+    <figure>
+      <img src="V6_side.png" alt="V6 측면형">
+      <figcaption><span class="tag">V6</span>측면형 (게임 스프라이트용)<div class="desc">오른쪽을 보는 옆모습, 걷기·점프 연출용</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 기준 그림(D)과 얼마나 같은 캐릭터로 읽히는지, 화면에서 작을 때도 누구인지 알아보는지, 옷과 소품이 화면 정보를 가리지 않는지.
+    하나 고르면 그 디자인을 주인공 기준으로 정하고 표정 5종을 그 디자인으로 다시 뽑습니다. 여러 개를 섞어도 됩니다.
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A chubby CHIPMUNK (orange-tan fur, dark brown stripes on back and head, cream belly, small round ears, short bushy tail), standing upright on two legs, character with a short rounded body and big head. Art style: cozy rounded 3D toy-like rendering with soft smooth shading, simple rounded shapes, big glossy eyes with highlights, soft matte material, warm pastel palette, friendly and charming, like a relaxed village life game character. Original design only, not any existing game character. Full body, centered, plain solid cream background, no text, no border. Variant Y2: holding a small phone showing a rising chart, no clothes, fur only.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-cozy/Y2_phone.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-cozy/Y2_phone.png.raw.png",
+  "raw_bytes": 1854449,
+  "elapsed_seconds": 41.795,
+  "model": null,
+  "session_id": "01a20e36-c4b8-79a0-80fc-9a1fb1628d90",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk/C1_bare.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-cozy/Y2.json"
+}

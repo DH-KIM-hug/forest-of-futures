@@ -1,0 +1,6473 @@
+{
+ "meta": {
+  "version": 1,
+  "source": "docs/gdd/sources/endings-catalogue-200-2.md (200-2.md 사본). scripts/data/build_endings.py 가 만든 파일이므로 직접 고치지 않는다.",
+  "count": 200,
+  "categories": {
+   "CAT-A": {
+    "name": "1금융·부동산",
+    "from": 1,
+    "to": 40
+   },
+   "CAT-B": {
+    "name": "사채·추심",
+    "from": 41,
+    "to": 100
+   },
+   "CAT-C": {
+    "name": "친구·관계",
+    "from": 101,
+    "to": 150
+   },
+   "CAT-D": {
+    "name": "선물·청산",
+    "from": 151,
+    "to": 200
+   }
+  },
+  "causes": {
+   "overdue_upkeep": "유지비 연체",
+   "overdue_bank": "1금융 연체",
+   "overdue_capital": "2금융 연체",
+   "overdue_shark1": "사채 1단계 연체",
+   "overdue_shark2": "사채 2단계 연체",
+   "friends": "친구 3명 이상과 절교",
+   "liquidation": "강제 청산"
+  },
+  "triggerSpec": {
+   "type": "rule = 카탈로그 조건을 게임 통계로 그대로 옮긴 것. proxy = 게임에 없는 사건이라 단순한 대용 조건으로 바꾼 것(note에 설명).",
+   "causes": "배열 중 하나가 파산 원인과 같아야 한다. null이면 원인 무관.",
+   "all": "[통계, 연산자, 값] 조건을 모두 만족해야 한다. 통계 값이 null이면 그 조건은 거짓.",
+   "ops": [
+    "==",
+    "!=",
+    ">=",
+    "<=",
+    ">",
+    "<",
+    "has(배열에 값이 있음)",
+    "in(값이 배열 안에 있음)"
+   ],
+   "priority": "분류 기본값(CAT-D 400, B 300, C 200, A 100) + 조건 수×10 - proxy 50 + 보정. 클수록 먼저.",
+   "selection": [
+    "1 원인과 조건이 맞는 엔딩을 모두 모은다",
+    "2 아직 수집하지 않은 것이 있으면 그중 priority가 가장 큰 것(같으면 번호가 작은 것)",
+    "3 전부 수집했으면: 새 엔딩 없는 파산이 pity.dryStreak번 이어졌을 때 원인이 맞는 미수집 proxy 엔딩 중 번호가 가장 작은 것",
+    "4 그래도 없으면 이미 수집한 후보 중 priority가 가장 큰 것을 다시 보여 준다",
+    "5 후보가 하나도 없으면 balance.json endings.fallbackId"
+   ]
+  },
+  "stats": {
+   "cause": {
+    "label": "파산 원인",
+    "scope": "moment",
+    "update": "bankruptcy.triggers 참고"
+   },
+   "immediate": {
+    "label": "청산 즉시 파산 여부",
+    "scope": "moment",
+    "update": "liquidationWipeout이면 true"
+   },
+   "causeLender": {
+    "label": "연체 한도에 닿은 채권처",
+    "scope": "moment",
+    "update": "원인이 liquidation으로 바뀐 경우에도 원래 채권처를 남긴다. 없으면 null"
+   },
+   "houseStage": {
+    "label": "집 단계",
+    "scope": "moment",
+    "update": "housing.json stage"
+   },
+   "cash": {
+    "label": "현금",
+    "scope": "moment",
+    "update": ""
+   },
+   "totalDebt": {
+    "label": "총부채",
+    "scope": "moment",
+    "update": "금융 4곳 + 친구"
+   },
+   "netWorth": {
+    "label": "순자산",
+    "scope": "moment",
+    "update": "현금 + 포지션 평가액 + 집 평가액×sellRate - 총부채"
+   },
+   "debtBank": {
+    "label": "1금융 원금",
+    "scope": "moment",
+    "update": ""
+   },
+   "debtCapital": {
+    "label": "2금융 원금",
+    "scope": "moment",
+    "update": ""
+   },
+   "debtShark1": {
+    "label": "사채 1단계 원금",
+    "scope": "moment",
+    "update": ""
+   },
+   "debtShark2": {
+    "label": "사채 2단계 원금",
+    "scope": "moment",
+    "update": ""
+   },
+   "debtSharks": {
+    "label": "사채 원금 합",
+    "scope": "moment",
+    "update": "shark1 + shark2"
+   },
+   "debtFriends": {
+    "label": "친구 빚 합",
+    "scope": "moment",
+    "update": ""
+   },
+   "ltvPct": {
+    "label": "담보 대비 1금융 대출 비율(%)",
+    "scope": "moment",
+    "update": "debtBank / 현재 담보 평가액 × 100. 집이 없으면 0"
+   },
+   "housingSlumpActive": {
+    "label": "부동산 하락 속보 진행 중",
+    "scope": "moment",
+    "update": "events.json"
+   },
+   "rateHikeActive": {
+    "label": "금리 인상 속보 진행 중",
+    "scope": "moment",
+    "update": "events.json"
+   },
+   "positionsEquity": {
+    "label": "열린 포지션 평가액 합",
+    "scope": "moment",
+    "update": "Σ max(0, margin + pnl)"
+   },
+   "shortfall": {
+    "label": "이번 정산 미납 총액",
+    "scope": "moment",
+    "update": "정산 4단계에서 계산. 청산 즉시 파산이면 0"
+   },
+   "equityCoversShortfall": {
+    "label": "포지션에 묶인 돈이 미납액 이상",
+    "scope": "moment",
+    "update": "positionsEquity >= shortfall 이고 shortfall > 0"
+   },
+   "auctionSurplus": {
+    "label": "경매 후 남는 돈",
+    "scope": "moment",
+    "update": "현재 담보 평가액 × auctionRate - debtBank"
+   },
+   "minNonzeroDebt": {
+    "label": "0이 아닌 빚 중 가장 작은 원금",
+    "scope": "moment",
+    "update": "빚이 없으면 null"
+   },
+   "creditScore": {
+    "label": "신용점수",
+    "scope": "moment",
+    "update": "balance.json credit"
+   },
+   "location": {
+    "label": "마을에서 보고 있던 장소",
+    "scope": "moment",
+    "update": "work|home|bank|capital|shark1|shark2|friends|archive|board. 거래 탭이어도 마지막 장소 유지"
+   },
+   "localHour": {
+    "label": "기기 시각(시)",
+    "scope": "moment",
+    "update": "0~23"
+   },
+   "localDay": {
+    "label": "기기 날짜(일)",
+    "scope": "moment",
+    "update": "1~31"
+   },
+   "localWeekday": {
+    "label": "기기 요일",
+    "scope": "moment",
+    "update": "0=일 … 6=토"
+   },
+   "localMonth": {
+    "label": "기기 월",
+    "scope": "moment",
+    "update": "1~12"
+   },
+   "offline": {
+    "label": "오프라인 따라잡기 중 발생",
+    "scope": "moment",
+    "update": ""
+   },
+   "stBank": {
+    "label": "1금융 연속 연체",
+    "scope": "moment",
+    "update": ""
+   },
+   "stUpkeep": {
+    "label": "유지비 연속 연체",
+    "scope": "moment",
+    "update": ""
+   },
+   "trustMin": {
+    "label": "친구 신뢰 최솟값",
+    "scope": "moment",
+    "update": "절교는 0으로 계산"
+   },
+   "trustAvg": {
+    "label": "친구 신뢰 평균",
+    "scope": "moment",
+    "update": "5명 평균, 절교는 0"
+   },
+   "cycles": {
+    "label": "버틴 정산 횟수",
+    "scope": "run",
+    "update": "정산 8단계에서 +1"
+   },
+   "odTotal": {
+    "label": "연체 횟수 합(금융 4곳 + 유지비)",
+    "scope": "run",
+    "update": "미납이 생길 때마다 +1"
+   },
+   "odFriends": {
+    "label": "친구 빚 연체 횟수",
+    "scope": "run",
+    "update": "friends.json overdue"
+   },
+   "capitalizedInterest": {
+    "label": "원금에 붙은 미납 이자 합",
+    "scope": "run",
+    "update": ""
+   },
+   "borrowCapital": {
+    "label": "2금융 대출 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "borrowShark1": {
+    "label": "사채 1단계 대출 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "borrowShark2": {
+    "label": "사채 2단계 대출 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "borrowSharks": {
+    "label": "사채 대출 횟수 합",
+    "scope": "run",
+    "update": ""
+   },
+   "borrowFriends": {
+    "label": "친구 대출 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "bankRefusals": {
+    "label": "1금융 거절 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "friendRefusals": {
+    "label": "친구 거절 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "contactsSeized": {
+    "label": "연락처 제출 여부",
+    "scope": "run",
+    "update": ""
+   },
+   "upfrontPaid": {
+    "label": "선이자로 떼인 금액 합",
+    "scope": "run",
+    "update": ""
+   },
+   "claimsSold": {
+    "label": "친구가 넘긴 채권 금액 합",
+    "scope": "run",
+    "update": ""
+   },
+   "friendsBorrowed": {
+    "label": "빌린 친구 수",
+    "scope": "run",
+    "update": "서로 다른 친구"
+   },
+   "friendsBroken": {
+    "label": "절교한 친구 수",
+    "scope": "run",
+    "update": ""
+   },
+   "brokenFriendIds": {
+    "label": "절교한 친구 목록",
+    "scope": "run",
+    "update": "id 배열"
+   },
+   "friendMaxedOut": {
+    "label": "한도까지 빌린 친구 수",
+    "scope": "run",
+    "update": "잔액이 maxLoan에 닿은 적 있는 친구"
+   },
+   "friendRepayStamps": {
+    "label": "친구 빚 도장 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "laborTaps": {
+    "label": "노동 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "garnished": {
+    "label": "차압당한 금액 합",
+    "scope": "run",
+    "update": ""
+   },
+   "stamps": {
+    "label": "도장 횟수 합",
+    "scope": "run",
+    "update": "금융 + 친구"
+   },
+   "stampsBank": {
+    "label": "1금융 도장 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "stampsShark1": {
+    "label": "사채 1단계 도장 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "stampsShark2": {
+    "label": "사채 2단계 도장 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "lastMoveDir": {
+    "label": "마지막 이사 방향",
+    "scope": "run",
+    "update": "up|down|null"
+   },
+   "cyclesSinceMove": {
+    "label": "마지막 이사 뒤 정산 횟수",
+    "scope": "run",
+    "update": "이사한 적 없으면 null"
+   },
+   "netWorthAtMove": {
+    "label": "마지막 이사 순간 순자산",
+    "scope": "run",
+    "update": ""
+   },
+   "cyclesSinceBankBorrow": {
+    "label": "마지막 1금융 대출 뒤 정산 횟수",
+    "scope": "run",
+    "update": "없으면 null"
+   },
+   "cyclesSinceShark2Borrow": {
+    "label": "마지막 사채 2단계 대출 뒤 정산 횟수",
+    "scope": "run",
+    "update": "없으면 null"
+   },
+   "refiAny": {
+    "label": "돌려막기 횟수",
+    "scope": "run",
+    "update": "어디서든 빌린 뒤 60초 안에 다른 곳에 도장을 찍으면 +1(한 번 빌린 것당 1회)"
+   },
+   "refiShark2ToShark1": {
+    "label": "독사에게 빌려 오소리 갚기 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "refiFriendToFriend": {
+    "label": "친구에게 빌려 다른 친구 갚기 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "refiFriendToLender": {
+    "label": "친구에게 빌려 금융 빚 갚기 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "termsViewedShark2": {
+    "label": "독사 대부 약관을 펼쳐 봤는지",
+    "scope": "run",
+    "update": "약관 줄을 누르면 true"
+   },
+   "idleStreak": {
+    "label": "아무것도 안 한 정산 연속 횟수",
+    "scope": "run",
+    "update": "그 회차에 노동 0회 + 진입 0건이면 +1, 아니면 0"
+   },
+   "subsidyCount": {
+    "label": "지원금 수령 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "tabSwitches": {
+    "label": "탭 전환 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "chartWatchSec": {
+    "label": "포지션 없이 거래 탭을 본 시간(초)",
+    "scope": "run",
+    "update": ""
+   },
+   "peakNetWorth": {
+    "label": "이번 회차 최고 순자산",
+    "scope": "run",
+    "update": ""
+   },
+   "wasLocalBest": {
+    "label": "이번 회차에 내 최고 기록을 넘었는지",
+    "scope": "run",
+    "update": ""
+   },
+   "trades": {
+    "label": "진입 횟수",
+    "scope": "run",
+    "update": "추가 진입 제외"
+   },
+   "liqs": {
+    "label": "청산 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "liqStreak": {
+    "label": "연속 청산 횟수",
+    "scope": "run",
+    "update": "청산이 아닌 정리로 끝나면 0"
+   },
+   "liqsThisCycle": {
+    "label": "이번 정산 회차의 청산 횟수",
+    "scope": "run",
+    "update": "정산 때 0으로"
+   },
+   "winStreakBeforeLiq": {
+    "label": "마지막 청산 직전 연승 수",
+    "scope": "run",
+    "update": "이익 정리 연속 횟수"
+   },
+   "lev200Trades": {
+    "label": "200배 진입 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "lowLevTrades": {
+    "label": "5배 이하 진입 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "flips": {
+    "label": "손실 직후 반대 방향 진입 횟수",
+    "scope": "run",
+    "update": "같은 종목에서 손실·청산 뒤 flipWindowSec 안에 반대 방향 진입"
+   },
+   "marginCalls": {
+    "label": "마진콜 경고 횟수",
+    "scope": "run",
+    "update": "ROE가 marginCallRoe 아래로 내려갈 때마다 +1"
+   },
+   "againstTrendLosses": {
+    "label": "추세 반대로 들어가 잃은 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "fundedByFriendTrades": {
+    "label": "친구에게 빌린 직후 연 포지션 수",
+    "scope": "run",
+    "update": "빌린 뒤 60초 안 진입"
+   },
+   "hedgedEver": {
+    "label": "롱과 숏을 동시에 든 적 있는지",
+    "scope": "run",
+    "update": "서로 다른 종목"
+   },
+   "fundingPaid": {
+    "label": "펀딩비 합",
+    "scope": "run",
+    "update": ""
+   },
+   "grossPnl": {
+    "label": "수수료·펀딩비 빼기 전 실현 손익 합",
+    "scope": "run",
+    "update": ""
+   },
+   "realizedPnl": {
+    "label": "실현 손익 합(수수료·펀딩비 포함)",
+    "scope": "run",
+    "update": ""
+   },
+   "lastLev": {
+    "label": "마지막 청산 포지션의 배율",
+    "scope": "run",
+    "update": "아래 last* 는 모두 가장 최근에 강제 청산된 포지션 기준. 없으면 null"
+   },
+   "lastDir": {
+    "label": "마지막 청산 포지션의 방향",
+    "scope": "run",
+    "update": "long|short"
+   },
+   "lastMarket": {
+    "label": "마지막 청산 포지션의 종목",
+    "scope": "run",
+    "update": ""
+   },
+   "lastHoldSec": {
+    "label": "마지막 청산 포지션의 보유 시간(초)",
+    "scope": "run",
+    "update": ""
+   },
+   "lastHeldCycles": {
+    "label": "마지막 청산 포지션이 넘긴 정산 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "lastMargin": {
+    "label": "마지막 청산 포지션의 증거금",
+    "scope": "run",
+    "update": ""
+   },
+   "lastMarginPct": {
+    "label": "진입 때 현금 대비 증거금 비율(%)",
+    "scope": "run",
+    "update": ""
+   },
+   "lastViaJump": {
+    "label": "급등락 틱에 청산됐는지",
+    "scope": "run",
+    "update": ""
+   },
+   "lastHadSL": {
+    "label": "손절을 걸어 뒀는지",
+    "scope": "run",
+    "update": ""
+   },
+   "lastAdds": {
+    "label": "추가 진입 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "lastNearLiqSec": {
+    "label": "ROE가 nearLiqRoe 아래였던 시간(초)",
+    "scope": "run",
+    "update": ""
+   },
+   "lastTpNearMiss": {
+    "label": "익절가의 90%까지 갔다가 못 닿았는지",
+    "scope": "run",
+    "update": "최고 ROE >= 익절 ROE × 0.9"
+   },
+   "lastEntryAtExtreme": {
+    "label": "최근 고점/저점에서 진입했는지",
+    "scope": "run",
+    "update": "진입가가 최근 120틱 고가(저가)의 ±0.1% 안이면 high(low)"
+   },
+   "lastAgainstTrend": {
+    "label": "추세 반대로 진입했는지",
+    "scope": "run",
+    "update": "최근 60틱 수익률 부호와 반대"
+   },
+   "lastFlip": {
+    "label": "손실 직후 반대 방향 진입이었는지",
+    "scope": "run",
+    "update": ""
+   },
+   "lastAfterNewsSec": {
+    "label": "속보 뒤 몇 초 만에 진입했는지",
+    "scope": "run",
+    "update": "events.json newsStats. 해당 없으면 null"
+   },
+   "lastNewsFake": {
+    "label": "그 속보가 가짜였는지",
+    "scope": "run",
+    "update": ""
+   },
+   "lastFundedBy": {
+    "label": "진입 직전(60초 안) 돈을 빌린 곳",
+    "scope": "run",
+    "update": "bank|capital|shark1|shark2|friend|null"
+   },
+   "lastLiqByFunding": {
+    "label": "펀딩비 차감으로 청산됐는지",
+    "scope": "run",
+    "update": ""
+   },
+   "lastLoss": {
+    "label": "마지막 청산으로 잃은 증거금",
+    "scope": "run",
+    "update": ""
+   },
+   "lastPostLiqTaps": {
+    "label": "청산 뒤 3초 안에 화면을 누른 횟수",
+    "scope": "run",
+    "update": ""
+   },
+   "lifeBankruptcies": {
+    "label": "누적 파산 횟수",
+    "scope": "life",
+    "update": "이번 파산 포함"
+   },
+   "lifeCollected": {
+    "label": "수집한 엔딩 수",
+    "scope": "life",
+    "update": "이번 엔딩을 주기 전 기준"
+   },
+   "lifeRuns": {
+    "label": "누적 회차 수",
+    "scope": "life",
+    "update": "이번 회차 포함"
+   },
+   "lifeLiqs": {
+    "label": "누적 청산 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeLaborTaps": {
+    "label": "누적 노동 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeOdTotal": {
+    "label": "누적 연체 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeOdShark1": {
+    "label": "누적 사채 1단계 연체 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeOdShark2": {
+    "label": "누적 사채 2단계 연체 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeBorrowShark2": {
+    "label": "누적 사채 2단계 대출 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeFriendsBroken": {
+    "label": "누적 절교 횟수",
+    "scope": "life",
+    "update": ""
+   },
+   "lifeLev200Trades": {
+    "label": "누적 200배 진입 횟수",
+    "scope": "life",
+    "update": ""
+   }
+  }
+ },
+ "endings": [
+  {
+   "id": "END-001",
+   "no": 1,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "무자산 텐트 거지의 서막",
+   "condition": "텐트 거주, 1금융 대출 없음, 정산 연체로 파산",
+   "line": "은행 문턱도 못 넘고 이자를 못 내서 나뭇잎 이불까지 압류당했습니다.",
+   "motif": "빗속에서 찢어진 텐트를 안고 우는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "houseStage",
+      "==",
+      0
+     ],
+     [
+      "debtBank",
+      "==",
+      0
+     ]
+    ]
+   },
+   "priority": 60,
+   "hint": "집 단계 = 0 · 1금융 원금 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-002",
+   "no": 2,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "황금 저택의 흑자 도산",
+   "condition": "황금 저택 보유, 유지비 3회 연속 미납",
+   "line": "5,000만 도토리짜리 저택에 살면서 유지비 50만 도토리를 못 내 경매로 쫓겨났습니다. 하우스푸어의 정석.",
+   "motif": "황금 대문에 붙은 붉은 압류 딱지와 쫓겨난 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      4
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 · 집 단계 = 4",
+   "illustration": null
+  },
+  {
+   "id": "END-003",
+   "no": 3,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "통나무 오두막의 꿈 파탄",
+   "condition": "오두막 보유, 1금융 대출 연체 2회 이상",
+   "line": "꿈에 그리던 통나무 오두막이 1금융권 부엉이 지점장의 경매 망치 한 번에 날아갔습니다.",
+   "motif": "법원 경매 봉투를 든 부엉이 지점장과 주저앉은 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      1
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 1금융 연체 · 집 단계 = 1",
+   "illustration": null
+  },
+  {
+   "id": "END-004",
+   "no": 4,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "도토리 창고 깡통 전세",
+   "condition": "도토리 창고 보유, 자산 담보 비율 100% 초과",
+   "line": "창고를 담보로 대출을 다 당겨 썼더니, 시세 하락으로 창고보다 빚이 더 커졌습니다.",
+   "motif": "텅 빈 창고 안에서 부채 서류 더미에 묻힌 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank",
+     "overdue_upkeep"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      2
+     ],
+     [
+      "ltvPct",
+      ">",
+      100
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "원인: 1금융 연체 또는 유지비 연체 · 집 단계 = 2 · 담보 대비 1금융 대출 비율(%) > 100",
+   "illustration": null
+  },
+  {
+   "id": "END-005",
+   "no": 5,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "호숫가 별장 경매 사건",
+   "condition": "호숫가 별장 보유, 유지비 3회 연속 미납",
+   "line": "아름다운 호수 뷰를 보며 여유를 즐기다 유지비 독촉장이 쌓여 별장이 경매로 넘어갔습니다.",
+   "motif": "경매 안내문이 붙은 별장을 호수 건너편에서 바라보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      3
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 · 집 단계 = 3",
+   "illustration": null
+  },
+  {
+   "id": "END-006",
+   "no": 6,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "1금융권 신용불량자 1호",
+   "condition": "1금융 이자 3회 연속 미납",
+   "line": "숲속 중앙조합 역사상 최초로 '접근 금지 및 신용 블랙리스트'에 이름을 올렸습니다.",
+   "motif": "부엉이 은행 벽면에 붙은 칩멍크의 수배 전단지",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": []
+   },
+   "priority": 100,
+   "hint": "원인: 1금융 연체",
+   "illustration": null
+  },
+  {
+   "id": "END-007",
+   "no": 7,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "서류 미비자의 허망한 낙방",
+   "condition": "무자산 상태로 1금융권 대출 버튼 10회 연타 후 파산",
+   "line": "소득 증빙 서류로 도토리 껍데기 3개를 제출했다가 부엉이 지점장에게 쫓겨났습니다.",
+   "motif": "은행 출입문 밖으로 쫓겨나 나뒹구는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "houseStage",
+      "==",
+      0
+     ],
+     [
+      "bankRefusals",
+      ">=",
+      10
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "집 단계 = 0 · 1금융 거절 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-008",
+   "no": 8,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "담보 비율 착오의 대가",
+   "condition": "오두막 담보 대출 직후 자산 매각 실패 파산",
+   "line": "LTV 80%가 뭔지 모르고 빌렸다가, 다음날 담보권 실행으로 오두막 문이 용접되었습니다.",
+   "motif": "오두막 문에 자물쇠와 쇠사슬이 채워진 모습",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      1
+     ],
+     [
+      "cyclesSinceBankBorrow",
+      "<=",
+      3
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "원인: 1금융 연체 · 집 단계 = 1 · 마지막 1금융 대출 뒤 정산 횟수 ≤ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-009",
+   "no": 9,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "2금융 연쇄 이자 폭탄",
+   "condition": "1금융 상환을 위해 2금융 3회 이상 돌려막기 후 파산",
+   "line": "저축은행 이자를 막으려고 캐피탈을 썼더니 이자가 도토리 팽이처럼 돌고 돕니다.",
+   "motif": "팽이처럼 돌아가는 이자 영수증 폭풍 속에 갇힌 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "borrowCapital",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 2금융 연체 · 2금융 대출 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-010",
+   "no": 10,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "무리한 승급의 비극",
+   "condition": "오두막에서 도토리 창고로 업그레이드 직후 파산",
+   "line": "집 넓히자마자 정산 주기가 찾아왔습니다. 평수 늘리다 인생 줄어들었네요.",
+   "motif": "이삿짐 상자를 들고 고꾸라지는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      2
+     ],
+     [
+      "lastMoveDir",
+      "==",
+      "up"
+     ],
+     [
+      "cyclesSinceMove",
+      "<=",
+      3
+     ]
+    ]
+   },
+   "priority": 130,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 집 단계 = 2 · 마지막 이사 방향 = 더 좋은 집으로 · 마지막 이사 뒤 정산 횟수 ≤ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-011",
+   "no": 11,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "세금 체납과 공매 처분",
+   "condition": "1금융 대출금 보유 중 지방세/유지비 동시 연체",
+   "line": "숲속 구청에서 당신의 마지막 남은 도토리 찻잔까지 압류 딱지를 붙였습니다.",
+   "motif": "찻잔과 숟가락에 붙은 빨간 압류 스티커",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "debtBank",
+      ">",
+      0
+     ],
+     [
+      "stUpkeep",
+      ">=",
+      1
+     ],
+     [
+      "stBank",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 130,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 · 1금융 원금 > 0 · 유지비 연속 연체 ≥ 1 · 1금융 연속 연체 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-012",
+   "no": 12,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "부엉이 은행장의 냉정한 거절",
+   "condition": "신용점수 미달 상태에서 1금융 재대출 시도 시 파산",
+   "line": "부엉이 은행장이 돋보기를 고쳐 쓰며 말했습니다. '손님, 담보부터 가져오세요.'",
+   "motif": "차가운 눈빛으로 돋보기를 비추는 부엉이 지점장",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ],
+     [
+      "bankRefusals",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 집 단계 ≥ 1 · 1금융 거절 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-013",
+   "no": 13,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "자산 매각 타이밍 미스",
+   "condition": "경매 직전 자산 매각 버튼을 눌렀으나 0.1초 차 미스",
+   "line": "팔려고 한 순간 경매가 끝났습니다. 손가락이 0.1초만 빨랐어도 덜 날아갔을 텐데.",
+   "motif": "시계 바늘을 잡으려고 손을 뻗는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ],
+     [
+      "location",
+      "==",
+      "home"
+     ]
+    ],
+    "note": "경매 직전 매각 타이밍 판정은 없다. 파산 순간 마을에서 '내 집'을 보고 있었으면 준다."
+   },
+   "priority": 70,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 집 단계 ≥ 1 · 마을에서 보고 있던 장소 = 내 집",
+   "illustration": null
+  },
+  {
+   "id": "END-014",
+   "no": 14,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "부동산 거품 붕괴",
+   "condition": "황금 저택 보유 중 시세 50% 하락 이벤트로 파산",
+   "line": "숲속 아파트 버블이 꺼졌습니다. 영끌의 끝은 영혼까지 끌려나가는 것이었습니다.",
+   "motif": "금 간 황금 저택과 바닥으로 떨어지는 시세 그래프",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      4
+     ],
+     [
+      "housingSlumpActive",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 집 단계 = 4 · 부동산 하락 속보 진행 중 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-015",
+   "no": 15,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "경매 낙찰자의 비웃음",
+   "condition": "내 담보 자산이 다른 동물 NPC에게 경매로 넘어감",
+   "line": "당신의 도토리 창고를 너구리가 반값에 낙찰받고 기쁨의 춤을 춥니다.",
+   "motif": "창고 앞에서 춤추는 너구리와 눈물 흘리는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      2
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 1금융 연체 · 집 단계 = 2",
+   "illustration": null
+  },
+  {
+   "id": "END-016",
+   "no": 16,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "이체 수수료 부족 파산",
+   "condition": "정산 때 모자란 금액이 500 도토리 이하",
+   "line": "단돈 500 도토리가 모자라 이자가 이체되지 않았고, 그대로 연체 파산했습니다.",
+   "motif": "화면에 떠오른 '잔액 부족 (500 도토리 부족)' 안내",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "shortfall",
+      "<=",
+      500
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 이번 정산 미납 총액 ≤ 500",
+   "illustration": null
+  },
+  {
+   "id": "END-017",
+   "no": 17,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "변제 순서 착오",
+   "condition": "저금리 1금융부터 갚고 고금리 사채를 방치해 파산",
+   "line": "착하게 은행 빚부터 갚다가, 사채 이자에 마지막 한 톨까지 털렸습니다.",
+   "motif": "1금융 감사장과 사채 독촉장 뭉치가 나란히 놓인 장면",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "stampsBank",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 1금융 도장 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-018",
+   "no": 18,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "저축은행 연체이자 굴레",
+   "condition": "황금저축은행 대출 연체 이자율 20% 적용 파산",
+   "line": "연체 이자가 눈덩이처럼 굴러가더니 마침내 길을 통째로 막아버렸습니다.",
+   "motif": "거대한 원금+이자 눈덩이 앞에 선 작은 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_capital"
+    ],
+    "all": []
+   },
+   "priority": 100,
+   "hint": "원인: 2금융 연체",
+   "illustration": null
+  },
+  {
+   "id": "END-019",
+   "no": 19,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "담보권 추가 설정 거부",
+   "condition": "기존 대출 상환 없이 추가 담보 신청 실패 파산",
+   "line": "부엉이 지점장이 고개를 저었습니다. '이 집엔 이미 빨간 딱지가 세 겹입니다.'",
+   "motif": "누더기처럼 딱지가 겹겹이 붙은 통나무집",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ],
+     [
+      "bankRefusals",
+      ">=",
+      1
+     ],
+     [
+      "ltvPct",
+      ">=",
+      95
+     ]
+    ]
+   },
+   "priority": 130,
+   "hint": "원인: 1금융 연체 · 집 단계 ≥ 1 · 1금융 거절 횟수 ≥ 1 · 담보 대비 1금융 대출 비율(%) ≥ 95",
+   "illustration": null
+  },
+  {
+   "id": "END-020",
+   "no": 20,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "1금융권 신용 회복 실패",
+   "condition": "신용 회복 프로그램 신청 기준 미달 파산",
+   "line": "신용 회복을 신청하러 갔더니 최소 소득 조건이 도토리 100개라 실패했습니다.",
+   "motif": "'자격 미달' 도장이 찍힌 신용 회복 신청서",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "laborTaps",
+      "<",
+      100
+     ],
+     [
+      "cycles",
+      ">=",
+      5
+     ]
+    ],
+    "note": "신용 회복 프로그램은 없다. 노동을 거의 하지 않고(100회 미만) 5회 이상 정산을 버틴 경우로 대신한다."
+   },
+   "priority": 70,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 노동 횟수 < 100 · 버틴 정산 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-021",
+   "no": 21,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "깡통 저택과 월세 전락",
+   "condition": "황금 저택 압류 후 텐트로 강제 전거",
+   "line": "어제는 펜트하우스, 오늘은 길바닥 텐트. 화려했던 지난날이여 안녕.",
+   "motif": "저택 배경 뒤로 텐트를 치는 씁쓸한 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      4
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 1금융 연체 · 집 단계 = 4",
+   "illustration": null
+  },
+  {
+   "id": "END-022",
+   "no": 22,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "서민금융지원금 먹튀 오해",
+   "condition": "지원금 수령 직후 다른 빚 갚다 적발 파산",
+   "line": "서민 지원금을 받아 사채 갚는데 썼다가 부정 수급으로 즉시 환수당했습니다.",
+   "motif": "경찰 포졸 쥐들에게 끌려가는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "subsidyCount",
+      ">=",
+      1
+     ]
+    ],
+    "note": "부정 수급 적발은 없다. 서민금융 지원금 속보를 받은 회차에 연체 파산하면 준다."
+   },
+   "priority": 60,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 지원금 수령 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-023",
+   "no": 23,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "연체 독촉장 폭탄",
+   "condition": "1금융 독촉 통지서 10장 누적 파산",
+   "line": "집 우체통이 독촉장으로 터져버렸습니다. 종이 무게를 못 이기고 우체통도 파산.",
+   "motif": "독촉 서류가 쏟아져 나오는 나무 우체통",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "lifeOdTotal",
+      ">=",
+      10
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 누적 연체 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-024",
+   "no": 24,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "보증인 서명 오류",
+   "condition": "타 NPC 보증 서줬다가 연쇄 파산",
+   "line": "옆집 순록이 빚을 안 갚고 야반도주하는 바람에 보증인인 당신이 독박을 썼습니다.",
+   "motif": "야반도주한 순록의 짐수레와 넋이 나간 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "cycles",
+      ">=",
+      10
+     ]
+    ],
+    "note": "보증 제도는 없다. 10회 이상 정산을 버틴 뒤의 1·2금융 파산에 준다."
+   },
+   "priority": 60,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 버틴 정산 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-025",
+   "no": 25,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "금리 인상 폭탄 맞춤",
+   "condition": "금리 인상 기습 이벤트 시 1금융 이자 감당 불가",
+   "line": "숲속 중앙은행 기준금리 기습 인상! 이자가 2배로 뛰며 즉시 숨이 막혔습니다.",
+   "motif": "치솟는 금리 화살표를 올려다보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "rateHikeActive",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 금리 인상 속보 진행 중 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-026",
+   "no": 26,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "1금융 담보 매각 대금 0 도토리",
+   "condition": "경매 후 청산 비용 차감으로 남은 돈 0 도토리",
+   "line": "집을 팔아 빚을 갚았더니 잔금이 정확히 0 도토리 남았습니다. 영리한 청산!",
+   "motif": "0 도토리이 찍힌 통장을 들고 멍하니 서 있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ],
+     [
+      "auctionSurplus",
+      "<=",
+      0
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "원인: 1금융 연체 · 집 단계 ≥ 1 · 경매 후 남는 돈 ≤ 0",
+   "illustration": null
+  },
+  {
+   "id": "END-027",
+   "no": 27,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "주택 담보 대출 비율 초과",
+   "condition": "대출 한도 초과 상태에서 자동 정산 파산",
+   "line": "한도를 120% 초과해 대출을 땡겨 쓴 결과, 정산 시스템이 즉시 계약을 해지했습니다.",
+   "motif": "빨간색 경고등이 켜진 금융 시스템 단말기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "ltvPct",
+      ">=",
+      120
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 담보 대비 1금융 대출 비율(%) ≥ 120",
+   "illustration": null
+  },
+  {
+   "id": "END-028",
+   "no": 28,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "신용 등급 최하위의 잔혹사",
+   "condition": "신용점수 1점 달성 파산",
+   "line": "당신의 신용점수는 1점입니다. 이제 숲속 자판기에서도 음료수를 안 팝니다.",
+   "motif": "자판기 동전 투입구가 막혀 쫓겨나는 장면",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "creditScore",
+      "<=",
+      1
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 신용점수 ≤ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-029",
+   "no": 29,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "법원 집행관 기습 방문",
+   "condition": "자산 압류 집행관 방문 이벤트 파산",
+   "line": "아침에 눈을 뜨니 법원 집행관 족제비가 내 도토리 베개에 딱지를 붙이고 있었습니다.",
+   "motif": "베개와 숟가락에 딱지를 붙이는 족제비 집행관",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "localHour",
+      ">=",
+      5
+     ],
+     [
+      "localHour",
+      "<=",
+      9
+     ]
+    ],
+    "note": "집행관 방문 이벤트는 없다. 기기 시각이 오전 5~9시일 때의 파산으로 대신한다."
+   },
+   "priority": 70,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 기기 시각(시) ≥ 5 · 기기 시각(시) ≤ 9",
+   "illustration": null
+  },
+  {
+   "id": "END-030",
+   "no": 30,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "금융 사기 찌라시 낚시",
+   "condition": "1금융 빙자 스팸 대출 문자에 낚여 자산 상실",
+   "line": "1금융 저금리 대출 문자를 누르고 보이스피싱에 낚여 남은 현금을 송금했습니다.",
+   "motif": "스마트폰 화면을 보며 머리를 쥐어뜯는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "houseStage",
+      "==",
+      0
+     ],
+     [
+      "bankRefusals",
+      ">=",
+      5
+     ]
+    ],
+    "note": "피싱 문자 이벤트는 없다. 텐트에서 1금융에 5번 이상 거절당한 뒤 파산하면 준다."
+   },
+   "priority": 70,
+   "hint": "집 단계 = 0 · 1금융 거절 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-031",
+   "no": 31,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "자동 이체 계좌 잔액 부족",
+   "condition": "이체 계좌를 잘못 지정하여 1금융 이자 연체 파산",
+   "line": "주 계좌엔 돈이 가득한데, 이체 계좌가 텅 비어 연체 판정을 받았습니다. 아뿔싸!",
+   "motif": "돈이 가득한 자루 옆에서 텅 빈 통장을 들고 울기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "equityCoversShortfall",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 포지션에 묶인 돈이 미납액 이상 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-032",
+   "no": 32,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "이자 유예 기간 종료 폭탄",
+   "condition": "유예 기간 종료 후 원리금 동시 상환 폭탄 파산",
+   "line": "3개월 유예 기간이 끝나는 날, 거대한 원리금 덩어리가 떨어졌습니다.",
+   "motif": "하늘에서 떨어지는 거대한 숫자 덩어리",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_capital",
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "capitalizedInterest",
+      ">=",
+      50000
+     ]
+    ],
+    "note": "유예 제도는 없다. 원금에 붙은 미납 이자가 5만 도토리 이상이면 준다."
+   },
+   "priority": 60,
+   "hint": "원인: 2금융 연체 또는 1금융 연체 · 원금에 붙은 미납 이자 합 ≥ 50,000",
+   "illustration": null
+  },
+  {
+   "id": "END-033",
+   "no": 33,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "담보 가치 재평가 하락",
+   "condition": "감정평가원 NPC의 평가절하로 대출 즉시 회수",
+   "line": "감정평가원 여우가 당신의 집나무에 흠집이 있다며 담보 가치를 반토막 냈습니다.",
+   "motif": "돋보기로 나뭇결을 흠잡는 여우 감정평가사",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "housingSlumpActive",
+      "==",
+      true
+     ],
+     [
+      "houseStage",
+      "<=",
+      3
+     ]
+    ]
+   },
+   "priority": 120,
+   "hint": "원인: 1금융 연체 · 부동산 하락 속보 진행 중 = 예 · 집 단계 ≤ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-034",
+   "no": 34,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "무차입 영끌의 결말",
+   "condition": "순자산 0 이하 상태에서 빚으로 집을 산 직후 파산",
+   "line": "자기 자본 0으로 집을 샀던 기적, 그 기적은 딱 정산 한 번 동안 유지되었습니다.",
+   "motif": "정산 타이머가 0이 되는 순간 압류 딱지가 붙는 집",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "lastMoveDir",
+      "==",
+      "up"
+     ],
+     [
+      "cyclesSinceMove",
+      "<=",
+      1
+     ],
+     [
+      "netWorthAtMove",
+      "<=",
+      0
+     ]
+    ]
+   },
+   "priority": 130,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 마지막 이사 방향 = 더 좋은 집으로 · 마지막 이사 뒤 정산 횟수 ≤ 1 · 마지막 이사 순간 순자산 ≤ 0",
+   "illustration": null
+  },
+  {
+   "id": "END-035",
+   "no": 35,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "숲속 은행 셧다운",
+   "condition": "은행 영업시간 종료 후 이체 시도 실패 연체",
+   "line": "오후 4시 1분에 은행 창구에 도착했습니다. 셔터가 내려가며 파산 확정!",
+   "motif": "닫힌 쇠창살 셔터 앞에서 통곡하는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "localHour",
+      ">=",
+      16
+     ]
+    ],
+    "note": "은행 영업시간은 없다. 기기 시각이 오후 4시 이후일 때의 1금융 파산으로 대신한다."
+   },
+   "priority": 60,
+   "hint": "원인: 1금융 연체 · 기기 시각(시) ≥ 16",
+   "illustration": null
+  },
+  {
+   "id": "END-036",
+   "no": 36,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "부동산 복비 미납 경매",
+   "condition": "집 매매 성공했으나 중개 수수료 미납 파산",
+   "line": "집은 잘 팔았는데, 복덕방 곰 아저씨 수수료를 안 줘서 매매 대금이 압류되었습니다.",
+   "motif": "팔짱을 끼고 서 있는 험악한 복덕방 곰",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "lastMoveDir",
+      "==",
+      "down"
+     ],
+     [
+      "cyclesSinceMove",
+      "<=",
+      2
+     ]
+    ],
+    "note": "중개 수수료 미납 판정은 없다. 집을 줄여 이사한 뒤 2회 정산 안에 파산하면 준다."
+   },
+   "priority": 70,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 마지막 이사 방향 = 더 싼 집으로 · 마지막 이사 뒤 정산 횟수 ≤ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-037",
+   "no": 37,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "1금융 연체 독촉 전화 스트레스",
+   "condition": "1금융 독촉을 계속 외면한 끝에 강제 집행",
+   "line": "부엉이 지점장의 전화 20통을 받지 않았더니, 법원 집행관이 열쇠공과 함께 문을 열었습니다.",
+   "motif": "열린 현관문 앞에 선 집행관과 열쇠공",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "stamps",
+      "==",
+      0
+     ]
+    ],
+    "note": "독촉 전화는 없다. 도장을 한 번도 찍지 않고 1금융 파산하면 준다."
+   },
+   "priority": 60,
+   "hint": "원인: 1금융 연체 · 도장 횟수 합 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-038",
+   "no": 38,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "담보 대출 서류 위조 적발",
+   "condition": "가짜 서류 제출로 대출금 즉시 회수 및 파산",
+   "line": "나뭇잎 도장을 위조했다가 부엉이 지점장의 날카로운 눈에 적발되었습니다.",
+   "motif": "위조 도장을 들키고 덜덜 떠는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_bank"
+    ],
+    "all": [
+     [
+      "bankRefusals",
+      ">=",
+      5
+     ],
+     [
+      "houseStage",
+      ">=",
+      1
+     ]
+    ],
+    "note": "서류 위조는 없다. 집이 있는데도 1금융에 5번 이상 거절당한 뒤 파산하면 준다."
+   },
+   "priority": 70,
+   "hint": "원인: 1금융 연체 · 1금융 거절 횟수 ≥ 5 · 집 단계 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-039",
+   "no": 39,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "주택 유지비 누적 압류",
+   "condition": "유지비 3회 연속 미납으로 집을 잃음",
+   "line": "월세를 안 내서 집주인 족제비가 내 짐짝을 창밖으로 던져버렸습니다.",
+   "motif": "창밖으로 날아가는 칩멍크의 도토리 짐 보따리",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep"
+    ],
+    "all": []
+   },
+   "priority": 100,
+   "hint": "원인: 유지비 연체",
+   "illustration": null
+  },
+  {
+   "id": "END-040",
+   "no": 40,
+   "category": "CAT-A",
+   "categoryName": "1금융·부동산",
+   "title": "1금융 완납 착각의 비극",
+   "condition": "1,000 도토리 이하로 남은 빚을 방치",
+   "line": "빚 다 갚은 줄 알고 잔치를 벌였는데, 남은 1 도토리에 이자가 붙어 파산했습니다.",
+   "motif": "축하 음료를 들다가 잔액 안내서를 받고 굳은 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "minNonzeroDebt",
+      "<=",
+      1000
+     ]
+    ]
+   },
+   "priority": 110,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 0이 아닌 빚 중 가장 작은 원금 ≤ 1,000",
+   "illustration": null
+  },
+  {
+   "id": "END-041",
+   "no": 41,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "오소리 소장의 집기 압류",
+   "condition": "사채 1단계 연체 2회, 집기 압류 이벤트 발동",
+   "line": "오소리 소장이 들이닥쳐 냄비, 숟가락, 도토리 맷돌까지 싹 쓸어갔습니다.",
+   "motif": "트럭에 칩멍크의 살림살이를 싣는 오소리 소장",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": []
+   },
+   "priority": 300,
+   "hint": "원인: 사채 1단계 연체",
+   "illustration": null
+  },
+  {
+   "id": "END-042",
+   "no": 42,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "지인 연락처 유출과 사회적 매장",
+   "condition": "사채 2단계 연체, 연락처 유출 조건 충족",
+   "line": "독사 대부가 전화번호부를 열었습니다. 온 숲속 단톡방에 내 채무가 생중계됩니다.",
+   "motif": "스마트폰에 쏟아지는 친구들의 비난과 독사 대부의 웃음",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "contactsSeized",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 연락처 제출 여부 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-043",
+   "no": 43,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "선이자 40% 떼이고 즉시 파산",
+   "condition": "사채 2단계 대출 직후 파산",
+   "line": "20만 도토리를 빌렸는데 선이자 8만을 떼이고 12만만 받았습니다. 빚은 그대로 20만입니다.",
+   "motif": "12만 도토리를 들고 망연자실한 칩멍크와 혀를 낼름거리는 뱀",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "cyclesSinceShark2Borrow",
+      "<=",
+      2
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 마지막 사채 2단계 대출 뒤 정산 횟수 ≤ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-044",
+   "no": 44,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "급여 양도 각서 나뭇잎 서명",
+   "condition": "오소리 차압을 겪은 뒤 사채 2단계 연체",
+   "line": "앞으로 벌 모든 도토리의 수령 권리를 넘긴다는 각서에 서명했습니다. 월급날이 남의 날이 되었습니다.",
+   "motif": "각서에 발도장을 찍고 빈 주머니를 내려다보는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "garnished",
+      ">",
+      0
+     ]
+    ],
+    "note": "각서 서명 절차는 없다. 오소리 차압을 겪은 회차의 사채 2단계 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 차압당한 금액 합 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-045",
+   "no": 45,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 콜센터 강제 노역",
+   "condition": "사채 2단계 잔액 100만 도토리 이상, 사채 2단계 연체 누적 3회 이상",
+   "line": "상환 실패. 이름 모를 외딴 건물에서 헤드셋을 끼고 밤새 전화를 겁니다.",
+   "motif": "어두운 콜센터 방에서 수화기를 들고 있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "debtShark2",
+      ">=",
+      1000000
+     ],
+     [
+      "lifeOdShark2",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 원금 ≥ 1,000,000 · 누적 사채 2단계 연체 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-046",
+   "no": 46,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "밤길 추심 피하기",
+   "condition": "밤 10시 이후 사채 연체 파산",
+   "line": "밤마다 추심원의 손전등을 피해 골목을 돌다가 막차도 일자리도 놓쳤습니다.",
+   "motif": "손전등 불빛을 피해 담벼락에 붙어 선 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "localHour",
+      ">=",
+      22
+     ]
+    ],
+    "note": "추심 피하기 미니게임은 없다. 기기 시각이 밤 10시 이후일 때의 사채 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 기기 시각(시) ≥ 22",
+   "illustration": null
+  },
+  {
+   "id": "END-047",
+   "no": 47,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "인감 도장 착오",
+   "condition": "사채 2단계 대출 3회 이상 후 연체",
+   "line": "한 번 찍은 인감은 거짓말을 하지 않습니다. 독사 대부가 마지막 한 톨까지 징수했습니다.",
+   "motif": "붉은 인주 도장이 찍힌 차용증과 넋이 나간 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "borrowShark2",
+      ">=",
+      3
+     ]
+    ],
+    "note": "도장 종류 선택은 없다. 사채 2단계 3회 이상 이용으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 대출 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-048",
+   "no": 48,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "일주일 100% 초고리 사채",
+   "condition": "일주일 100% 이자 사채 연체",
+   "line": "하루 지나니 이자가 원금의 2배! 도토리가 세포 분열하듯 빚이 증가했습니다.",
+   "motif": "세포 분열하듯 둥둥 떠다니는 거대한 이자 숫자들",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "cycles",
+      "<=",
+      7
+     ]
+    ],
+    "note": "주 100% 상품은 없다. 시작 후 7회 정산 안의 사채 2단계 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 버틴 정산 횟수 ≤ 7",
+   "illustration": null
+  },
+  {
+   "id": "END-049",
+   "no": 49,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "독사 대부의 심야 독촉 전화",
+   "condition": "새벽(0~4시)에 사채 2단계 연체 파산",
+   "line": "새벽 3시마다 울리는 독촉 전화에 잠도 일도 잃었습니다.",
+   "motif": "침대 옆에서 울리는 스마트폰과 이불을 뒤집어쓴 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "localHour",
+      "<=",
+      4
+     ]
+    ],
+    "note": "전화 받기는 없다. 기기 시각이 0~4시일 때의 사채 2단계 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 기기 시각(시) ≤ 4",
+   "illustration": null
+  },
+  {
+   "id": "END-050",
+   "no": 50,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "길거리 찌라시 대출의 함정",
+   "condition": "찌라시 대출 3회 이상 이용 후 연체 파산",
+   "line": "길에 뿌려진 '무조건 당일 대출' 찌라시를 주운 것이 내 인생 최대의 실수였습니다.",
+   "motif": "길바닥에 가득 뿌려진 노란색 찌라시 더미",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "borrowSharks",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 사채 대출 횟수 합 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-051",
+   "no": 51,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채업자 족제비의 현관 페인트",
+   "condition": "사채 1단계 연체 시 현관문 훼손 연출",
+   "line": "현관문에 '돈 갚아라'라고 붉은 열매 즙으로 칠해졌습니다. 집주인에게 쫓겨났습니다.",
+   "motif": "붉은 글씨가 쓰인 현관문과 짐 싸서 나오는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ]
+    ],
+    "note": "현관 훼손 연출은 엔딩 그림으로만 있다. 집이 있는 상태의 사채 1단계 파산에 준다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 · 집 단계 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-052",
+   "no": 52,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "차량(수레) 강제 압류",
+   "condition": "텐트 거주 중 사채 1단계 연체",
+   "line": "내 유일한 이동 수단인 도토리 수레를 오소리 소장이 압류해 갔습니다.",
+   "motif": "바퀴에 압류 딱지가 붙은 나무 수레",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      0
+     ]
+    ],
+    "note": "수레는 따로 없다. 텐트 상태의 사채 1단계 파산에 준다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 · 집 단계 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-053",
+   "no": 53,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "행동대장 곰의 방문 추심",
+   "condition": "사채 2단계 연체 누적 6회 이상",
+   "line": "독사 대부의 행동대장 곰이 찾아와 집 안의 서랍을 전부 뒤집어 놓고 갔습니다.",
+   "motif": "뒤집힌 서랍과 문 앞에 선 거대한 곰 그림자",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "lifeOdShark2",
+      ">=",
+      6
+     ]
+    ],
+    "note": "협박 레벨은 없다. 사채 2단계 연체 누적(전체 회차) 6회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 누적 사채 2단계 연체 횟수 ≥ 6",
+   "illustration": null
+  },
+  {
+   "id": "END-054",
+   "no": 54,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "일당 알바 강제 차압",
+   "condition": "노동 버튼으로 번 현금이 사채업자에게 즉시 차압",
+   "line": "손가락이 닳도록 주운 도토리가 주머니에 들어오기도 전에 차압당했습니다.",
+   "motif": "주운 도토리를 낚아채는 족제비의 손",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "garnished",
+      ">",
+      0
+     ],
+     [
+      "laborTaps",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 차압당한 금액 합 > 0 · 노동 횟수 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-055",
+   "no": 55,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "고향 집에 찾아간 사채업자",
+   "condition": "연락처 제출 후 사채 2단계 연체",
+   "line": "고향 할머니 댁까지 독사 대부가 찾아갔습니다. 손주는 고개를 들지 못합니다.",
+   "motif": "시골집 마당에서 고개 숙여 사과하는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "contactsSeized",
+      "==",
+      true
+     ],
+     [
+      "friendsBorrowed",
+      "==",
+      0
+     ]
+    ],
+    "note": "연좌 이벤트는 없다. 연락처를 냈지만 친구에게는 빌리지 않은 경우로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 2단계 연체 · 연락처 제출 여부 = 예 · 빌린 친구 수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-056",
+   "no": 56,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "꺾기 대출의 늪",
+   "condition": "사채 1단계에서 빚 갚으려 사채 2단계 꺾기 대출",
+   "line": "빚을 빚으로 꺾었더니 꺾인 건 내 통장이었습니다. 끝없는 채무 연쇄.",
+   "motif": "꺾인 화살표 모양의 대출 체인에 묶인 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "refiShark2ToShark1",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 독사에게 빌려 오소리 갚기 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-057",
+   "no": 57,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 서류 마법의 문구",
+   "condition": "약관을 한 번도 펼쳐 보지 않고 사채 2단계 파산",
+   "line": "깨알 같은 약관 제99조: '본 계약서 사본은 100부 보관하며, 채무자의 모든 도토리는 변제에 우선 충당한다.'",
+   "motif": "돋보기로 봐야 보이는 미세 약관과 허탈한 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "termsViewedShark2",
+      "==",
+      false
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 독사 대부 약관을 펼쳐 봤는지 = 아니오",
+   "illustration": null
+  },
+  {
+   "id": "END-058",
+   "no": 58,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 드럼통 헛소문",
+   "condition": "연락처 제출 후 친구와 절교한 상태에서 사채 2단계 파산",
+   "line": "'안 갚으면 호수에 간다더라'는 헛소문이 돌았습니다. 소문만으로 일자리와 셋방을 모두 잃었습니다.",
+   "motif": "수군거리는 마을 주민들과 호숫가에 덩그러니 놓인 빈 나무 통",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "contactsSeized",
+      "==",
+      true
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ],
+    "note": "연출 모달은 없다. 연락처 제출 + 절교 1명 이상인 사채 2단계 파산에 준다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 2단계 연체 · 연락처 제출 여부 = 예 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-059",
+   "no": 59,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "탕감 도장 훔치려다 적발",
+   "condition": "독사 대부 사무실에서 탕감 도장 도둑질 실패",
+   "line": "독사 대부의 도장을 몰래 찍으려다 현장에서 들켰습니다.",
+   "motif": "책상 위 도장에 손을 뻗다 굳어 버린 칩멍크와 뒤에 선 독사 대부",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "stampsShark2",
+      ">=",
+      10
+     ]
+    ],
+    "note": "도둑질 행동은 없다. 독사 대부 도장을 10번 이상 찍고도 파산하면 준다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 도장 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-060",
+   "no": 60,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "나뭇잎 차용증 화장지 착오",
+   "condition": "차용증을 실수로 버렸다고 우기다 보복 파산",
+   "line": "차용증을 찢어 버렸다고 빚이 사라질 줄 알았나요? 독사 대부는 사본을 100장 갖고 있습니다.",
+   "motif": "100장의 차용증 복사본을 날리는 독사 대부",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "stampsShark2",
+      "==",
+      0
+     ]
+    ],
+    "note": "차용증 폐기 행동은 없다. 독사 대부 도장을 한 번도 안 찍고 파산하면 준다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 도장 횟수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-061",
+   "no": 61,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채업자의 감언이설",
+   "condition": "\"오늘만 이자 감면\" 거짓말에 속아 추가 대출",
+   "line": "오늘 갚으면 이자 탕감해 준대서 딴 데서 빌려 줬더니 탕감은커녕 원금에 얹혔습니다.",
+   "motif": "속았다는 사실을 깨닫고 벙찐 표정의 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "refiAny",
+      ">=",
+      2
+     ]
+    ],
+    "note": "이자 감면 제안은 없다. 돌려막기(빌린 직후 다른 곳 상환) 2회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 돌려막기 횟수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-062",
+   "no": 62,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 밤시장 명의 도용",
+   "condition": "직접 빌린 적 없이 사채 2단계 빚이 생겨 파산",
+   "line": "신원 나뭇잎을 잃어버렸더니, 어느새 내 이름 앞으로 사채 빚이 더 얹혀 있었습니다.",
+   "motif": "가짜 나뭇잎 신분증을 들고 있는 괴한",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "claimsSold",
+      ">",
+      0
+     ],
+     [
+      "borrowShark2",
+      "==",
+      0
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 2단계 연체 · 친구가 넘긴 채권 금액 합 > 0 · 사채 2단계 대출 횟수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-063",
+   "no": 63,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "오소리 소장의 각서 연쇄",
+   "condition": "오소리 소장 대출 5회 연속 이용",
+   "line": "오소리 소장의 친절한 미소 뒤에 숨겨진 5장의 각서가 한꺼번에 돌아왔습니다.",
+   "motif": "친절하게 웃지만 손에 각서 5장을 쥔 오소리",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "borrowShark1",
+      ">=",
+      5
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 1단계 연체 · 사채 1단계 대출 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-064",
+   "no": 64,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 2단계 첫 이용의 참극",
+   "condition": "사채 2단계 버튼 처음 누르자마자 연체 파산",
+   "line": "단 한 번의 호기심으로 독사 대부 버튼을 눌렀고, 그 길로 인생이 끝났습니다.",
+   "motif": "버튼을 누르는 순간 등 뒤에서 문이 닫히는 연출",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "borrowShark2",
+      "==",
+      1
+     ],
+     [
+      "lifeBorrowShark2",
+      "<=",
+      1
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 대출 횟수 = 1 · 누적 사채 2단계 대출 횟수 ≤ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-065",
+   "no": 65,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 야반도주 실패",
+   "condition": "야반도주 선택지 클릭했으나 사채업자에게 포획",
+   "line": "밤중에 짐 싸서 도망치다 숲속 길목에서 기다리던 족제비 부대에게 잡혔습니다.",
+   "motif": "짐 보따리를 멘 채 족제비들에게 둘러싸인 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "lastMoveDir",
+      "==",
+      "down"
+     ],
+     [
+      "cyclesSinceMove",
+      "<=",
+      3
+     ]
+    ],
+    "note": "야반도주 선택지는 없다. 집을 줄여 이사한 뒤 3회 정산 안의 사채 파산으로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 마지막 이사 방향 = 더 싼 집으로 · 마지막 이사 뒤 정산 횟수 ≤ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-066",
+   "no": 66,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 1단계 담보 설정 오류",
+   "condition": "오두막을 사채 1단계에 이중 담보 제공 후 적발",
+   "line": "1금융 담보 집에 사채 담보를 또 잡았다가 양쪽에서 협공으로 쫓겨났습니다.",
+   "motif": "양쪽에서 집을 잡아당기는 부엉이와 오소리",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ],
+     [
+      "debtBank",
+      ">",
+      0
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 1단계 연체 · 집 단계 ≥ 1 · 1금융 원금 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-067",
+   "no": 67,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "지인 추심 문자의 재앙",
+   "condition": "연락처 유출 후 친구들의 거센 항의 파산",
+   "line": "친한 친구 너구리한테 '당신 친구 칩멍크 대신 빚 갚으세요' 문자가 발송되었습니다.",
+   "motif": "화가 난 너구리가 스마트폰을 들고 쳐들어오는 씬",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "contactsSeized",
+      "==",
+      true
+     ],
+     [
+      "trustMin",
+      "<=",
+      40
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 2단계 연체 · 연락처 제출 여부 = 예 · 친구 신뢰 최솟값 ≤ 40",
+   "illustration": null
+  },
+  {
+   "id": "END-068",
+   "no": 68,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "독사 대부의 미소 속 칼날",
+   "condition": "독사 대부 이자 상환 1초 지연 파산",
+   "line": "1초 늦게 입금했습니다. 독사 대부는 1초의 오차도 용납하지 않습니다.",
+   "motif": "시계를 가리키며 혀를 낼름거리는 독사 대부",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "shortfall",
+      "<=",
+      5000
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 이번 정산 미납 총액 ≤ 5,000",
+   "illustration": null
+  },
+  {
+   "id": "END-069",
+   "no": 69,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "추심원의 24시간 밀착 감시",
+   "condition": "추심 NPC가 화면 밖을 막아서서 플레이 방해",
+   "line": "사채업자 족제비가 내 화면 중앙에 앉아서 비키질 않아 아무 버튼도 못 눌렀습니다.",
+   "motif": "UI 화면 한가운데를 가로막고 누워있는 족제비",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "idleStreak",
+      ">=",
+      2
+     ]
+    ],
+    "note": "화면을 막는 추심 NPC는 없다. 노동도 거래도 하지 않은 정산이 2회 이어진 뒤의 사채 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 아무것도 안 한 정산 연속 횟수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-070",
+   "no": 70,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "선이자 감추기 수법",
+   "condition": "선이자로 떼인 금액 누적 40만 도토리 이상",
+   "line": "100만 도토리를 빌리면 100만을 주는 줄 알았죠? 손에 들어온 건 60만뿐입니다.",
+   "motif": "텅 빈 손바닥을 허망하게 바라보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "upfrontPaid",
+      ">=",
+      400000
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 선이자로 떼인 금액 합 ≥ 400,000",
+   "illustration": null
+  },
+  {
+   "id": "END-071",
+   "no": 71,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 이자 일일 복리 폭탄",
+   "condition": "일일 복리 이자율 적용 사채 파산",
+   "line": "복리의 마술! 마술처럼 내 빚이 숲속 전체 도토리 수량보다 많아졌습니다.",
+   "motif": "거대한 숫자 기둥 아래 작게 서 있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "capitalizedInterest",
+      ">=",
+      300000
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 원금에 붙은 미납 이자 합 ≥ 300,000",
+   "illustration": null
+  },
+  {
+   "id": "END-072",
+   "no": 72,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "굴착 현장 선불 계약",
+   "condition": "노동 500회 이상 하고도 사채 1단계 파산",
+   "line": "빚 대신 굴착 현장 일당을 통째로 넘기는 계약서에 서명했습니다. 삽질 시작.",
+   "motif": "거대한 삽을 들고 굴을 파고 있는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "laborTaps",
+      ">=",
+      500
+     ]
+    ],
+    "note": "훈련소 이벤트는 없다. 노동 500회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 · 노동 횟수 ≥ 500",
+   "illustration": null
+  },
+  {
+   "id": "END-073",
+   "no": 73,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "탕감 도장 헛손질",
+   "condition": "도장을 30번 넘게 찍고도 사채 2단계 파산",
+   "line": "탕감 도장을 몰래 찍으려다 들켜, 서류에는 '상환 계획 없음' 도장이 찍혔습니다.",
+   "motif": "'상환 계획 없음' 빨간 도장이 찍힌 서류를 든 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "stamps",
+      ">=",
+      30
+     ]
+    ],
+    "note": "탕감 성공률은 없다. 도장 30회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 도장 횟수 합 ≥ 30",
+   "illustration": null
+  },
+  {
+   "id": "END-074",
+   "no": 74,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채업자 결혼식 축의금 갈취",
+   "condition": "현금 보유 중 축의금 명목으로 사채업자가 차압",
+   "line": "길에서 만난 사채업자가 '오늘 내 조카 결혼식이다'라며 남은 돈을 다 가져갔습니다.",
+   "motif": "강제로 축의금 봉투를 빼앗기는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "friendsBorrowed",
+      ">=",
+      1
+     ]
+    ],
+    "note": "길거리 조우 이벤트는 없다. 친구에게 빌린 적이 있는 사채 1단계 파산에 준다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 · 빌린 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-075",
+   "no": 75,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 2단계 무한 연체 굴레",
+   "condition": "연체 횟수 10회 돌파 파산",
+   "line": "이제 빚이 얼마인지도 모르겠습니다. 독사 대부가 부르는 게 값이 되었습니다.",
+   "motif": "끝없이 펼쳐진 장부를 보며 머리를 싸매는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "lifeOdShark2",
+      ">=",
+      10
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 누적 사채 2단계 연체 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-076",
+   "no": 76,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 지하 도박장 유인",
+   "condition": "사채업자의 도박장 유인에 넘어가 현금 전액 상실",
+   "line": "빚 갚을 돈 벌게 해준다 해서 따라간 지하 굴에서 10초 만에 털렸습니다.",
+   "motif": "룰렛 판 앞에서 털털 털린 호주머니를 보여주는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "liqs",
+      ">=",
+      1
+     ],
+     [
+      "lastHoldSec",
+      "<=",
+      10
+     ]
+    ],
+    "note": "도박장은 없다. 10초 안에 청산당한 적이 있는 회차의 사채 파산으로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 청산 횟수 ≥ 1 · 마지막 청산 포지션의 보유 시간(초) ≤ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-077",
+   "no": 77,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "오소리 소장의 거짓 인심",
+   "condition": "\"이자만 갚으세요\" 말에 원금은 그대로 둔 채 20회 넘게 이자만 냄",
+   "line": "원금은 그대로 두고 이자만 갚다가 할아버지 칩멍크가 되어서야 파산했습니다.",
+   "motif": "수염이 하얗게 핀 할아버지 칩멍크와 이자 장부",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "cycles",
+      ">=",
+      20
+     ],
+     [
+      "stampsShark1",
+      "==",
+      0
+     ]
+    ]
+   },
+   "priority": 320,
+   "hint": "원인: 사채 1단계 연체 · 버틴 정산 횟수 ≥ 20 · 사채 1단계 도장 횟수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-078",
+   "no": 78,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "추심원의 주머니 검사",
+   "condition": "오소리 차압 중 사채 1단계 파산",
+   "line": "추심원이 가방 안쪽 주머니에 숨겨 둔 비상금 도토리 2개까지 찾아냈습니다.",
+   "motif": "뒤집힌 가방과 굴러 나온 도토리 2개",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "garnished",
+      ">",
+      0
+     ],
+     [
+      "laborTaps",
+      "<",
+      100
+     ]
+    ],
+    "note": "수색 연출은 없다. 차압 중이고 노동 100회 미만인 사채 1단계 파산에 준다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 1단계 연체 · 차압당한 금액 합 > 0 · 노동 횟수 < 100",
+   "illustration": null
+  },
+  {
+   "id": "END-079",
+   "no": 79,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "불법 사채 신고 실패",
+   "condition": "경찰 신고 버튼을 눌렀으나 사채업자와 경찰이 친분",
+   "line": "경찰 포졸 쥐가 독사 대부와 형님 아우 하는 사이였습니다. 신고 실패!",
+   "motif": "경찰과 사채업자가 어깨동무하고 웃고 있는 장면",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "lifeBankruptcies",
+      ">=",
+      10
+     ]
+    ],
+    "note": "신고 버튼은 없다. 누적 파산 10회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 누적 파산 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-080",
+   "no": 80,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 강제 야간 작업",
+   "condition": "야간 노동 시 이익 전액 사채 차압",
+   "line": "밤새 줍고 주운 도토리가 새벽 6시 정산에 사채업자 통장으로 자동 이체되었습니다.",
+   "motif": "허탈하게 이체 알림 화면을 바라보는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "garnished",
+      ">",
+      0
+     ],
+     [
+      "localHour",
+      "<=",
+      6
+     ]
+    ],
+    "note": "야간 노동 구분은 없다. 차압 중 기기 시각 0~6시의 사채 파산으로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 차압당한 금액 합 > 0 · 기기 시각(시) ≤ 6",
+   "illustration": null
+  },
+  {
+   "id": "END-081",
+   "no": 81,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "독사 대부의 담보 요구 목록",
+   "condition": "1금융·2금융·사채 1단계·사채 2단계 빚을 모두 진 채 파산",
+   "line": "가진 모든 것에 담보가 잡혔습니다. 이제 무소유의 삶을 삽니다.",
+   "motif": "살림살이마다 담보 딱지가 붙은 방 한가운데의 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "debtBank",
+      ">",
+      0
+     ],
+     [
+      "debtCapital",
+      ">",
+      0
+     ],
+     [
+      "debtShark1",
+      ">",
+      0
+     ]
+    ]
+   },
+   "priority": 330,
+   "hint": "원인: 사채 2단계 연체 · 1금융 원금 > 0 · 2금융 원금 > 0 · 사채 1단계 원금 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-082",
+   "no": 82,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "연체 이자 할인 쿠폰의 함정",
+   "condition": "할인 쿠폰 사용 후 조건 미달로 2배 중과세",
+   "line": "이자 50% 할인 쿠폰을 썼는데 서류 미비로 200% 중과세 폭탄을 맞았습니다.",
+   "motif": "쿠폰이 찢어지며 폭탄으로 변하는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "rateHikeActive",
+      "==",
+      true
+     ]
+    ],
+    "note": "할인 쿠폰은 없다. 금리 인상 속보가 진행 중일 때의 사채 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 금리 인상 속보 진행 중 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-083",
+   "no": 83,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채업자의 인질극",
+   "condition": "내 비상금 도토리 항아리를 인질로 잡힘",
+   "line": "내 평생 모은 비상금 항아리가 독사 대부의 망치 아래에 놓였습니다. 쨍그랑!",
+   "motif": "깨진 항아리와 흩어지는 조각을 보며 통곡하기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "peakNetWorth",
+      ">=",
+      1000000
+     ]
+    ],
+    "note": "비상금 항아리는 없다. 이번 회차 최고 순자산이 100만 도토리를 넘었던 경우로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 이번 회차 최고 순자산 ≥ 1,000,000",
+   "illustration": null
+  },
+  {
+   "id": "END-084",
+   "no": 84,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 신용 정보망 도배",
+   "condition": "불법 사채 광고판에 내 사진 도배",
+   "line": "숲속 중앙 광장 나무에 내 얼굴과 '돈 안 갚는 튄 칩멍크' 수배지가 도배되었습니다.",
+   "motif": "광장 나무에 가득 붙은 칩멍크 수배지 전단",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "lifeOdShark1",
+      ">=",
+      6
+     ]
+    ],
+    "note": "광고판 이벤트는 없다. 사채 1단계 연체 누적(전체 회차) 6회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 누적 사채 1단계 연체 횟수 ≥ 6",
+   "illustration": null
+  },
+  {
+   "id": "END-085",
+   "no": 85,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 2단계 추심 앱 강제 설치",
+   "condition": "스마트폰에 추심 앱 설치되어 자동 이체",
+   "line": "스마트폰을 빼앗겨 추심 앱이 설치되었습니다. 돈이 생길 때마다 1초 만에 차압!",
+   "motif": "스마트폰 화면에서 손이 나와 돈을 가져가는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "garnished",
+      ">",
+      0
+     ],
+     [
+      "contactsSeized",
+      "==",
+      true
+     ]
+    ],
+    "note": "추심 앱은 없다. 차압 + 연락처 제출 상태로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 2단계 연체 · 차압당한 금액 합 > 0 · 연락처 제출 여부 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-086",
+   "no": 86,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "독사 대부의 생일 선물 연체",
+   "condition": "매월 13일(독사 대부 생일)에 사채 2단계 연체 파산",
+   "line": "하필 독사 대부 생일에 이자를 연체했습니다. 생일상 앞에서 장부가 다시 펼쳐졌습니다.",
+   "motif": "생일 모자를 쓴 독사 대부가 장부를 펼치는 장면",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "localDay",
+      "==",
+      13
+     ]
+    ],
+    "note": "생일은 기기 날짜 매월 13일로 정했다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 기기 날짜(일) = 13",
+   "illustration": null
+  },
+  {
+   "id": "END-087",
+   "no": 87,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "오소리 소장의 집기 경매",
+   "condition": "집 안의 모든 집기류 경매 처분",
+   "line": "내 사랑스러운 푹신한 이끼 침대마저 오소리 소장의 경매 리스트에 올랐습니다.",
+   "motif": "이끼 침대를 가져가는 오소리와 눈물 바다",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      2
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 1단계 연체 · 집 단계 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-088",
+   "no": 88,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 사채 연쇄 피해자 모임",
+   "condition": "다른 피해자들과 함께 파산 선언",
+   "line": "사채 피해자 모임에 나갔더니 다 같이 알거지가 되어 텐트촌을 형성했습니다.",
+   "motif": "텐트촌에 모여 컵라면(도토리 국수)을 먹는 동물들",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      0
+     ],
+     [
+      "lifeBankruptcies",
+      ">=",
+      5
+     ]
+    ],
+    "note": "피해자 모임은 없다. 텐트 상태 + 누적 파산 5회 이상으로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 집 단계 = 0 · 누적 파산 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-089",
+   "no": 89,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 계약서 나뭇잎 태우기",
+   "condition": "차용증을 불태웠으나 사채업자가 불사신",
+   "line": "차용증을 불태웠더니, 독사 대부가 금속 차용판을 꺼냈습니다. '이건 안 타지?'",
+   "motif": "쇠판에 새긴 차용증을 보여주는 독사 대부",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "stampsShark2",
+      "==",
+      0
+     ],
+     [
+      "borrowShark2",
+      ">=",
+      2
+     ]
+    ],
+    "note": "차용증 소각 행동은 없다. 2회 이상 빌리고 한 번도 안 갚은 경우로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 도장 횟수 = 0 · 사채 2단계 대출 횟수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-090",
+   "no": 90,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "100배 고리 사채의 최후",
+   "condition": "사채 2단계를 3번 넘게 쓴 직후 파산",
+   "line": "100배 이자율에 서명하는 순간, 계좌 잔고가 음수의 한계를 돌파했습니다.",
+   "motif": "계좌 잔액 숫자가 화면 밖으로 뚫고 나가는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "cyclesSinceShark2Borrow",
+      "<=",
+      2
+     ],
+     [
+      "borrowShark2",
+      ">=",
+      3
+     ]
+    ],
+    "note": "100배 이자 상품은 없다. 3회 이상 빌린 직후(2회 정산 안) 파산으로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 2단계 연체 · 마지막 사채 2단계 대출 뒤 정산 횟수 ≤ 2 · 사채 2단계 대출 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-091",
+   "no": 91,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 2단계 상환 연기 실패",
+   "condition": "상환 연기 요청 버튼 거절 판정 파산",
+   "line": "싹싹 빌며 하루만 연기해 달라고 했지만, 독사 대부는 차갑게 고개를 저었습니다.",
+   "motif": "무릎 꿇고 빌고 있는 칩멍크와 차가운 뱀",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "location",
+      "==",
+      "shark2"
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 마을에서 보고 있던 장소 = 독사 골목",
+   "illustration": null
+  },
+  {
+   "id": "END-092",
+   "no": 92,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "도토리 가공 공장 선불 계약",
+   "condition": "노동 1,000회 이상 하고도 사채 파산",
+   "line": "빚을 못 갚아 도토리 가공 공장과 선불 계약을 맺었습니다. 하루 18시간, 급여는 전액 상계.",
+   "motif": "공장 컨베이어 벨트 앞에서 도토리 까는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "laborTaps",
+      ">=",
+      1000
+     ]
+    ],
+    "note": "작업장 이송은 없다. 노동 1,000회 이상으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 노동 횟수 ≥ 1,000",
+   "illustration": null
+  },
+  {
+   "id": "END-093",
+   "no": 93,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "독사 대부의 서명 압박",
+   "condition": "대출 신청 모달에서 취소 못 하고 강제 서명",
+   "line": "취소 버튼을 누르려 했는데 서류는 이미 접수되어 있었습니다.",
+   "motif": "'접수 완료' 도장이 찍힌 신청서와 취소 버튼 위에 멈춘 손",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "tabSwitches",
+      ">=",
+      20
+     ]
+    ],
+    "note": "강제 서명 연출은 없다. 탭 전환 20회 이상(망설임)으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 탭 전환 횟수 ≥ 20",
+   "illustration": null
+  },
+  {
+   "id": "END-094",
+   "no": 94,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 추심원의 새벽 기상 송",
+   "condition": "새벽마다 집 앞에서 꽹과리 치는 추심",
+   "line": "매일 새벽 4시마다 현관 앞에서 꽹과리를 치는 바람에 수면 부족으로 파산!",
+   "motif": "꽹과리를 치는 족제비와 다크서클 짙은 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "localHour",
+      ">=",
+      4
+     ],
+     [
+      "localHour",
+      "<=",
+      6
+     ]
+    ],
+    "note": "새벽 방문 이벤트는 없다. 기기 시각 4~6시의 사채 1단계 파산으로 대신한다."
+   },
+   "priority": 270,
+   "hint": "원인: 사채 1단계 연체 · 기기 시각(시) ≥ 4 · 기기 시각(시) ≤ 6",
+   "illustration": null
+  },
+  {
+   "id": "END-095",
+   "no": 95,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 1단계 원금 탕감 실패",
+   "condition": "탕감 도장 눌렀으나 원금 0 도토리 탕감 판정",
+   "line": "탕감 도장을 쾅 찍었더니 '0.001 도토리 탕감 성공!'이라는 허망한 메시지가 떴습니다.",
+   "motif": "'0.001 도토리 탕감' 팝업창과 허탈한 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "stampsShark1",
+      ">=",
+      20
+     ]
+    ],
+    "note": "탕감 실패 판정은 없다. 오소리 도장 20회 이상 찍고도 파산한 경우로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 · 사채 1단계 도장 횟수 ≥ 20",
+   "illustration": null
+  },
+  {
+   "id": "END-096",
+   "no": 96,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 명의 차용 잔혹사",
+   "condition": "남의 명의로 사채 빌렸다가 형사 고발",
+   "line": "친구 너구리 이름으로 사채를 빌렸다가 적발되어 감옥으로 끌려갔습니다.",
+   "motif": "감옥 창살 뒤에서 도토리 빵을 먹는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1"
+    ],
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ],
+    "note": "명의 차용은 없다. 절교한 친구가 있는 사채 1단계 파산으로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 1단계 연체 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-097",
+   "no": 97,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "독사 대부의 마지막 선물",
+   "condition": "파산 선언 시 독사 대부가 휴지 한 곽 선물",
+   "line": "모든 것을 빼앗은 독사 대부가 곽휴지를 던져주며 말했습니다. '울 때 쓰거라.'",
+   "motif": "곽휴지를 안고 엉엉 울고 있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": []
+   },
+   "priority": 300,
+   "hint": "원인: 사채 2단계 연체",
+   "illustration": null
+  },
+  {
+   "id": "END-098",
+   "no": 98,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채 이자 롤오버 폭탄",
+   "condition": "이자 이월 신청 5회 누적 파산",
+   "line": "이자를 다음 주로 이월하고 또 이월했더니 이월 폭탄이 한꺼번에 터졌습니다.",
+   "motif": "이월 스티커가 덕지덕지 붙은 거대한 폭탄",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "odTotal",
+      ">=",
+      5
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 연체 횟수 합(금융 4곳 + 유지비) ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-099",
+   "no": 99,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "숲속 보석상 담보 몰수",
+   "condition": "귀중한 도토리 보석을 사채 담보로 뺏김",
+   "line": "할머니에게 물려받은 반짝이는 도토리 보석이 사채업자의 주머니로 들어갔습니다.",
+   "motif": "보석을 들고 이빨로 깨물어보는 독사 대부",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      3
+     ]
+    ],
+    "note": "보석 담보는 없다. 별장 이상에 살면서 사채 2단계 파산한 경우로 대신한다."
+   },
+   "priority": 260,
+   "hint": "원인: 사채 2단계 연체 · 집 단계 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-100",
+   "no": 100,
+   "category": "CAT-B",
+   "categoryName": "사채·추심",
+   "title": "사채의 왕 독사 대부의 승리",
+   "condition": "사채 2단계 잔액 500만 도토리 돌파",
+   "line": "당신은 독사 대부의 최우수 고객이 되었습니다. 전설의 채무자 등극.",
+   "motif": "독사 대부의 책상 앞, 'VIP 채무자' 명패 옆에 앉은 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "debtShark2",
+      ">=",
+      5000000
+     ]
+    ]
+   },
+   "priority": 310,
+   "hint": "원인: 사채 2단계 연체 · 사채 2단계 원금 ≥ 5,000,000",
+   "illustration": null
+  },
+  {
+   "id": "END-101",
+   "no": 101,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "우정의 가격은 5만 도토리",
+   "condition": "친구 빚을 갚지 않아 3명 이상과 절교",
+   "line": "도토리를 갚지 않아 마지막 남아있던 절친 너구리마저 당신을 차단했습니다.",
+   "motif": "엑스(X) 표시가 그려진 프로필과 혼자 남은 단톡방",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends"
+    ],
+    "all": []
+   },
+   "priority": 200,
+   "hint": "원인: 친구 3명 이상과 절교",
+   "illustration": null
+  },
+  {
+   "id": "END-102",
+   "no": 102,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "단체 채팅방 강제 퇴장",
+   "condition": "친구 5명에게 모두 차용 후 연체",
+   "line": "숲속 친구 단톡방에서 '칩멍크 님이 강퇴당하셨습니다' 메시지가 떴습니다.",
+   "motif": "단톡방 강퇴 팝업과 씁쓸한 스마트폰 화면",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "friendsBorrowed",
+      ">=",
+      5
+     ],
+     [
+      "odFriends",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "빌린 친구 수 ≥ 5 · 친구 빚 연체 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-103",
+   "no": 103,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 소문망의 왕따",
+   "condition": "친구 대출 연체 2회 이상, 소문 지수 MAX",
+   "line": "숲속 전체에 '돈 빌리고 튀는 놈'으로 소문나서 아무도 인사를 받아주지 않습니다.",
+   "motif": "칩멍크가 지나가자 수군거리며 피하는 동물들",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "odFriends",
+      ">=",
+      2
+     ],
+     [
+      "trustAvg",
+      "<=",
+      30
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "친구 빚 연체 횟수 ≥ 2 · 친구 신뢰 평균 ≤ 30",
+   "illustration": null
+  },
+  {
+   "id": "END-104",
+   "no": 104,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 결혼식 축의금 먹튀",
+   "condition": "친구 차용금 있는 상태에서 축의금 0 도토리 제출",
+   "line": "친구 너구리 결혼식 축의금 봉투에 나뭇잎만 넣어 보냈다가 단칼에 절교당했습니다.",
+   "motif": "나뭇잎이 들어있는 축의금 봉투를 보고 분노하는 너구리",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "localWeekday",
+      "in",
+      [
+       0,
+       6
+      ]
+     ]
+    ],
+    "note": "결혼식 이벤트는 없다. 기기 요일이 토·일일 때의 관계 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 기기 요일 ∈ [0, 6]",
+   "illustration": null
+  },
+  {
+   "id": "END-105",
+   "no": 105,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "절교 도장 10개 수집가",
+   "condition": "친구 10명과 연속 절교 판정",
+   "line": "축하합니다! 숲속에서 가장 친구가 없는 외톨이 칩멍크 훈장을 획득하셨습니다.",
+   "motif": "'외톨이' 훈장을 가슴에 달고 혼자 울고 있기",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "lifeFriendsBroken",
+      ">=",
+      10
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "누적 절교 횟수 ≥ 10 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-106",
+   "no": 106,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "탕감 도장의 배신",
+   "condition": "친구 빚 탕감 시도 중 거절 판정으로 파산",
+   "line": "탕감 도장을 아무리 찍어도 마음이 찢어진 친구의 마음은 탕감되지 않았습니다.",
+   "motif": "부러진 붉은 탕감 도장과 눈물 흘리는 친구 NPC",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendRepayStamps",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "원인: 친구 3명 이상과 절교 · 친구 빚 도장 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-107",
+   "no": 107,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구의 보증 거절 사건",
+   "condition": "친구에게 1금융 보증 부탁했다가 거절",
+   "line": "10년 지기 친구 토끼에게 보증을 부탁했더니 토끼가 빛의 속도로 도망쳤습니다.",
+   "motif": "흙먼지를 날리며 도망치는 토끼와 손 뻗은 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital"
+    ],
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ],
+    "note": "보증 부탁은 없다. 절교한 친구가 있는 1·2금융 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-108",
+   "no": 108,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "동창회 참석 금지령",
+   "condition": "친구 차용금 미상환 상태에서 동창회 접근",
+   "line": "숲속 초등학교 동창회 명단에서 당신의 이름이 빨간 줄로 그어졌습니다.",
+   "motif": "빨간 줄이 그어진 동창회 명부 서류",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendsBorrowed",
+      ">=",
+      3
+     ],
+     [
+      "friendRepayStamps",
+      "==",
+      0
+     ]
+    ],
+    "note": "동창회는 없다. 3명 이상에게 빌리고 한 번도 안 갚은 경우로 대신한다."
+   },
+   "priority": 170,
+   "hint": "원인: 친구 3명 이상과 절교 · 빌린 친구 수 ≥ 3 · 친구 빚 도장 횟수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-109",
+   "no": 109,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 비상금 털어먹기",
+   "condition": "친구 대출 한도 끝까지 쥐어짜서 빌린 후 연체",
+   "line": "친구의 마지막 비상금 도토리까지 빌려 쓰고 탕진했습니다. 친구는 아무 말도 하지 않았습니다.",
+   "motif": "텅 빈 친구의 비상금 도토리 통과 죄책감",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "friendMaxedOut",
+      ">=",
+      1
+     ],
+     [
+      "odFriends",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "한도까지 빌린 친구 수 ≥ 1 · 친구 빚 연체 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-110",
+   "no": 110,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "무이자 대출의 염치없음",
+   "condition": "친구 무이자 대출 5회 연장 시도 파산",
+   "line": "무이자라고 계속 미루다가 친구가 내용증명을 들고 찾아왔습니다.",
+   "motif": "내용증명 봉투를 들고 문 앞에 선 친구",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "odFriends",
+      ">=",
+      5
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "친구 빚 연체 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-111",
+   "no": 111,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 자산 공동 투자 파기",
+   "condition": "친구와 공동 투자 후 청산되어 친구 빚까지 짊어짐",
+   "line": "친구 돈까지 얹어서 선물 200배 숏 쳤다가 둘 다 길바닥으로 쫓겨났습니다.",
+   "motif": "텐트 하나에 같이 구겨져 들어가 서로 노려보기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastFundedBy",
+      "==",
+      "friend"
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "원인: 강제 청산 · 진입 직전(60초 안) 돈을 빌린 곳 = 친구 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-112",
+   "no": 112,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 중고 마켓 사기 파산",
+   "condition": "친구에게 중고 물품 팔아 빚 갚다 적발",
+   "line": "친구에게 고장 난 도토리 맷돌을 팔았다가 걸려서 신용과 우정을 모두 잃었습니다.",
+   "motif": "고장 난 맷돌을 들고 따지러 온 친구",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "laborTaps",
+      ">=",
+      300
+     ]
+    ],
+    "note": "중고 거래는 없다. 노동 300회 이상 한 회차의 관계 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 노동 횟수 ≥ 300",
+   "illustration": null
+  },
+  {
+   "id": "END-113",
+   "no": 113,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "절친의 채권 양도",
+   "condition": "친구가 내 채권을 독사 대부에게 팔아넘김",
+   "line": "정 믿었던 친구가 내 빚 채무 서류를 독사 대부에게 할인 매각했습니다. 배신감!",
+   "motif": "독사 대부와 악수하며 돈을 받는 옛 친구",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "claimsSold",
+      ">",
+      0
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "원인: 친구 3명 이상과 절교 또는 사채 2단계 연체 · 친구가 넘긴 채권 금액 합 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-114",
+   "no": 114,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "거짓말 핑계 적발",
+   "condition": "친구 돈을 빌리자마자 선물 거래에 넣었다가 절교",
+   "line": "급한 병원비라고 돈을 빌려놓고 선물 거래를 하다 걸렸습니다. 신뢰 파산.",
+   "motif": "현장 적발되어 친구들에게 둘러싸여 혼나는 중",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ],
+     [
+      "fundedByFriendTrades",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "절교한 친구 수 ≥ 1 · 친구에게 빌린 직후 연 포지션 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-115",
+   "no": 115,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 펀딩 실패",
+   "condition": "친구 대상 숲속 스타트업 펀딩 모집 후 탕진",
+   "line": "도토리 농장 차린다고 친구들 돈 펀딩 받아 200배 롱 베팅에 다 날렸습니다.",
+   "motif": "'사업 설명서'가 쓰레기통에 박혀있는 연출",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "fundedByFriendTrades",
+      ">=",
+      1
+     ],
+     [
+      "friendsBorrowed",
+      ">=",
+      3
+     ],
+     [
+      "lastDir",
+      "==",
+      "long"
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 240,
+   "hint": "원인: 강제 청산 · 친구에게 빌린 직후 연 포지션 수 ≥ 1 · 빌린 친구 수 ≥ 3 · 마지막 청산 포지션의 방향 = 롱 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-116",
+   "no": 116,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구의 차가운 눈빛",
+   "condition": "친구 대출 상환 기일 1초 지연 시 절교",
+   "line": "친구 토끼가 냉정한 눈빛으로 말했습니다. '우리 우정은 여기까지야.'",
+   "motif": "차갑게 돌아서는 토끼의 뒷모습과 그림자",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "brokenFriendIds",
+      "has",
+      "rabbit"
+     ]
+    ],
+    "note": "1초 지연 판정은 없다. 이웃 토끼와 절교한 관계 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 절교한 친구 목록 에 포함: 이웃 토끼",
+   "illustration": null
+  },
+  {
+   "id": "END-117",
+   "no": 117,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "단체 생일 파티 제외",
+   "condition": "친구 빚 연체 중 친구 생일 파티에 무단 참석",
+   "line": "돈 안 갚고 생일 파티 케이크 먹으러 갔다가 쫓겨났습니다.",
+   "motif": "생일 파티 케이크 앞에서 쫓겨나는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "location",
+      "==",
+      "friends"
+     ]
+    ],
+    "note": "생일 파티는 없다. 파산 순간 친구네 골목에 있었으면 준다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 마을에서 보고 있던 장소 = 친구네 골목",
+   "illustration": null
+  },
+  {
+   "id": "END-118",
+   "no": 118,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "우정 탕감 도장 100회 연타",
+   "condition": "탕감 도장 100회 눌렀으나 우정 지수 0 파산",
+   "line": "도장을 100번 찍어 원금은 탕감받았지만, 친구의 우정 지수도 0이 되었습니다.",
+   "motif": "원금 0 도토리 서류와 텅 빈 친구 관계창",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "stamps",
+      ">=",
+      100
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "도장 횟수 합 ≥ 100 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-119",
+   "no": 119,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 SNS 악플 도배",
+   "condition": "친구들이 내 SNS 계정에 빚 독촉 댓글 작성",
+   "line": "내 숲속 인스타그램 사진마다 '돈이나 갚아라' 댓글이 1000개 달렸습니다.",
+   "motif": "스마트폰 화면을 가득 채운 독촉 댓글들",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "contactsSeized",
+      "==",
+      true
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      2
+     ]
+    ],
+    "note": "SNS는 없다. 연락처 제출 + 절교 2명 이상으로 대신한다."
+   },
+   "priority": 170,
+   "hint": "연락처 제출 여부 = 예 · 절교한 친구 수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-120",
+   "no": 120,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 통장 잔액 몰래 보기",
+   "condition": "친구 비밀번호 몰래 알아내서 대출 받다 적발",
+   "line": "친구 스마트폰으로 몰래 대출 승인 누르다 현장에서 덜미를 잡혔습니다.",
+   "motif": "경찰서 철창에 갇혀 손가락을 씹는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "borrowFriends",
+      ">=",
+      8
+     ]
+    ],
+    "note": "몰래 대출은 없다. 친구에게 8번 이상 빌린 경우로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 친구 대출 횟수 ≥ 8",
+   "illustration": null
+  },
+  {
+   "id": "END-121",
+   "no": 121,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 품앗이 거절",
+   "condition": "빚 때문에 마을 품앗이 노동에서 제외",
+   "line": "마을 도토리 수확 품앗이에서 제명되어 겨울 식량을 구하지 못했습니다.",
+   "motif": "즐겁게 일하는 마을 동물들을 울타리 밖에서 보기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "laborTaps",
+      "<",
+      50
+     ]
+    ],
+    "note": "품앗이는 없다. 노동 50회 미만으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 노동 횟수 < 50",
+   "illustration": null
+  },
+  {
+   "id": "END-122",
+   "no": 122,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "옛 친구의 뼈 있는 조언",
+   "condition": "친구가 돈 대신 사탕 하나 던져주고 떠남",
+   "line": "돈 빌려달라 했더니 친구가 동정표로 깎은 도토리 하나 주고 떠났습니다.",
+   "motif": "손바닥에 올려진 조그만 도토리 조각 하나",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "friendRefusals",
+      ">=",
+      3
+     ]
+    ],
+    "note": "사탕 이벤트는 없다. 친구에게 3번 이상 거절당한 회차의 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "친구 거절 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-123",
+   "no": 123,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 비밀 모임 탈퇴",
+   "condition": "친목 모임 회비 미납으로 강제 탈퇴",
+   "line": "모임 회비 5,000 도토리를 빚 갚는 데 썼다가 모임에서 내보내졌습니다.",
+   "motif": "탈퇴 처리 메시지가 뜬 동호회 앱 화면",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "refiFriendToLender",
+      ">=",
+      1
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ],
+    "note": "모임 회비는 없다. 친구 돈으로 금융 빚을 갚은(돌려막기) 뒤 절교한 경우로 대신한다."
+   },
+   "priority": 170,
+   "hint": "친구에게 빌려 금융 빚 갚기 횟수 ≥ 1 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-124",
+   "no": 124,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구와의 물귀신 작전",
+   "condition": "친구를 사채 2단계 소개자로 등록 후 파산",
+   "line": "내가 살려고 친구를 독사 대부 추천인으로 적었습니다. 극악무도!",
+   "motif": "독사 대부에게 친구 사진을 건네주는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_shark2",
+     "friends"
+    ],
+    "all": [
+     [
+      "contactsSeized",
+      "==",
+      true
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 220,
+   "hint": "원인: 사채 2단계 연체 또는 친구 3명 이상과 절교 · 연락처 제출 여부 = 예 · 절교한 친구 수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-125",
+   "no": 125,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "우정의 마지막 선을 넘다",
+   "condition": "친구의 유일한 보물 장난감을 담보로 잡힘",
+   "line": "친구의 아끼는 팽이를 몰래 사채 담보로 잡혔다가 영원히 절교당했습니다.",
+   "motif": "빈 장난감 상자 앞에 선 어린 너구리",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "debtFriends",
+      ">",
+      0
+     ]
+    ],
+    "note": "친구 물건 담보는 없다. 친구 빚이 남은 채 사채 파산한 경우로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 친구 빚 합 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-126",
+   "no": 126,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 팟캐스트 뒷담화 대스타",
+   "condition": "빚투 제보로 숲속 팟캐스트 주인공 등극",
+   "line": "숲속 라디오 방송 1위에 올랐습니다: '내 돈 안 갚는 파렴치한 칩멍크 이야기.'",
+   "motif": "라디오 마이크 앞에서 제보 글을 읽는 DJ 부엉이",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "lifeFriendsBroken",
+      ">=",
+      6
+     ]
+    ],
+    "note": "방송 이벤트는 없다. 절교 누적(전체 회차) 6명 이상으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 누적 절교 횟수 ≥ 6",
+   "illustration": null
+  },
+  {
+   "id": "END-127",
+   "no": 127,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 차용증 찢기 퍼포먼스",
+   "condition": "한 번도 갚지 않고 친구에게 3번 이상 빌림",
+   "line": "차용증을 찢으며 '우리 사이에 이런 게 필요하냐' 했더니, 친구가 말없이 사본을 꺼냈습니다.",
+   "motif": "찢어진 차용증과 친구 손에 들린 사본",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendRepayStamps",
+      "==",
+      0
+     ],
+     [
+      "borrowFriends",
+      ">=",
+      3
+     ]
+    ],
+    "note": "차용증 찢기 행동은 없다. 3번 이상 빌리고 한 번도 안 갚은 경우로 대신한다."
+   },
+   "priority": 170,
+   "hint": "원인: 친구 3명 이상과 절교 · 친구 빚 도장 횟수 = 0 · 친구 대출 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-128",
+   "no": 128,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 귀농 친구의 손절",
+   "condition": "귀농한 친구 굴에 찾아가 돈 구걸하다 쫓겨남",
+   "line": "조용히 농사짓는 친구 굴까지 찾아가 구걸하다 소금 세례를 맞았습니다.",
+   "motif": "소금을 뿌리며 분노하는 귀농 토끼",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "friendRefusals",
+      ">=",
+      5
+     ]
+    ],
+    "note": "귀농 친구는 없다. 친구에게 5번 이상 거절당한 경우로 대신한다."
+   },
+   "priority": 160,
+   "hint": "친구 거절 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-129",
+   "no": 129,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 대출 돌려막기 신공",
+   "condition": "친구 A 빚 갚으려 친구 B에게 빌리다 적발",
+   "line": "A와 B가 서로 만나는 바람에 돌려막기 사기극이 통째로 들통났습니다.",
+   "motif": "양옆에서 팔짱을 끼고 노려보는 친구 A와 B",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "refiFriendToFriend",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "친구에게 빌려 다른 친구 갚기 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-130",
+   "no": 130,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "이웃 사촌의 외면",
+   "condition": "빚 독촉 소음으로 이웃들의 집단 민원 파산",
+   "line": "사채업자들이 현관에서 소리 지르는 바람에 이웃 주민들이 쫓아냈습니다.",
+   "motif": "짐 가방을 들고 아파트 복도에서 쫓겨나기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "houseStage",
+      ">=",
+      1
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ],
+    "note": "이웃 민원은 없다. 집이 있고 절교한 친구가 있는 사채 파산으로 대신한다."
+   },
+   "priority": 170,
+   "hint": "원인: 사채 1단계 연체 또는 사채 2단계 연체 · 집 단계 ≥ 1 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-131",
+   "no": 131,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 벼룩시장 블랙리스트",
+   "condition": "마켓에서 친구 물건 몰래 내다 팔다 적발",
+   "line": "친구한테 빌린 도토리 냄비를 중고 마켓에 올렸다가 친구가 구매했습니다.",
+   "motif": "직거래 장소에서 만난 친구와 당황한 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "lastMoveDir",
+      "==",
+      "down"
+     ]
+    ],
+    "note": "벼룩시장은 없다. 집을 줄여 이사한 회차의 관계 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 마지막 이사 방향 = 더 싼 집으로",
+   "illustration": null
+  },
+  {
+   "id": "END-132",
+   "no": 132,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구의 마지막 메시지",
+   "condition": "차단 직전 전송된 친구의 장문 문자",
+   "line": "'너한테 실망했다. 다시는 연락하지 마라.' 문자를 끝으로 우정이 끝났습니다.",
+   "motif": "화면에 뜬 긴 문자 메시지와 차단 알림",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-133",
+   "no": 133,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 렌탈 물품 먹튀",
+   "condition": "친구의 도토리 수레를 렌탈 후 사채업자에게 빼앗김",
+   "line": "친구 수레를 빌려 타고 나갔다가 독사 대부에게 압류당했습니다.",
+   "motif": "텅 빈 주차공간을 보며 흙을 파헤치는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "debtFriends",
+      ">",
+      0
+     ]
+    ],
+    "note": "수레 대여는 없다. 친구 빚이 남은 채 사채 2단계 파산한 경우로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 사채 2단계 연체 · 친구 빚 합 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-134",
+   "no": 134,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "우정 지수 음수 돌파",
+   "condition": "우정 지수 -100 달성 파산",
+   "line": "당신의 우정 지수는 -100입니다. 스쳐 지나가는 바람도 당신을 기피합니다.",
+   "motif": "차가운 바람만 불어오는 허허벌판에 혼자 서 있기",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "trustAvg",
+      "<=",
+      10
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "친구 신뢰 평균 ≤ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-135",
+   "no": 135,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구의 집단 채권 추심",
+   "condition": "친구 5명이 합심하여 집단 채권단 결성",
+   "line": "친구들이 '칩멍크 채권단'을 결성하여 내 텐트 앞을 점거했습니다.",
+   "motif": "피켓을 들고 텐트 앞을 점거한 친구 동물들",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendsBorrowed",
+      ">=",
+      5
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "원인: 친구 3명 이상과 절교 · 빌린 친구 수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-136",
+   "no": 136,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 축제 참석 금지",
+   "condition": "빚쟁이라는 이유로 마을 축제 입장 거부",
+   "line": "가장 즐거운 가을 도토리 축제 입구에서 거부당해 담장 밖에서 울었습니다.",
+   "motif": "축제 불빛이 번쩍이는 담장 밖에서 조용히 울기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "localMonth",
+      "in",
+      [
+       9,
+       10,
+       11
+      ]
+     ]
+    ],
+    "note": "축제는 없다. 기기 날짜가 9~11월일 때의 관계 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 기기 월 ∈ [9, 10, 11]",
+   "illustration": null
+  },
+  {
+   "id": "END-137",
+   "no": 137,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 빚 상환 유예 구걸 실패",
+   "condition": "친구에게 무릎 꿇고 빌었으나 차갑게 외면",
+   "line": "무릎이 닳도록 빌었지만, 이미 상처받은 친구의 마음은 돌아서지 않았습니다.",
+   "motif": "무릎 꿇은 칩멍크를 지나쳐 가는 친구의 발걸음",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendRefusals",
+      ">=",
+      1
+     ],
+     [
+      "odFriends",
+      ">=",
+      3
+     ]
+    ],
+    "note": "유예 부탁 행동은 없다. 거절 1회 + 친구 연체 3회 이상으로 대신한다."
+   },
+   "priority": 170,
+   "hint": "원인: 친구 3명 이상과 절교 · 친구 거절 횟수 ≥ 1 · 친구 빚 연체 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-138",
+   "no": 138,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 쉼터 쫓겨남",
+   "condition": "친구들이 운영하는 무료 쉼터에서 제명",
+   "line": "불쌍해서 재워주던 친구들의 오두막 쉼터에서도 쫓겨나 나뭇가지에서 잤습니다.",
+   "motif": "나뭇가지에 아슬아슬하게 걸쳐 자는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "houseStage",
+      "==",
+      0
+     ]
+    ],
+    "note": "쉼터는 없다. 텐트 상태의 관계 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 집 단계 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-139",
+   "no": 139,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "거짓 펀딩 상품의 최후",
+   "condition": "가짜 선물 투자 수익률 보장으로 친구 돈 갈취",
+   "line": "친구들에게 '월 20% 수익 보장' 거짓말을 했다가 사기죄로 고소당했습니다.",
+   "motif": "고소장을 들고 있는 숲속 변호사 여우",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends",
+     "liquidation"
+    ],
+    "all": [
+     [
+      "fundedByFriendTrades",
+      ">=",
+      3
+     ]
+    ],
+    "note": "펀딩 모집은 없다. 친구 돈으로 연 포지션 3건 이상으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 또는 강제 청산 · 친구에게 빌린 직후 연 포지션 수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-140",
+   "no": 140,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 선행상 수상 취소",
+   "condition": "과거 받은 착한 칩멍크 상 박탈",
+   "line": "빚을 안 갚고 도망 다닌 사실이 밝혀져 어린이 선행상이 취소되었습니다.",
+   "motif": "상장을 빼앗기고 우는 어린 시절의 추억 씬",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "lifeRuns",
+      ">=",
+      10
+     ]
+    ],
+    "note": "선행상은 없다. 누적 10회차 이상으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 누적 회차 수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-141",
+   "no": 141,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구의 비상금 항아리 파쇄",
+   "condition": "친구 집 몰래 들어가 항아리 깨고 돈 훔침",
+   "line": "돈에 눈이 멀어 친구 집 비상금 항아리를 깼다가 현행범으로 체포되었습니다.",
+   "motif": "깨진 항아리 옆에 수갑을 차고 앉아있는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendMaxedOut",
+      ">=",
+      3
+     ]
+    ],
+    "note": "절도 행동은 없다. 친구 3명의 한도를 끝까지 빌린 경우로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 한도까지 빌린 친구 수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-142",
+   "no": 142,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 우정 기념비 철거",
+   "condition": "마을에 있던 우정 나무에 이름 삭제",
+   "line": "마을 광장 우정의 나무에서 당신의 이름표가 톱으로 깎여 나갔습니다.",
+   "motif": "톱으로 이름표를 잘라내는 마을 이장님 곰",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      4
+     ]
+    ],
+    "note": "기념비는 없다. 절교 4명 이상으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 절교한 친구 수 ≥ 4",
+   "illustration": null
+  },
+  {
+   "id": "END-143",
+   "no": 143,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 차용금 반토막 상환",
+   "condition": "10만 도토리 빌리고 5만만 갚으며 생색내다 파산",
+   "line": "10만 도토리를 빌리고 5만만 갚으면서 '반이나 갚았잖아' 했다가 친구를 잃었습니다.",
+   "motif": "5만 도토리를 내미는 칩멍크와 어이없어하는 친구",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "friendRepayStamps",
+      ">=",
+      1
+     ],
+     [
+      "odFriends",
+      ">=",
+      1
+     ],
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 230,
+   "hint": "친구 빚 도장 횟수 ≥ 1 · 친구 빚 연체 횟수 ≥ 1 · 절교한 친구 수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-144",
+   "no": 144,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 단짝 친구의 눈물",
+   "condition": "단짝 다람쥐와 절교",
+   "line": "가장 아끼던 단짝 다람쥐마저 눈물을 흘리며 당신의 손을 놓았습니다.",
+   "motif": "서로 손을 놓으며 눈물을 흘리는 칩멍크와 다람쥐",
+   "trigger": {
+    "type": "rule",
+    "causes": null,
+    "all": [
+     [
+      "brokenFriendIds",
+      "has",
+      "squirrel"
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "절교한 친구 목록 에 포함: 단짝 다람쥐",
+   "illustration": null
+  },
+  {
+   "id": "END-145",
+   "no": 145,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 채무 이자 요구 폭탄",
+   "condition": "친구가 서운해서 사채보다 높은 이자 청구",
+   "line": "분노한 친구가 연 50% 법정 초과 이자를 청구하며 맞불을 놓았습니다.",
+   "motif": "친구가 직접 작성한 험악한 이자 계산서",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "odFriends",
+      ">=",
+      4
+     ]
+    ],
+    "note": "친구 이자 청구는 없다. 친구 연체 4회 이상으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "원인: 친구 3명 이상과 절교 · 친구 빚 연체 횟수 ≥ 4",
+   "illustration": null
+  },
+  {
+   "id": "END-146",
+   "no": 146,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 벼락부자 친구의 외면",
+   "condition": "여우 선배와 절교",
+   "line": "성공한 여우 선배의 저택에 찾아갔다가 경비원에게 정중히 돌려보내졌습니다.",
+   "motif": "거대한 저택 철문 밖에 혼자 서 있는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "brokenFriendIds",
+      "has",
+      "fox"
+     ]
+    ],
+    "note": "저택 방문 이벤트는 없다. 여우 선배와 절교한 회차의 파산으로 대신한다."
+   },
+   "priority": 160,
+   "hint": "절교한 친구 목록 에 포함: 여우 선배",
+   "illustration": null
+  },
+  {
+   "id": "END-147",
+   "no": 147,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "우정의 마지막 선물 탕감",
+   "condition": "단짝 다람쥐가 빚을 탕감해 주고 절교",
+   "line": "빚은 안 갚아도 된다. 대신 다시는 내 눈앞에 나타나지 마라.",
+   "motif": "탕감 도장이 찍힌 종이와 지워지는 연락처",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "brokenFriendIds",
+      "has",
+      "squirrel"
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "원인: 친구 3명 이상과 절교 · 절교한 친구 목록 에 포함: 단짝 다람쥐",
+   "illustration": null
+  },
+  {
+   "id": "END-148",
+   "no": 148,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 인간관계 리셋 실패",
+   "condition": "신분 세탁하려다 소문이 먼저 도착해 파산",
+   "line": "옆 동네 숲으로 이사 갔는데 이미 내 빚투 소문이 전단지로 뿌려져 있었습니다.",
+   "motif": "새 동네 입구에서 수배 전단지를 보고 경악하기",
+   "trigger": {
+    "type": "proxy",
+    "causes": null,
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      1
+     ],
+     [
+      "lifeFriendsBroken",
+      ">=",
+      3
+     ],
+     [
+      "lifeRuns",
+      ">=",
+      3
+     ]
+    ],
+    "note": "이사 간 동네는 없다. 3회차 이상이고 절교 누적 3명 이상인데 또 절교한 경우로 대신한다."
+   },
+   "priority": 180,
+   "hint": "절교한 친구 수 ≥ 1 · 누적 절교 횟수 ≥ 3 · 누적 회차 수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-149",
+   "no": 149,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "친구 차용금 연체 100일 기념",
+   "condition": "연체 100일 되는 날 친구들의 사채업자 고발",
+   "line": "연체 100일째 되는 날, 친구들이 모여 당신을 독사 대부에게 제보했습니다.",
+   "motif": "100일 축하(?) 촛불을 끄는 친구들과 들이닥친 사채업자",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "odFriends",
+      ">=",
+      8
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "원인: 친구 3명 이상과 절교 또는 사채 2단계 연체 · 친구 빚 연체 횟수 ≥ 8",
+   "illustration": null
+  },
+  {
+   "id": "END-150",
+   "no": 150,
+   "category": "CAT-C",
+   "categoryName": "친구·관계",
+   "title": "숲속 외딴섬 유배",
+   "condition": "인간관계 파산으로 마을에서 쫓겨나 외딴섬 이주",
+   "line": "아무도 살지 않는 숲속 외딴 웅덩이 섬으로 쫓겨나 혼자 살게 되었습니다.",
+   "motif": "외딴 섬 나뭇잎 위에서 혼자 도토리 씹는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "friends"
+    ],
+    "all": [
+     [
+      "friendsBroken",
+      ">=",
+      5
+     ]
+    ]
+   },
+   "priority": 210,
+   "hint": "원인: 친구 3명 이상과 절교 · 절교한 친구 수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-151",
+   "no": 151,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "200배 풀레버리지 1초 벼락 청산",
+   "condition": "레버리지 200배, 진입 3초 안에 강제 청산",
+   "line": "버튼을 누르자마자 붉은 장대 음봉 하나에 증거금이 증발했습니다. 빛보다 빠른 청산!",
+   "motif": "붉은 장대 음봉 차트와 눈이 튀어나올 듯 놀란 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastLev",
+      "==",
+      200
+     ],
+     [
+      "lastHoldSec",
+      "<=",
+      3
+     ]
+    ]
+   },
+   "priority": 450,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 배율 = 200 · 마지막 청산 포지션의 보유 시간(초) ≤ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-152",
+   "no": 152,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "반대 매매의 잔혹사",
+   "condition": "롱 포지션 잡자마자 숏 빔 폭격 청산",
+   "line": "내가 사면 내리고, 내가 팔면 오르는 우주의 법칙! 반대 매매의 신 등극!",
+   "motif": "내가 누른 버튼과 반대로 솟구치는 차트 화살표",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastDir",
+      "==",
+      "long"
+     ],
+     [
+      "lastHoldSec",
+      "<=",
+      15
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 방향 = 롱 · 마지막 청산 포지션의 보유 시간(초) ≤ 15",
+   "illustration": null
+  },
+  {
+   "id": "END-153",
+   "no": 153,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "틱 차트 트라우마",
+   "condition": "차트만 100초 넘게 지켜보다 200배 숏으로 청산",
+   "line": "1초마다 요동치는 차트를 지켜보다 눈이 침침해져 200배 숏을 잘못 눌렀습니다.",
+   "motif": "충혈된 눈으로 차트를 노려보는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "chartWatchSec",
+      ">=",
+      100
+     ],
+     [
+      "lastDir",
+      "==",
+      "short"
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ],
+    "note": "틱 차트 관람 횟수는 없다. 포지션 없이 거래 탭을 100초 이상 본 뒤 고배율 숏 청산으로 대신한다."
+   },
+   "priority": 380,
+   "hint": "원인: 강제 청산 · 포지션 없이 거래 탭을 본 시간(초) ≥ 100 · 마지막 청산 포지션의 방향 = 숏 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-154",
+   "no": 154,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "청산 빔의 희생양",
+   "condition": "차트 꼬리 침 하나에 스톱로스 없이 청산",
+   "line": "딱 0.1초 동안 찍고 내려온 찌르기 침 하나에 내 전 재산이 털렸습니다.",
+   "motif": "기다란 바늘 모양의 차트 꼬리 옆에 주저앉은 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastViaJump",
+      "==",
+      true
+     ],
+     [
+      "lastHadSL",
+      "==",
+      false
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 급등락 틱에 청산됐는지 = 예 · 손절을 걸어 뒀는지 = 아니오",
+   "illustration": null
+  },
+  {
+   "id": "END-155",
+   "no": 155,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "물타기 청산의 늪",
+   "condition": "추가 진입(물타기) 후 청산",
+   "line": "물타기로 평단을 낮췄지만, 물이 너무 깊어서 계좌가 통째로 잠겼습니다.",
+   "motif": "차트 물속 깊이 가라앉는 계좌 통장",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastAdds",
+      ">=",
+      1
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 추가 진입 횟수 ≥ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-156",
+   "no": 156,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숏 포지션 벼락 롱빔 폭사",
+   "condition": "200배 숏 진입 후 호재 뉴스 기습 터짐",
+   "line": "도토리 생산량 폭망 소식에 숏 쳤는데, 갑자기 호재 뉴스가 터져 벼락 맞았습니다.",
+   "motif": "벼락 모양 장대 양봉 앞에서 굳어 버린 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastDir",
+      "==",
+      "short"
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ],
+     [
+      "lastViaJump",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 430,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 방향 = 숏 · 마지막 청산 포지션의 배율 ≥ 100 · 급등락 틱에 청산됐는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-157",
+   "no": 157,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "손절매 타이밍 미스",
+   "condition": "추가 진입 2회 이상 후 청산",
+   "line": "손절해야 하는데 추가 진입 버튼을 두 번이나 눌러버렸습니다. 아...",
+   "motif": "손가락이 잘못된 버튼을 누르는 극적인 순간",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastAdds",
+      ">=",
+      2
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 추가 진입 횟수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-158",
+   "no": 158,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 냇가 뗏목 살이",
+   "condition": "선물 청산 후 남은 돈 0 도토리으로 뗏목 삶",
+   "line": "도토리 차트 롱에 올인했다가 청산당하고 숲속 냇가 뗏목 위에서 반성 중입니다.",
+   "motif": "냇가 뗏목 위에서 낚시찌만 바라보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": []
+   },
+   "priority": 400,
+   "hint": "원인: 강제 청산",
+   "illustration": null
+  },
+  {
+   "id": "END-159",
+   "no": 159,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "길바닥 도토리 줍기의 한계",
+   "condition": "노동 300회 이상, 거래 없이 이자 감당 불가 파산",
+   "line": "손가락이 닳도록 도토리를 주웠지만 이자 올라가는 속도를 못 잡았습니다.",
+   "motif": "쌓여 있는 도토리 껍데기와 지친 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "laborTaps",
+      ">=",
+      300
+     ],
+     [
+      "trades",
+      "==",
+      0
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 노동 횟수 ≥ 300 · 진입 횟수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-160",
+   "no": 160,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "레버리지 10배 사치 파산",
+   "condition": "초보자 10배 레버리지 첫 도전 청산",
+   "line": "10배는 안전할 줄 알았죠? 차트가 10%만 움직여도 원금 0 도토리 되는 건 똑같습니다.",
+   "motif": "'10배 안전' 책자를 들고 청산당해 울기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastLev",
+      "==",
+      10
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 배율 = 10",
+   "illustration": null
+  },
+  {
+   "id": "END-161",
+   "no": 161,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "증거금 연체 자동 반대매매",
+   "condition": "이체 지연으로 증거금 부족 강제 청산",
+   "line": "증거금이 모자라 거래소 시스템이 내 의지와 상관없이 반대매매를 날렸습니다.",
+   "motif": "로봇 손이 나타나 내 포지션을 강제 청산하는 씬",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastLiqByFunding",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 펀딩비 차감으로 청산됐는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-162",
+   "no": 162,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 차트 분석가의 비극",
+   "condition": "복잡한 지표 10개 켜놓고 거래하다 청산",
+   "line": "RSI, MACD, 볼린저 밴드 다 켜놓고 분석했는데 차트는 제멋대로 갔습니다.",
+   "motif": "모니터 가득 찬 지표선에 꽁꽁 묶인 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "chartWatchSec",
+      ">=",
+      300
+     ]
+    ],
+    "note": "보조 지표는 없다. 포지션 없이 거래 탭을 300초 이상 본 회차의 청산으로 대신한다."
+   },
+   "priority": 360,
+   "hint": "원인: 강제 청산 · 포지션 없이 거래 탭을 본 시간(초) ≥ 300",
+   "illustration": null
+  },
+  {
+   "id": "END-163",
+   "no": 163,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "뉴스 매매 뇌동 투자 파산",
+   "condition": "숲속 찌라시 뉴스 보고 올인 청산",
+   "line": "'도토리 풍년' 찌라시 뉴스 보고 롱 쳤다가 가짜 뉴스인 거 밝혀지고 폭망!",
+   "motif": "가짜 뉴스 신문을 들고 좌절하는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastAfterNewsSec",
+      "<=",
+      15
+     ],
+     [
+      "lastNewsFake",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 속보 뒤 몇 초 만에 진입했는지 ≤ 15 · 그 속보가 가짜였는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-164",
+   "no": 164,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "선물 거래소 시스템 점검 청산",
+   "condition": "앱을 꺼 둔 사이 청산",
+   "line": "자리를 비운 사이 차트가 폭락했습니다. 돌아와 보니 화면에는 결과만 남아 있었습니다.",
+   "motif": "'자리를 비운 사이' 안내창 뒤로 폭락한 차트",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "offline",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 오프라인 따라잡기 중 발생 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-165",
+   "no": 165,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "200배 숏 몰빵의 최후",
+   "condition": "전 재산 200배 숏으로 일확천금 노리다 파산",
+   "line": "남자는 숏! 을 외치며 올인했지만, 우주는 당신의 숏을 허락하지 않았습니다.",
+   "motif": "숏 우주복을 입고 우주 밖으로 튕겨 나가는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastLev",
+      "==",
+      200
+     ],
+     [
+      "lastDir",
+      "==",
+      "short"
+     ],
+     [
+      "lastMarginPct",
+      ">=",
+      95
+     ]
+    ]
+   },
+   "priority": 430,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 배율 = 200 · 마지막 청산 포지션의 방향 = 숏 · 진입 때 현금 대비 증거금 비율(%) ≥ 95",
+   "illustration": null
+  },
+  {
+   "id": "END-166",
+   "no": 166,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "미상환 대출금 선물 투입 파산",
+   "condition": "사채 2단계로 빌린 돈 선물 200배 올인",
+   "line": "사채 빚 갚겠다고 사채 돈으로 200배 선물 쳤다가 10초 만에 더블 파산!",
+   "motif": "독사 대부 서류와 선물 청산서가 양손에 들린 씬",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastFundedBy",
+      "==",
+      "shark2"
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 진입 직전(60초 안) 돈을 빌린 곳 = 독사 골목 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-167",
+   "no": 167,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "수익률 -99% 도파민 중독",
+   "condition": "ROE -80% 아래에서 10초 넘게 버티다 청산",
+   "line": "-99%에서 1%만 올라오면 산다! 도파민만 남기고 계좌가 멈췄습니다.",
+   "motif": "눈을 번쩍이며 차트를 노려보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastNearLiqSec",
+      ">=",
+      10
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · ROE가 nearLiqRoe 아래였던 시간(초) ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-168",
+   "no": 168,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 트레이딩 룸 살이",
+   "condition": "사채 빚을 진 채 거래 30회 이상 후 청산",
+   "line": "선물 거래로 갚으라며 사채업자가 차트 방 월세 계약서까지 대신 써 주었습니다. 끝없는 매매.",
+   "motif": "모니터 4대 둘러싸인 어두운 방에서 클리커 누르기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "trades",
+      ">=",
+      30
+     ],
+     [
+      "debtSharks",
+      ">",
+      0
+     ]
+    ],
+    "note": "감금 이벤트는 없다. 사채 빚이 있는 채 거래 30회 이상으로 대신한다."
+   },
+   "priority": 370,
+   "hint": "원인: 강제 청산 · 진입 횟수 ≥ 30 · 사채 원금 합 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-169",
+   "no": 169,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "슬리피지 폭탄 맞춤",
+   "condition": "주문 체결가 오차(슬리피지) 폭탄 파산",
+   "line": "원하는 가격보다 5% 낮은 가격에 체결되면서 진입과 동시에 청산당했습니다.",
+   "motif": "미끄러지며 주문 가격을 놓치는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastViaJump",
+      "==",
+      true
+     ],
+     [
+      "lastHoldSec",
+      "<=",
+      5
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 급등락 틱에 청산됐는지 = 예 · 마지막 청산 포지션의 보유 시간(초) ≤ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-170",
+   "no": 170,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "고배율 레버리지 금단 증상",
+   "condition": "1배 레버리지는 지루해서 200배만 누르다 파산",
+   "line": "1배는 심심해! 200배 버튼만 누르는 중독 증세로 계좌가 가루가 되었습니다.",
+   "motif": "200배 버튼을 광란적으로 누르는 손가락",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lev200Trades",
+      ">=",
+      5
+     ],
+     [
+      "lowLevTrades",
+      "==",
+      0
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 200배 진입 횟수 ≥ 5 · 5배 이하 진입 횟수 = 0",
+   "illustration": null
+  },
+  {
+   "id": "END-171",
+   "no": 171,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "도토리 선물 만기일 폭탄",
+   "condition": "만기일 자동 정산 손실 확정 파산",
+   "line": "선물 만기일 시각 24시 00분! 손실이 확정되며 계좌가 닫혔습니다.",
+   "motif": "시계가 12시를 가리키며 터지는 선물 상자",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastHeldCycles",
+      ">=",
+      3
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션이 넘긴 정산 횟수 ≥ 3",
+   "illustration": null
+  },
+  {
+   "id": "END-172",
+   "no": 172,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "롱/숏 양방향 수수료 녹기",
+   "condition": "롱/숏 동시 진입했으나 펀딩비로 계좌 녹음",
+   "line": "롱과 숏 둘 다 잡아서 안심했더니 정산마다 나가는 펀딩비에 계좌가 녹아내렸습니다.",
+   "motif": "양쪽에 포지션을 잡았는데 가운데로 녹아내리는 돈",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "hedgedEver",
+      "==",
+      true
+     ],
+     [
+      "fundingPaid",
+      ">",
+      0
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 롱과 숏을 동시에 든 적 있는지 = 예 · 펀딩비 합 > 0",
+   "illustration": null
+  },
+  {
+   "id": "END-173",
+   "no": 173,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 선물 왕의 허망한 추락",
+   "condition": "랭킹 1위 찍고 1분 만에 청산되어 꼴찌 전락",
+   "line": "숲속 선물 수익률 1위 찍고 캡처하는 동안 차트 폭락해서 파산했습니다.",
+   "motif": "자랑거리 캡처 화면을 들고 울고 있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "wasLocalBest",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 이번 회차에 내 최고 기록을 넘었는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-174",
+   "no": 174,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "거래소 펀딩비 폭탄",
+   "condition": "펀딩비 +10% 타임에 포지션 유지하다 파산",
+   "line": "펀딩비 정산 타임인 줄 모르고 홀딩했다가 펀딩비로 전 재산이 빠져나갔습니다.",
+   "motif": "펀딩비 청구서에 줄줄이 빠져나가는 통장 잔고",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "fundingPaid",
+      ">=",
+      50000
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 펀딩비 합 ≥ 50,000",
+   "illustration": null
+  },
+  {
+   "id": "END-175",
+   "no": 175,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "만 번 주운 도토리의 최후",
+   "condition": "누적 노동 1만 회 후 200배 청산",
+   "line": "손가락이 닳도록 주운 돈이 200배 버튼 한 번에 지워졌습니다.",
+   "motif": "멍하니 빈 화면을 바라보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lifeLaborTaps",
+      ">=",
+      10000
+     ],
+     [
+      "lastLev",
+      "==",
+      200
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 누적 노동 횟수 ≥ 10,000 · 마지막 청산 포지션의 배율 = 200",
+   "illustration": null
+  },
+  {
+   "id": "END-176",
+   "no": 176,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 최고층 펜트하우스 청산",
+   "condition": "차트 최고점에 롱 진입 후 영원히 구조대 안 옴",
+   "line": "도토리 차트 역사상 최정상 펜트하우스에 물렸습니다. 구조대는 오지 않습니다.",
+   "motif": "산꼭대기 차트 꼭짓점에 깃발 꽂고 덜덜 떨기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastEntryAtExtreme",
+      "==",
+      "high"
+     ],
+     [
+      "lastDir",
+      "==",
+      "long"
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 최근 고점/저점에서 진입했는지 = 고점 · 마지막 청산 포지션의 방향 = 롱",
+   "illustration": null
+  },
+  {
+   "id": "END-177",
+   "no": 177,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "최저점 숏 진입의 굴욕",
+   "condition": "차트 바닥 끝에서 숏 쳤다가 반등 빔 맞음",
+   "line": "지하실 바닥인 줄 알고 숏 쳤더니 지하 2층은 없었고, 옥상까지 반등했습니다.",
+   "motif": "발밑에서 솟구치는 장대 양봉을 바라보는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastEntryAtExtreme",
+      "==",
+      "low"
+     ],
+     [
+      "lastDir",
+      "==",
+      "short"
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 최근 고점/저점에서 진입했는지 = 저점 · 마지막 청산 포지션의 방향 = 숏",
+   "illustration": null
+  },
+  {
+   "id": "END-178",
+   "no": 178,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "선물 거래 청산 분노 폭발",
+   "condition": "청산당하고 스마트폰 던졌다가 기기 파손 파산",
+   "line": "청산 팝업 보고 열받아서 폰을 던졌더니 스마트폰 수리비로 완전 파산!",
+   "motif": "깨진 스마트폰 액정 화면과 머리 쥐어뜯기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "immediate",
+      "==",
+      false
+     ],
+     [
+      "lastPostLiqTaps",
+      ">=",
+      8
+     ]
+    ],
+    "note": "기기 파손은 없다. 청산 직후 3초 안에 화면을 8번 이상 두드린 경우로 대신한다(즉시 파산이 아닌 청산만)."
+   },
+   "priority": 370,
+   "hint": "원인: 강제 청산 · 청산 즉시 파산 여부 = 아니오 · 청산 뒤 3초 안에 화면을 누른 횟수 ≥ 8",
+   "illustration": null
+  },
+  {
+   "id": "END-179",
+   "no": 179,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "차트 버그 착각의 비극",
+   "condition": "오르는 차트인 줄 알고 올인했으나 반전 차트",
+   "line": "스마트폰 화면을 거꾸로 들고 차트를 봤습니다. 상승이 아니라 폭락이었네?",
+   "motif": "스마트폰을 거꾸로 들고 고개를 갸웃하는 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastAgainstTrend",
+      "==",
+      true
+     ],
+     [
+      "lastDir",
+      "==",
+      "long"
+     ],
+     [
+      "lastMarginPct",
+      ">=",
+      95
+     ]
+    ],
+    "note": "화면 방향 감지는 쓰지 않는다. 하락 추세에 전액 롱으로 들어간 경우로 대신한다."
+   },
+   "priority": 380,
+   "hint": "원인: 강제 청산 · 추세 반대로 진입했는지 = 예 · 마지막 청산 포지션의 방향 = 롱 · 진입 때 현금 대비 증거금 비율(%) ≥ 95",
+   "illustration": null
+  },
+  {
+   "id": "END-180",
+   "no": 180,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "마진콜 통보 무시",
+   "condition": "마진콜 경고 알림 3회 씹고 강제 집행",
+   "line": "증거금 채우라는 부엉이 거래소의 마진콜 문자를 씹었다가 강제 청산당했습니다.",
+   "motif": "'MARGIN CALL' 빨간 경고 창을 끄다가 폭사",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "marginCalls",
+      ">=",
+      3
+     ],
+     [
+      "lastHadSL",
+      "==",
+      false
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 마진콜 경고 횟수 ≥ 3 · 손절을 걸어 뒀는지 = 아니오",
+   "illustration": null
+  },
+  {
+   "id": "END-181",
+   "no": 181,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "오더북(호가창) 허매수 낚시",
+   "condition": "호가창 벽 믿고 롱 진입했으나 벽 철회 파산",
+   "line": "10만 개 매수 벽 믿고 롱 쳤는데 진입하자마자 벽이 사라졌습니다. 세력의 낚시!",
+   "motif": "밑에 받쳐진 벽 그림이 스르륵 사라지는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastDir",
+      "==",
+      "long"
+     ],
+     [
+      "lastHoldSec",
+      "<=",
+      30
+     ],
+     [
+      "lastLev",
+      ">=",
+      50
+     ]
+    ],
+    "note": "호가창은 없다. 고배율 롱을 30초 안에 청산당한 경우로 대신한다."
+   },
+   "priority": 380,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 방향 = 롱 · 마지막 청산 포지션의 보유 시간(초) ≤ 30 · 마지막 청산 포지션의 배율 ≥ 50",
+   "illustration": null
+  },
+  {
+   "id": "END-182",
+   "no": 182,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 선물 학원 수강료 탕진",
+   "condition": "증거금 1만 도토리 이하의 마지막 포지션 청산",
+   "line": "100% 수익 공식을 가르쳐 준다는 여우의 강의를 듣고, 남은 1만 도토리마저 청산당했습니다.",
+   "motif": "'선물 신의 기법' 책자를 든 사기꾼 여우",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastMargin",
+      "<=",
+      10000
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 증거금 ≤ 10,000",
+   "illustration": null
+  },
+  {
+   "id": "END-183",
+   "no": 183,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "역추세 매매의 고집",
+   "condition": "하락장에 계속 롱으로 맞서다 장렬히 전사",
+   "line": "내 생각이 맞아! 라며 하락장에 롱으로 계속 맞서다 계좌가 소멸했습니다.",
+   "motif": "내리는 눈보라를 향해 롱 깃발을 들고 서 있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "againstTrendLosses",
+      ">=",
+      3
+     ],
+     [
+      "lastDir",
+      "==",
+      "long"
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 추세 반대로 들어가 잃은 횟수 ≥ 3 · 마지막 청산 포지션의 방향 = 롱",
+   "illustration": null
+  },
+  {
+   "id": "END-184",
+   "no": 184,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "200배 레버리지 연승 후 한 번에 청산",
+   "condition": "9번 성공하고 10번째에 올인 청산",
+   "line": "9번 이겨서 불린 돈이, 10번째 200배 올인으로 1초 만에 0이 되었습니다.",
+   "motif": "잔고가 순식간에 0으로 바뀌는 통장",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "winStreakBeforeLiq",
+      ">=",
+      9
+     ],
+     [
+      "lastMarginPct",
+      ">=",
+      95
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 마지막 청산 직전 연승 수 ≥ 9 · 진입 때 현금 대비 증거금 비율(%) ≥ 95",
+   "illustration": null
+  },
+  {
+   "id": "END-185",
+   "no": 185,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "선물 지정가 미체결 파산",
+   "condition": "지정가 매도 걸어놨으나 1 도토리 차이로 안 팔림",
+   "line": "지정가 매도에 1 도토리 차이로 체결 안 되고 그대로 꺾여 하한가 청산당했습니다.",
+   "motif": "차트 선이 매도선 바로 밑에서 꺾여 내려가는 씬",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastTpNearMiss",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 익절가의 90%까지 갔다가 못 닿았는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-186",
+   "no": 186,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 자동 트레이딩 보트 오류",
+   "condition": "자동 매매 AI 보트 설정 오류로 밤새 청산",
+   "line": "AI가 알아서 벌어준다 해서 켜놓고 잤더니 밤새 50번 청산시켜놨습니다.",
+   "motif": "로봇 장난감이 통장을 파쇄기에 넣고 있는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "offline",
+      "==",
+      true
+     ],
+     [
+      "liqsThisCycle",
+      ">=",
+      2
+     ]
+    ],
+    "note": "자동 매매 봇은 없다. 앱을 꺼 둔 사이 포지션 2개 이상이 청산된 경우로 대신한다."
+   },
+   "priority": 370,
+   "hint": "원인: 강제 청산 · 오프라인 따라잡기 중 발생 = 예 · 이번 정산 회차의 청산 횟수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-187",
+   "no": 187,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "롱/숏 스위칭 발작",
+   "condition": "롱 패배 후 즉시 숏 스위칭, 숏 패배 후 롱 스위칭",
+   "line": "롱 쳐서 청산, 숏으로 갈아타서 또 청산. 왕복 수수료까지 내고 계좌가 비었습니다.",
+   "motif": "양쪽으로 꺾이는 차트 사이에서 어지러워하는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "flips",
+      ">=",
+      2
+     ],
+     [
+      "lastFlip",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 손실 직후 반대 방향 진입 횟수 ≥ 2 · 손실 직후 반대 방향 진입이었는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-188",
+   "no": 188,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "펀딩비 뜯어먹기 전략 실패",
+   "condition": "펀딩비 받으려고 진입했다가 원금 청산",
+   "line": "펀딩비 몇 푼 받으려다 원금 전체가 펀딩비 속으로 녹아 사라졌습니다.",
+   "motif": "동전 몇 개를 줍다가 지갑을 통째로 떨어뜨리는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastHeldCycles",
+      ">=",
+      2
+     ],
+     [
+      "lastLev",
+      ">=",
+      50
+     ]
+    ],
+    "note": "펀딩비 수취는 없다(항상 낸다). 고배율 포지션을 정산 2회 이상 넘겨 들고 있다가 청산된 경우로 대신한다."
+   },
+   "priority": 370,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션이 넘긴 정산 횟수 ≥ 2 · 마지막 청산 포지션의 배율 ≥ 50",
+   "illustration": null
+  },
+  {
+   "id": "END-189",
+   "no": 189,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "교차 마진의 재앙",
+   "condition": "한 정산 회차 안에 포지션 2개 이상 청산",
+   "line": "포지션 하나 지키겠다고 다른 포지션까지 줄줄이 열었다가 지갑 속 비상금까지 다 날아갔습니다.",
+   "motif": "포지션 구멍으로 지갑 속 돈이 쏙 빠져나가는 연출",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "liqsThisCycle",
+      ">=",
+      2
+     ]
+    ],
+    "note": "교차 마진은 없다(격리만). 한 회차 안에 포지션 2개 이상 청산으로 대신한다."
+   },
+   "priority": 360,
+   "hint": "원인: 강제 청산 · 이번 정산 회차의 청산 횟수 ≥ 2",
+   "illustration": null
+  },
+  {
+   "id": "END-190",
+   "no": 190,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "200배 레버리지 수수료 청산",
+   "condition": "이겨도 수수료가 커서 실질 계좌 파산",
+   "line": "200배로 수익은 냈는데 거래소 수수료 빼니까 마이너스 계좌가 되었습니다.",
+   "motif": "승리 깃발을 들었지만 호주머니는 텅 비어있기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation",
+     "overdue_upkeep",
+     "overdue_bank",
+     "overdue_capital",
+     "overdue_shark1",
+     "overdue_shark2"
+    ],
+    "all": [
+     [
+      "grossPnl",
+      ">",
+      0
+     ],
+     [
+      "realizedPnl",
+      "<",
+      0
+     ],
+     [
+      "trades",
+      ">=",
+      5
+     ]
+    ]
+   },
+   "priority": 430,
+   "hint": "원인: 강제 청산 또는 유지비 연체 또는 1금융 연체 또는 2금융 연체 또는 사채 1단계 연체 또는 사채 2단계 연체 · 수수료·펀딩비 빼기 전 실현 손익 합 > 0 · 실현 손익 합(수수료·펀딩비 포함) < 0 · 진입 횟수 ≥ 5",
+   "illustration": null
+  },
+  {
+   "id": "END-191",
+   "no": 191,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "차트 갭 상승/하락 벼락",
+   "condition": "손절을 걸어 뒀지만 급등락이 손절가를 건너뜀",
+   "line": "차트가 한 번에 건너뛰어 손절가를 지나쳤고, 그대로 청산되었습니다.",
+   "motif": "공중에서 중간 선이 끊어진 차트 그래프",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastViaJump",
+      "==",
+      true
+     ],
+     [
+      "lastHadSL",
+      "==",
+      true
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 급등락 틱에 청산됐는지 = 예 · 손절을 걸어 뒀는지 = 예",
+   "illustration": null
+  },
+  {
+   "id": "END-192",
+   "no": 192,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 선물 방송 따라 하기",
+   "condition": "속보 직후 고배율로 따라 들어갔다가 청산",
+   "line": "인기 방송인 너구리를 따라 200배를 쳤다가 시청자 모두의 계좌가 비었습니다.",
+   "motif": "방송 모니터 앞에서 시청자 동물들과 다 같이 울기",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastAfterNewsSec",
+      "<=",
+      15
+     ],
+     [
+      "lastNewsFake",
+      "==",
+      false
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ],
+    "note": "방송 시청은 없다. 진짜 속보 직후 15초 안에 고배율로 따라 들어갔다 청산된 경우로 대신한다."
+   },
+   "priority": 380,
+   "hint": "원인: 강제 청산 · 속보 뒤 몇 초 만에 진입했는지 ≤ 15 · 그 속보가 가짜였는지 = 아니오 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-193",
+   "no": 193,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "뇌동 매매 끝판왕",
+   "condition": "청산당하고 화나서 200배 연타 5회 연속 청산",
+   "line": "청산당한 분노를 못 참아 연속 5회 200배 올인! 계좌 복구 불능 상태 확정.",
+   "motif": "빨간 버튼을 미친 듯이 연타하는 광기 어린 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "liqStreak",
+      ">=",
+      5
+     ],
+     [
+      "lastLev",
+      "==",
+      200
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 연속 청산 횟수 ≥ 5 · 마지막 청산 포지션의 배율 = 200",
+   "illustration": null
+  },
+  {
+   "id": "END-194",
+   "no": 194,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "200배 첫 개방의 참극",
+   "condition": "생애 첫 200배 거래에서 청산",
+   "line": "200배 레버리지 첫 개방! 누르는 순간 계좌가 사라졌습니다.",
+   "motif": "200배 버튼이 번쩍이며 터지는 연출",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastLev",
+      "==",
+      200
+     ],
+     [
+      "lifeLev200Trades",
+      "<=",
+      1
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 배율 = 200 · 누적 200배 진입 횟수 ≤ 1",
+   "illustration": null
+  },
+  {
+   "id": "END-195",
+   "no": 195,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "숲속 세력의 설거지 희생양",
+   "condition": "세력 NPC의 상장 폐지 설거지에 걸려 파산",
+   "line": "세력 족제비가 다 털고 나간 차트의 설거지를 대신 하다가 빈 접시만 남았습니다.",
+   "motif": "빈 그릇 더미 앞에 앉은 칩멍크",
+   "trigger": {
+    "type": "proxy",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastMarket",
+      "==",
+      "SQH"
+     ],
+     [
+      "lastDir",
+      "==",
+      "long"
+     ]
+    ],
+    "note": "상장 폐지는 없다. 빔이 가장 큰 SQ하이넛츠 롱 청산으로 대신한다."
+   },
+   "priority": 370,
+   "hint": "원인: 강제 청산 · 마지막 청산 포지션의 종목 = SQH · 마지막 청산 포지션의 방향 = 롱",
+   "illustration": null
+  },
+  {
+   "id": "END-196",
+   "no": 196,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "선물거래 중 도토리 전력 차단",
+   "condition": "스마트폰 배터리 1% 상태에서 청산",
+   "line": "200배 포지션 잡았는데 배터리 나가서 폰 꺼졌습니다. 켜보니까 이미 파산!",
+   "motif": "배터리 0% 아이콘과 꺼진 화면 속 내 비친 얼굴",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "offline",
+      "==",
+      true
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 420,
+   "hint": "원인: 강제 청산 · 오프라인 따라잡기 중 발생 = 예 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-197",
+   "no": 197,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "청산 보고서 100장 발송",
+   "condition": "총 선물 청산 횟수 100회 달성 기념 파산",
+   "line": "부엉이 거래소에서 '단골 청산 고객 감사장'과 함께 100번째 청산 보고서를 받았습니다.",
+   "motif": "100번째 청산 보고서 상장을 들고 눈물 흘리기",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lifeLiqs",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 누적 청산 횟수 ≥ 100",
+   "illustration": null
+  },
+  {
+   "id": "END-198",
+   "no": 198,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "선물 트레이딩 룸 월세 미납",
+   "condition": "선물 전용 방 임대료 못 내서 길바닥 청산",
+   "line": "선물 방 차려놓고 트레이딩 하다 월세를 못 내서 모니터 끌려 나갔습니다.",
+   "motif": "길바닥에 모니터 하나 놓고 앉아있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "overdue_upkeep"
+    ],
+    "all": [
+     [
+      "trades",
+      ">=",
+      10
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 유지비 연체 · 진입 횟수 ≥ 10",
+   "illustration": null
+  },
+  {
+   "id": "END-199",
+   "no": 199,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "도토리 선물 역사서 등재",
+   "condition": "숲속 선물 역사상 가장 큰 손실 기록",
+   "line": "당신의 이름이 숲속 금융 박물관 '역대 최고 선물 손실자' 전시대에 등재되었습니다.",
+   "motif": "박물관 유리관 안에 전시된 칩멍크의 텅 빈 지갑",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lastLoss",
+      ">=",
+      5000000
+     ]
+    ]
+   },
+   "priority": 410,
+   "hint": "원인: 강제 청산 · 마지막 청산으로 잃은 증거금 ≥ 5,000,000",
+   "illustration": null
+  },
+  {
+   "id": "END-200",
+   "no": 200,
+   "category": "CAT-D",
+   "categoryName": "선물·청산",
+   "title": "전설의 숲속 아귀 (최종 파산)",
+   "condition": "파산 50회 이상, 도감 150종 해금 후 고배율 파산",
+   "line": "당신은 파산의 대가입니다. 숲속의 모든 동물들이 당신의 역발상 파산 기법에 찬사를 보냅니다!",
+   "motif": "황금 파산 왕관을 쓰고 텅 빈 도토리 자루 위에 당당하게 앉아있는 칩멍크",
+   "trigger": {
+    "type": "rule",
+    "causes": [
+     "liquidation"
+    ],
+    "all": [
+     [
+      "lifeBankruptcies",
+      ">=",
+      50
+     ],
+     [
+      "lifeCollected",
+      ">=",
+      150
+     ],
+     [
+      "lastLev",
+      ">=",
+      100
+     ]
+    ]
+   },
+   "priority": 930,
+   "hint": "원인: 강제 청산 · 누적 파산 횟수 ≥ 50 · 수집한 엔딩 수 ≥ 150 · 마지막 청산 포지션의 배율 ≥ 100",
+   "illustration": null
+  }
+ ]
+}

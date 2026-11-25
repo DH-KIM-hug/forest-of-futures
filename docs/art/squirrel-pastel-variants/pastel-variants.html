@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>파스텔 소프트 셀 그림체 변형</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>파스텔 소프트 셀 그림체 변형 4종</h1>
+  <p class="lead">기반은 D(파스텔 소프트 셀)로 고정하고, 선·그림자·채도·무게감만 바꿨습니다. 캐릭터는 같은 옷과 포즈입니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="P1_no-line.png" alt="P1 무선">
+      <figcaption><span class="tag">P1</span>무선 면 중심<div class="desc">외곽선 없이 색 블록만으로 형태를 만듦. 가장 밝고 가벼움.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="P2_thin-line.png" alt="P2 얇은 선">
+      <figcaption><span class="tag">P2</span>얇은 선<div class="desc">갈색 얇은 선과 3톤 셀 그림자. 일러스트 느낌이 살아 있음.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="P3_bold-silhouette.png" alt="P3 굵은 실루엣">
+      <figcaption><span class="tag">P3</span>굵은 실루엣<div class="desc">바깥 외곽선만 굵게, 내부 그림자는 최소. 포스터 같은 힘.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="P4_muted-grounded.png" alt="P4 차분한 현실감">
+      <figcaption><span class="tag">P4</span>차분하고 현실감 있게<div class="desc">채도를 낮추고 차가운 도시 빛. 덜 귀엽고 더 무거움.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 빚과 파산의 무게를 담는지 (P4 쪽), 귀여움과 밝음을 유지하는지 (P1 쪽), 방치형 화면 위에서 읽히는지.
+    하나 고르면 그 변형을 스타일 고정문으로 동결하고 표정 5종을 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

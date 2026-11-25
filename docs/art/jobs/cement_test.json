@@ -1,0 +1,27 @@
+{
+ "_doc": "2026-11-25 사용자 요청 '콘크리트 부어지는 모습' 시험 2안(A 시멘트 신발 장면, B 암시만)",
+ "jobs": [
+  {
+   "id": "cement_a",
+   "out": "docs/art/style-bold/despair/cement_a.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Game ending card illustration, portrait 3:4. Night, cool blue and grey world, the chipmunk stays warm orange. Classic cartoon gangster black-comedy trope, no blood, no injury, no violence shown, no text. Scene: a lonely wooden pier at night by dark water. The chipmunk stands with both feet stuck in a small tub of wet grey concrete (cartoon cement shoes), tears brimming in its dot eyes, trembling mouth, paws clasped begging. A cement mixer behind is still pouring a stream of concrete into the tub. Two large shadowy badger thugs in suits seen only from behind or as silhouettes at the edge, one checking a ledger. "
+  },
+  {
+   "id": "cement_b",
+   "out": "docs/art/style-bold/despair/cement_b.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Game ending card illustration, portrait 3:4. Night, cool blue and grey world, the chipmunk stays warm orange. Classic cartoon gangster black-comedy trope, no blood, no injury, no violence shown, no text. Scene: implication only, the chipmunk is NOT visible. A lonely wooden pier at night by dark water. A metal drum stands at the edge of the pier while a cement mixer pours a thick stream of grey concrete into it. On the planks beside the drum lies a small red ribbon and a single acorn. Two shadowy thug silhouettes walking away. "
+  }
+ ]
+}

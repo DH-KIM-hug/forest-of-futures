@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "_doc": "B 잎사귀 버블 방향 확정(2026-11-25) 후 UI 구현용 그림. SCREEN_PLAN_v1 5.3",
+  "jobs": [
+    {
+      "id": "bg_village",
+      "out": "docs/ui/assets/raw/bg_village.png",
+      "prompt": "Mobile game background art, portrait 9:16, for a cozy forest village map. EMPTY LANDSCAPE ONLY: no buildings, no houses, no characters, no animals, no UI, no text, no icons. Same art style and colours as the reference mockup (pastel soft cel shading, soft two-tone shadows, smooth pastel colour blocks, gentle and bright, Cats-and-Soup-like softness). Layers from top to bottom: soft pale sky with two small fluffy clouds (top 12%), a band of distant rounded forest tree silhouettes in light sage green, then a gently rolling light meadow of grass that fills most of the image, and a slightly warmer open dirt clearing across the bottom 18% of the image (a flat soft-brown ground where a character will stand and pick acorns, with a few scattered acorns and small pebbles). A single winding light-beige dirt path zigzags through the meadow connecting nine flat empty grassy clearings arranged in three rows: far row at about 28% height (left, centre, right), middle row at about 50% height (left, centre, right), near row at about 70% height (left, centre, right); each clearing is a flat empty patch where a building will be placed later, so keep them empty and evenly lit. Small decorative details only at the edges: a few flowers, small bushes, tiny mushrooms, ferns. Flat, readable, uncluttered; leave the clearings and the bottom clearing open. No vignette, no frame, no border.",
+      "ref": ["docs/ui/mockups/B_s1_village.png"],
+      "transparent": false,
+      "aspect": "9:16"
+    },
+    {
+      "id": "icons_sheet",
+      "out": "docs/ui/assets/raw/icons_sheet.png",
+      "prompt": "A sprite sheet of 16 separate small game UI icons arranged in a clean 4 by 4 grid with generous empty space between them, each icon centred in its own cell, every icon the same size. Style: same as the reference mockup: cute pastel soft cel shading, soft two-tone shadow, chunky rounded shapes, a thin darker brown edge, readable at 32 pixels, no text, no letters, no numbers. Icons in reading order: 1 a golden-brown acorn (money); 2 a folded green leaf ledger with a red ribbon (debt); 3 a small golden bell (settlement timer); 4 a leaf newspaper with a tiny megaphone (news); 5 a little house with a leaf roof (village tab); 6 a wooden board with a zigzag rising line drawn on it (trade tab); 7 a left-pointing wooden arrow sign (back); 8 a leaf document with a fold (terms); 9 a small iron padlock wrapped with a vine (locked); 10 five acorns in a row (trust); 11 a small round wooden shield (stop loss); 12 a small green triangle flag on a twig (take profit); 13 a red tilted rectangular sticker tag with a pin (overdue); 14 a round red rubber stamp mark with a check shape (paid off); 15 a burlap acorn sack, empty and flat; 16 a burlap acorn sack, full and bulging with acorns. Background: one perfectly flat uniform pure magenta (#FF00FF) filling the whole image, no gradient, no grid lines drawn, no shadows on the background. Do not use magenta or pink on the icons.",
+      "ref": ["docs/ui/mockups/B_s1_village.png"],
+      "transparent": true,
+      "chroma_key": "magenta",
+      "aspect": "1:1"
+    }
+  ]
+}

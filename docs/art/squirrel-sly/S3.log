@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, smooth pastel color blocks, soft two-tone cel shadows, a thin light highlight, polished mobile game character art. Same species and style as the reference image: orange-brown squirrel with cream muzzle and belly, big dark eyes, round body. Full body, centered, plain solid cream background, no text, no border. The character must look shrewd and a little untrustworthy, not kind or innocent: sharp, scheming, worn-down gambler from a black-comedy story. Variant S3: flashy gambler look, a cheap gold acorn chain necklace, short sharp jacket, side-eyed suspicious glance, one hand in pocket, a fake confident grin.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-sly/S3_flashy-gambler.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-sly/S3_flashy-gambler.png.raw.png",
+  "raw_bytes": 1477413,
+  "elapsed_seconds": 50.865,
+  "model": null,
+  "session_id": "01a20e20-bf6c-7012-97d6-49a4fd53b907",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-sly/S3.json"
+}

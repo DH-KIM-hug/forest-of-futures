@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>동물과 캐릭터 중간 다람쥐 시안</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>동물과 캐릭터 중간 다람쥐 시안</h1>
+  <p class="lead">서서 있는 자세와 표정으로 캐릭터성을 살리고, 옷은 빼거나 최소로 줄였습니다. 동물 본래의 몸은 그대로 둔 중간 지점입니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="M1_upright-bare.png" alt="M1 맨몸 서기">
+      <figcaption><span class="tag">M1</span>맨몸 서기<div class="desc">옷 없이 털만 있음. 한 손을 허리에 얹은 여유로운 표정.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="M2_upright-phone.png" alt="M2 휴대폰 들기">
+      <figcaption><span class="tag">M2</span>휴대폰 들기<div class="desc">옷 없이 휴대폰 하나만. 차트를 보는 방치형 게임의 핵심 행동이 드러남.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="M3_upright-ribbon.png" alt="M3 빨간 목끈">
+      <figcaption><span class="tag">M3</span>빨간 목끈 하나<div class="desc">포인트 소품은 목끈 하나. 눈썹을 올려 들뜬 표정.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="M4_upright-clasp.png" alt="M4 두 손 모은 자세">
+      <figcaption><span class="tag">M4</span>두 손 모음<div class="desc">옷 없이 두 발을 가슴에 모은 간절한 자세. 빚과 기대가 함께 보임.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 동물다운 귀여움과 캐릭터성의 균형이 맞는지, 옷이나 소품이 과하지 않은지, 작은 화면에서도 읽히는지.
+    하나 고르면 그 자세와 소품 수준을 기본형으로 정하고, 표정 5종을 같은 몸으로 다시 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

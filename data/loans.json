@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "_doc": "대출 사다리 1~4단계(금융 기관). 5단계(친구)는 friends.json. 이자율은 '정산 1회당'이다. limitByHouseStage의 인덱스는 housing.json stage(0~4).",
+  "lenders": [
+    {
+      "id": "bank",
+      "tier": 1,
+      "name": "숲속중앙조합",
+      "kind": "1금융",
+      "npc": "부엉이 지점장",
+      "building": "bank",
+      "requiresCollateral": true,
+      "limitRule": "ltv",
+      "limitByHouseStage": null,
+      "borrowUnit": 100000,
+      "ratePerSettlement": 0.01,
+      "upfrontRate": 0,
+      "stampUnit": 50000,
+      "maxOverdueStreak": 3,
+      "unlock": {
+        "type": "always",
+        "note": "처음부터 보이지만 집(stage 1 이상)이 없으면 거절한다. 거절할 때마다 bankRefusals +1."
+      },
+      "onOverdue": [],
+      "refuseLines": [
+        "고객님, 담보가 확인되지 않습니다.",
+        "고객님, 한도가 초과되었습니다."
+      ],
+      "terms": "담보인정비율(LTV) 80%. 이자 3회 연속 미납 시 기한이익이 상실되며 담보권을 실행합니다."
+    },
+    {
+      "id": "capital",
+      "tier": 2,
+      "name": "황금저축·캐피탈",
+      "kind": "2금융",
+      "npc": "족제비 대표",
+      "building": "capital",
+      "requiresCollateral": false,
+      "limitRule": "byHouseStage",
+      "limitByHouseStage": [
+        600000,
+        1000000,
+        3000000,
+        10000000,
+        30000000
+      ],
+      "borrowUnit": 50000,
+      "ratePerSettlement": 0.02,
+      "upfrontRate": 0,
+      "stampUnit": 10000,
+      "maxOverdueStreak": 3,
+      "unlock": {
+        "type": "always"
+      },
+      "onOverdue": [],
+      "refuseLines": [
+        "고객님~ 아쉽지만 한도가 꽉 찼어요!"
+      ],
+      "terms": "무담보 신용대출. 이자 3회 연속 미납 시 전액 즉시 상환을 청구합니다."
+    },
+    {
+      "id": "shark1",
+      "tier": 3,
+      "name": "오소리 대부",
+      "kind": "사채 1단계",
+      "npc": "오소리 소장",
+      "building": "shark1",
+      "requiresCollateral": false,
+      "limitRule": "byHouseStage",
+      "limitByHouseStage": [
+        500000,
+        1000000,
+        2000000,
+        5000000,
+        10000000
+      ],
+      "borrowUnit": 100000,
+      "ratePerSettlement": 0.04,
+      "upfrontRate": 0,
+      "stampUnit": 10000,
+      "maxOverdueStreak": 2,
+      "unlock": {
+        "type": "always"
+      },
+      "onOverdue": [
+        {
+          "atStreak": 1,
+          "effect": "garnish",
+          "note": "연체 중에는 노동·급여 수입의 labor.garnishRate(30%)를 차압해 오소리 원금에서 깎는다. 연체가 풀리면 중단."
+        }
+      ],
+      "refuseLines": [
+        "더는 안 돼. 있는 것부터 갚아."
+      ],
+      "terms": "이자 2회 연속 미납 시 집기와 수입을 압류합니다."
+    },
+    {
+      "id": "shark2",
+      "tier": 4,
+      "name": "뒷골목 독사 대부",
+      "kind": "사채 2단계",
+      "npc": "독사 대부",
+      "building": "shark2",
+      "requiresCollateral": false,
+      "limitRule": "byHouseStage",
+      "limitByHouseStage": [
+        1000000,
+        2000000,
+        5000000,
+        10000000,
+        20000000
+      ],
+      "borrowUnit": 200000,
+      "ratePerSettlement": 0.08,
+      "upfrontRate": 0.4,
+      "stampUnit": 20000,
+      "maxOverdueStreak": 2,
+      "unlock": {
+        "type": "anyOf",
+        "conditions": [
+          {
+            "stat": "odTotal",
+            "op": ">=",
+            "value": 1
+          },
+          {
+            "stat": "totalDebt",
+            "op": ">=",
+            "value": 500000
+          },
+          {
+            "stat": "claimsSold",
+            "op": ">",
+            "value": 0
+          }
+        ],
+        "note": "한 번이라도 연체했거나, 총부채가 50만 이상이거나, 친구가 채권을 넘겼을 때 골목이 열린다. 한 번 열리면 그 회차 동안 계속 열려 있다."
+      },
+      "onOverdue": [
+        {
+          "atStreak": 1,
+          "effect": "contactCollection",
+          "note": "contactsSeized가 true면 정산마다 모든 친구 신뢰도 -30."
+        }
+      ],
+      "special": {
+        "upfront": "빌린 금액의 40%를 선이자로 떼고 60%만 현금으로 준다. 장부 원금은 100%.",
+        "contactSeizure": "이 회차에서 두 번째 대출부터는 '지인 연락처 제출 동의'에 체크해야 빌릴 수 있다. 빌리는 순간 contactsSeized = true."
+      },
+      "refuseLines": [
+        "오늘은 여기까지 하시지요."
+      ],
+      "terms": "선이자 40% 공제. 추가 대출 시 지인 연락처 제출. 이자 2회 연속 미납 시 전액 회수에 들어갑니다. 제99조: 본 계약서 사본은 100부 보관합니다."
+    }
+  ],
+  "stampMultipliers": [
+    1,
+    10,
+    "all"
+  ],
+  "borrowRules": {
+    "limitCheck": "원금 + borrowUnit <= 한도일 때만 대출. bank 한도 = housing.rules.ltv × 현재 담보 평가액.",
+    "cashReceived": "borrowUnit × (1 - upfrontRate)",
+    "principalAdded": "borrowUnit"
+  }
+}

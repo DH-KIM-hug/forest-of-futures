@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A chubby CHIPMUNK (orange-tan fur, dark brown stripes on back and head, cream belly, small round ears, short bushy tail), standing upright on two legs. Keep exactly the same cozy rounded proportions as the reference image: short rounded body, big round head, short limbs. But render it as a flat 2D illustration, NOT 3D: no volume shading, no glossy highlights, no clay or toy material. Flat colour blocks with simple cel shading, clean shapes. Full body, centered, plain solid cream background, no text, no border. Variant Z3: a small red neck ribbon as the only accessory, eyebrows raised eagerly, tail curled.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-2d/Z3_flat-ribbon.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-2d/Z3_flat-ribbon.png.raw.png",
+  "raw_bytes": 1262757,
+  "elapsed_seconds": 43.443,
+  "model": null,
+  "session_id": "01a20e38-733e-79c0-85c6-9f0c43199581",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-cozy/Y1_bare.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/chipmunk-2d/Z3.json"
+}

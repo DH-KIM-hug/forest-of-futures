@@ -1,0 +1,23 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "A young squirrel, an anxious young dreamer chasing a quick fortune, standing and holding a phone. Full body, centered, plain neutral background, no text, no border. Let the art style fully define the look; outfit and details are yours to decide in this style. Art family F1: 16-bit pixel art sprite, crisp pixels, limited palette, retro handheld game look.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-families/F1_pixel16.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-families/F1_pixel16.png.raw.png",
+  "raw_bytes": 1398033,
+  "elapsed_seconds": 52.613,
+  "model": null,
+  "session_id": "01a20e29-06fa-72a0-9eba-d07140b5ad23",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-families/F1.json"
+}

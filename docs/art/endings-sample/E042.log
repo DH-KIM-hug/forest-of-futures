@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks with no outlines, light airy pastel palette, cheerful and light, the chubby short squirrel from the reference image (same character, same proportions). Full scene, light black-comedy mood: the situation is absurd and funny, not tragic, no gore, no text, no captions. Scene for ending END-042 'contacts leaked': the squirrel holds a phone that is flooded with pop-up speech bubbles from friends, a snake grinning in the corner with a notebook, comic.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/E042_phone-flood.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/E042_phone-flood.png.raw.png",
+  "raw_bytes": 1835657,
+  "elapsed_seconds": 96.946,
+  "model": null,
+  "session_id": "01a20e2d-3bc3-7cb1-a579-0afb623cf628",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/E042.json"
+}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>선물의 숲 일확천금 주인공 시안</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>일확천금을 꿈꾸는 젊은이 시안</h1>
+  <p class="lead">스타일 D로 뽑은 주인공 시안 4종입니다. 성격은 "빠르게 한 방을 노리는 젊은 도전자"로 맞췄습니다. 특정 기존 캐릭터를 따라 그린 것은 아닙니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="D1_hoodie-phone.png" alt="D1 후드 휴대폰형">
+      <figcaption><span class="tag">D1</span>후드·휴대폰형<div class="desc">차트가 오르는 화면을 든 흥분한 얼굴</div></figcaption>
+    </figure>
+    <figure>
+      <img src="D2_fist-headband.png" alt="D2 주먹 머리띠형">
+      <figcaption><span class="tag">D2</span>주먹 머리띠형<div class="desc">한 방을 확신하는 자신만만한 포즈</div></figcaption>
+    </figure>
+    <figure>
+      <img src="D3_cap-coin.png" alt="D3 뒤집은 모자형">
+      <figcaption><span class="tag">D3</span>뒤집은 모자·도토리 동전형<div class="desc">도토리 동전을 쥐고 다음 한 방을 노리는 자세</div></figcaption>
+    </figure>
+    <figure>
+      <img src="D4_jump-backpack.png" alt="D4 점프 배낭형">
+      <figcaption><span class="tag">D4</span>점프·배낭형<div class="desc">뛰어오르는 역동적인 연출, 게임 연출용으로 좋음</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 덜 착해 보이는지, 젊고 들뜬 느낌이 나는지, 작은 화면에서도 누구인지 알아보는지.
+    하나 고르면 그 디자인을 주인공 기준으로 정하고 표정 5종을 다시 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

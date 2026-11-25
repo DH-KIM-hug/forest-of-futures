@@ -1,0 +1,16 @@
+{
+ "_doc": "2026-11-25 사용자 요청: 쳇바퀴에 영원히 갇혀 전기 생산",
+ "jobs": [
+  {
+   "id": "wheel_power",
+   "out": "docs/art/style-bold/despair/wheel_power.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon. Do NOT draw the bear, the cat, the jeep or any tropical plants from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Game ending card illustration, portrait 3:4. Classic cartoon gangster black-comedy trope, bleak dystopian slapstick; no blood, no injury, no gore, no death shown, no text. The world is in cool blue and grey, the chipmunk stays warm orange. Scene: a dim underground power room of the loan shark's building. The chipmunk runs endlessly inside a big metal hamster wheel wired to a humming generator, a chain-locked padlock on the wheel door, a debt counter board on the wall whose blank digit panels barely change, dark circles under its hollow tired eyes, sweat drops, ribbon frayed. Light bulbs across the ceiling are powered by the wheel. A badger thug in a suit lounges in a chair by the door eating snacks and scrolling a phone, a calendar on the wall with many days crossed out. Forever-labor despair, no injury."
+  }
+ ]
+}

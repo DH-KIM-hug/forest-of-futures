@@ -1,0 +1,24 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, smooth pastel color blocks, soft two-tone cel shadows, a thin light highlight, polished warm mobile game character art. Same character as the reference image: orange-brown squirrel with cream muzzle and belly, round chubby body, big dark eyes, rough tan patched tunic. Full body, centered, same size and proportions as the reference, plain solid cream background, no text, no border. Expression: dazed blank stare with swirl eyes, slumped posture, tiny stars circling the head, holding a stock chart paper.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-expressions/05_dazed.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-expressions/05_dazed.png.raw.png",
+  "raw_bytes": 1365356,
+  "elapsed_seconds": 53.466,
+  "model": null,
+  "session_id": "01a20e1b-651b-7070-a06a-2390d6deac25",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/gdd/art-style-compare/D_pastel-cel.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

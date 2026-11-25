@@ -1,0 +1,9 @@
+{"_doc":"2026-11-25 사용자 참고 프롬프트 형식(warm healing whimsical illustration + 짧은 장면 묘사)으로 시험 3장. 참고 그림의 곰·고양이·지프는 그리지 않는다. 스타일 참고 이미지는 쓰지 않고 글만으로(모델 기본값이 그 그림체를 냈으므로).",
+"jobs":[
+{"id":"wh_hero","out":"docs/art/style-whimsical/wh_hero.png","ref":[],"transparent":true,"chroma_key":"magenta",
+"prompt":"warm healing whimsical illustration, a well-proportioned small chipmunk with a balanced slim build, orange-tan fur with dark brown stripes along the back and head, cream belly, a little red ribbon tied around the neck, standing upright on two legs holding one acorn with both paws, calm deadpan face with tiny dot eyes, full body, centered, plain solid magenta (#FF00FF) background, no text"},
+{"id":"wh_tent","out":"docs/art/style-whimsical/wh_tent.png","ref":[],"transparent":false,
+"prompt":"warm healing whimsical illustration, a small patched canvas tent pitched under a big leafy tree in a cozy forest village, a tiny campfire pot, a wooden crate used as a table, a little wooden mailbox, a well-proportioned small chipmunk with a slim balanced build, orange-tan fur with dark back stripes and a little red neck ribbon, sitting on a crate in front of the tent eating an acorn, beige dirt ground dotted with patches of moss and small rocks"},
+{"id":"wh_village","out":"docs/art/style-whimsical/wh_village.png","ref":[],"transparent":false,"aspect":"9:16",
+"prompt":"warm healing whimsical illustration, portrait view of a small forest village of animals seen from slightly above, a winding dirt path connecting little wooden shops and houses among giant leafy trees and ferns: a sturdy tree-stump bank with stone columns, a shiny leaf-roofed loan shop, a shabby two-storey log office with an outside staircase, a row of tiny friends' houses, a dark root-tangled alley, a village notice board, a patched tent under a tree, beige sandy ground dotted with patches of moss and rocks, no characters, no text"}
+]}

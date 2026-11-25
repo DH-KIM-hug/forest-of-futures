@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>칩멍크 코지 3D 토이풍 시안</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+figcaption { margin-top: 8px; }
+.tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+.desc { color: var(--muted); font-size: 13px; }
+.note {
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>칩멍크 코지 3D 토이풍 시안</h1>
+  <p class="lead">동물의 숲 계열의 둥글고 포근한 3D 토이 느낌을 참고했습니다. 특정 게임의 캐릭터를 따라 그린 것이 아니라, 질감과 비율의 방향만 가져왔습니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="Y1_bare.png" alt="Y1 맨몸 서기">
+      <figcaption><span class="tag">Y1</span>맨몸 서기<div class="desc">털과 줄무늬만. 한 손을 허리에 얹은 차분한 미소.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="Y2_phone.png" alt="Y2 휴대폰 들기">
+      <figcaption><span class="tag">Y2</span>휴대폰 들기<div class="desc">휴대폰 하나로 차트를 보는 핵심 행동이 드러남.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="Y3_ribbon.png" alt="Y3 빨간 목끈">
+      <figcaption><span class="tag">Y3</span>빨간 목끈<div class="desc">포인트 소품은 목끈 하나. 눈썹을 올린 들뜬 표정.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="Y4_clasp.png" alt="Y4 두 손 모음">
+      <figcaption><span class="tag">Y4</span>두 손 모음<div class="desc">두 손을 가슴에 모은 간절한 자세. 빚과 기대가 함께 보임.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="note">
+    고르실 때 볼 점: 3D 토이풍이 귀엽게 읽히는지, 어두운 엔딩 장면과 대비가 되는지, 작은 화면에서도 알아보는지.
+    하나 고르면 그 자세를 기본형으로 정하고, 표정 5종을 같은 몸으로 다시 뽑겠습니다.
+  </div>
+</main>
+</body>
+</html>

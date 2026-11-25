@@ -1,0 +1,25 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Style: pastel soft cel shading, flat colour blocks with no outlines, light airy pastel palette, cheerful and light, the chubby short squirrel from the reference image (same character, same proportions). Full scene, light black-comedy mood: the situation is absurd and funny, not tragic, no gore, no text, no captions. Scene for ending END-002 'golden mansion foreclosure': the squirrel stands in front of a huge golden gate with a big red seizure sticker on it, with a small suitcase, looking sheepish.",
+  "out": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/E002_golden-gate.png",
+  "raw": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/E002_golden-gate.png.raw.png",
+  "raw_bytes": 1785388,
+  "elapsed_seconds": 63.297,
+  "model": null,
+  "session_id": "01a20e2d-3bc2-7ba2-90b8-ebb79dce27e4",
+  "refs": [
+    "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/squirrel-pastel-variants/P1_no-line.png"
+  ],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "auth_source": "codex-login",
+    "inline_results": 1,
+    "rollout_cleaned": true,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit",
+  "report": "/Users/house_of_4k2b/orca/projects/future-clicker/docs/art/endings-sample/E002.json"
+}

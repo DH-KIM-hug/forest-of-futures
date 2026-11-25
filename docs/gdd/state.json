@@ -1,0 +1,50 @@
+{
+ "meta": {
+  "genre": "클리커/방치형 + 시뮬레이션(선물 거래) 혼합, 서사형 엔딩 도감",
+  "engine": "웹(Vite + React + TypeScript, 차트 Canvas 2D, 마을 DOM) + Capacitor 래핑. three.js 미사용 — GDD_v1.md 19장",
+  "online": "일부(부 기준 랭킹 — 별도 운영)",
+  "combat": "없음",
+  "growth": "예",
+  "item": "예(부동산 자산 등급)",
+  "shop": "예(대출·자산 구매)",
+  "stage": "없음(단일 루프, 회차 구조는 미정)",
+  "narrative": "예(200종 엔딩)",
+  "random": "예(시세 랜덤워크·이벤트)",
+  "monetization": "미정",
+  "platform": "iOS + Android 앱 출시 (웹 기반, Capacitor 래핑 예정)"
+ },
+ "steps": {
+  "D1": {
+   "status": "done",
+   "file": "docs/gdd/D1-한-문장-콘셉트.md",
+   "date": "2026-11-25"
+  },
+  "D2": {
+   "status": "done",
+   "file": "docs/gdd/D2-타깃-유저.md",
+   "date": "2026-11-25"
+  }
+ },
+ "history": [
+  "2026-11-25 init",
+  "2026-11-25 meta genre=클리커/방치형 + 시뮬레이션(선물 거래) 혼합, 서사형 엔딩 도감",
+  "2026-11-25 meta engine=웹(모바일 세로 9:16) — three.js 검토 중",
+  "2026-11-25 meta online=없음",
+  "2026-11-25 meta combat=없음",
+  "2026-11-25 meta growth=예",
+  "2026-11-25 meta item=예(부동산 자산 등급)",
+  "2026-11-25 meta shop=예(대출·자산 구매)",
+  "2026-11-25 meta stage=없음(단일 루프, 회차 구조는 미정)",
+  "2026-11-25 meta narrative=예(200종 엔딩)",
+  "2026-11-25 meta random=예(시세 랜덤워크·이벤트)",
+  "2026-11-25 meta monetization=미정",
+  "2026-11-25 meta platform=iOS + Android 앱 출시 (웹 기반, Capacitor 래핑 예정)",
+  "2026-11-25 meta engine=웹(three.js 검토) + Capacitor 래핑 (iOS/Android)",
+  "2026-11-25 start D1",
+  "2026-11-25 meta online=일부(부 기준 랭킹 — 별도 운영)",
+  "2026-11-25 done D1 docs/gdd/D1-한-문장-콘셉트.md",
+  "2026-11-25 start D2",
+  "2026-11-25 done D2 docs/gdd/D2-타깃-유저.md",
+  "2026-11-25 meta engine=웹(Vite + React + TypeScript, 차트 Canvas 2D, 마을 DOM) + Capacitor 래핑. three.js 미사용 — GDD_v1.md 19장"
+ ]
+}

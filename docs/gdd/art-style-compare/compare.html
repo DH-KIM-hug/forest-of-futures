@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>선물의 숲 그림체 시안 비교</title>
+<style>
+:root {
+  --bg: #FBF6EC;
+  --fg: #3B2F25;
+  --muted: #7A6A5C;
+  --card: #FFFFFF;
+  --accent: #C0703A;
+  --line: #E7DCCB;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #201A15; --fg: #F3E9DA; --muted: #B8A894; --card: #2C241D; --accent: #E09A62; --line: #443728;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.6 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 24px;
+  padding-bottom: 40px;
+}
+main { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+figcaption { margin-top: 10px; }
+.tag {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 6px;
+}
+.name { font-weight: 700; }
+.desc { color: var(--muted); font-size: 13px; }
+.rec {
+  margin-top: 24px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.rec strong { color: var(--accent); }
+.pick {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>선물의 숲 그림체 시안 비교</h1>
+  <p class="lead">같은 장면(흙수저 다람쥐 + 나뭇잎 텐트)을 스타일만 바꿔 뽑은 4개 시안입니다.</p>
+
+  <div class="grid">
+    <figure>
+      <img src="A_paper-cut.png" alt="A 색지 오림 페이퍼아트">
+      <figcaption><span class="tag">A</span><span class="name">색지 오림 페이퍼아트</span>
+        <div class="desc">겹겹이 오린 종이 질감, 단색 조각. 동화책 느낌이 가장 강함.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="B_clean-flat.png" alt="B 깔끔한 플랫 일러스트">
+      <figcaption><span class="tag">B</span><span class="name">깔끔한 플랫 일러스트</span>
+        <div class="desc">얇은 갈색 외곽선, 그라데이션 최소. 요청하신 "깔끔한" 방향에 가장 가까움.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="C_watercolor.png" alt="C 수채 그림책">
+      <figcaption><span class="tag">C</span><span class="name">수채 그림책</span>
+        <div class="desc">번짐과 종이 결. 따뜻하지만 UI와 함께 쓰면 화면이 흐려 보일 수 있음.</div></figcaption>
+    </figure>
+    <figure>
+      <img src="D_pastel-cel.png" alt="D 파스텔 소프트 셀">
+      <figcaption><span class="tag">D</span><span class="name">파스텔 소프트 셀</span>
+        <div class="desc">부드러운 2톤 그림자, 얇은 하이라이트. 파스텔 무드와 완성도의 균형.</div></figcaption>
+    </figure>
+  </div>
+
+  <div class="rec">
+    <strong>추천: D</strong> (파스텔 무드를 유지하면서 깔끔함도 있음, 2D 웹에서 구현하기 쉬움)
+    <br><strong>차선: B</strong> (가장 깔끔하지만 개성이 약함)
+    <div class="pick">고르실 시안을 알려 주세요. 선택한 스타일을 고정문으로 동결하고 주인공 표정 5종부터 생성합니다.</div>
+  </div>
+</main>
+</body>
+</html>
