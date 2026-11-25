@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "sim:v3": "vite-node scripts/sim/sim_v3.ts",
     "data:endings": "python3 scripts/data/build_endings_v2.py"
   },
   "dependencies": {
