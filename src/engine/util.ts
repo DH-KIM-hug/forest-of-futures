@@ -25,3 +25,15 @@ export function lastLogKinds(run: RunState, n: number): string[] {
   return run.eventLog.slice(-n).map((e) => e.kind);
 }
 export type { GameState };
+
+/** 좁은 곳용 큰 수 줄임(내림). 9,500 / 1.2만 / 3,400만 / 1.5억 */
+export function abbrev(n: number): string {
+  const x = Math.floor(n + 1e-9);
+  if (x < 10000) return x.toLocaleString('ko-KR');
+  const fmt = (v: number, unit: string) => {
+    if (v >= 100) return Math.floor(v).toLocaleString('ko-KR') + unit;
+    const f = Math.floor(v * 10 + 1e-9) / 10;
+    return (Number.isInteger(f) ? String(f) : f.toFixed(1)) + unit;
+  };
+  return x < 100000000 ? fmt(x / 10000, '만') : fmt(x / 100000000, '억');
+}
