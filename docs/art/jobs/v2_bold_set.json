@@ -1,0 +1,376 @@
+{
+ "_doc": "2026-11-25 굵은 선 스타일 MVP 그림 세트(건물·집·종목 쳇바퀴·주인공 자세·NPC 흉상·마을 배경). 기준: style-bold/bx_bank, bold_hero, pilot-bold/bld_shark1·house_0_tent",
+ "jobs": [
+  {
+   "id": "bld_capital",
+   "out": "docs/art/v2/raw/bld_capital.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a shiny friendly-looking loan shop in a hollow tree trunk with a big leaf awning, golden trim, cheerful window posters as blank plates, a bit too polished. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bld_board",
+   "out": "docs/art/v2/raw/bld_board.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a village square notice board and ranking board: a big wooden board on posts with blank plates and colored bars, a bell on top, a bench and lantern. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bld_archive",
+   "out": "docs/art/v2/raw/bld_archive.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a quiet stone-and-moss village archive with an arched wooden door, small round windows, stacks of ledgers visible inside, a little lantern. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bld_friends",
+   "out": "docs/art/v2/raw/bld_friends.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a narrow lane of four tiny friends' houses side by side: a round-door burrow, a small cottage, a stump house, a little cabin, each with a different door color. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bld_shark2_locked",
+   "out": "docs/art/v2/raw/bld_shark2_locked.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a dark root-tangled alley entrance between two huge tree roots, closed by a rusty iron gate with a padlock, very dark and ominous, no light. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bld_shark2_open",
+   "out": "docs/art/v2/raw/bld_shark2_open.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: the same dark root-tangled alley but the iron gate is open, one dim green lantern hangs inside, a sleek dark wooden door at the end, cold and ominous. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "house_1_cabin",
+   "out": "docs/art/v2/raw/house_1_cabin.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a small honest log cabin with a stone chimney, one lit window, a woodpile, a little mailbox. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "house_2_warehouse",
+   "out": "docs/art/v2/raw/house_2_warehouse.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a sturdy wooden acorn storehouse home with a big barn door, two floors, sacks and barrels, a lit upper window. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "house_3_villa",
+   "out": "docs/art/v2/raw/house_3_villa.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a pretty two-storey lakeside-style villa built from wood and stone, with a terrace, flower boxes, a parasol, round windows. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "house_4_mansion",
+   "out": "docs/art/v2/raw/house_4_mansion.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated building asset for a mobile game village map, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. Same camera and ground patch as the second reference building: three-quarter front view from slightly above, standing on a round grassy dirt ground patch spanning about 84% of the image width, nothing cropped. No characters. Subject: a golden grand three-storey mansion in a giant tree, ornate golden roofs and balconies, a fancy gate and fountain, showy and rich. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_DTC",
+   "out": "docs/art/v2/raw/wheel_DTC.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated game prop, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a sturdy wooden-and-metal hamster wheel on a small stand for a chipmunk to run in, painted brown and acorn-orange, with an acorn emblem plate on the stand, a small generator box and a cable attached, three-quarter view, empty (no character). Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_BTH",
+   "out": "docs/art/v2/raw/wheel_BTH.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated game prop, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a sturdy wooden-and-metal hamster wheel on a small stand for a chipmunk to run in, painted purple and night-blue, with a crescent moon emblem plate on the stand, a small generator box and a cable attached, three-quarter view, empty (no character). Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_MDT",
+   "out": "docs/art/v2/raw/wheel_MDT.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated game prop, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a sturdy wooden-and-metal hamster wheel on a small stand for a chipmunk to run in, painted bright yellow, with a goofy dog-face emblem plate drawn as a simple shape on the stand, a small generator box and a cable attached, three-quarter view, empty (no character). Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_SMS",
+   "out": "docs/art/v2/raw/wheel_SMS.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bx_bank.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A single isolated game prop, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a sturdy wooden-and-metal hamster wheel on a small stand for a chipmunk to run in, painted blue and silver, with a small chip-shaped emblem plate on the stand, a small generator box and a cable attached, three-quarter view, empty (no character). Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_idle",
+   "out": "docs/art/v2/raw/hero_idle.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: standing upright, calm deadpan face, paws at its sides. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_pick",
+   "out": "docs/art/v2/raw/hero_pick.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: bending down picking up an acorn from the ground, small determined face. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_run",
+   "out": "docs/art/v2/raw/hero_run.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: running hard mid-stride as if inside a wheel, determined face, little sweat drops, side view facing right. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_joy",
+   "out": "docs/art/v2/raw/hero_joy.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: jumping with arms up, eyes as happy upside-down arcs, small open smile, a few acorns flying. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_sweat",
+   "out": "docs/art/v2/raw/hero_sweat.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: standing stiff, many cold sweat drops, trembling mouth line, eyes wide. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_greed",
+   "out": "docs/art/v2/raw/hero_greed.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: leaning forward pressing a big round red button with both paws, eyes turned into tiny shiny acorn shapes, a bead of sweat, thin excited grin. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_dazed",
+   "out": "docs/art/v2/raw/hero_dazed.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "Draw OUR character from the second reference image: a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Do NOT draw the bear or the cat from the first image. in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Pose: sitting with legs out, hollow white eyes with no pupils, mouth slightly open, ribbon loose, tiny gray cloud above head. Full body, centered. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_owl",
+   "out": "docs/art/v2/raw/npc_owl.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a stern owl bank branch manager in a grey vest and round glasses, cold polite face. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_weasel",
+   "out": "docs/art/v2/raw/npc_weasel.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a slick smiling weasel capital loan salesman in a shiny gold-trim suit, too friendly smile. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_badger",
+   "out": "docs/art/v2/raw/npc_badger.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a gruff old badger loan office boss in a worn cardigan, toothpick, tired but strangely human eyes. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_viper",
+   "out": "docs/art/v2/raw/npc_viper.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a calm elegant viper loan shark boss in a dark suit with a thin tie, half-closed eyes, quietly menacing. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_squirrel",
+   "out": "docs/art/v2/raw/npc_squirrel.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a cheerful best-friend squirrel with a scarf. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_raccoon",
+   "out": "docs/art/v2/raw/npc_raccoon.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a sly but warm raccoon friend in a hoodie. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_rabbit",
+   "out": "docs/art/v2/raw/npc_rabbit.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a kind neighbor rabbit in an apron. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_fox",
+   "out": "docs/art/v2/raw/npc_fox.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a cool senior fox in a shirt and sleeves rolled up. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_bear",
+   "out": "docs/art/v2/raw/npc_bear.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "A character bust portrait for a mobile game dialog, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Subject: a big boastful bear 'big brother' in a tracksuit giving a thumbs up, overconfident grin. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes style matching the reference. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bg_village",
+   "out": "docs/art/v2/raw/bg_village.png",
+   "ref": [
+    "docs/art/ref/user_bold_line_ref.jpg",
+    "docs/ui/assets/raw/bg_village.png"
+   ],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "Mobile game background, portrait 9:16, in the ART STYLE of the first reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines. Use the LAYOUT of the second reference image exactly: pale sky at the top with two small clouds, a band of distant oak forest, a meadow with nine EMPTY flat oval grassy clearings in three rows (left, centre, right) joined by one winding light dirt path, and an open dirt clearing across the bottom 18% for the character. Keep the clearings and bottom clearing empty and calm; dense ferns, mushrooms, rocks only at the edges. Cozy temperate forest village of animals (oak, beech, ferns, moss, log and stump buildings), NO palm trees, NO cactus, NO tropical plants. No buildings, no characters, no text, no frame."
+  }
+ ]
+}
