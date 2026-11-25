@@ -1,0 +1,258 @@
+{
+  "version": 2,
+  "_doc": "한(恨)과 가문 특성 트리. currency.name 은 표시 이름(사용자 확정 2026-11-25: 가훈). 코드 식별자는 legacy/legacyPoints/han. 비용(한) = ceil(기준 × r^단계). GDD_v2 3.14·4.5",
+  "currency": {
+    "id": "han",
+    "name": "가훈",
+    "namePlaceholder": false
+  },
+  "score": {
+    "netWorthCoef": 4,
+    "netWorthUnit": 100000,
+    "minedCoef": 2,
+    "minedUnit": 100000,
+    "newEnding": 5,
+    "retire": 8
+  },
+  "multipliers": {
+    "ledgerPerEnding": 0.01,
+    "repeatDecay": 0.7,
+    "repeatFloor": 0.3,
+    "crestPerLevel": 0.05,
+    "branch": {
+      "renounce": 1.0,
+      "limited": 0.5,
+      "simple": 0,
+      "gift": 0
+    }
+  },
+  "keep": {
+    "limited": {
+      "coinWheels": [
+        "wheel:DTC"
+      ],
+      "lowestTierUnits": 1,
+      "houseFloorIfParentAtLeast": {
+        "parent": 2,
+        "keep": 1
+      }
+    }
+  },
+  "tree": [
+    {
+      "id": "grip",
+      "name": "대대로 굳은 손",
+      "effect": {
+        "stat": "tap",
+        "addPct": 10
+      },
+      "maxLevel": 10,
+      "baseCost": 5,
+      "r": 1.5,
+      "seenAs": "목끈(리본)의 색이 단계마다 짙어진다"
+    },
+    {
+      "id": "craft",
+      "name": "가업 비법",
+      "effect": {
+        "stat": "equipYield",
+        "addPct": 5
+      },
+      "maxLevel": 10,
+      "baseCost": 6,
+      "r": 1.5,
+      "seenAs": "쳇바퀴 간판에 가문 문장"
+    },
+    {
+      "id": "seed",
+      "name": "쌈짓돈",
+      "effect": {
+        "stat": "startCash",
+        "addValue": 20000
+      },
+      "maxLevel": 5,
+      "baseCost": 8,
+      "r": 1.6,
+      "seenAs": "텐트 안 항아리"
+    },
+    {
+      "id": "heirwheel",
+      "name": "물려받은 쳇바퀴",
+      "effect": {
+        "stat": "startWheels",
+        "levels": [
+          "wheel:DTC",
+          "wheel:DTC+tier:wheel2",
+          "wheel:DTC+tier:wheel2+wheel:BTH"
+        ]
+      },
+      "maxLevel": 3,
+      "baseCost": 15,
+      "r": 2.6,
+      "seenAs": "낡았지만 문장이 새겨진 쳇바퀴"
+    },
+    {
+      "id": "prep",
+      "name": "선행 학습",
+      "effect": {
+        "stat": "unlockDiscount",
+        "addPct": -20,
+        "zeroAtMax": true
+      },
+      "maxLevel": 5,
+      "baseCost": 10,
+      "r": 1.6,
+      "seenAs": "칩멍크의 작은 책가방"
+    },
+    {
+      "id": "nerve",
+      "name": "집안 내력",
+      "effect": {
+        "stat": "levCapAtOpen",
+        "levels": [
+          50,
+          200
+        ]
+      },
+      "maxLevel": 2,
+      "baseCost": 30,
+      "r": 4,
+      "seenAs": "책상의 붉은 눈금자"
+    },
+    {
+      "id": "haggle",
+      "name": "금리 인하 요구권",
+      "effect": {
+        "stat": "interestMul",
+        "mulPerLevel": 0.97
+      },
+      "maxLevel": 5,
+      "baseCost": 12,
+      "r": 1.7,
+      "seenAs": "창구에서 서류를 한 장 더 내민다"
+    },
+    {
+      "id": "exempt",
+      "name": "압류 금지 물품",
+      "effect": {
+        "stat": "garnishRate",
+        "addPctPoint": -3
+      },
+      "maxLevel": 5,
+      "baseCost": 10,
+      "r": 1.6,
+      "seenAs": "딱지가 작아진다"
+    },
+    {
+      "id": "lastwheel",
+      "name": "생계 수단 보호",
+      "effect": {
+        "stat": "protectLast",
+        "levels": [
+          "wheel",
+          "wheel+lowestTier"
+        ]
+      },
+      "maxLevel": 2,
+      "baseCost": 40,
+      "r": 3.5,
+      "seenAs": "그 쳇바퀴에 '압류 금지' 나뭇잎"
+    },
+    {
+      "id": "idle",
+      "name": "불 꺼도 도는 집",
+      "effect": {
+        "stat": "offlineSettlements",
+        "addValue": 1
+      },
+      "maxLevel": 4,
+      "baseCost": 25,
+      "r": 2,
+      "seenAs": "밤에도 창에 불이 켜져 있다"
+    },
+    {
+      "id": "thickskin",
+      "name": "낯 두꺼움",
+      "effect": {
+        "stat": "grudgeLimitCut",
+        "levels": [
+          0.25,
+          0
+        ]
+      },
+      "maxLevel": 2,
+      "baseCost": 20,
+      "r": 3,
+      "seenAs": "-"
+    },
+    {
+      "id": "crest",
+      "name": "족보",
+      "effect": {
+        "stat": "hanMul",
+        "addPct": 5
+      },
+      "maxLevel": 10,
+      "baseCost": 10,
+      "r": 1.5,
+      "seenAs": "집 문패의 문장에 획이 는다"
+    }
+  ],
+  "crestTiers": [
+    10,
+    50,
+    200,
+    1000
+  ],
+  "pacingTargets": [
+    {
+      "playedGen": 1,
+      "debtFreeHours": 36
+    },
+    {
+      "playedGen": 2,
+      "debtFreeHours": 26
+    },
+    {
+      "playedGen": 3,
+      "debtFreeHours": 16
+    },
+    {
+      "playedGen": 4,
+      "debtFreeHours": 9
+    },
+    {
+      "playedGen": 5,
+      "debtFreeHours": 5
+    }
+  ],
+  "maxims": {
+    "_doc": "세대가 끝날 때 망한 방식(원인)에 따라 가훈 문구 한 줄이 생기는 연출용 템플릿. {points} 는 그 세대에 받는 가훈 점수. M1 에서는 쓰지 않는다(자리만). 문구는 이후에 채운다.",
+    "byCause": {
+      "LIQ": [
+        "200배는 잠들기 전에 걸지 않는다 +{points}"
+      ],
+      "TIP": [
+        "남이 알려 준 종목은 내 종목이 아니다 +{points}"
+      ],
+      "SHARK": [
+        "선이자 떼는 곳과는 두 번 거래하지 않는다 +{points}"
+      ],
+      "BANK": [
+        "서류는 읽고 도장을 찍는다 +{points}"
+      ],
+      "UPKEEP": [
+        "집은 월급이 아니라 현금으로 산다 +{points}"
+      ],
+      "SEIZE": [
+        "쳇바퀴는 한 종목에 다 얹지 않는다 +{points}"
+      ],
+      "FRIEND": [
+        "친구에게 빌린 돈부터 갚는다 +{points}"
+      ],
+      "LEGACY": [
+        "물려받기 전에 장부부터 본다 +{points}"
+      ]
+    }
+  }
+}

@@ -14,5 +14,6 @@ export function gauss(holder: { rng: number }): number {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * nextRandom(holder));
 }
 
+/** 부동소수 오차 때문에 정수 경계가 틀어지지 않게 하는 올림·내림. */
 export const floorS = (x: number) => Math.floor(x + 1e-9);
 export const ceilS = (x: number) => Math.ceil(x - 1e-9);

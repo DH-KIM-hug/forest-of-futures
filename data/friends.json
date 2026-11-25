@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "_doc": "대출 사다리 5단계. 이자는 없지만 신뢰가 깎인다. 마을의 '친구네 골목'에 집 5채로 놓인다.",
+  "version": 2,
+  "_doc": "친구 5명(대출 사다리 5단계). 이자는 없지만 신뢰가 깎인다. v1 구조 + tipRole(3.7 정보에서 맡는 입). GDD_v2 3.7",
   "friends": [
     {
       "id": "squirrel",
@@ -11,7 +11,8 @@
       "borrowUnit": 25000,
       "stampUnit": 5000,
       "onBreak": "forgive",
-      "breakLine": "빚은 안 갚아도 돼. 대신 다시는 연락하지 마."
+      "breakLine": "빚은 안 갚아도 돼. 대신 다시는 연락하지 마.",
+      "tipRole": "ROE -50% 아래면 그만 정리하라고 말한다"
     },
     {
       "id": "raccoon",
@@ -22,7 +23,8 @@
       "borrowUnit": 50000,
       "stampUnit": 10000,
       "onBreak": "sellClaim",
-      "breakLine": "너한테 실망했다. 다시는 연락하지 마라."
+      "breakLine": "너한테 실망했다. 다시는 연락하지 마라.",
+      "tipRole": "한발 늦은 추세 소문"
     },
     {
       "id": "rabbit",
@@ -33,7 +35,8 @@
       "borrowUnit": 75000,
       "stampUnit": 15000,
       "onBreak": "sellClaim",
-      "breakLine": "우리 우정은 여기까지야."
+      "breakLine": "우리 우정은 여기까지야.",
+      "tipRole": "변동성이 크면 쉬라고 말한다"
     },
     {
       "id": "fox",
@@ -44,7 +47,8 @@
       "borrowUnit": 150000,
       "stampUnit": 30000,
       "onBreak": "sellClaim",
-      "breakLine": "경비실에 얘기해 뒀다. 찾아오지 마."
+      "breakLine": "경비실에 얘기해 뒀다. 찾아오지 마.",
+      "tipRole": "빠른 추세 소문"
     },
     {
       "id": "bear",
@@ -55,7 +59,8 @@
       "borrowUnit": 300000,
       "stampUnit": 60000,
       "onBreak": "sellClaim",
-      "breakLine": "형이라고 부르지 마라."
+      "breakLine": "형이라고 부르지 마라.",
+      "tipRole": "급락하면 바닥이라고 말한다"
     }
   ],
   "rules": {

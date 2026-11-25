@@ -1,0 +1,205 @@
+{
+  "version": 2,
+  "_doc": "정보 출처 11종. 모든 규칙은 지나간 시세만 읽는다(정산 단위). kind=fact 의 문구(시스템)는 사실만 — 오른다/내린다/사라/팔아라 같은 권유 표현 금지. params 는 기준 수치(GDD_v2 3.11) — M2 에서 엔진이 쓴다.",
+  "sourceCooldownSettlements": 5,
+  "followWindowSec": 20,
+  "hitWindowSec": 300,
+  "sources": [
+    {
+      "id": "wire_break",
+      "name": "속보",
+      "kind": "fact",
+      "rule": "breakout",
+      "params": {
+        "lookbackSettles": 5,
+        "volMul": 2.5
+      },
+      "counted": false,
+      "lines": {
+        "up": [
+          "{market}, 15분 고가 갱신. 거래량 평소의 {vol}배"
+        ],
+        "down": [
+          "{market}, 15분 저가 갱신. 거래량 평소의 {vol}배"
+        ]
+      }
+    },
+    {
+      "id": "wire_flow",
+      "name": "속보",
+      "kind": "fact",
+      "rule": "flow",
+      "params": {
+        "volMul": 3,
+        "buyShareHigh": 0.75,
+        "buyShareLow": 0.25
+      },
+      "counted": false,
+      "lines": {
+        "up": [
+          "{market}, 대량 매수 체결"
+        ],
+        "down": [
+          "{market}, 대량 매도 체결"
+        ]
+      }
+    },
+    {
+      "id": "wire_vol",
+      "name": "속보",
+      "kind": "fact",
+      "rule": "vol",
+      "params": {
+        "rangeMul": 2
+      },
+      "counted": false,
+      "lines": {
+        "up": [
+          "{market}, 변동성 확대"
+        ],
+        "down": [
+          "{market}, 변동성 확대"
+        ]
+      }
+    },
+    {
+      "id": "fox",
+      "name": "여우 선배",
+      "kind": "pitch",
+      "rule": "mom1",
+      "params": {
+        "rangeMul": 2
+      },
+      "counted": true,
+      "lines": {
+        "up": [
+          "이거 더 간다. 지금 타야 해."
+        ],
+        "down": [
+          "이거 더 빠진다. 지금 들어가야 해."
+        ]
+      }
+    },
+    {
+      "id": "raccoon",
+      "name": "절친 너구리",
+      "kind": "pitch",
+      "rule": "mom5",
+      "params": {
+        "settles": 5,
+        "rangeMul": 1.5
+      },
+      "counted": true,
+      "lines": {
+        "up": [
+          "요즘 흐름 좋아. 더 갈 것 같아."
+        ],
+        "down": [
+          "요즘 흐름 안 좋아. 더 빠질 것 같아."
+        ]
+      }
+    },
+    {
+      "id": "weasel",
+      "name": "족제비 대표",
+      "kind": "pitch",
+      "rule": "chaseLong",
+      "params": {
+        "settles": 5
+      },
+      "counted": true,
+      "lines": {
+        "up": [
+          "고객님, 이 종목 올라갑니다. 한도도 5만 올려 드릴게요."
+        ],
+        "down": []
+      },
+      "bundle": "limitUp"
+    },
+    {
+      "id": "bear",
+      "name": "곰 형",
+      "kind": "pitch",
+      "rule": "dipBuy",
+      "params": {
+        "settles": 5
+      },
+      "counted": true,
+      "lines": {
+        "up": [
+          "바닥이다. 이제 오른다."
+        ],
+        "down": []
+      }
+    },
+    {
+      "id": "viper",
+      "name": "독사 대부",
+      "kind": "pitch",
+      "rule": "flowFade",
+      "params": {},
+      "counted": true,
+      "lines": {
+        "up": [
+          "세력이 털고 나갑니다. 반대로 가시지요. 선이자 대출을 준비해 두었습니다."
+        ],
+        "down": [
+          "세력이 털고 나갑니다. 반대로 가시지요. 선이자 대출을 준비해 두었습니다."
+        ]
+      },
+      "bundle": "upfrontLoan"
+    },
+    {
+      "id": "leadroom",
+      "name": "리딩방 전단지",
+      "kind": "pitch",
+      "rule": "random",
+      "params": {},
+      "counted": true,
+      "lines": {
+        "up": [
+          "적중! 어제 그 종목, 정확히 맞혔습니다. 오늘 종목은 입장하시면 공개."
+        ],
+        "down": [
+          "적중! 어제 그 종목, 정확히 맞혔습니다. 오늘 종목은 입장하시면 공개."
+        ]
+      }
+    },
+    {
+      "id": "rabbit",
+      "name": "이웃 토끼",
+      "kind": "advice",
+      "rule": "vol",
+      "params": {
+        "rangeMul": 2
+      },
+      "counted": false,
+      "lines": {
+        "up": [
+          "지금은 쉬어. 괜히 건드리지 마."
+        ],
+        "down": [
+          "지금은 쉬어. 괜히 건드리지 마."
+        ]
+      }
+    },
+    {
+      "id": "squirrel",
+      "name": "단짝 다람쥐",
+      "kind": "advice",
+      "rule": "roeBelow",
+      "params": {
+        "roe": -50
+      },
+      "counted": false,
+      "lines": {
+        "up": [
+          "그만 정리해. 더 보면 힘들어져."
+        ],
+        "down": [
+          "그만 정리해. 더 보면 힘들어져."
+        ]
+      }
+    }
+  ]
+}

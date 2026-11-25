@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "_doc": "종목별 쳇바퀴(coinWheels) + 공용 설비 사다리(tiers). 전기세는 저장하지 않고 grossPerSettle × powerMul(붙은 종목) 으로 계산, 캐는 값은 grossPerSettle × yieldMul. GDD_v2 3.3·3.4·4.3",
+  "coinWheels": [
+    {
+      "id": "wheel:DTC",
+      "coin": "DTC",
+      "name": "도토코인 쳇바퀴",
+      "cost": 10000,
+      "yieldMul": 1.0,
+      "powerMul": 0.7,
+      "tapMul": 1.0,
+      "unlock": {
+        "acornTaps": 200
+      },
+      "sign": "acorn",
+      "color": "#8B5E3C"
+    },
+    {
+      "id": "wheel:BTH",
+      "coin": "BTH",
+      "name": "밤더리움 쳇바퀴",
+      "cost": 30000,
+      "yieldMul": 1.1,
+      "powerMul": 0.78,
+      "tapMul": 1.07,
+      "unlock": {
+        "minedValue": 20000
+      },
+      "sign": "night",
+      "color": "#7A5BB5"
+    },
+    {
+      "id": "wheel:MDT",
+      "coin": "MDT",
+      "name": "멍도토 쳇바퀴",
+      "cost": 15000,
+      "yieldMul": 1.3,
+      "powerMul": 0.95,
+      "tapMul": 1.17,
+      "unlock": {
+        "minedValue": 50000
+      },
+      "sign": "paw",
+      "color": "#E0B52E"
+    },
+    {
+      "id": "wheel:SMS",
+      "coin": "SMS",
+      "name": "삼솔전자 쳇바퀴",
+      "cost": 60000,
+      "yieldMul": 1.2,
+      "powerMul": 0.86,
+      "tapMul": 1.13,
+      "unlock": {
+        "house": 1
+      },
+      "sign": "neat",
+      "color": "#3F7CC4"
+    }
+  ],
+  "tiers": [
+    {
+      "id": "wheel2",
+      "name": "보조 쳇바퀴",
+      "cost": 20000,
+      "grossPerSettle": 5700,
+      "netPerSec": 9.5,
+      "needHouse": 0,
+      "bankCollateral": false,
+      "seenAs": "쳇바퀴가 한 대 더 돈다"
+    },
+    {
+      "id": "helper",
+      "name": "알바 칩멍크",
+      "cost": 60000,
+      "grossPerSettle": 14700,
+      "netPerSec": 24.5,
+      "needHouse": 0,
+      "bankCollateral": false,
+      "seenAs": "알바 칩멍크가 옆 쳇바퀴를 돌린다"
+    },
+    {
+      "id": "row",
+      "name": "쳇바퀴 줄(다섯 대)",
+      "cost": 150000,
+      "grossPerSettle": 32250,
+      "netPerSec": 53.75,
+      "needHouse": 0,
+      "bankCollateral": false,
+      "seenAs": "쳇바퀴가 한 줄로 늘어선다"
+    },
+    {
+      "id": "generator",
+      "name": "소형 발전기",
+      "cost": 400000,
+      "grossPerSettle": 75000,
+      "netPerSec": 125,
+      "needHouse": 0,
+      "bankCollateral": false,
+      "seenAs": "쳇바퀴에 발전기와 전선이 붙는다"
+    },
+    {
+      "id": "shed",
+      "name": "채굴 헛간",
+      "cost": 1500000,
+      "grossPerSettle": 240000,
+      "netPerSec": 400,
+      "needHouse": 1,
+      "bankCollateral": true,
+      "seenAs": "일터가 지붕 있는 채굴 헛간이 된다"
+    },
+    {
+      "id": "powerroom",
+      "name": "지하 발전실",
+      "cost": 8000000,
+      "grossPerSettle": 1020000,
+      "netPerSec": 1700,
+      "needHouse": 2,
+      "bankCollateral": true,
+      "seenAs": "지하 발전실에 쳇바퀴가 층층이 돈다"
+    },
+    {
+      "id": "farm",
+      "name": "채굴 공장",
+      "cost": 40000000,
+      "grossPerSettle": 3900000,
+      "netPerSec": 6500,
+      "needHouse": 3,
+      "bankCollateral": true,
+      "seenAs": "굴뚝 달린 채굴 공장"
+    }
+  ]
+}

@@ -1,121 +1,130 @@
 {
-  "version": 1,
-  "_doc": "5개 종목의 시뮬레이션 시세 파라미터. 틱 1개 = balance.json trading.tickMs. 실제 종목은 패러디 대상일 뿐이며 MVP는 실시간 시세를 쓰지 않는다(liveSymbol은 나중을 위한 자리).",
-  "priceModel": {
-    "type": "regime_gbm_jump",
-    "formula": "logP(t+1) = logP(t) + drift(regime) + sigma*N(0,1) + jump - k*(logP(t) - log(startPrice))",
-    "regimes": [
-      "up",
-      "down",
-      "flat"
-    ],
+  "version": 2,
+  "_doc": "가상 종목. 실제 종목과의 대응은 이 파일에 넣지 않는다(서버 설정에만). simFeed 는 테스트·서버 없는 개발용 난수 시세(v1 모델) 파라미터.",
+  "markets": [
+    {
+      "id": "DTC",
+      "name": "도토코인",
+      "startPrice": 68000,
+      "decimals": 0,
+      "tradable": true,
+      "minable": true,
+      "color": "#8B5E3C"
+    },
+    {
+      "id": "BTH",
+      "name": "밤더리움",
+      "startPrice": 3400.0,
+      "decimals": 1,
+      "tradable": true,
+      "minable": true,
+      "color": "#7A5BB5"
+    },
+    {
+      "id": "SMS",
+      "name": "삼솔전자",
+      "startPrice": 78.5,
+      "decimals": 2,
+      "tradable": true,
+      "minable": true,
+      "color": "#3F7CC4"
+    },
+    {
+      "id": "MDT",
+      "name": "멍도토",
+      "startPrice": 210.0,
+      "decimals": 2,
+      "tradable": true,
+      "minable": true,
+      "color": "#E0B52E"
+    },
+    {
+      "id": "JQQ",
+      "name": "잣스닥",
+      "startPrice": 520.0,
+      "decimals": 2,
+      "tradable": true,
+      "minable": false,
+      "index": true,
+      "color": "#4FA37A"
+    }
+  ],
+  "simFeed": {
     "regimeWeights": {
       "up": 0.35,
       "down": 0.35,
       "flat": 0.3
     },
-    "note": "regime은 숨은 상태다. 매 틱 switchProbPerTick 확률로 regimeWeights에 따라 다시 뽑는다. drift = +driftSigmaRatio*sigma (up) / -driftSigmaRatio*sigma (down) / 0 (flat). jump는 probPerTick 확률로 발생하고 크기는 uniform(minSigma, maxSigma)*sigma, 방향은 50:50."
-  },
-  "markets": [
-    {
-      "id": "DTC",
-      "name": "도토코인",
-      "short": "도토코인",
-      "ticker": "DTC",
-      "parodyOf": "BTC",
-      "liveSymbol": "BTCUSDT",
-      "startPrice": 68000,
-      "decimals": 0,
-      "sigmaPerTick": 0.001,
-      "driftSigmaRatio": 0.15,
-      "switchProbPerTick": 0.0067,
-      "jump": {
-        "probPerTick": 0.002,
-        "minSigma": 6,
-        "maxSigma": 15
+    "params": {
+      "DTC": {
+        "sigmaPerTick": 0.001,
+        "driftSigmaRatio": 0.15,
+        "switchProbPerTick": 0.0067,
+        "jump": {
+          "probPerTick": 0.002,
+          "minSigma": 6,
+          "maxSigma": 15
+        },
+        "meanReversionK": 0.0005
       },
-      "meanReversionK": 0.0005,
-      "temperament": "기준 종목. 변동이 크고 추세가 뚜렷하다."
-    },
-    {
-      "id": "BTH",
-      "name": "밤더리움",
-      "short": "밤더리움",
-      "ticker": "BTH",
-      "parodyOf": "ETH",
-      "liveSymbol": "ETHUSDT",
-      "startPrice": 3400,
-      "decimals": 1,
-      "sigmaPerTick": 0.0013,
-      "driftSigmaRatio": 0.15,
-      "switchProbPerTick": 0.008,
-      "jump": {
-        "probPerTick": 0.003,
-        "minSigma": 6,
-        "maxSigma": 18
+      "BTH": {
+        "sigmaPerTick": 0.0013,
+        "driftSigmaRatio": 0.15,
+        "switchProbPerTick": 0.008,
+        "jump": {
+          "probPerTick": 0.003,
+          "minSigma": 6,
+          "maxSigma": 18
+        },
+        "meanReversionK": 0.0005
       },
-      "meanReversionK": 0.0005,
-      "temperament": "가장 거칠다. 급등락(빔)이 잦다."
-    },
-    {
-      "id": "JQQ",
-      "name": "잣스닥",
-      "short": "잣스닥",
-      "ticker": "JQQ",
-      "parodyOf": "QQQ",
-      "liveSymbol": "QQQUSDT",
-      "startPrice": 520,
-      "decimals": 2,
-      "sigmaPerTick": 0.0004,
-      "driftSigmaRatio": 0.18,
-      "switchProbPerTick": 0.0056,
-      "jump": {
-        "probPerTick": 0.0008,
-        "minSigma": 5,
-        "maxSigma": 12
+      "SMS": {
+        "sigmaPerTick": 0.0005,
+        "driftSigmaRatio": 0.15,
+        "switchProbPerTick": 0.0056,
+        "jump": {
+          "probPerTick": 0.001,
+          "minSigma": 6,
+          "maxSigma": 14
+        },
+        "meanReversionK": 0.0004
       },
-      "meanReversionK": 0.0003,
-      "temperament": "가장 잔잔하다. 고배율이 안전해 보이는 착각을 준다."
-    },
-    {
-      "id": "SMS",
-      "name": "삼솔전자",
-      "short": "삼솔전자",
-      "ticker": "SMS",
-      "parodyOf": "삼성전자",
-      "liveSymbol": null,
-      "startPrice": 78.5,
-      "decimals": 2,
-      "sigmaPerTick": 0.0005,
-      "driftSigmaRatio": 0.15,
-      "switchProbPerTick": 0.0056,
-      "jump": {
-        "probPerTick": 0.001,
-        "minSigma": 6,
-        "maxSigma": 14
+      "MDT": {
+        "sigmaPerTick": 0.0008,
+        "driftSigmaRatio": 0.15,
+        "switchProbPerTick": 0.0067,
+        "jump": {
+          "probPerTick": 0.003,
+          "minSigma": 8,
+          "maxSigma": 20
+        },
+        "meanReversionK": 0.0005
       },
-      "meanReversionK": 0.0004,
-      "temperament": "느리게 움직이다가 속보에 크게 반응한다."
-    },
-    {
-      "id": "SQH",
-      "name": "SQ하이넛츠",
-      "short": "하이넛츠",
-      "ticker": "SQH",
-      "parodyOf": "SK하이닉스",
-      "liveSymbol": null,
-      "startPrice": 210,
-      "decimals": 2,
-      "sigmaPerTick": 0.0008,
-      "driftSigmaRatio": 0.15,
-      "switchProbPerTick": 0.0067,
-      "jump": {
-        "probPerTick": 0.003,
-        "minSigma": 8,
-        "maxSigma": 20
-      },
-      "meanReversionK": 0.0005,
-      "temperament": "평소엔 중간, 빔이 가장 크다."
+      "JQQ": {
+        "sigmaPerTick": 0.0004,
+        "driftSigmaRatio": 0.18,
+        "switchProbPerTick": 0.0056,
+        "jump": {
+          "probPerTick": 0.0008,
+          "minSigma": 5,
+          "maxSigma": 12
+        },
+        "meanReversionK": 0.0003
+      }
     }
-  ]
+  },
+  "replayMap": {
+    "_doc": "docs/gdd/v2/sim/data/hl_3m.json 의 C1..C5 를 가상 종목에 연결(기록 재생용). JQQ 는 다섯 종목 수익률의 평균.",
+    "C1": "DTC",
+    "C2": "BTH",
+    "C3": "SMS",
+    "C4": "MDT",
+    "indexOf": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ]
+  }
 }

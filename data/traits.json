@@ -1,0 +1,128 @@
+{
+  "version": 2,
+  "_doc": "기질: 부모가 망한 원인에서 하나. 효과 stat 은 엔진이 읽는 키(traitStat). 같은 원인 2대 연속이면 진한 피(효과 1.5배). GDD_v2 3.14 (6)",
+  "deepBloodMul": 1.5,
+  "traits": [
+    {
+      "cause": "LIQ",
+      "id": "onehit",
+      "name": "한 방 체질",
+      "good": {
+        "stat": "feeMulAtLev100",
+        "value": 0.5
+      },
+      "bad": {
+        "stat": "defaultLeverage",
+        "value": 50
+      },
+      "note": "계좌를 열면 상한 50배부터, 손절 기본값 없음"
+    },
+    {
+      "cause": "TIP",
+      "id": "doubting",
+      "name": "의심병",
+      "good": {
+        "stat": "showTipHitRate",
+        "value": 1
+      },
+      "bad": {
+        "stat": "wireDelaySec",
+        "value": 3
+      }
+    },
+    {
+      "cause": "SHARK",
+      "id": "debtTolerance",
+      "name": "빚 내성",
+      "good": {
+        "stat": "shark2Upfront",
+        "value": 0.3
+      },
+      "bad": {
+        "stat": "shark2OpenAtStart",
+        "value": 1
+      }
+    },
+    {
+      "cause": "BANK",
+      "id": "paperwork",
+      "name": "서류 체질",
+      "good": {
+        "stat": "bankLtv",
+        "value": 0.85
+      },
+      "bad": {
+        "stat": "rateHikeMul",
+        "value": 2.5
+      }
+    },
+    {
+      "cause": "UPKEEP",
+      "id": "vanity",
+      "name": "허세",
+      "good": {
+        "stat": "houseLimitMul",
+        "value": 1.2
+      },
+      "bad": {
+        "stat": "livingMul",
+        "value": 1.2
+      }
+    },
+    {
+      "cause": "SEIZE",
+      "id": "merchant",
+      "name": "장사꾼 피",
+      "good": {
+        "stat": "equipYieldMul",
+        "value": 1.1
+      },
+      "bad": {
+        "stat": "tagEarly",
+        "value": 1
+      }
+    },
+    {
+      "cause": "FRIEND",
+      "id": "loner",
+      "name": "외톨이",
+      "good": {
+        "stat": "tapMul",
+        "value": 1.1
+      },
+      "bad": {
+        "stat": "friendTipHalf",
+        "value": 1
+      },
+      "extra": {
+        "brokenStartTrust": 60
+      }
+    },
+    {
+      "cause": "LEGACY",
+      "id": "callus",
+      "name": "굳은살",
+      "good": {
+        "stat": "tapMul",
+        "value": 1.15
+      },
+      "bad": {
+        "stat": "hideStatementLine",
+        "value": 1
+      }
+    },
+    {
+      "cause": "GIFT",
+      "id": "silverspoon",
+      "name": "금수저",
+      "good": {
+        "stat": "keepAll",
+        "value": 1
+      },
+      "bad": {
+        "stat": "tapMul",
+        "value": 0.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "version": 2,
+  "_doc": "채권처. rate 는 정산 1회당 이자율. limitByHouse 는 집 단계 0~4. ltv 는 조합(집 평가액 × ltv + 헛간 이상 설비 평가액 × collateralLtvBank). GDD_v2 3.5·4.6",
+  "lenders": [
+    {
+      "id": "bank",
+      "name": "숲속중앙조합",
+      "npc": "부엉이 지점장",
+      "rate": 0.01,
+      "maxOverdue": 3,
+      "ltv": 0.8,
+      "borrowUnit": 100000,
+      "stampUnit": 50000,
+      "upfront": 0,
+      "requiresHouse": true,
+      "closedAtNight": true,
+      "tagOrder": "bankCollateralOnly",
+      "terms": "담보인정비율(LTV) 80%. 이자 3회 연속 미납 시 기한이익이 상실되며 담보권을 실행합니다.",
+      "lines": {
+        "greet": "어서 오세요. 담보 서류부터 보겠습니다.",
+        "refuseCollateral": "고객님, 담보가 확인되지 않습니다.",
+        "refuseLimit": "고객님, 한도가 초과되었습니다.",
+        "closed": "영업시간이 끝났습니다. 내일 아침에 오십시오.",
+        "dun": "이자 납부 기한이 지났습니다."
+      }
+    },
+    {
+      "id": "capital",
+      "name": "황금저축·캐피탈",
+      "npc": "족제비 대표",
+      "rate": 0.02,
+      "maxOverdue": 3,
+      "limitByHouse": [
+        200000,
+        1000000,
+        3000000,
+        10000000,
+        30000000
+      ],
+      "borrowUnit": 50000,
+      "stampUnit": 10000,
+      "upfront": 0,
+      "tagOrder": "expensiveFirst",
+      "terms": "무담보 신용대출. 이자 3회 연속 미납 시 전액 즉시 상환을 청구합니다.",
+      "lines": {
+        "greet": "고객님~ 오늘도 좋은 하루 되세요!",
+        "refuseLimit": "고객님~ 아쉽지만 한도가 꽉 찼어요!",
+        "dun": "고객님, 이자가 아직 입금되지 않았어요."
+      }
+    },
+    {
+      "id": "shark1",
+      "name": "오소리 대부",
+      "npc": "오소리 소장",
+      "rate": 0.04,
+      "maxOverdue": 2,
+      "limitByHouse": [
+        500000,
+        1000000,
+        2000000,
+        5000000,
+        10000000
+      ],
+      "borrowUnit": 100000,
+      "stampUnit": 10000,
+      "upfront": 0,
+      "tagOrder": "cheapFirst",
+      "terms": "연대보증 포함. 이자 2회 연속 미납 시 담보물을 싼 것부터 가져갑니다.",
+      "lines": {
+        "greet": "오, 왔어? 필요하면 말해.",
+        "refuseLimit": "여기까지야. 더는 안 돼.",
+        "dun": "이자 아직이야. 알지?"
+      }
+    },
+    {
+      "id": "shark2",
+      "name": "뒷골목 독사 대부",
+      "npc": "독사 대부",
+      "rate": 0.08,
+      "maxOverdue": 2,
+      "limitByHouse": [
+        1000000,
+        2000000,
+        5000000,
+        10000000,
+        20000000
+      ],
+      "borrowUnit": 200000,
+      "stampUnit": 20000,
+      "upfront": 0.4,
+      "contactsFromNth": 2,
+      "tagOrder": "expensiveFirst",
+      "terms": "선이자 40%를 먼저 뗍니다. 두 번째 대출부터 지인 연락처를 제출합니다. 연체 시 지인에게 연락합니다.",
+      "lines": {
+        "greet": "급하신가 보군. 편하게 앉으시게.",
+        "refuseLimit": "오늘은 여기까지 하지.",
+        "dun": "약속한 날이 지났습니다. 지인분들께 연락드리지요."
+      }
+    },
+    {
+      "id": "tax",
+      "name": "세무서",
+      "npc": "조합 건물 창구",
+      "rate": 0,
+      "maxOverdue": 1,
+      "stampUnit": 10000,
+      "upfront": 0,
+      "deadlineSettlements": 8,
+      "tagOrder": "expensiveFirst",
+      "terms": "상속세·증여세. 기한에 남은 만큼 비싼 설비부터 공매(구매가의 50%)하고, 그래도 남으면 캐피탈 빚으로 넘어갑니다.",
+      "lines": {
+        "greet": "납부 기한을 확인해 주십시오.",
+        "dun": "납부 기한이 지났습니다."
+      }
+    }
+  ],
+  "shark2Open": {
+    "anyOverdue": true,
+    "totalDebtAtLeast": 500000,
+    "claimSold": true,
+    "flyer": true,
+    "traitIds": [
+      "debtTolerance"
+    ]
+  },
+  "offers": {
+    "rollProbPerSettlement": 0.2,
+    "list": [
+      {
+        "id": "promo",
+        "by": "capital",
+        "cooldownSettlements": 5,
+        "effect": {
+          "type": "promoLoan",
+          "lender": "capital",
+          "amount": 50000,
+          "halfSettlements": 3,
+          "doubleSettlements": 3,
+          "halfMul": 0.5,
+          "doubleMul": 2
+        },
+        "text": "첫 3회 이자 반값 대출 5만",
+        "log": "offer:promo"
+      },
+      {
+        "id": "waive",
+        "by": "shark1",
+        "cooldownSettlements": 5,
+        "effect": {
+          "type": "waiveInterest",
+          "lender": "shark1",
+          "payAmount": 50000,
+          "trueProb": 0.7
+        },
+        "text": "오늘 원금 5만을 갚으면 이번 이자는 안 받는다",
+        "log": "offer:waive"
+      },
+      {
+        "id": "fake_waive",
+        "by": "shark2",
+        "cooldownSettlements": 5,
+        "effect": {
+          "type": "waiveInterest",
+          "lender": "shark2",
+          "payAmount": 20000,
+          "trueProb": 0
+        },
+        "text": "오늘 갚으시면 이자는 감면해 드리지요",
+        "log": "offer:fake_waive"
+      },
+      {
+        "id": "rollover",
+        "by": "shark1",
+        "cooldownSettlements": 5,
+        "effect": {
+          "type": "rollover",
+          "lenders": [
+            "shark1",
+            "shark2"
+          ]
+        },
+        "text": "이번 이자는 미뤄 드리지요",
+        "log": "offer:rollover"
+      },
+      {
+        "id": "flyer",
+        "by": "wire",
+        "cooldownSettlements": 5,
+        "effect": {
+          "type": "flyer"
+        },
+        "text": "당일 대출 전단지",
+        "log": "flyer"
+      }
+    ]
+  },
+  "rollover": {
+    "addPct": 0.1,
+    "refuseAfter": {
+      "shark1": null,
+      "shark2": 2
+    },
+    "lenders": [
+      "shark1",
+      "shark2"
+    ]
+  },
+  "pawn": {
+    "byHeirloomLevel": [
+      50000,
+      150000,
+      400000
+    ],
+    "lenders": [
+      "shark1",
+      "shark2"
+    ]
+  }
+}

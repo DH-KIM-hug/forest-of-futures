@@ -1,0 +1,181 @@
+{
+  "version": 2,
+  "_doc": "세대 안의 잘게 쪼갠 업그레이드. 비용(n단계->n+1) = ceil(기준 × r^n). baseCostOfWheel/baseCostOfTier 는 그 쳇바퀴 가격/그 설비 첫 대 가격에 곱한다. GDD_v2 3.4a·4.4",
+  "tracks": [
+    {
+      "id": "glove",
+      "scope": "body",
+      "names": [
+        "목장갑",
+        "코팅 장갑",
+        "산재 처리 안 되는 장갑"
+      ],
+      "effect": {
+        "stat": "acornTap",
+        "addPct": 4
+      },
+      "maxLevel": 10,
+      "baseCost": 4000,
+      "r": 1.15,
+      "lookAt": [
+        1,
+        5,
+        10
+      ]
+    },
+    {
+      "id": "shoes",
+      "scope": "body",
+      "names": [
+        "시장표 운동화",
+        "러닝화",
+        "한정판"
+      ],
+      "effect": {
+        "stat": "mineTap",
+        "addPct": 3
+      },
+      "maxLevel": 15,
+      "baseCost": 5000,
+      "r": 1.12,
+      "lookAt": [
+        1,
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "id": "oil",
+      "scope": "coinWheel",
+      "names": [
+        "기름칠",
+        "베어링 교체",
+        "무소음 베어링"
+      ],
+      "effect": {
+        "stat": "equipYield",
+        "addPct": 2
+      },
+      "maxLevel": 20,
+      "baseCostOfWheel": 0.2,
+      "r": 1.1,
+      "lookAt": [
+        1,
+        5,
+        10,
+        20
+      ]
+    },
+    {
+      "id": "spokes",
+      "scope": "coinWheel",
+      "names": [
+        "바퀴 살 교체",
+        "관성 바퀴",
+        "영구 기관(아님)"
+      ],
+      "effect": {
+        "stat": "autoSpin",
+        "addValue": 150
+      },
+      "maxLevel": 10,
+      "baseCost": 3000,
+      "r": 1.15,
+      "lookAt": [
+        1,
+        5,
+        10
+      ]
+    },
+    {
+      "id": "power",
+      "scope": "coinWheel",
+      "names": [
+        "절전 멀티탭",
+        "심야 전기 요금제",
+        "한전 직원 지인"
+      ],
+      "effect": {
+        "stat": "power",
+        "addPct": -1
+      },
+      "maxLevel": 15,
+      "baseCostOfWheel": 0.3,
+      "r": 1.12,
+      "lookAt": [
+        1,
+        5,
+        10,
+        15
+      ]
+    },
+    {
+      "id": "tier",
+      "scope": "tier",
+      "names": {
+        "helper": "알바 교육",
+        "row": "줄 맞추기",
+        "generator": "발전기 정비",
+        "shed": "헛간 환기",
+        "powerroom": "발전실 배선",
+        "farm": "공장 3교대"
+      },
+      "effect": {
+        "stat": "tierYield",
+        "addPct": 2
+      },
+      "maxLevel": 10,
+      "baseCostOfTier": 0.05,
+      "r": 1.12,
+      "lookAt": [
+        1,
+        5,
+        10
+      ]
+    },
+    {
+      "id": "fee",
+      "scope": "run",
+      "names": [
+        "단골 환전상",
+        "우수 고객",
+        "VIP(수수료는 받습니다)"
+      ],
+      "effect": {
+        "stat": "sellFee",
+        "addPctPoint": -0.03
+      },
+      "maxLevel": 10,
+      "baseCost": 5000,
+      "r": 1.15,
+      "lookAt": [
+        1,
+        5,
+        10
+      ]
+    }
+  ],
+  "onSeize": {
+    "coinWheel": "resetWithWheel",
+    "tier": "resetWhenTierEmpty",
+    "body": "keep",
+    "run": "keep"
+  },
+  "onInherit": {
+    "simple": {
+      "coinWheel": "keep",
+      "tier": "keep",
+      "body": "half",
+      "run": "reset"
+    },
+    "gift": "sameAsSimple",
+    "limited": {
+      "coinWheel": "keepForKeptWheel",
+      "tier": "keepForKeptTier",
+      "body": "half",
+      "run": "reset"
+    },
+    "renounce": "resetAll"
+  }
+}

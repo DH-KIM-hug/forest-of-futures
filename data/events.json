@@ -1,77 +1,54 @@
 {
-  "version": 1,
-  "_doc": "속보. 정산마다 rollProbPerSettlement 확률로 하나를 뽑아(weight 비례) 다음 회차 안의 무작위 시각에 터뜨린다. 상단 속보 띠에 한 줄로 뜬다. 문구는 사실 그대로, 투자 권유 문구 금지.",
+  "version": 2,
+  "_doc": "게임 안 사건 4종. 시세를 움직이는 사건은 없다(시세는 실제 시장). announceBefore 는 효과가 시작되기 전 예고하는 정산 수. 시스템 문구는 사실만(권유 표현 금지). GDD_v2 3.12·4.7",
   "rollProbPerSettlement": 0.35,
   "events": [
     {
       "id": "rate_hike",
       "weight": 10,
-      "headline": "[속보] 숲속중앙은행, 기준금리 기습 인상",
-      "effect": { "type": "rateMultiplier", "multiplier": 2, "lenders": ["bank", "capital", "shark1", "shark2"], "durationSettlements": 2 },
-      "statFlag": "rateHikeActive"
+      "text": "숲속중앙은행, 기준금리 인상. 다음 정산부터 모든 이자율이 두 배로 적용됩니다.",
+      "announceBefore": 1,
+      "effect": {
+        "type": "rateMultiplier",
+        "value": 2,
+        "settlements": 2
+      }
     },
     {
       "id": "housing_slump",
       "weight": 8,
-      "headline": "[속보] 숲속 부동산 시세 하락세",
-      "effect": { "type": "appraisalMultiplier", "multiplier": 0.7, "durationSettlements": 5 },
-      "statFlag": "housingSlumpActive"
+      "text": "숲속 부동산 시세 하락. 집 평가액이 70%로 조정됩니다.",
+      "effect": {
+        "type": "appraisalMultiplier",
+        "value": 0.7,
+        "settlements": 5
+      }
     },
     {
       "id": "housing_crash",
       "weight": 2,
-      "headline": "[속보] 부동산 거품 붕괴, 감정가 반토막",
-      "effect": { "type": "appraisalMultiplier", "multiplier": 0.5, "durationSettlements": 3 },
-      "statFlag": "housingSlumpActive"
-    },
-    {
-      "id": "market_pump",
-      "weight": 25,
-      "headline": "[속보] {market} 호재 발표",
-      "effect": { "type": "marketJump", "market": "random", "direction": 1, "delaySecMin": 3, "delaySecMax": 8, "sizeMin": 0.012, "sizeMax": 0.03 },
-      "fake": false
-    },
-    {
-      "id": "market_dump",
-      "weight": 25,
-      "headline": "[속보] {market} 악재 발표",
-      "effect": { "type": "marketJump", "market": "random", "direction": -1, "delaySecMin": 3, "delaySecMax": 8, "sizeMin": 0.012, "sizeMax": 0.03 },
-      "fake": false
-    },
-    {
-      "id": "fake_pump",
-      "weight": 8,
-      "headline": "[속보] {market} 호재 발표",
-      "effect": { "type": "marketJump", "market": "random", "direction": -1, "delaySecMin": 3, "delaySecMax": 8, "sizeMin": 0.012, "sizeMax": 0.03 },
-      "fake": true,
-      "followUpHeadline": "[정정] {market} 호재는 사실무근"
-    },
-    {
-      "id": "fake_dump",
-      "weight": 8,
-      "headline": "[속보] {market} 악재 발표",
-      "effect": { "type": "marketJump", "market": "random", "direction": 1, "delaySecMin": 3, "delaySecMax": 8, "sizeMin": 0.012, "sizeMax": 0.03 },
-      "fake": true,
-      "followUpHeadline": "[정정] {market} 악재는 사실무근"
-    },
-    {
-      "id": "whale",
-      "weight": 10,
-      "headline": "[속보] 멧돼지 세력 대량 체결 포착",
-      "effect": { "type": "volMultiplier", "market": "random", "multiplier": 2, "durationSec": 30 }
+      "text": "부동산 거품 붕괴. 집 평가액이 50%로 조정됩니다.",
+      "effect": {
+        "type": "appraisalMultiplier",
+        "value": 0.5,
+        "settlements": 3
+      }
     },
     {
       "id": "subsidy",
       "weight": 4,
-      "headline": "[안내] 서민금융 지원금 지급",
-      "condition": { "stat": "netWorth", "op": "<", "value": 0 },
+      "text": "서민금융 지원금 30,000 도토리가 지급되었습니다.",
+      "cond": {
+        "stat": "netWorth",
+        "op": "<",
+        "value": 0
+      },
       "oncePerRun": true,
-      "effect": { "type": "cash", "amount": 30000 },
-      "statCounter": "subsidyCount"
+      "effect": {
+        "type": "cash",
+        "value": 30000,
+        "settlements": 0
+      }
     }
-  ],
-  "rules": {
-    "newsStats": "속보(marketJump)가 뜬 뒤 15초 안에 그 종목에서 속보 방향대로 진입하면 lastAfterNewsSec와 lastNewsFake를 기록한다.",
-    "jumpTick": "marketJump와 종목 자체 jump로 생긴 틱은 viaJump = true로 표시한다(슬리피지·엔딩 판정에 사용)."
-  }
+  ]
 }
