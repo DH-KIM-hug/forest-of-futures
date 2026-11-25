@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGame } from '../store/gameStore';
 import { useUI } from './uiStore';
 import { Hud, Ticker } from './common/Hud';
@@ -21,6 +21,12 @@ export function Game() {
   const away = useGame((s) => s.net.away);
   useEffect(() => { startHistory(); }, []);
   useEffect(() => { if (away) useUI.getState().markAway(Date.now()); }, [away]);
+  const liqs = g.run.stats.liqCount ?? 0;
+  const lastLiqs = useRef(liqs);
+  useEffect(() => {
+    if (liqs > lastLiqs.current) useUI.getState().doShake(); // 강제 청산: 화면 흔들림 한 번(동작 줄이기면 CSS 가 끈다)
+    lastLiqs.current = liqs;
+  }, [liqs]);
   const gate = tradeGate(g);
   const pos = Object.values(run.positions);
   const roeSum = pos.reduce((a, p) => a + roePct(p, run.prices[p.market]), 0);

@@ -2,6 +2,9 @@
 import { create } from 'zustand';
 import type { LenderId } from '../engine/types';
 
+const PKEY = 'fof.prologue.v2';
+const seen = (): boolean => { try { return typeof localStorage !== 'undefined' && localStorage.getItem(PKEY) === '1'; } catch { return true; } };
+
 export type Sheet =
   | { k: 'lender'; id: LenderId }
   | { k: 'friends' }
@@ -21,6 +24,8 @@ interface UI {
   trade: { market: string; lev: number | null; pct: number; sl: number | null; tp: number | null };
   awayDismissed: number;
   awayAt: number;
+  prologue: boolean;
+  finishPrologue: () => void;
   open: (s: Sheet) => void;
   close: () => void;
   setOverlay: (o: Overlay) => void;
@@ -41,6 +46,8 @@ export const useUI = create<UI>((set) => ({
   trade: { market: 'DTC', lev: null, pct: 25, sl: null, tp: null },
   awayDismissed: 0,
   awayAt: 0,
+  prologue: !seen(),
+  finishPrologue: () => { try { localStorage.setItem(PKEY, '1'); } catch { /* 저장 못 해도 진행 */ } set({ prologue: false }); },
   open: (sheet) => set({ sheet }),
   close: () => set({ sheet: null }),
   setOverlay: (overlay) => set({ overlay }),

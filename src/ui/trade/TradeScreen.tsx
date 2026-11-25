@@ -6,6 +6,7 @@ import { marketById } from '../../engine/data';
 import { price } from '../../engine/selectors';
 import { historyOf } from '../priceHistory';
 import { Art } from '../common/Art';
+import { pctStr } from '../vm/village';
 import { heroArt } from '../assets';
 import { ChartBox, type ChartLine } from './Chart';
 import {
@@ -13,7 +14,7 @@ import {
 } from '../vm/trade';
 
 const COLORS = { kr: { up: '#e5484d', down: '#3e7bfa' }, intl: { up: '#2f9e5a', down: '#e5484d' } };
-const pctTxt = (x: number, d = 1) => `${x >= 0 ? '▲' : '▼'}${Math.abs(x).toFixed(d)}%`;
+const pctTxt = pctStr;
 const roeTxt = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}%`;
 
 /** 거래 탭: 한 화면, 스크롤·팝업 없음. 차트는 장식 없는 사각형이다. */

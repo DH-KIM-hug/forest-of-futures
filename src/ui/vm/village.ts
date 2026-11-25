@@ -21,7 +21,8 @@ export const TIME_LABEL = ['아침', '낮', '저녁', '밤'] as const;
 /** 줄여 쓰기: 10,000 미만은 그대로, 그 이상은 1.2만. */
 export const short = abbrev;
 export const signed = (n: number): string => (n >= 0 ? '+' : '−') + comma(Math.abs(n));
-export const pctStr = (x: number, d = 1): string => `${x >= 0 ? '▲' : '▼'}${Math.abs(x).toFixed(d)}%`;
+/** 상승·하락은 색 말고도 ▲▼ 와 +/− 로 구분한다(AC-v2-150). */
+export const pctStr = (x: number, d = 1): string => `${x >= 0 ? '▲+' : '▼−'}${Math.abs(x).toFixed(d)}%`;
 
 // ── HUD ─────────────────────────────────────────────────────────────────
 export interface HudModel {

@@ -67,6 +67,7 @@ export function Stage() {
       {m.stage === 0 && (
         <button className="stage-tap" aria-label="도토리 줍기" onPointerDown={(e) => { e.preventDefault(); doTap(undefined, 50); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doTap(); } }}>
           {[8, 22, 36, 66, 80, 91].map((l, i) => <i key={i} className="ac" style={{ left: l + '%', bottom: 8 + (i % 3) * 10 }} />)}
+          {m.acornTaps < 2 && <><i className="finger" aria-hidden="true" /><span className="finger-note">여기를 눌러 줍기</span></>}
           <Art id={heroArt(pose === 'idle' && !tapping ? 'pick' : pose)} className={'hero' + (tapping ? ' bn' : '')} alt="칩멍크" />
         </button>
       )}
