@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useProto } from './protoStore';
 import { renderCard, saveCard } from './shareCard';
 import { comma } from '../../engine/util';
@@ -18,6 +18,18 @@ export function ProfitPrompt() {
     const t = window.setTimeout(() => useProto.getState().patch({ profit: null }), 15000);
     return () => window.clearTimeout(t);
   }, [p, stage]);
+  // 폰 탭에서는 차트 위에 얹는다(차트 아래 끝에 맞춰 위로 자란다): 배율·증거금·주문 단추를 가리지 않는다.
+  const box = useRef<HTMLDivElement>(null);
+  const tab = useProto((s) => s.tab);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const chart = tab === 'phone' ? document.querySelector('.pt-chart') : null;
+    const root = el.offsetParent as HTMLElement | null;
+    if (!chart || !root) { el.style.top = ''; el.style.bottom = ''; return; }
+    el.style.top = 'auto';
+    el.style.bottom = `${root.getBoundingClientRect().bottom - chart.getBoundingClientRect().bottom + 2}px`;
+  });
   if (!p) return null;
   const close = () => useProto.getState().patch({ profit: null });
   const save = async () => {
@@ -33,7 +45,7 @@ export function ProfitPrompt() {
     setStage('done');
   };
   return (
-    <div className="pr-profit" role="dialog" aria-label="수익 인증서">
+    <div ref={box} className="pr-profit" role="dialog" aria-label="수익 인증서">
       {stage === 'done' && thumb ? (
         <>
           <img className="th" src={thumb} alt="수익 인증서 미리보기" />

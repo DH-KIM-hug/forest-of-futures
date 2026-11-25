@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useGame } from '../../store/gameStore';
 import { endingCardModel } from '../vm/records';
 import { comma } from '../../engine/util';
+import { lifeNo } from './model';
+import { rebirthOverride } from './dev';
 import { Tent, Tree, C } from './art';
 import heroSit from './img/hero_sit.png';
 import heroFront from './img/hero_front.png';
@@ -49,7 +51,7 @@ export function EndingFlow() {
           </div>
           <p className="sub">{m.status} · 장부 {m.ledger}</p>
         </div>
-        <button className="go" onClick={() => act({ type: 'estateNext' })}>환생하기</button>
+        <button className="go" data-rebirth onClick={() => act({ type: 'estateNext' })}>환생하기</button>
       </div>
     );
   }
@@ -60,17 +62,17 @@ export function EndingFlow() {
       <div className="re-hero"><div className="sun" aria-hidden="true" /><img src={heroFront} alt="" width={96} height={93} /></div>
       <div className="card">
         <h2>다시 눈을 뜬다</h2>
-        <p className="line">엄마의 빚은 그대로다.</p>
+        <p className="line">폰 고리의 리본이 빛난다. 눈을 뜨면 다시 그 공터, 그날이다.<br />엄마의 빚 30만도, 봉투 10만도 그대로다.</p>
         <div className="award"><i className="coin" aria-hidden="true" /><span>황금 실물 도토코인</span><b>+{comma(e.award)}</b></div>
         <div className="stats">
           <div><small>누적</small><b>{comma(total)}개</b></div>
-          <div><small>지나간 생</small><b>{g.family.generation}번째</b></div>
+          <div><small>지나간 생</small><b>{lifeNo(g)}번</b></div>
           {e.calc && <div><small>최고 순자산</small><b>{comma(Math.round(e.calc.peak))}</b></div>}
           {e.calc && <div><small>누적 채굴</small><b>{comma(Math.round(e.calc.mined))}</b></div>}
         </div>
         {e.maxim && <p className="maxim">「{e.maxim}」</p>}
       </div>
-      <button className="go" onClick={() => act({ type: 'nextGeneration' })}>다음 생 시작</button>
+      <button className="go" data-next-life onClick={() => { if (act({ type: 'nextGeneration' }).ok) rebirthOverride(); }}>{lifeNo(g) + 1}번째 생 시작</button>
     </div>
   );
 }

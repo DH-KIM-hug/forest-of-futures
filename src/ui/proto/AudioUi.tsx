@@ -33,7 +33,7 @@ const usePrefs = () => { const [, f] = useState(0); useEffect(() => subscribe(()
 /** 장면에 따라 곡·심장박동·컷인 소리 낮춤·탭 소리·엔딩/환생 소리를 고른다. */
 export function useAudioDirector(near: boolean): void {
   const tab = useProto((s) => s.tab);
-  const cutin = useProto((s) => s.cutin);
+  const cutin = useProto((s) => s.scenes.length > 0);
   const step = useGame((s) => s.g.estate?.step ?? null);
   const night = tintAt(useClock()).night;
   const pick = usePick();

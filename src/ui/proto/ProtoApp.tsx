@@ -10,16 +10,18 @@ import { Lot, useOpenPositions } from './Lot';
 import { UpgTab, MapTab, PhoneTab } from './Tabs';
 import { PeopleTab } from './People';
 import { EndingFlow } from './Ending';
+import { CutIn } from './CutIn';
+import { Prologue, prologueSeen } from './Prologue';
+import { endPrologue } from './dev';
 import { ProfitPrompt } from './ProfitPrompt';
 import { WalletSheet } from './Wallet';
-import { BOSS_NAME } from './text';
 import { isFast, isCheat } from './config';
 import { clone } from '../../engine/game';
 import { comma } from '../../engine/util';
 import { interestDue, ownedCoins, walletValue } from '../../engine/selectors';
 import { forecast } from '../../engine/settlement';
 import { balance, DEBT_IDS } from '../../engine/data';
-import { Acorn, RowIcon, O } from './art';
+import { Acorn, RowIcon } from './art';
 import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
 import { pdev } from './config';
@@ -61,28 +63,30 @@ function Hud() {
   const fc = forecast(g);
   const rd = (n: number) => comma(Math.round(n));
   const hasWheel = ownedCoins(run).length > 0;
+  const rate = run.effects.find((e) => e.type === 'rateMultiplier') ?? null;
   return (
     <header className={'pr-hud' + (lot ? ' over' : '')}>
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span>이자 {comma(interest)}/정산</span>{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
+          {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배 · {rate.remaining}회 남음</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
         </div>
         <DevBar />
         <div className="acorn">
           <div className="n"><span key={bump.k} className={bump.k ? 'v n-' + bump.dir : 'v'}>{comma(cash)}</span><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
-          {ps !== null && <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} onClick={() => setBrk((b) => !b)}>정산당 {ps >= 0 ? '+' : '−'}{comma(Math.abs(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i></button>}
+          {ps === null && run.settleNo === 0 && <div className="memo">엄마 비상금 「급할 때」</div>}
+          {ps !== null && <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps onClick={() => setBrk((b) => !b)}>정산당 {ps >= 0 ? '+' : '−'}{comma(Math.abs(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i></button>}
           {hasWheel && <button className="walbtn" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
         </div>
       </div>
       {brk && ps !== null && (
-        <div className="brk" role="status">채굴 <b className="up">+{rd(fc.mined)}</b> · 전기 <b className="dn">−{rd(fc.power)}</b> · 이자 <b className="dn">−{rd(fc.interest)}</b> · 생활비 <b className="dn">−{rd(fc.living)}</b> = <b className={fc.net >= 0 ? 'up' : 'dn'}>{fc.net >= 0 ? '+' : '−'}{rd(Math.abs(fc.net))}</b></div>
+        <div className="brk" role="status"><i>다음 정산 예상</i> 채굴 <b className="up">+{rd(fc.mined)}</b> · 전기 <b className="dn">−{rd(fc.power)}</b> · 이자 <b className="dn">−{rd(fc.interest)}</b> · 생활비 <b className="dn">−{rd(fc.living)}</b> = <b className={fc.net >= 0 ? 'up' : 'dn'}>{fc.net >= 0 ? '+' : '−'}{rd(Math.abs(fc.net))}</b></div>
       )}
       {lot && (
         <>
           <div key={'g' + gi} className="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
-            <span><small>목표</small> {goal ? goal.label : '다 했다! 이제 빚과 거래뿐'}</span>{goal && <em>{comma(goal.cur)}/{comma(goal.need)}</em>}
+            <span><small>목표</small> {goal ? goal.label : '1막 끝. 이제 빚과 거래뿐'}</span>{goal && <em>{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
           <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '')}>
             <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>정산</span><em>{mmss(left)}</em>
@@ -132,55 +136,6 @@ function TabBar() {
   );
 }
 
-/** 오소리 대부 반신(와이어프레임 컷인 그림을 옮김). win=웃음, 아니면 정색 */
-function BossBust({ win }: { win: boolean }) {
-  return (
-    <svg className="bust" viewBox="20 300 350 430" aria-hidden="true">
-      <polygon points="40,844 70,640 320,640 350,844" fill="#5d5446" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-      <polygon points="170,640 195,720 220,640" fill="#E9D9B4" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-      <circle cx={85} cy={360} r={46} fill="#8C8478" stroke={O} strokeWidth={3} /><circle cx={305} cy={360} r={46} fill="#8C8478" stroke={O} strokeWidth={3} />
-      <circle cx={85} cy={360} r={24} fill="#5d5446" stroke={O} strokeWidth={2} /><circle cx={305} cy={360} r={24} fill="#5d5446" stroke={O} strokeWidth={2} />
-      <ellipse cx={195} cy={470} rx={150} ry={150} fill="#8C8478" stroke={O} strokeWidth={3} />
-      <ellipse cx={195} cy={488} rx={100} ry={98} fill="#EFE8DA" stroke={O} strokeWidth={2.5} />
-      <polygon points="160,330 185,330 178,400 150,396" fill="#3d3a36" stroke={O} strokeWidth={2} /><polygon points="205,330 230,330 240,396 212,400" fill="#3d3a36" stroke={O} strokeWidth={2} />
-      <circle cx={152} cy={470} r={6} fill={O} /><circle cx={238} cy={470} r={6} fill={O} />
-      {win
-        ? <path d="M138 454 q14 -8 28 -2 M224 452 q14 -6 28 2" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
-        : <path d="M136 446 l30 10 M254 446 l-30 10" fill="none" stroke={O} strokeWidth={4} strokeLinecap="round" />}
-      <ellipse cx={195} cy={512} rx={13} ry={9} fill={O} />
-      {win
-        ? <path d="M158 538 q37 28 74 0" fill="none" stroke={O} strokeWidth={3.5} strokeLinecap="round" />
-        : <path d="M166 548 h58" fill="none" stroke={O} strokeWidth={3.5} strokeLinecap="round" />}
-      {/* 장부 */}
-      <g transform="rotate(-10 300 690)"><rect x={262} y={640} width={78} height={96} rx={6} fill="#F3E7C6" stroke={O} strokeWidth={3} /><path d="M276 666 h50 M276 684 h50 M276 702 h34" stroke={O} strokeWidth={2.5} strokeLinecap="round" /></g>
-    </svg>
-  );
-}
-
-function CutIn() {
-  const c = useProto((s) => s.cutin);
-  const g = useGame((s) => s.g);
-  useEffect(() => {
-    if (!c) return;
-    const t = window.setTimeout(() => useProto.getState().patch({ cutin: null }), 4000);
-    return () => window.clearTimeout(t);
-  }, [c]);
-  if (!c || g.run.over) return null;
-  return (
-    <div className={'pr-cutin' + (c.win ? ' win' : ' lose')} onClick={() => useProto.getState().patch({ cutin: null })} role="dialog" aria-label="정산 컷인">
-      <BossBust win={c.win} />
-      {!c.win && <div className="stamp">증거금 부족</div>}
-      <div className="say">
-        <div className="tag">{BOSS_NAME}</div>
-        <p>{c.win ? `이자 ${comma(c.interest)} 수금 완료!` : `이자 ${comma(c.interest)}… 장부에 적어 두죠.`}</p>
-        <div className="meta"><span>내 정산 합계 <b className={c.net >= 0 ? 'up' : 'dn'}>{c.net >= 0 ? '+' : '−'}{comma(Math.abs(c.net))}</b></span><span>채굴·전기·이자·생활비 합</span></div>
-        <div className="dots" aria-label={`정산 ${c.no}회째`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= c.no ? 'on' : ''} />)}</div>
-        <em>탭하면 계속</em>
-      </div>
-    </div>
-  );
-}
-
 /** 강제 청산: 장면 흔들림 + 붉은 '청산' 도장(대 등급) */
 function LiqStamp({ onShake }: { onShake: () => void }) {
   const [hit, setHit] = useState<{ k: number; name: string } | null>(null);
@@ -217,10 +172,22 @@ function DevBar() {
 export function ProtoApp() {
   const tab = useProto((s) => s.tab);
   const toast = useProto((s) => s.toast);
+  const prologue = useProto((s) => s.prologue);
+  const [skip] = useState(() => prologueSeen());
   const dark = useOpenPositions().some((p) => isNearLiq(p));
   useAudioDirector(dark);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); }, []);
+  // 자동 플레이 검증용 읽기 전용 창(&e2e=1): 상태를 읽기만 한다. 바꾸는 길은 없다.
+  useEffect(() => {
+    if (!/[?&]e2e=1/.test(window.location.search)) return;
+    (window as unknown as { __fofRead?: () => unknown }).__fofRead = () => {
+      const g = useGame.getState().g, r = g.run, P = useProto.getState();
+      return { cash: r.cash, settleNo: r.settleNo, settleIn: r.settleIn, mined: r.minedValue, taps: r.acornTaps, wheels: Object.keys(r.coinWheels), equip: r.equipment.map((u) => u.tier), over: r.over,
+        fut: r.futures, pos: Object.values(r.positions).map((p) => ({ m: p.market, dir: p.dir, lev: p.lev, margin: p.margin0 })), debts: Object.fromEntries(Object.entries(r.debts).map(([k, v]) => [k, v.principal])), friend: r.friends.squirrel.debt,
+        gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet };
+    };
+  }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)
   const shake = () => root.current?.animate(
     [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => { const k = (1 - i / 8) ** 2; return { transform: `translate(${(10 * k * Math.sin(i * 1.7)).toFixed(1)}px, ${(7 * k * Math.sin(i * 2.3)).toFixed(1)}px) rotate(${(1.2 * k * Math.sin(i * 1.1)).toFixed(2)}deg)` }; }),
@@ -243,6 +210,7 @@ export function ProtoApp() {
       <EndingFlow />
       <ProfitPrompt />
       <WalletSheet />
+      {prologue && <Prologue onDone={endPrologue} canSkip={skip} />}
       {pdev === 'sounds' && <SoundLab />}
     </div>
   );

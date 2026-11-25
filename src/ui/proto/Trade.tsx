@@ -8,7 +8,6 @@ import { isNearLiq } from './model';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useUI } from '../uiStore';
-import { useProto } from './protoStore';
 import { comma } from '../../engine/util';
 import { clone } from '../../engine/game';
 import { marketById } from '../../engine/data';
@@ -36,7 +35,7 @@ const COIN: Record<string, { col: string; glyph: ReactNode }> = {
   SMS: { col: '#6C93C4', glyph: <rect x="6.4" y="6.4" width="7.2" height="7.2" rx="1" /> },
   JQQ: { col: '#4FA37A', glyph: <path d="M10 5.2l4.6 8.4H5.4z" /> },
 };
-function Coin({ id, size = 22 }: { id: string; size?: number }) {
+export function Coin({ id, size = 22 }: { id: string; size?: number }) {
   const c = COIN[id] ?? COIN.DTC;
   return (
     <svg className="pt-coin" width={size} height={size} viewBox="0 0 20 20" aria-hidden="true">
@@ -46,7 +45,7 @@ function Coin({ id, size = 22 }: { id: string; size?: number }) {
   );
 }
 /** 오르내림 세모(글자 대신 그린다). */
-const Tri = ({ up, size = 10 }: { up: boolean; size?: number }) => (
+export const Tri = ({ up, size = 10 }: { up: boolean; size?: number }) => (
   <svg className="pt-tri" width={size} height={size} viewBox="0 0 10 10" aria-hidden="true" style={up ? undefined : { transform: 'rotate(180deg)' }}>
     <path d="M5 1.6 9 8.4H1z" fill="currentColor" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
   </svg>
@@ -66,7 +65,7 @@ const Cross = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
 );
 /** 폰 고리: 작은 붉은 나비매듭(§11.4). 폰 틀 모서리에 달려 있고, 거래할 때만 살짝 흔들린다. */
-function Charm({ r }: { r: RefObject<SVGSVGElement> }) {
+export function Charm({ r }: { r: RefObject<SVGSVGElement> }) {
   return (
     <svg ref={r} className="pt-charm" width="40" height="52" viewBox="0 0 34 44" aria-hidden="true">
       <path d="M17 0v19" stroke="#4A4640" strokeWidth="2" strokeLinecap="round" />
@@ -85,7 +84,7 @@ const money = (x: number) => `${sign(x)}${comma(Math.abs(Math.round(x)))}`;
 // ── 차트 ────────────────────────────────────────────────────────────────
 interface Tag { key: string; cls: string; label: string; price: number; edge?: 'up' | 'down' }
 /** 깨끗한 사각형 안에는 시세 선과 가로선뿐이다. 가격 꼬리표는 오른쪽 축 띠(차트 밖)에 둔다. */
-function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: PositionView | null }) {
+export function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: PositionView | null }) {
   const box = useRef<HTMLDivElement>(null);
   const [h, setH] = useState(0);
   useLayoutEffect(() => {
@@ -204,7 +203,6 @@ export function ProtoTrade() {
   const net = useGame((s) => s.net);
   const tr = useUI((s) => s.trade);
   const setTrade = useUI((s) => s.setTrade);
-  const setTab = useProto((s) => s.setTab);
   const run = g.run;
   const mode = tradeMode(g);
   const market = tr.market;
@@ -362,7 +360,7 @@ export function ProtoTrade() {
   // 0단계: 아직 앱이 잠겨 있다
   if (mode.mode === 'locked') {
     return frame(
-      <div className="pt-lockbox"><Lock size={34} /><p>{mode.text}</p></div>,
+      <div className="pt-lockbox"><Lock size={34} /><p>{(run.stats.assetsSeized ?? 0) > 0 ? '쳇바퀴가 압류되어 거래 앱이 잠겼습니다. 쳇바퀴를 다시 사야 열립니다.' : mode.text}</p></div>,
     );
   }
 
@@ -404,7 +402,6 @@ export function ProtoTrade() {
           {mode.lines.map((l) => (
             <div key={l.id} className={'gl' + (l.ok ? ' ok' : '')}><i>{l.ok && <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.4l2.8 2.8L10 3.4" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>}</i>{l.text}</div>
           ))}
-          <button className="pt-btn cta" onClick={() => setTab('upg')}><span>{mode.ready ? '강화 탭에서 계좌 열기' : '강화 탭에서 조건 보기'}</span></button>
         </div>
       </>,
     );
@@ -519,12 +516,19 @@ export function ProtoTrade() {
           <p className="pt-tut"><img src={heroFront} alt="" />{tut}</p>
         ) : null}
         {order}
+        {/* 확인서를 찍을 수 있을 때는 손절·익절 줄 자리에 확인서가 온다(화면 높이를 늘리지 않는다) */}
+        {!pos && mode.waiver ? (
+        <button className="pt-waiver" data-waiver onClick={() => { const r = act({ type: 'signWaiver' }); if (r.ok) { play('overdue_stamp'); say('고위험 거래 확인서에 도장을 찍었다. 200배까지 열렸다.', false); } else say(r.msg ?? '아직 안 됩니다'); }}>
+          <span><b>고위험 거래 확인서</b><small>「손실은 전부 본인 책임입니다」 · 도장을 찍으면 200배</small></span><i>도장</i>
+        </button>
+        ) : (
         <button className="pt-cond" onClick={() => setSheet('stops')}>
           <span className="vals">
             {curSl === null && curTp === null ? <span>손절·익절 없음</span> : <><span className={curSl !== null ? 'set' : ''}>손절 {slTxt}</span><span className={curTp !== null ? 'set' : ''}>익절 {tpTxt}</span></>}
           </span>
           <span className="more">바꾸기<Chev size={11} /></span>
         </button>
+        )}
         {noteLine}
         <div className="pt-orders">
           {pos ? (

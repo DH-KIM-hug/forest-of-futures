@@ -1,0 +1,135 @@
+// 컷인 대화(§7.6·7.7, U-8·U-9): 사람이 크게 올라오고 이름표 + 한 줄씩. 탭으로 넘긴다. 아래에 진행 점.
+// 정산 컷인도 같은 틀을 쓴다(이자 금액은 추심원 대사에, 내 정산 합계는 따로 — U-23).
+import { useEffect, useRef, useState } from 'react';
+import { useGame } from '../../store/gameStore';
+import { useProto, type Scene, type Who } from './protoStore';
+import { WHO_NAME } from './text';
+import { comma } from '../../engine/util';
+import { Badger, BearFace, Squirrel, O } from './art';
+import { play } from './audio';
+import { say } from './watch';
+
+const TAB_LABEL: Record<string, string> = { map: '지도', people: '인맥', upg: '강화', phone: '폰', lot: '공터' };
+import heroFront from './img/hero_front.png';
+
+/** 오소리 대부 반신. win=웃음, 아니면 정색 */
+function BossBust({ win }: { win: boolean }) {
+  return (
+    <svg className="bust" viewBox="20 300 350 430" aria-hidden="true">
+      <polygon points="40,844 70,640 320,640 350,844" fill="#5d5446" stroke={O} strokeWidth={3} strokeLinejoin="round" />
+      <polygon points="170,640 195,720 220,640" fill="#E9D9B4" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
+      <circle cx={85} cy={360} r={46} fill="#8C8478" stroke={O} strokeWidth={3} /><circle cx={305} cy={360} r={46} fill="#8C8478" stroke={O} strokeWidth={3} />
+      <circle cx={85} cy={360} r={24} fill="#5d5446" stroke={O} strokeWidth={2} /><circle cx={305} cy={360} r={24} fill="#5d5446" stroke={O} strokeWidth={2} />
+      <ellipse cx={195} cy={470} rx={150} ry={150} fill="#8C8478" stroke={O} strokeWidth={3} />
+      <ellipse cx={195} cy={488} rx={100} ry={98} fill="#EFE8DA" stroke={O} strokeWidth={2.5} />
+      <polygon points="160,330 185,330 178,400 150,396" fill="#3d3a36" stroke={O} strokeWidth={2} /><polygon points="205,330 230,330 240,396 212,400" fill="#3d3a36" stroke={O} strokeWidth={2} />
+      <circle cx={152} cy={470} r={6} fill={O} /><circle cx={238} cy={470} r={6} fill={O} />
+      {win
+        ? <path d="M138 454 q14 -8 28 -2 M224 452 q14 -6 28 2" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
+        : <path d="M136 446 l30 10 M254 446 l-30 10" fill="none" stroke={O} strokeWidth={4} strokeLinecap="round" />}
+      <ellipse cx={195} cy={512} rx={13} ry={9} fill={O} />
+      {win
+        ? <path d="M158 538 q37 28 74 0" fill="none" stroke={O} strokeWidth={3.5} strokeLinecap="round" />
+        : <path d="M166 548 h58" fill="none" stroke={O} strokeWidth={3.5} strokeLinecap="round" />}
+      <g transform="rotate(-10 300 690)"><rect x={262} y={640} width={78} height={96} rx={6} fill="#F3E7C6" stroke={O} strokeWidth={3} /><path d="M276 666 h50 M276 684 h50 M276 702 h34" stroke={O} strokeWidth={2.5} strokeLinecap="round" /></g>
+    </svg>
+  );
+}
+
+/** 둥근 얼굴 하나로 그리는 조연(족제비·너구리): 귀 + 얼굴 + 주둥이. 새 그림은 만들지 않는다. */
+function Face({ fur, muzzle, mask, smile, slim }: { fur: string; muzzle: string; mask?: boolean; smile: boolean; slim?: boolean }) {
+  if (slim) return (
+    <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
+      <path d="M52 200 q6 -58 48 -58 q42 0 48 58z" fill={fur} stroke={O} strokeWidth={3} strokeLinejoin="round" />
+      <path d="M100 150 l-22 -12 v24z M100 150 l22 -12 v24z" fill="#C8553D" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
+      <circle cx={66} cy={40} r={12} fill={fur} stroke={O} strokeWidth={3} /><circle cx={134} cy={40} r={12} fill={fur} stroke={O} strokeWidth={3} />
+      <ellipse cx={100} cy={88} rx={46} ry={62} fill={fur} stroke={O} strokeWidth={3} />
+      <path d="M70 96 q30 -34 60 0 q4 44 -30 50 q-34 -6 -30 -50z" fill={muzzle} />
+      <path d="M74 76 q8 -8 16 0 M110 76 q8 -8 16 0" fill="none" stroke={O} strokeWidth={3.2} strokeLinecap="round" />
+      <ellipse cx={100} cy={108} rx={6} ry={4.5} fill={O} />
+      <path d="M84 120 q16 14 32 0" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
+      <path d="M62 110 h-22 M62 118 l-20 6 M138 110 h22 M138 118 l20 6" stroke={O} strokeWidth={2} strokeLinecap="round" />
+    </svg>
+  );
+  return (
+    <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
+      <path d="M30 200 q10 -62 70 -62 q60 0 70 62z" fill={fur} stroke={O} strokeWidth={3} strokeLinejoin="round" />
+      <circle cx={52} cy={48} r={20} fill={fur} stroke={O} strokeWidth={3} /><circle cx={148} cy={48} r={20} fill={fur} stroke={O} strokeWidth={3} />
+      <ellipse cx={100} cy={92} rx={66} ry={60} fill={fur} stroke={O} strokeWidth={3} />
+      {mask && <path d="M40 80 q60 -22 120 0 q-4 30 -60 26 q-56 4 -60 -26z" fill="#4d4a45" />}
+      <ellipse cx={100} cy={114} rx={34} ry={26} fill={muzzle} />
+      <circle cx={76} cy={86} r={5} fill={mask ? '#fff' : O} /><circle cx={124} cy={86} r={5} fill={mask ? '#fff' : O} />
+      <ellipse cx={100} cy={104} rx={8} ry={6} fill={O} />
+      {smile ? <path d="M82 118 q18 16 36 0" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" /> : <path d="M86 122 h28" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />}
+    </svg>
+  );
+}
+
+function Bust({ who, smile }: { who: Who; smile: boolean }) {
+  switch (who) {
+    case 'boss': return <BossBust win={smile} />;
+    case 'collector': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Badger cx={100} cy={196} h={180} /></svg>;
+    case 'squirrel': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Squirrel cx={90} cy={196} h={180} /></svg>;
+    case 'bear': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><path d="M20 200 q10 -70 80 -70 q70 0 80 70z" fill="#A67B55" stroke={O} strokeWidth={3} /><BearFace cx={100} cy={86} r={62} /><rect x={128} y={130} width={34} height={56} rx={7} fill="#9AD0C2" stroke={O} strokeWidth={3} transform="rotate(10 145 158)" /></svg>;
+    case 'weasel': return <Face slim fur="#C9B08A" muzzle="#FFF8E4" smile={smile} />;
+    case 'raccoon': return <Face fur="#A9A39A" muzzle="#EFE8DA" mask smile={smile} />;
+    case 'hero': return <img className="bust hero" src={heroFront} alt="" />;
+    case 'sms': return (
+      <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
+        <rect x={56} y={14} width={88} height={176} rx={18} fill="#9AD0C2" stroke={O} strokeWidth={4} /><rect x={66} y={32} width={68} height={130} rx={6} fill="#E6F4EF" stroke={O} strokeWidth={2.5} />
+        <rect x={72} y={46} width={50} height={26} rx={9} fill="#fff" stroke={O} strokeWidth={2.2} /><path d="M78 56 h36 M78 63 h24" stroke={O} strokeWidth={2.4} strokeLinecap="round" />
+        <circle cx={132} cy={40} r={11} fill="#C8553D" stroke={O} strokeWidth={2.5} /><text x={132} y={45} textAnchor="middle" fontSize={14} fontWeight={800} fill="#fff">1</text>
+      </svg>
+    );
+    default: return null;
+  }
+}
+
+export function CutIn() {
+  const sc: Scene | undefined = useProto((s) => s.scenes[0]);
+  const over = useGame((s) => s.g.run.over);
+  const [i, setI] = useState(0);
+  // 줍기를 연타하던 손가락이 대사를 넘겨 버리지 않게, 줄이 뜨고 0.6초는 탭을 받지 않는다
+  const shownAt = useRef(0);
+  useEffect(() => { setI(0); shownAt.current = performance.now(); if (sc) play('cutin_whoosh'); }, [sc?.id]);
+  const end = () => {
+    const P = useProto.getState();
+    const cur = P.scenes[0];
+    if (!cur) return;
+    const patch: Record<string, unknown> = { scenes: P.scenes.slice(1), seen: { ...P.seen, [cur.id]: true } };
+    if (cur.unlock && !P.everUnlocked[cur.unlock]) {
+      patch.everUnlocked = { ...P.everUnlocked, [cur.unlock]: true };
+      patch.visited = { ...P.visited, [cur.unlock]: false };
+      play('unlock_tab');
+      say(`${TAB_LABEL[cur.unlock]} 탭이 열렸다!`);
+    }
+    P.patch(patch);
+  };
+  useEffect(() => {
+    if (!sc?.auto) return;
+    const t = window.setTimeout(end, sc.auto);
+    return () => window.clearTimeout(t);
+  }, [sc?.id]);
+  if (!sc || over) return null;
+  const line = sc.lines[Math.min(i, sc.lines.length - 1)];
+  const smile = line.mood ? line.mood === 'smile' : sc.settle ? sc.settle.win : true;
+  const last = i >= sc.lines.length - 1;
+  const next = () => { if (performance.now() - shownAt.current < 600) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
+  const st = sc.settle;
+  return (
+    <div className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win')} onClick={next} role="dialog" aria-label="컷인 대화" data-scene={sc.id}>
+      <div key={line.who} className="bustbox"><Bust who={line.who} smile={smile} /></div>
+      {st && !st.win && <div className="stamp">연체</div>}
+      <div className={'say' + (line.who === 'note' ? ' note' : '') + (line.who === 'sms' ? ' sms' : '')}>
+        {WHO_NAME[line.who] && <div className="tag">{WHO_NAME[line.who]}</div>}
+        <p key={i}>{line.text}</p>
+        {st && i === 0 && (
+          <div className="meta"><span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span><span>채굴 − 전기 − 이자 − 생활비</span></div>
+        )}
+        {sc.lines.length > 1 && <div className="dots" aria-label={`${i + 1}/${sc.lines.length}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
+        {last && sc.unlock && <div className="unl">끝나면 새 탭이 열린다</div>}
+        <em>{last ? '탭하면 닫기' : '탭하면 다음'}</em>
+      </div>
+    </div>
+  );
+}

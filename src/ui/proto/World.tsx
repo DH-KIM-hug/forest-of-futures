@@ -156,8 +156,8 @@ export function World({ near }: { near: boolean }) {
     const left = collector.overdue ? 1 - collector.fill : 0;
     items.push({ y: 399, key: `col${collector.at}`, node: (
       <g key={`col${collector.at}`} className="pa-walkin">
-        <Badger cx={44} cy={398} h={48} />
-        <g transform="translate(10 330)">
+        <Badger cx={76} cy={398} h={48} />
+        <g transform="translate(42 330)">
           <rect x={-6} y={-40} width={80} height={18} rx={9} fill={O} />
           <text x={34} y={-27} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{COLLECTOR_NAME}</text>
           <text x={34} y={-6} textAnchor="middle" fontSize={12} fill="#B8432C" className="pa-t pa-lbl">이자 {comma(collector.interest)}</text>
@@ -187,8 +187,8 @@ export function World({ near }: { near: boolean }) {
         {items.map((it) => <g key={it.key}>{it.node}</g>)}
         {collector && collector.interest > 0 && (
           collector.overdue
-            ? <Spiky key={`sb${collector.at}`} x={96} y={262} w={168} h={30} text={`연체다. 장부에 적어 두지.`} tail={6} />
-            : <Round key={`rb${collector.at}`} x={96} y={262} w={150} h={28} text="이번 회차 수납 완료~" tail={6} />
+            ? <Spiky key={`sb${collector.at}`} x={96} y={262} w={168} h={30} text={`이자가 모자라요오. 연체.`} tail={6} />
+            : <Round key={`rb${collector.at}`} x={96} y={262} w={176} h={28} text={`이자 ${comma(collector.interest)} 수납 완료요오~`} tail={6} />
         )}
         {floats.map((f) => <text key={f.id} x={f.x} y={f.y} textAnchor="middle" className={'pa-float ' + f.cls}>{f.t}</text>)}
         </g>

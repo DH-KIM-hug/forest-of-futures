@@ -11,7 +11,7 @@
       "powerMul": 0.7,
       "tapMul": 1.0,
       "unlock": {
-        "acornTaps": 200
+        "acornTaps": 30
       },
       "sign": "acorn",
       "color": "#8B5E3C"

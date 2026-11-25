@@ -5,7 +5,7 @@ import { useProto } from './protoStore';
 import { lotRows, WHEEL_COIN, isNearLiq, type Row } from './model';
 import { say } from './watch';
 import { comma } from '../../engine/util';
-import { marketById } from '../../engine/data';
+import { marketById, balance } from '../../engine/data';
 import { ownedCoins, stage } from '../../engine/selectors';
 import { tapValue } from '../../engine/equipment';
 import { wheelByCoin } from '../../engine/data';
@@ -56,7 +56,7 @@ function ProdRow({ r, onBuy }: { r: Row; onBuy: (r: Row) => boolean }) {
   const locked = r.kind === 'locked';
   const [pop, setPop] = useState(0);
   return (
-    <div className={'pr-row' + (locked ? ' locked' : '')}>
+    <div className={'pr-row' + (locked ? ' locked' : '')} data-row={r.key}>
       <div className="ic">{locked ? <span className="q">?</span> : <RowIcon kind={r.kind === 'wheel' ? 'wheel' : r.tier ?? 'wheel'} />}</div>
       <div className="mid">
         <div className="nm">{r.name}</div>
@@ -73,7 +73,7 @@ function ProdRow({ r, onBuy }: { r: Row; onBuy: (r: Row) => boolean }) {
 export function Lot() {
   const g = useGame((s) => s.g);
   const act = useGame((s) => s.act);
-  const mapBought = useProto((s) => s.mapBought);
+  const mapOpen = useProto((s) => !!s.everUnlocked.map);
   const pos = useOpenPositions();
   const run = g.run;
   const rows = lotRows(g);
@@ -130,17 +130,17 @@ export function Lot() {
     <div className="pr-lot">
       <World near={near} />
       <section className="pr-panel" aria-label="생산 줄">
-        <div className={'pr-hint' + (short ? ' on' : '')} aria-live="polite">{short ? (mapBought ? '도토리가 부족합니다 · 오소리 대부에 전화해 볼까?' : '도토리가 부족합니다') : ''}</div>
+        <div className={'pr-hint' + (short ? ' on' : '')} aria-live="polite">{short ? (mapOpen ? '도토리가 부족합니다 · 지도에서 빌릴 수는 있다' : '도토리가 부족합니다') : ''}</div>
         <div className="pr-rows">
           {pos.map((p) => <PinRow key={p.market} p={p} />)}
           <div className="pr-row tap">
-            <button className="tapbody" onPointerDown={doTap} aria-label={wheeled ? '쳇바퀴 달리기' : '도토리 줍기'}>
+            <button className="tapbody" onPointerDown={doTap} data-tap aria-label={wheeled ? '쳇바퀴 달리기 (코인 채굴)' : '도토리 줍기'}>
               <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind={wheeled ? 'wheel' : 'pile'} /></div>
               <div className="mid">
-                <div className="nm">{wheeled ? '쳇바퀴 달리기' : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
-                <div className="sb">{wheeled ? `탭마다 +${comma(Math.round(tapValue(g, rideCoin)))} ${wheelByCoin[rideCoin].name.replace(' 쳇바퀴', '')}어치 (코인 채굴)` : `탭마다 도토리 · 줍기 ${comma(run.acornTaps)}회`}</div>
+                <div className="nm">{wheeled ? <>쳇바퀴 달리기 <small>(코인 채굴)</small></> : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
+                <div className="sb">{wheeled ? `탭마다 ${wheelByCoin[rideCoin].name.replace(' 쳇바퀴', '')} +${comma(Math.round(tapValue(g, rideCoin)))}어치 → 콜드월렛${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔림' : ''}` : `탭마다 도토리 +${balance.progression.acornPerTap} · 줍기 ${comma(run.acornTaps)}회`}</div>
               </div>
-              <div className="buy tapbtn"><span>줍기</span><small>탭!</small></div>
+              <div className="buy tapbtn"><span>{wheeled ? '달리기' : '줍기'}</span><small>탭!</small></div>
             </button>
           </div>
           {rows.map((r) => <ProdRow key={r.key} r={r} onBuy={buy} />)}

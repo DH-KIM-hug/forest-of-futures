@@ -261,3 +261,10 @@
 
 /* 폰 탭 안에서는 탭 스티커의 손익·청산 배지를 감춘다(같은 숫자가 화면에서 가장 크게 보인다. 주문 단추를 가리지 않게). */
 .pr.tab-phone .pr-tabs .st.on .bdg { display: none; }
+
+/* 고위험 거래 확인서(끝난 거래 10건 뒤): 도장을 찍어야 200배가 열린다 */
+.pr .pt .pt-waiver { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 5px 8px 5px 11px; border-radius: 12px; background: #FBE3DC; border: 2.5px solid var(--red); text-align: left; }
+.pt-waiver span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.pt-waiver b { font-family: var(--dsp); font-weight: 400; font-size: 15px; color: var(--red-ink); }
+.pt-waiver small { font-size: 12px; font-weight: 700; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pt-waiver i { flex: 0 0 auto; padding: 3px 10px; border-radius: 9px; border: 3px solid var(--red); color: var(--red-ink); font-style: normal; font-family: var(--dsp); font-size: 16px; transform: rotate(-6deg); background: rgba(255, 253, 246, .8); }
