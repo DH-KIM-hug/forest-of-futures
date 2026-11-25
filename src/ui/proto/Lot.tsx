@@ -162,7 +162,7 @@ export function Lot() {
               <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind={wheeled ? 'wheel' : 'pile'} /></div>
               <div className="mid">
                 <div className="nm">{wheeled ? <>쳇바퀴 달리기 <small>Lv {runLv}</small></> : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
-                <div className="sb">{wheeled ? `탭마다 코인 +${comma(Math.round(tapValue(g, rideCoin)))}어치${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔림' : ' → 콜드월렛'}` : `탭마다 도토리 +${balance.progression.acornPerTap} · 줍기 ${comma(run.acornTaps)}회`}</div>
+                <div className="sb">{wheeled ? `탭마다 ${wheelByCoin[rideCoin].name.replace(' 쳇바퀴', '')} +${comma(Math.round(tapValue(g, rideCoin)))}어치${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔려 도토리로' : ' → 콜드월렛'}` : `탭마다 도토리 +${balance.progression.acornPerTap} · 줍기 ${comma(run.acornTaps)}회`}</div>
                 {wheeled && msText && <div className="sb ms">다음 {msText}</div>}
               </div>
               {!wheeled && <div className="buy tapbtn"><span>줍기</span><small>탭!</small></div>}
