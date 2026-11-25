@@ -4,6 +4,6 @@ import { startLoop, useGame } from './store/gameStore';
 
 // 저장(`fof.save.v2`)을 읽은 뒤에 시계를 돌린다.
 void useGame.getState().hydrate().finally(() => {
-  startLoop();
+  void startLoop();
   createRoot(document.getElementById('root')!).render(<App />);
 });

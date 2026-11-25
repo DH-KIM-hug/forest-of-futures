@@ -12,6 +12,7 @@ import { futuresGate } from './engine/progression';
 import { levCapNow, roePct, liqPrice } from './engine/futures';
 import { statement, treeStatus, canRetire } from './engine/generation';
 import { legacy } from './engine/data';
+import { NetBadge } from './NetBadge';
 
 const TIME = ['아침', '낮', '저녁', '밤'];
 
@@ -23,6 +24,7 @@ export default function App() {
   return (
     <div style={{ padding: 12, fontFamily: 'sans-serif', fontSize: 14, maxWidth: 760 }}>
       <h1 style={{ fontSize: 18 }}>선물의 숲 — 엔진 디버그 (GDD v2 M1)</h1>
+      <NetBadge />
       <Inheritance />
       <p>
         단계 {stage(run)} · {TIME[timeOfDay(run)]} · 정산 {run.settleNo}회 (다음까지 {run.settleIn}초) · 현금 {comma(run.cash)} · 순자산 {comma(netWorth(run))} · 총부채 {comma(totalDebt(run))}

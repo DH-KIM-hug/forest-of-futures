@@ -178,3 +178,23 @@ healthz: {"ok":true,"st":"open","source":"A","lastTickAgeSec":0,"ticks":21}
 rest ticks returned=20
 ```
 (Hyperliquid 에서 20초 동안 755개 메시지, 재연결 없음, 틱 20개가 끊김 없이 방송·REST 로 조회됨.)
+
+## M6 앱 네트워크 (`src/net`)
+
+**같이 돌리기**: 터미널 1 `npm run server:install`(처음 한 번) → `npm run server`(8787). 터미널 2 `npm run dev` → 브라우저 `http://localhost:5173`(같은 호스트의 8787 로 붙는다. 다른 주소는 `VITE_SERVER_URL=http://…:8787`). 서버 없이: `?feed=sim`(난수) 또는 `?feed=replay`(기록 재생), 또는 `VITE_FEED=sim`. 디버그 화면 맨 위 줄에 시세 출처·연결·시장 상태가 보인다(`src/NetBadge.tsx`).
+
+**구성**: `serverFeed.ts`(WS·재연결·지연 감시·틱/봉/시각 REST, `Feed` 구현), `session.ts`(ServerFeed ↔ 엔진 연결: `stepMut`·`catchUp` 만 부름, 엔진 코드 무변경), `protocol.ts`, `feedMode.ts`, 스토어 `net` 상태.
+
+**벗어난 곳·고른 해석**
+- **끊김 메우기를 ServerFeed 안에서**: 틱 `n` 이 건너뛰면 60틱 이하는 `/v1/ticks` 로 받아 순서대로 흘리고(AC-v2-97), 그보다 길거나 REST 가 실패하면 `gapHandler` → `/v1/bars?res=60` + `catchUp`(3.13)에 맡긴다. 앱이 켜진 채 2분 끊긴 것도 "자리를 비운 것"과 똑같이 처리한다. 접속·재접속 직후의 "돌아옴"도 같은 경로(엔진의 `lastSeenTick` 부터 이어 받음). 이어지는 틱은 gapHandler 가 끝날 때까지 기다린다.
+- **끊긴 동안 엔진에 틱을 안 넣는다**: 서버를 한 번 만난 뒤의 끊김은 마을도 멈춘다(재생·따라잡기가 시계를 대신 메우므로 이중 계산이 없다). 대신 3초 넘게 틱이 없으면 스토어가 `run.marketStatus` 를 `delayed`(60초면 `halted`)로 바꿔 준다(진입 막힘, AC-v2-86). 다음 실제 틱이 상태를 덮어쓴다.
+- **서버를 한 번도 못 만났을 때만** 3초 유예 뒤 기기 시계로 마을을 돌린다(틱 번호 = 저장된 `lastSeenTick`+1, 상태 `halted`, 시세·포지션 얼림, GDD 6.6·T-15). 서버가 나타나면 `lastSeenTick` 을 서버 번호로 맞추고 따라잡기는 하지 않는다(얼려 둔 동안의 움직임은 버림). 화면 문구 "시장에 연결할 수 없습니다"는 디버그 줄에만(거래 탭은 M7~).
+- **봉 따라잡기의 앞쪽 오차**: `/v1/bars` 는 `n0 ≥ from` 인 닫힌 봉만 주므로 떠난 틱이 속한 분(최대 59틱)과 지금이 속한 분은 봉에 안 들어간다(전자는 서버 봉에 떠나기 전 구간이 섞여 있어 일부러 뺀다). 뒤쪽은 곧바로 이어지는 실시간 틱이 메운다.
+- **봉을 못 받으면** 그 구간은 건너뛰고(포지션 미처리) 다음 틱부터 잇는다. 재시도·경고 표시는 M7.
+- **세대 시작가**: 새 게임(틱 0, 포지션 없음)의 첫 서버 틱 가격을 `refPrice`·`prices` 로 삼는다(3.9 "세대 시작이 시작한 틱의 서버 가격").
+- **저장과 서버 번호**: 저장의 `lastSeenTick` 이 서버 `n` 보다 크거나 90일 넘게 차이 나면(sim 에서 이어 받은 저장, 서버 DB 초기화) 새로 시작한 것으로 보고 `lastSeenTick = hello.n`.
+- **앱이 가려지면**(`visibilitychange`) `onBackground`(열린 포지션 알림) + 연결 닫기, 다시 보이면 `onForeground` + 마지막 틱부터 재연결. `pagehide` 에 저장.
+- **디버그 버튼**: 서버 모드에서는 `10초`/`정산(3분)`/배속 버튼이 동작하지 않는다(서버 시계는 앞당길 수 없다). `?feed=sim|replay` 에서만 쓴다. `?feed=replay` 는 `docs/gdd/v2/sim/data/hl_3m.json`(756KB)을 동적 import 로 따로 받는다(빌드에 별도 청크 생김 — 임시).
+- **`hello` 의 `epoch`** 는 항상 1(가격대 재설정 자리). `markets` 목록은 앱의 `data/markets.json` 과 같아야 한다(서버가 같은 파일을 읽음).
+
+**AC 대응(`tests/net/`, `server/tests/ac_net_integration.test.ts`)**: AC-v2-86(ServerFeed 의 3초·60초 감시 → 엔진 `delayed`/`halted`, 정지 중 포지션 얼림·정산 시계 계속), AC-v2-97(20초 끊김: 틱 20개 순서 재생, 닿은 틱 1020 에서 청산), AC-v2-93 연동(60분 끊김 → 봉 → 시간표 `liq`), AC-v2-138(번들 `src`·`data`·`index.html` 에 출처 주소·BTC 등 없음, 네트워크 호출은 `serverFeed.ts` 한 곳 + 실제 로컬 서버가 준 메시지 직렬화에 원본 없음), AC-v2-139(앱 쪽: 평소 값·준비 봉 480칸이 엔진에 들어감), AC-v2-142(Sim·Replay·Server 모두 같은 `Tick`/`Bar`). "로컬 서버를 띄운 통합 테스트"는 가짜 출처 어댑터 + 진짜 WS/HTTP(약 4초).
