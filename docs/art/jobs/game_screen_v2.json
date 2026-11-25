@@ -1,0 +1,499 @@
+{
+ "_doc": "2026-11-25 게임 화면 기획 v2(docs/ui/GAME_SCREEN_PLAN_v2.md 8-B)의 그림 작업표. 그림체가 아직 정해지지 않아(굵은 선 / 수채 그림책) 모든 prompt 는 {STYLE} 한 칸으로 시작한다. 돌리기 전에 _style 에서 고른 sentence 로 {STYLE} 을 바꾸고, 그 스타일의 ref_prepend 를 각 작업 ref 맨 앞에 붙인다. 마을 구도 참고는 docs/ui/mockups/user_village_mock_watercolor.png(참나무가 감싼 앞쪽, 길, 마당 쳇바퀴 — 칠하는 방식은 따르지 않는다). 결과는 docs/art/v3/raw 에 받고 webp 로 바꿔 public/art/v3 에 넣는다.",
+ "_style": {
+  "bold": {
+   "sentence": "In the ART STYLE of the style reference image: clean bold black ink outlines of even weight, flat vivid colour fills with no gradients, simple flat cel shadow blocks, small hand-drawn detail lines.",
+   "ref_prepend": [
+    "docs/art/ref/user_bold_line_ref.jpg"
+   ],
+   "note": "지금 public/art/v2 의 31장과 같은 스타일. 크로마키가 깨끗하게 빠진다."
+  },
+  "watercolor": {
+   "sentence": "Detailed warm watercolor storybook illustration: soft hand-painted washes on textured paper, fine brown pencil-and-ink linework, golden afternoon light, gentle natural colours.",
+   "ref_prepend": [
+    "docs/ui/mockups/user_village_mock_watercolor.png"
+   ],
+   "note": "이 스타일을 고르면 public/art/v2 의 31장도 다시 그려야 한다. 번진 가장자리는 크로마키가 지저분해지므로 transparent 작업은 '가장자리는 또렷하게(clean hard silhouette edge)' 문장을 sentence 뒤에 덧붙인다."
+  }
+ },
+ "jobs": [
+  {
+   "id": "bg_lot",
+   "out": "docs/art/v3/raw/bg_lot.png",
+   "ref": [
+    "docs/ui/mockups/user_village_mock_watercolor.png"
+   ],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Mobile game background, portrait 9:16: the player's own EMPTY forest clearing (a private lot that will be built up later), seen from slightly above, enclosed by a wall of oak and beech forest. Use the composition reference image for LAYOUT ONLY: take its foreground (the huge oak framing the left and top, the home under the oak, the open yard in front); ignore its painting style, its characters, its buildings and its UI. Top 22% of the image: sky seen through leaves. From 22% to 32% of the height: the forest wall, with one gap at 83% across where a dirt path leaves the clearing toward a village. From 32% down to the bottom: the clearing floor of short grass and trampled dirt. Only eight faint flattened bare-dirt oval pads (EMPTY, nothing built), centred at these points (across, down): one very large pad at (31%,46%), a small one at (71%,47%), the path mouth at (83%,36%), then (27%,62%), a small one at (46%,61%), (66%,63%), and two more at (34%,76%) and (75%,76%). Everything below 77% of the height is one wide, calm, empty strip of trampled dirt with a few acorns and fallen oak leaves (the player taps there). Flowers and stones only at the edges. The image will be shown zoomed in up to 1.7 times on its left-centre part, so paint that part with the most care and keep it uncluttered. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. No buildings, no tent, no fences, no characters, no big tree trunks inside the clearing, no frame. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "fg_lot_oak",
+   "out": "docs/art/v3/raw/fg_lot_oak.png",
+   "ref": [
+    "docs/ui/mockups/user_village_mock_watercolor.png"
+   ],
+   "transparent": true,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Mobile game foreground overlay, portrait 9:16. Use the composition reference image for LAYOUT ONLY: take its foreground (the huge oak framing the left and top, the home under the oak, the open yard in front); ignore its painting style, its characters, its buildings and its UI. Only a huge old oak that frames the picture: its trunk runs down the far left edge (no wider than 12% of the width) from 15% to 62% of the height, its leafy canopy with a few acorns covers the whole top 21% of the image and hangs lower on the left side down to 27% of the height, and a clump of ferns, a mossy rock and two small mushrooms sit in the bottom-left corner below 93% of the height, plus a smaller fern clump in the bottom-right corner. The whole centre and right of the image is empty background so the clearing behind stays visible. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. No buildings, no characters. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "bg_village",
+   "out": "docs/art/v3/raw/bg_village.png",
+   "ref": [
+    "docs/ui/mockups/user_village_mock_watercolor.png"
+   ],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Mobile game background, portrait 9:16: an EMPTY forest village street for banks and lenders, seen from slightly above. Use the composition reference image for LAYOUT ONLY: take its upper half (a dirt path winding up a gentle slope with building plots on both sides, bigger near, smaller far); ignore its painting style, its characters, its buildings and its UI. Top 22% of the image: a soft sky with two small clouds, then distant forest hills and a tree line down to 28% of the height. Below that a meadow slope fills the image. One winding light dirt path enters at the bottom left (28% across, 88% down), climbs through (40%,76%), (55%,70%), (51%,59%), (49%,53%), (47%,43%) and ends at a small village square at (47%,37%). Short side paths branch to EMPTY flat oval grassy clearings centred at (across, down): (31%,36%), (65%,35%), (27%,52%), (72%,52%), a wide one at (34%,67%), (75%,68%), and one at (72%,84%) that lies in deep shadow under dark tangled roots. Clearings stay empty and calm; flowers, mushrooms, stones, low fences and lanterns only between them. Farther things are smaller and paler. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. No buildings, no characters, no water, no frame. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "fg_village_frame",
+   "out": "docs/art/v3/raw/fg_village_frame.png",
+   "ref": [
+    "docs/ui/mockups/user_village_mock_watercolor.png"
+   ],
+   "transparent": true,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Mobile game foreground overlay, portrait 9:16. Only a frame of foliage: leafy oak branches hanging into the top 20% of the image (thicker toward the top left and top right corners, thin in the middle), a fern and bush clump in the bottom-left corner below 92% of the height and dark twisted roots in the bottom-right corner below 90% of the height. The whole centre of the image is empty background. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. No buildings, no characters, no tree trunks in the middle. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_fox",
+   "out": "docs/art/v3/raw/npc_fox.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A character bust portrait for a mobile game dialog. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes. Subject: a cool senior fox with shirt sleeves rolled up, one eyebrow raised, a knowing half smile, a rolled leaf newspaper under one arm. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_bear",
+   "out": "docs/art/v3/raw/npc_bear.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A character bust portrait for a mobile game dialog. Head and shoulders, facing slightly left toward the viewer, cute simple dot eyes. Subject: a big boastful bear 'big brother' in a knitted vest giving a thumbs up, overconfident grin. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_badger_stand",
+   "out": "docs/art/v3/raw/npc_badger_stand.png",
+   "ref": [
+    "public/art/v2/npc_badger.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single full-body character sprite for a mobile game village, standing on the ground, three-quarter view facing left, feet at the bottom centre of the image, nothing cropped. Subject: a gruff middle-aged badger loan shark in a worn cardigan and tie, arms crossed, waiting, holding a thick ledger under one arm, tired heavy-lidded eyes. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_viper_stand",
+   "out": "docs/art/v3/raw/npc_viper_stand.png",
+   "ref": [
+    "public/art/v2/npc_viper.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single full-body character sprite for a mobile game village, standing on the ground, three-quarter view facing left, feet at the bottom centre of the image, nothing cropped. Subject: a calm red-brown viper loan shark in a neat dark three-piece suit with a pocket watch chain, coiled upright, holding a quill pen and a small black ledger, a polite cold smile. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "npc_seize_cart",
+   "out": "docs/art/v3/raw/npc_seize_cart.png",
+   "ref": [
+    "public/art/v2/npc_badger.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single game sprite, side view facing left, nothing cropped. Subject: a wooden handcart with a rope and a blank red tag tied to its handle, pulled by one bored badger thug in a dark suit and pushed by another who is yawning; the cart bed is EMPTY (the game puts the seized item on it). Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "vil_hedgehog",
+   "out": "docs/art/v3/raw/vil_hedgehog.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single small full-body villager sprite for a mobile game village, strict side view facing right, mid-step walking pose, feet at the bottom centre, nothing cropped, cute simple dot eyes. Subject: a hedgehog clerk with round glasses carrying a stack of bark ledgers. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "vil_duck",
+   "out": "docs/art/v3/raw/vil_duck.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single small full-body villager sprite for a mobile game village, strict side view facing right, mid-step walking pose, feet at the bottom centre, nothing cropped, cute simple dot eyes. Subject: a duck postman with a canvas shoulder bag full of leaf letters and a small cap. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "vil_mole",
+   "out": "docs/art/v3/raw/vil_mole.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single small full-body villager sprite for a mobile game village, strict side view facing right, mid-step walking pose, feet at the bottom centre, nothing cropped, cute simple dot eyes. Subject: a mole carpenter in overalls carrying a plank on one shoulder and a wooden mallet. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_run_a",
+   "out": "docs/art/v3/raw/hero_run_a.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png",
+    "public/art/v2/hero_run.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Pose: running hard inside a wheel, strict side view facing right, frame A of a two-frame run cycle: right leg stretched forward, left leg kicked back, arms pumping opposite, determined face, two small sweat drops, tail streaming behind. Full body, centred, feet at 88% of the image height. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "hero_run_b",
+   "out": "docs/art/v3/raw/hero_run_b.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png",
+    "public/art/v2/hero_run.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. Pose: running hard inside a wheel, strict side view facing right, frame B of a two-frame run cycle: both legs gathered under the body mid-stride with the left leg coming forward, arms swapped, same face, same size and same position as frame A. Full body, centred, feet at 88% of the image height. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_DTC_open",
+   "out": "docs/art/v3/raw/wheel_DTC_open.png",
+   "ref": [
+    "public/art/v2/wheel_DTC.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop: a big wooden hamster wheel that a chipmunk runs INSIDE, three-quarter view with the open side toward the viewer and slightly to the left. The near side of the drum is completely open: no spokes, no stand and no beam cross the opening, so the whole inside floor of the drum is visible and EMPTY (no character). The stand holds the axle from behind and from the two outer sides only, with a low base plank in front that stays below the drum. The drum is centred in the image, its opening about 62% of the image height. Warm acorn-brown wood with iron bands and a small blank plate shaped like an acorn on the base. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_BTH_open",
+   "out": "docs/art/v3/raw/wheel_BTH_open.png",
+   "ref": [
+    "public/art/v2/wheel_BTH.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop: a big wooden hamster wheel that a chipmunk runs INSIDE, three-quarter view with the open side toward the viewer and slightly to the left. The near side of the drum is completely open: no spokes, no stand and no beam cross the opening, so the whole inside floor of the drum is visible and EMPTY (no character). The stand holds the axle from behind and from the two outer sides only, with a low base plank in front that stays below the drum. The drum is centred in the image, its opening about 62% of the image height. Chestnut-purple painted wood with dark blue iron bands and a small crescent-moon emblem plate on the base. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_MDT_open",
+   "out": "docs/art/v3/raw/wheel_MDT_open.png",
+   "ref": [
+    "public/art/v2/wheel_MDT.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop: a big wooden hamster wheel that a chipmunk runs INSIDE, three-quarter view with the open side toward the viewer and slightly to the left. The near side of the drum is completely open: no spokes, no stand and no beam cross the opening, so the whole inside floor of the drum is visible and EMPTY (no character). The stand holds the axle from behind and from the two outer sides only, with a low base plank in front that stays below the drum. The drum is centred in the image, its opening about 62% of the image height. Bright yellow painted wood with a small paw-print emblem plate on the base, a little showy. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_SMS_open",
+   "out": "docs/art/v3/raw/wheel_SMS_open.png",
+   "ref": [
+    "public/art/v2/wheel_SMS.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop: a big wooden hamster wheel that a chipmunk runs INSIDE, three-quarter view with the open side toward the viewer and slightly to the left. The near side of the drum is completely open: no spokes, no stand and no beam cross the opening, so the whole inside floor of the drum is visible and EMPTY (no character). The stand holds the axle from behind and from the two outer sides only, with a low base plank in front that stays below the drum. The drum is centred in the image, its opening about 62% of the image height. Neat blue painted wood with silver bands and a small plain square emblem plate on the base, very tidy. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_crate_empty",
+   "out": "docs/art/v3/raw/prop_crate_empty.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: a small open wooden crate with a blank acorn-shaped brand plate on its front, rope handles, empty inside. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_crate_full",
+   "out": "docs/art/v3/raw/prop_crate_full.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: the same small open wooden crate with a blank acorn-shaped brand plate and rope handles, now heaped with round coins of four colours (brown, purple, yellow, blue), two coins spilling over the edge. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_cairn",
+   "out": "docs/art/v3/raw/prop_cairn.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: a small ancestor cairn of five stacked mossy river stones with a tiny unlit lantern and one white wildflower at its foot, a blank bark plate leaning on it. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_sign_stake",
+   "out": "docs/art/v3/raw/prop_sign_stake.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: a crooked wooden stake sign hammered into the ground with a blank bark board and a tiny drawing of a hamster wheel on it, a small ribbon tied to the post. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_desk",
+   "out": "docs/art/v3/raw/prop_desk.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: a tree-stump trading desk with a small stool, a lit lantern, a pile of leaf papers with blank zigzag line charts, an abacus made of acorns and a quill in an inkpot. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_gate_sign",
+   "out": "docs/art/v3/raw/prop_gate_sign.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: a wooden signpost at a path with two blank arrow boards pointing in opposite directions and a small lantern hanging from it. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_DTC_drum",
+   "out": "docs/art/v3/raw/wheel_DTC_drum.png",
+   "ref": [
+    "public/art/v2/wheel_DTC.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated add-on part for a mobile game, three-quarter view from slightly above matching the wheel reference image, centred, nothing cropped, no ground patch. Subject: ONLY the drum of the hamster wheel from the reference image (warm acorn-brown wood with iron bands), open side toward the viewer and slightly to the left, with a short stub of axle, and NO stand, NO base, NO emblem; it will be stacked behind the main wheel to make a double or triple wheel, so keep the same angle and proportions as the reference. Empty inside. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_BTH_drum",
+   "out": "docs/art/v3/raw/wheel_BTH_drum.png",
+   "ref": [
+    "public/art/v2/wheel_BTH.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated add-on part for a mobile game, three-quarter view from slightly above matching the wheel reference image, centred, nothing cropped, no ground patch. Subject: ONLY the drum of the hamster wheel from the reference image (chestnut-purple painted wood with dark blue iron bands), open side toward the viewer and slightly to the left, with a short stub of axle, and NO stand, NO base, NO emblem; it will be stacked behind the main wheel to make a double or triple wheel, so keep the same angle and proportions as the reference. Empty inside. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_MDT_drum",
+   "out": "docs/art/v3/raw/wheel_MDT_drum.png",
+   "ref": [
+    "public/art/v2/wheel_MDT.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated add-on part for a mobile game, three-quarter view from slightly above matching the wheel reference image, centred, nothing cropped, no ground patch. Subject: ONLY the drum of the hamster wheel from the reference image (bright yellow painted wood), open side toward the viewer and slightly to the left, with a short stub of axle, and NO stand, NO base, NO emblem; it will be stacked behind the main wheel to make a double or triple wheel, so keep the same angle and proportions as the reference. Empty inside. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "wheel_SMS_drum",
+   "out": "docs/art/v3/raw/wheel_SMS_drum.png",
+   "ref": [
+    "public/art/v2/wheel_SMS.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated add-on part for a mobile game, three-quarter view from slightly above matching the wheel reference image, centred, nothing cropped, no ground patch. Subject: ONLY the drum of the hamster wheel from the reference image (neat blue painted wood with silver bands), open side toward the viewer and slightly to the left, with a short stub of axle, and NO stand, NO base, NO emblem; it will be stacked behind the main wheel to make a double or triple wheel, so keep the same angle and proportions as the reference. Empty inside. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "addon_row",
+   "out": "docs/art/v3/raw/addon_row.png",
+   "ref": [
+    "public/art/v2/wheel_DTC.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated add-on part for a mobile game, three-quarter view from slightly above matching the wheel reference image, centred, nothing cropped, no ground patch. Subject: one long log beam with a shared axle carrying five very small plain hamster wheels side by side and a belt, about five times as wide as tall; it mounts across the back of a big wheel. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "addon_generator",
+   "out": "docs/art/v3/raw/addon_generator.png",
+   "ref": [
+    "public/art/v2/wheel_DTC.webp"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated add-on part for a mobile game, three-quarter view from slightly above matching the wheel reference image, centred, nothing cropped, no ground patch. Subject: a small forest-made power generator that sits right beside a hamster wheel: a barrel on its side with copper bands, a hand crank, a little tin chimney and one thick cable ending in a loose plug; built from wood, tin and rope, not a modern machine. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "addon_helper",
+   "out": "docs/art/v3/raw/addon_helper.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single small full-body character sprite, strict side view facing right, running hard mid-stride, feet at 88% of the image height, nothing cropped, cute simple dot eyes. Subject: a tiny grey field mouse part-timer with a cloth headband and a whistle on a string, clearly smaller and plainer than a chipmunk; it runs inside a wheel behind the main character. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "ext_shed",
+   "out": "docs/art/v3/raw/ext_shed.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated building extension part for a mobile game, three-quarter front view from slightly above, centred, nothing cropped, no ground patch. It will be attached to the side of a small forest house, so its left side is a flat cut wall with no decoration. Subject: a low lean-to mining shed of logs with a leaf-thatch roof and wide open double doors showing small hamster wheels inside, a lantern hook under the eave. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "ext_powerroom",
+   "out": "docs/art/v3/raw/ext_powerroom.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated building extension part for a mobile game, three-quarter front view from slightly above, centred, nothing cropped, no ground patch. It will be attached to the side of a small forest house, so its left side is a flat cut wall with no decoration. Subject: an open cellar hatch set in the ground at the foot of a house wall, two wooden doors flung open, warm yellow light and three thick cables coming out, a small blank warning plate. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "ext_factory",
+   "out": "docs/art/v3/raw/ext_factory.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated building extension part for a mobile game, three-quarter front view from slightly above, centred, nothing cropped, no ground patch. It will be attached to the side of a small forest house, so its left side is a flat cut wall with no decoration. Subject: a tall narrow workshop tower of stacked logs with three tin chimneys on top and a big water-wheel-like hamster wheel on its side wall, lit round windows; a little too big for the house it leans on. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_tarp",
+   "out": "docs/art/v3/raw/prop_tarp.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop for a mobile game village yard, three-quarter view from slightly above, sitting on the ground with no ground patch, centred, nothing cropped. Subject: a patched canvas tarp draped over a round wheel-shaped object so only the lumpy round shape shows, tied down with rope and two pegs. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "tag_seizure",
+   "out": "docs/art/v3/raw/tag_seizure.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game sticker, flat front view, centred. Subject: a red paper seizure tag with a torn top edge, a wax seal stamp mark and a short string, the face of the tag left completely blank. Background: one perfectly flat uniform pure green (#00FF00), no shadow on the background. Do not use green on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "green"
+  },
+  {
+   "id": "tag_iou",
+   "out": "docs/art/v3/raw/tag_iou.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game sticker, flat front view, centred. Subject: a small cream leaf-paper debt tag folded once, hanging on a short twine loop, with three faint ruled lines and no writing. Background: one perfectly flat uniform pure green (#00FF00), no shadow on the background. Do not use green on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "green"
+  },
+  {
+   "id": "tag_boards",
+   "out": "docs/art/v3/raw/tag_boards.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game overlay, flat front view, centred. Subject: two rough wooden planks nailed in an X shape with four bent nails, as used to board up a small door. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "prop_closed_sign",
+   "out": "docs/art/v3/raw/prop_closed_sign.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game prop, flat front view, centred. Subject: a small wooden hanging door sign on a twine loop with a blank face and a drawing of a closed eye-shaped crescent moon. Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "ui_envelope_sealed",
+   "out": "docs/art/v3/raw/ui_envelope_sealed.png",
+   "ref": [],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single isolated game item, flat front view, centred. Subject: a sealed envelope folded from a large dry oak leaf, tied with twine and closed with a round wax seal that has no emblem (plain disc, light grey so the game can tint it). Background: one perfectly flat uniform pure magenta (#FF00FF), no shadow on the background. Do not use magenta or pink on the subject. No text, no letters, no numbers anywhere; every sign is a blank plate.",
+   "chroma_key": "magenta"
+  },
+  {
+   "id": "end_cause_LIQ",
+   "out": "docs/art/v3/raw/end_cause_LIQ.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: night inside a patched tent, a stump desk with a blown-out lantern and torn leaf charts all over the floor; the chipmunk sits on the ground hugging its knees, hollow white eyes, mouth slightly open. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_TIP",
+   "out": "docs/art/v3/raw/end_cause_TIP.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: an empty village square at dusk under a big blank wooden notice board; the chipmunk stands alone holding a crumpled leaf flyer, eyes brimming with tears, while a fox walks away in the far background without looking back. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_SHARK",
+   "out": "docs/art/v3/raw/end_cause_SHARK.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: a dim loan office at night; the chipmunk on its knees scrubs the floor with a rag beside a bucket, forced smile and tears, while a badger in a cardigan sits at the desk yawning over a ledger. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_BANK",
+   "out": "docs/art/v3/raw/end_cause_BANK.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: a rainy evening in front of a log cabin whose door and windows carry blank red auction tags; the chipmunk sits outside on a tied bundle under a single big leaf as an umbrella, staring ahead. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_UPKEEP",
+   "out": "docs/art/v3/raw/end_cause_UPKEEP.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: a cold night under a small log bridge; the chipmunk curled up asleep on dry leaves with a leaf blanket and one acorn beside it, lantern lights of the village far away. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_SEIZE",
+   "out": "docs/art/v3/raw/end_cause_SEIZE.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: an empty dirt yard at dawn with round marks on the ground where wheels used to stand; a handcart loaded with a tarp-covered wheel leaves in the far distance; the chipmunk kneels in the middle wailing with tears flying. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_FRIEND",
+   "out": "docs/art/v3/raw/end_cause_FRIEND.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: a narrow alley of five small forest houses whose doors are all shut, two of them boarded with planks; the chipmunk sits alone on a doorstep holding two cups, one for nobody, trembling mouth. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  },
+  {
+   "id": "end_cause_LEGACY",
+   "out": "docs/art/v3/raw/end_cause_LEGACY.png",
+   "ref": [
+    "docs/art/style-bold/bold_hero.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Game ending illustration, portrait 3:4. Draw OUR character from the character reference image (identity only, not its rendering style): a small well-proportioned chipmunk with a balanced slim build, orange-tan fur, dark brown stripes along the back and head and around the eyes, cream belly and muzzle, short round ears, a little red neck ribbon, simple dot eyes. It shows life AFTER the consequence, not the moment of receiving a notice. The world is in cool blue and grey, the chipmunk stays warm orange. Black comedy: cute character, harsh outcome; no blood, no injury, no gore, no death shown, nothing that reads as self-harm. Keep the lower 30% of the image calm and dark so a title can sit on it. Cozy temperate forest village of small animals (oak, beech, ferns, moss, log and stump buildings, lanterns). NO palm trees, NO cactus, NO tropical plants, NO modern machines or shop fittings. Scene: a mossy ancestor cairn at dusk with a red neck ribbon tied to its top stone and nobody beside it; in front, a very small young chipmunk child holds a ledger far too big for it and looks up, puzzled. No text, no letters, no numbers anywhere; every sign is a blank plate."
+  }
+ ]
+}

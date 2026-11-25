@@ -72,13 +72,13 @@
     },
     {
       "id": "helper",
-      "name": "알바 칩멍크",
+      "name": "알바 햄스터",
       "cost": 60000,
       "grossPerSettle": 14700,
       "netPerSec": 24.5,
       "needHouse": 0,
       "bankCollateral": false,
-      "seenAs": "알바 칩멍크가 옆 쳇바퀴를 돌린다"
+      "seenAs": "알바 햄스터가 옆 쳇바퀴를 돌린다"
     },
     {
       "id": "row",

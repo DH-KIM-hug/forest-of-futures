@@ -1,0 +1,1031 @@
+{
+ "_doc": "2026-11-25 게임 화면 기획 v3(docs/ui/GAME_SCREEN_PLAN_v3.md 11장)의 그림 작업표. 그림체 = 아이소 2:1, 진회색 굵고 부드러운 선, 차분한 파스텔 평면 색, 점 눈, 지붕 걷은 단면 건물. docs/art/ref/tsuki_style/ 의 상용 게임 화면은 생성 참고 이미지로 넣지 않는다(문법만 글로 옮겼다). 먼저 style_anchor_lot 과 hero_ref 두 장을 뽑아(승인된 주인공 그림은 없고 hero_ref 가 새 기준이 된다) 사용자 확인을 받고, 그 두 장을 나머지 작업의 ref 로 쓴다. 모든 prompt 는 {STYLE} 한 칸으로 시작하고, 돌리기 전에 _style.iso.sentence 로 바꾼다. 결과는 docs/art/v4/raw, 앱에는 webp 로 public/art/v4. 시간대 색조는 그림에 넣지 않는다(낮 기준으로 그리고 앱이 색조를 덮는다). 글자·숫자는 그리지 않고 앱이 얹는다. 엔딩 사진은 형식 시험용 6장만 넣었다(200장은 마지막에).",
+ "_style": {
+  "iso": {
+   "sentence": "Cozy isometric mobile game art: thick soft dark warm-grey outlines (#4A4640) of even weight with rounded corners, flat muted pastel colour fills, at most one flat darker shade per surface, no gradients, no texture noise, tiny dot eyes on every character, small chunky proportions, buildings drawn as cutaways with the roof removed, soft even daylight from the top left.",
+   "ref_prepend": [],
+   "note": "주인공의 상징 소품은 폰에 묶은 작은 붉은 리본 고리(폰 줄) 하나다(DECISIONS_LOG T-6 최종 2026-11-25, T-8). 주인공은 몸에 아무것도 걸치지 않는다: 꼬리 띠·머리띠 없음, 머리·이마·목·귀·꼬리에 아무것도 없다. 리본은 폰 모서리 짧은 줄 끝의 작은 나비매듭으로(모든 자세에서 같은 모양, 기준 docs/art/candidates/hero_blob_v2_phonecharm.png), 폰을 쥔 장면에서만 폰과 함께 보이고 손이 바쁘면 폰과 고리는 가까이 두거나 생략한다. 주인공은 부드러운 서양배 모양 덩어리 몸, 짧고 통통한 팔다리, 꼬리 뒤로 말린 큰 복슬 꼬리, 연한 따뜻한 주황갈색 털, 옅은 크림색 얼굴과 배, 등 줄무늬는 희미한 한 줄(흰색 금지). 기본 얼굴은 낮고 멀리 벌어진 아주 작은 검은 점 눈 둘과 작은 입, 눈썹·볼 터치 없음. 무모한 성격은 얼굴이 아니라 상황과 소품(늘 폰을 들고 있음)으로 보이고, 감정 표정은 특정 순간에만 쓴다. 장면 속에서는 게임 스프라이트처럼 아주 작게 그린다. 프롤로그에서 리본을 찾기 전 장면(pro_arrival)만 폰에 고리가 없다. 주인공 몸·얼굴 기준 후보는 docs/art/candidates/hero_blob_v2_phonecharm.png (서양배 덩어리, 낮고 넓은 점 눈, 무표정, 큰 꼬리, 폰을 쥔 손)이며 hero_ref 의 ref 로만 쓰고 그림의 붉은 꼬리 띠는 따라 그리지 않는다. hero_headband_lot_v1.png 는 docs/art/rejected/ 로 옮겼다. 기각 시안: docs/art/rejected/hero_sheet_v1_sticker.png. 투명 그림은 초록 키로 받고 가장자리는 또렷하게."
+  }
+ },
+ "jobs": [
+  {
+   "id": "style_anchor_lot",
+   "out": "docs/art/v4/raw/style_anchor_lot.png",
+   "ref": [],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Style anchor scene, portrait 9:16. Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A small private forest clearing: one big oak at the back, a patched canvas tent under it, a pile of fallen leaves with acorns, a tiny bark mailbox, a small cairn of mossy stones under the oak, short grass with a few flowers, a dirt path leaving at the bottom left. One small chipmunk stands by the leaf pile. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "hero_ref",
+   "out": "docs/art/v4/raw/hero_ref.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/candidates/hero_blob_v2_phonecharm.png"
+   ],
+   "transparent": false,
+   "aspect": "16:9",
+   "prompt": "{STYLE} Character reference sheet on a plain cream background: the same chipmunk four times in a row (front, three-quarter front, side, three-quarter back), standing, same small size, plain neutral pose, each holding his smartphone in both paws with the small red ribbon phone charm hanging from it, no other props; nothing is worn on his body, so the tail, head and neck are bare in every view. Keep him very small, round and simple, with the calm blank dot-eyed face in every view. Use the reference image hero_blob_v1.png ONLY for the body shape and the face (pear-shaped blob, low wide dot eyes, blank face, big tail, phone in paws); do NOT copy its red tail band, and draw no band on the tail. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "bg_lot",
+   "out": "docs/art/v4/raw/bg_lot.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Game background, portrait 9:16. Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). An EMPTY diamond-shaped forest clearing that fills the picture and is cropped by the left and right edges: short grass floor, a low twig fence along the two back edges, a wall of round oak and beech trees behind the fence, a dirt path leaving at the bottom left corner, a few flowers and ferns along the front. NO buildings, NO characters, NO big tree inside the clearing. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "lot_oak",
+   "out": "docs/art/v4/raw/lot_oak.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). One huge old oak tree with a wide round canopy and a thick trunk, a few acorns on the branches, thick roots showing at the base. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "lot_leafpile",
+   "out": "docs/art/v4/raw/lot_leafpile.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A low round pile of fallen oak leaves with a dozen acorns lying on it, on a small woven mat. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "home_0_tent",
+   "out": "docs/art/v4/raw/home_0_tent.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero's home, stage 0: a patched canvas tent with the front flap open; inside only a bedroll and a bowl. The two front walls are cut away to knee height. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "home_1_cabin",
+   "out": "docs/art/v4/raw/home_1_cabin.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero's home, stage 1: a small log cabin with the ROOF REMOVED so the inside is visible from above (cutaway): plank floor, two back walls, a bed, a small table, a stove. The two front walls are cut away to knee height. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "home_2_store",
+   "out": "docs/art/v4/raw/home_2_store.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero's home, stage 2: an acorn storehouse home with the ROOF REMOVED (cutaway): plank floor, two back walls with shelves of acorn jars, a bed, a table, a rug, a lamp. The two front walls are cut away to knee height. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "home_3_villa",
+   "out": "docs/art/v4/raw/home_3_villa.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero's home, stage 3: a timber villa with the ROOF REMOVED (cutaway): two rooms, a sofa, a bookshelf, a big bed, potted plants, a window seat. The two front walls are cut away to knee height. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "home_4_mansion",
+   "out": "docs/art/v4/raw/home_4_mansion.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero's home, stage 4: a grand golden-trimmed timber mansion with the ROOF REMOVED (cutaway): three rooms, a chandelier of lanterns, a long table, a big bed, framed blank pictures. The two front walls are cut away to knee height. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "home_empty_essentials",
+   "out": "docs/art/v4/raw/home_empty_essentials.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The inside of a cutaway log cabin after a seizure: the room is almost EMPTY, only a bed with bedding and one bowl remain; pale clean rectangles on the plank floor mark where furniture stood; one red paper tag left on the door frame. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "works_deck",
+   "out": "docs/art/v4/raw/works_deck.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A low square plank deck workshop with knee-high plank walls on the two back sides and four round worn marks on the floor where wheels stand, EMPTY (no wheels). Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "wheel_DTC",
+   "out": "docs/art/v4/raw/wheel_DTC.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). One wooden running wheel on a short stand, open face toward the viewer so a small animal can be seen running inside, EMPTY, painted warm brown with an acorn emblem on the stand. Nothing crosses the opening. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "wheel_BTH",
+   "out": "docs/art/v4/raw/wheel_BTH.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). One wooden running wheel on a short stand, open face toward the viewer so a small animal can be seen running inside, EMPTY, painted muted purple with a crescent emblem on the stand. Nothing crosses the opening. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "wheel_MDT",
+   "out": "docs/art/v4/raw/wheel_MDT.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). One wooden running wheel on a short stand, open face toward the viewer so a small animal can be seen running inside, EMPTY, painted muted yellow with a paw emblem on the stand. Nothing crosses the opening. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "wheel_SMS",
+   "out": "docs/art/v4/raw/wheel_SMS.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). One wooden running wheel on a short stand, open face toward the viewer so a small animal can be seen running inside, EMPTY, painted muted blue with a square emblem on the stand. Nothing crosses the opening. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "addon_drum",
+   "out": "docs/art/v4/raw/addon_drum.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). ONLY a second wheel drum with no stand, to be layered behind a running wheel, plain unpainted wood. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "addon_generator",
+   "out": "docs/art/v4/raw/addon_generator.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A small forest-made generator: a barrel with a crank, a tin chimney and one thick cable. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "addon_helper",
+   "out": "docs/art/v4/raw/addon_helper.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A tiny round golden-and-cream hamster with a small work cap, running inside a wheel pose, chubby cheeks, clearly smaller than the chipmunk hero, three-quarter view. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "addon_chimney_tower",
+   "out": "docs/art/v4/raw/addon_chimney_tower.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A narrow plank workshop tower with three tin chimneys, to stand at the back corner of a deck. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "addon_cellar_hatch",
+   "out": "docs/art/v4/raw/addon_cellar_hatch.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). An open cellar hatch in the ground with warm yellow light inside and three thick cables coming out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_coldwallet_stand",
+   "out": "docs/art/v4/raw/prop_coldwallet_stand.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A small stump stand holding a cute hardware wallet device shaped like an acorn: wooden acorn-cap top, cream body, a tiny blank mint screen, two small round buttons, a short twine cord. Original design, not any real product. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_coldwallet_device",
+   "out": "docs/art/v4/raw/ui_coldwallet_device.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Front view, large and simple: the same cute acorn-shaped hardware wallet device, wooden acorn-cap top, cream body, a blank mint screen, two round buttons. Original design, not any real product. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_tab_stickers",
+   "out": "docs/art/v4/raw/ui_tab_stickers.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "16:9",
+   "prompt": "{STYLE} A row of three round die-cut stickers with thick white borders: a tiny clearing with a tent, a folded paper map, a small rounded phone with a mint screen. Evenly spaced. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_mailbox",
+   "out": "docs/art/v4/raw/prop_mailbox.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A tiny bark mailbox on a twig post with a rolled blank newspaper sticking out and a small flag raised. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_cairn",
+   "out": "docs/art/v4/raw/prop_cairn.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A small cairn of five stacked mossy stones under oak roots, with a tiny lantern and one flower. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_gold_jar",
+   "out": "docs/art/v4/raw/prop_gold_jar.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A small glass jar with a cork lid holding a few thick golden coins, each coin embossed with a plain acorn shape, standing beside mossy stones. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_sign_stake",
+   "out": "docs/art/v4/raw/prop_sign_stake.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A crooked stake sign with a blank board. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_tarp",
+   "out": "docs/art/v4/raw/prop_tarp.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A patched tarp draped over a round wheel shape. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "tag_seizure",
+   "out": "docs/art/v4/raw/tag_seizure.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A red paper seizure tag on twine, blank face, slightly tilted. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_seize_cart",
+   "out": "docs/art/v4/raw/npc_seize_cart.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A wooden handcart with a blank red tag, pulled by two bored badger workers in caps; the cart bed is EMPTY. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_idle",
+   "out": "docs/art/v4/raw/hero_idle.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, standing, relaxed, calm blank face. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_pick",
+   "out": "docs/art/v4/raw/hero_pick.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, bending down to pick up an acorn. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_run_a",
+   "out": "docs/art/v4/raw/hero_run_a.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, running inside a wheel, frame A of a two-frame cycle, strict side view. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_run_b",
+   "out": "docs/art/v4/raw/hero_run_b.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, running inside a wheel, frame B of a two-frame cycle, strict side view, same size and place as frame A. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_sweat",
+   "out": "docs/art/v4/raw/hero_sweat.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, standing stiff with one sweat drop and a forced smile. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_lie_bed",
+   "out": "docs/art/v4/raw/hero_lie_bed.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, lying on his back on a bed looking up at the ceiling, arms on the blanket, eyes open, tired. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_phone",
+   "out": "docs/art/v4/raw/hero_phone.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, sitting up in bed holding a small glowing phone with both paws. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_stamp",
+   "out": "docs/art/v4/raw/hero_stamp.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, pressing one inked paw down on a paper, seen from three-quarter above. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_joy",
+   "out": "docs/art/v4/raw/hero_joy.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, jumping with both arms up. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_carry_box",
+   "out": "docs/art/v4/raw/hero_carry_box.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, carrying a cardboard-like bark box with both arms. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "hero_ledger",
+   "out": "docs/art/v4/raw/hero_ledger.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). The hero chipmunk, holding a thick ledger book against the chest with both arms, looking up. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_owl",
+   "out": "docs/art/v4/raw/npc_owl.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a tidy owl bank branch manager with round glasses and sleeve covers. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_weasel",
+   "out": "docs/art/v4/raw/npc_weasel.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a slick smiling weasel salesman in a mustard waistcoat. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_badger",
+   "out": "docs/art/v4/raw/npc_badger.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a gruff badger loan office boss, arms crossed, holding a ledger. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_viper",
+   "out": "docs/art/v4/raw/npc_viper.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a calm viper in a three-piece suit holding a quill. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_thug",
+   "out": "docs/art/v4/raw/npc_thug.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a big bored badger thug yawning, a toothpick in his mouth. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_squirrel",
+   "out": "docs/art/v4/raw/npc_squirrel.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a kind young squirrel friend with a satchel. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_raccoon",
+   "out": "docs/art/v4/raw/npc_raccoon.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a chatty raccoon friend with a cap. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_rabbit",
+   "out": "docs/art/v4/raw/npc_rabbit.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a careful rabbit neighbour in an apron. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_fox",
+   "out": "docs/art/v4/raw/npc_fox.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a cool senior fox with rolled-up sleeves. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "npc_bear",
+   "out": "docs/art/v4/raw/npc_bear.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Full-body standing character: a big boastful bear in a knitted vest. Tiny dot eyes, same head-to-body proportion as the hero reference. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "int_bank",
+   "out": "docs/art/v4/raw/int_bank.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. A village cooperative bank inside a hollow stump: a waiting area with three stump stools, an acorn-cap number-ticket dispenser on a post, two counter windows of polished wood (one with a small blank tax sign), a potted fern, a blank notice board. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "int_capital",
+   "out": "docs/art/v4/raw/int_capital.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. A flashy small loan-and-brokerage shop: three display pedestals in a row along the left wall (a money pouch, a small phone tied with a gift ribbon, a rolled document with a red seal), a glossy counter, gold-painted leaf decorations, a blank banner. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "int_shark1",
+   "out": "docs/art/v4/raw/int_shark1.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. A shabby badger loan office: two display pedestals (a fat money sack; an empty velvet cushion for pawned keepsakes), a heavy log safe, a scratched desk with a ledger, one wobbly visitor stool, a dusty plant, a wall of small blank framed photos. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "int_shark2",
+   "out": "docs/art/v4/raw/int_shark2.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. A dim back-alley lending den under tree roots: one lantern, one display pedestal with a visibly small money pouch, a black ledger on a low table, a shelf of blank address cards, two shadowy doorways. Dark but colourful, not grey. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "int_friend",
+   "out": "docs/art/v4/raw/int_friend.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. A cosy small friend's home: a round table with two cups, a bookshelf, a rug, a window, a coat hook. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "int_archive",
+   "out": "docs/art/v4/raw/int_archive.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. A village record house: a long table with an open photo album, strings of blank instant photos pegged along the back walls, a lantern, drawers. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "prop_pedestal",
+   "out": "docs/art/v4/raw/prop_pedestal.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A short round stump display pedestal with a small cloth on top, empty. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_onloan_sign",
+   "out": "docs/art/v4/raw/prop_onloan_sign.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A small standing wooden sign with a blank board and a red ribbon seal, to mark a product that is out on loan. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_ticket",
+   "out": "docs/art/v4/raw/prop_ticket.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} An acorn-cap shaped paper number ticket, blank. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_paper",
+   "out": "docs/art/v4/raw/map_paper.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Top-down hand-drawn paper village map, portrait 3:4, two fold creases, cream paper: a winding dirt path from the bottom left up to a small square at the top, eight empty clearings along it, tiny trees. No buildings, no labels. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "map_lot",
+   "out": "docs/art/v4/raw/map_lot.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a tiny clearing with a tent. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_bank",
+   "out": "docs/art/v4/raw/map_bank.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a hollow-stump bank with a round door. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_capital",
+   "out": "docs/art/v4/raw/map_capital.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a gold-trimmed log shop. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_shark1",
+   "out": "docs/art/v4/raw/map_shark1.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a squat dark log office with a heavy door. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_shark2",
+   "out": "docs/art/v4/raw/map_shark2.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a dark gap between tree roots with one lantern. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_friends",
+   "out": "docs/art/v4/raw/map_friends.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a short row of five small doors under one mossy roof. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_archive",
+   "out": "docs/art/v4/raw/map_archive.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a small record house with a lantern. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_board",
+   "out": "docs/art/v4/raw/map_board.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Map icon building, very simple and chunky: a wooden notice board tower on a small square. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "map_revenge_sign",
+   "out": "docs/art/v4/raw/map_revenge_sign.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A small wooden tally board on a stake with five empty notches and a short red ribbon strip tied to it. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "pro_arrival",
+   "out": "docs/art/v4/raw/pro_arrival.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Prologue: the hero walks up a dirt path into a small forest village at dusk carrying one small bundle; lanterns in a few windows; one small log house at the end of the path has dark windows. Quiet, no other characters. The hero is a small slim orange-tan chipmunk with dark stripes, tiny dot eyes, no blush, and NO ribbon yet, and his phone has no charm. He is a very small soft pear-shaped blob with short stubby limbs, a big fluffy curled tail, light warm orange-brown fur, a pale cream face and belly, one faint back stripe, two tiny black dot eyes low and wide apart, a tiny mouth, no eyebrows, holding a small phone. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "int_mother_house",
+   "out": "docs/art/v4/raw/int_mother_house.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cutaway interior with the ROOF REMOVED and the two front walls cut to knee height, plank floor, two back walls, a door gap at the front. EMPTY of characters. The mother's small log house, tidy but emptied: a neatly made bed, an empty coat hook, four closed bark boxes of belongings on the floor, a small table, pale marks on the wall where pictures hung. Late afternoon light through one window. Nobody inside. No blood, no injury, no body, no moment of death, nothing that reads as self-harm. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "prop_box_closed",
+   "out": "docs/art/v4/raw/prop_box_closed.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A closed bark box tied with twine. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_box_apron",
+   "out": "docs/art/v4/raw/prop_box_apron.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). An OPEN bark box; inside: a folded patched apron and a wooden spoon. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_box_photos",
+   "out": "docs/art/v4/raw/prop_box_photos.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). An OPEN bark box; inside: three small instant photos lying face up with flat blank mint photo areas. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_box_ledger",
+   "out": "docs/art/v4/raw/prop_box_ledger.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). An OPEN bark box; inside: one thick worn debt ledger with a blank red tag. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "prop_box_ribbon",
+   "out": "docs/art/v4/raw/prop_box_ribbon.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). An OPEN bark box; inside: a single plain red ribbon (a long strip, not a bow) coiled at the bottom, with a faint soft golden glow. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "memory_mother_1",
+   "out": "docs/art/v4/raw/memory_mother_1.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Old happy photo: a mother chipmunk in an apron and a very small child chipmunk (no ribbon) picking acorns under a big oak, seen from a little distance, warm daylight. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "memory_mother_2",
+   "out": "docs/art/v4/raw/memory_mother_2.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Old happy photo: a mother chipmunk and a small child chipmunk (no ribbon) eating at a little table inside a cosy cutaway log house, warm lamp light. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "fx_reborn_sprout",
+   "out": "docs/art/v4/raw/fx_reborn_sprout.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A fresh oak sprout with two leaves growing from a mound of soil beside mossy cairn stones, a small smartphone resting against a cairn stone with a small red ribbon phone charm hanging from it, the charm glowing with a soft golden light (nothing tied to the sprout). Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "bg_roots_section",
+   "out": "docs/art/v4/raw/bg_roots_section.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "9:16",
+   "prompt": "{STYLE} Side-on cutaway of the ground under an old oak, portrait 9:16: the top 28% is grass with the oak trunk base, a small cairn and a glass jar; below is warm brown soil with THREE thick pale roots winding down separately to the bottom (left, middle, right), each root with four round empty sockets the size of a coin. Small pebbles, no creatures. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "ui_tally_flag",
+   "out": "docs/art/v4/raw/ui_tally_flag.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A small golden pennant flag on a thin pole, flat shading. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_gold_coin",
+   "out": "docs/art/v4/raw/ui_gold_coin.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} One thick golden coin embossed with a plain acorn shape, front view, flat shading. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_contract_paper",
+   "out": "docs/art/v4/raw/ui_contract_paper.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} Top-down view of a blank leaf-paper contract sheet lying on a wooden desk: cream paper with a faint leaf-vein watermark, one folded corner, a ring stain from a cup, a pad of red ink beside it. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "ui_paw_stamp",
+   "out": "docs/art/v4/raw/ui_paw_stamp.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A single red ink paw print of a small chipmunk paw, slightly uneven ink. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_polaroid_frame",
+   "out": "docs/art/v4/raw/ui_polaroid_frame.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} A blank instant photo frame, white border thicker at the bottom, empty photo area filled with flat mint, very slight paper curl. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_polaroid_back",
+   "out": "docs/art/v4/raw/ui_polaroid_back.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": true,
+   "aspect": "1:1",
+   "prompt": "{STYLE} The BACK of an instant photo: plain cream card with a faint grey round stamp outline, blank. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate. Isolated single subject on a flat pure green (#00FF00) background for chroma key, clean hard silhouette edge, no ground shadow."
+  },
+  {
+   "id": "ui_newspaper_blank",
+   "out": "docs/art/v4/raw/ui_newspaper_blank.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "3:4",
+   "prompt": "{STYLE} A blank newspaper front page, slightly creased cream newsprint with empty column rules, an empty masthead band, one empty photo box and one empty side box. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "end_photo_empty_room",
+   "out": "docs/art/v4/raw/end_photo_empty_room.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Ending photo: the hero lies in bed in an almost empty cutaway cabin at night; only the bed, bedding and one bowl remain; a small phone glows on the floor. Cool night colours, the hero stays warm orange. Calm. No blood, no injury, no body, no moment of death, nothing that reads as self-harm. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "end_photo_wheel_hall",
+   "out": "docs/art/v4/raw/end_photo_wheel_hall.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Ending photo: the hero runs alone in one wheel inside a big dim generator hall with rows of identical wheels; a bored badger supervisor with a clipboard stands in the corner. No blood, no injury, no body, no moment of death, nothing that reads as self-harm. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "end_photo_auction_yard",
+   "out": "docs/art/v4/raw/end_photo_auction_yard.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Ending photo: an empty clearing with only round worn marks where wheels stood and a blank auction notice board; the hero stands with a small bundle beside a tent. Daytime, not near any water. No blood, no injury, no body, no moment of death, nothing that reads as self-harm. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "end_photo_cement",
+   "out": "docs/art/v4/raw/end_photo_cement.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png",
+    "docs/art/style-bold/despair/cement_a.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Old-cartoon gangster cliche, the moment BEFORE: two badger thugs calmly pour wet cement from a bucket into a washtub around the hero's feet inside a warehouse; one thug yawns, the other checks a ledger; the hero stands stiff with teary dot eyes. It is clearly the thugs doing it. No result shown. No blood, no injury, no body, no moment of death, nothing that reads as self-harm. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "end_photo_pier_file",
+   "out": "docs/art/v4/raw/end_photo_pier_file.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A plain DAYTIME file photo of a small wooden fishing pier with two fishing rods on stands, a bucket and a blank sign; NO characters at all. Bright and ordinary. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "end_photo_friends_table",
+   "out": "docs/art/v4/raw/end_photo_friends_table.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). A cheerful dinner photo: four animal friends (squirrel, raccoon, rabbit, fox) around a round table with food, smiling at the camera; one chair at the table is EMPTY with a folded napkin on it. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "memory_first_wheel",
+   "out": "docs/art/v4/raw/memory_first_wheel.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Happy memory photo: the hero proudly hugging his first wooden running wheel. Warm daylight. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "memory_cabin_move",
+   "out": "docs/art/v4/raw/memory_cabin_move.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Happy memory photo: the hero in front of a new small log cabin carrying a box. Warm daylight. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "memory_paid_off",
+   "out": "docs/art/v4/raw/memory_paid_off.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Happy memory photo: the hero holding up a paper with a big blank round stamp mark, eyes sparkling. Warm daylight. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  },
+  {
+   "id": "memory_account_open",
+   "out": "docs/art/v4/raw/memory_account_open.png",
+   "ref": [
+    "docs/art/v4/raw/style_anchor_lot.png",
+    "docs/art/v4/raw/hero_ref.png"
+   ],
+   "transparent": false,
+   "aspect": "1:1",
+   "prompt": "{STYLE} Isometric 2:1 top-down view (camera looking down at about 30 degrees, ground edges running at 26.6 degrees). Happy memory photo: the hero holding a small new phone tied with a gift ribbon, a smiling weasel giving a thumbs up behind him. Warm daylight. OUR hero: a very small, soft, rounded pear-shaped blob of a chipmunk drawn as a tiny game sprite, short stubby limbs, a big fluffy tail curled up behind him, light warm orange-brown fur, a pale cream face and belly, only ONE faint thin stripe down the back, never white fur. His default face is calm and blank: two tiny black dot eyes placed low and wide apart, a tiny mouth, NO eyebrows, NO blush marks. Whenever his paws are free he is holding a small phone. He has ONE small red ribbon tied to his smartphone as a phone charm (nothing worn on his body): a tiny red bow tied to a short strap at the phone's corner, the same small bow in every pose, short ends. He wears NOTHING on his body: no tail band, no headband, nothing on the head, forehead, neck, ears or tail. When his paws are busy, the phone with its charm may be placed nearby or left out. Temperate forest village of small animals; everything is built from forest materials (logs, stumps, planks, bark, leaves, moss, twine, lanterns, acorn caps). NO modern shop fittings, NO concrete, NO palm trees or tropical plants. No text, no letters, no numbers anywhere; every sign, paper and screen is a blank plate."
+  }
+ ]
+}
