@@ -18,7 +18,9 @@ export function Game() {
   const shake = useUI((s) => s.shake);
   const run = g.run;
   const tab = run.view.tab;
+  const away = useGame((s) => s.net.away);
   useEffect(() => { startHistory(); }, []);
+  useEffect(() => { if (away) useUI.getState().markAway(Date.now()); }, [away]);
   const gate = tradeGate(g);
   const pos = Object.values(run.positions);
   const roeSum = pos.reduce((a, p) => a + roePct(p, run.prices[p.market]), 0);
@@ -28,7 +30,7 @@ export function Game() {
     act({ type: 'view', tab: t });
   };
   return (
-    <div className={'app' + (shake ? ' sh' + (shake % 2) : '')} data-time={timeIdx(g)} data-house={run.house} data-pc={g.settings.priceColors}>
+    <div className={'app' + (shake ? ' sh' + (shake % 2) : '')} data-tab={tab} data-time={timeIdx(g)} data-house={run.house} data-pc={g.settings.priceColors}>
       <div className="top">
         <Hud />
         <Ticker />

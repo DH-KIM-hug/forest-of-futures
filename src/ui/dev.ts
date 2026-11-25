@@ -42,6 +42,7 @@ export function buildScenario(name: string, base: GameState): GameState {
     case 'debt': stage1(); run.debts.bank.principal = 300_000; run.debts.shark1.principal = 100_000; run.debts.shark1.overdue = 1; run.debts.shark2.principal = 200_000; run.shark2Open = true; run.debts.tax.principal = 120_000; run.taxDueIn = 6; break;
     case 'visit': stage1(); run.offers = [{ id: 'promo', from: run.settleNo, by: 'capital' }]; break;
     case 'trade0': break;
+    case 'edu': stage1(); run.minedValue = 60_000; run.futures.edu = 1; break;
     case 'trade1': stage1(); run.view.tab = 'trade'; run.minedValue = 31_200; break;
     case 'trade': case 'trade2': stage1(); run.futures = { open: true, edu: 3, mock: true, defaultLev: 10, openedAtSettle: 0, levCap: 50, closedTrades: 3, waiver: false }; run.view.tab = 'trade'; run.minedValue = 90_000; break;
     case 'tradepos': {
@@ -79,6 +80,27 @@ export function applyDev(): void {
   if (!dev && !q.get('sheet') && !q.get('overlay')) return;
   persistFlag.on = false;
   if (dev) useGame.getState().setGame(buildScenario(dev, useGame.getState().g));
+  if (dev === 'away') {
+    const base = useGame.getState().g.run.tick;
+    const hist = useGame.getState().g.run;
+    hist.mkt.bars.BTH = Array.from({ length: 40 }, (_, i) => ({ n: i, o: 68000, h: 68100, l: 67900, c: 68000 + Math.sin(i / 4) * 300 + (i > 24 ? -i * 12 : 0), vol: 1, buy: 0.5, jump: false }));
+    useGame.setState((st) => ({
+      net: {
+        ...st.net,
+        away: {
+          awayHours: 7.87, awaySec: 7 * 3600 + 52 * 60, fromTick: base, toTick: base + 28320, economySettlements: 2,
+          openAtLeave: [{ market: 'BTH', dir: 1, lev: 200, margin: 42000 }],
+          entries: [
+            { tick: base + 8000, kind: 'liq', text: '밤더리움 강제 청산', amount: -42000, market: 'BTH' },
+            { tick: base + 8000, kind: 'tp', text: '도토코인 숏 100배 익절', amount: 18600, market: 'DTC' },
+            { tick: base + 17000, kind: 'settle', text: '정산 1회' },
+          ],
+          bankrupt: false, settlementSummary: { mined: 11400, power: 7980, interest: 18000 },
+        },
+      },
+    }));
+    useUI.getState().markAway(Date.now());
+  }
   const sheet = q.get('sheet');
   if (sheet) {
     if (['bank', 'capital', 'shark1', 'shark2'].includes(sheet)) useUI.getState().open({ k: 'lender', id: sheet as any });

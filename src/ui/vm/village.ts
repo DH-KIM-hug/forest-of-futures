@@ -343,3 +343,8 @@ export function standingCreditors(g: GameState): LenderId[] {
 export const isNightNow = (g: GameState): boolean => isNight(g.run);
 export const timeIdx = (g: GameState): number => timeOfDay(g.run);
 export { houseValue };
+
+/** 속보 띠에 지금 보여 줄 알림 하나(최근 14틱 안, 말풍선 제외). */
+export function tickerNotice(run: GameState['run']) {
+  return [...run.notices].reverse().find((x) => run.tick - x.tick < 14 && x.kind !== 'bubble') ?? null;
+}

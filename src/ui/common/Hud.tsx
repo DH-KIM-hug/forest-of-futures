@@ -1,6 +1,6 @@
 import { useGame } from '../../store/gameStore';
 import { comma } from '../../engine/util';
-import { hudModel, pctStr, short, signed } from '../vm/village';
+import { hudModel, pctStr, short, signed, tickerNotice } from '../vm/village';
 import { legacy } from '../../engine/data';
 import { useUI } from '../uiStore';
 
@@ -71,7 +71,7 @@ const KIND: Record<string, string> = { wire: '속보', settle: '정산', warn: '
 
 export function Ticker() {
   const run = useGame((s) => s.g.run);
-  const n = [...run.notices].reverse().find((x) => run.tick - x.tick < 14 && x.kind !== 'bubble');
+  const n = tickerNotice(run);
   return (
     <div aria-live="polite" style={{ display: 'contents' }}>
       {n && (

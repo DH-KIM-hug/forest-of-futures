@@ -18,12 +18,18 @@ interface UI {
   seenVisit: string | null; // 닫은 제안(key)
   toast: string | null;
   shake: number;
+  trade: { market: string; lev: number | null; pct: number; sl: number | null; tp: number | null };
+  awayDismissed: number;
+  awayAt: number;
   open: (s: Sheet) => void;
   close: () => void;
   setOverlay: (o: Overlay) => void;
   dismissVisit: (key: string) => void;
   say: (t: string | null) => void;
   doShake: () => void;
+  setTrade: (t: Partial<UI['trade']>) => void;
+  dismissAway: () => void;
+  markAway: (at: number) => void;
 }
 
 export const useUI = create<UI>((set) => ({
@@ -32,10 +38,16 @@ export const useUI = create<UI>((set) => ({
   seenVisit: null,
   toast: null,
   shake: 0,
+  trade: { market: 'DTC', lev: null, pct: 25, sl: null, tp: null },
+  awayDismissed: 0,
+  awayAt: 0,
   open: (sheet) => set({ sheet }),
   close: () => set({ sheet: null }),
   setOverlay: (overlay) => set({ overlay }),
   dismissVisit: (key) => set({ seenVisit: key, sheet: null }),
   say: (toast) => set({ toast }),
   doShake: () => set((s) => ({ shake: s.shake + 1 })),
+  setTrade: (t) => set((s) => ({ trade: { ...s.trade, ...t } })),
+  dismissAway: () => set((s) => ({ awayDismissed: s.awayAt })),
+  markAway: (awayAt) => set({ awayAt }),
 }));

@@ -81,8 +81,9 @@ export function LenderSheet({ id }: { id: LenderId }) {
     <SheetFrame title={m.name} sub={m.npc} onBack={close}>
       <div className="npc">
         <Art id={NPC_ART[id]} className="bust" alt={m.npc} />
-        <div className="bubble">{m.line}</div>
+        <div className="bubble"><span>{m.line}</span></div>
       </div>
+      {id === 'capital' && <CapitalFutures />}
       <div className="ledger">
         <div className="row sb">
           <span className="stat">원금 <b>{comma(m.principal)}</b></span>
@@ -130,7 +131,6 @@ export function LenderSheet({ id }: { id: LenderId }) {
           <button className="act stamp" disabled={m.tax.closed} onClick={() => run({ type: 'stamp', lender: 'tax', mult }, (r) => (r.cleared ? '납부 완료' : `−${comma(r.paid ?? 0)} 납부`))}>납부 도장</button>
         </div>
       )}
-      {id === 'capital' && <CapitalFutures />}
       <button className="terms-btn" onClick={() => { setTerms(!terms); if (id === 'shark2' && !terms) run({ type: 'visit', place: 'terms.shark2' }); }}>
         <img src="/ui/icons/terms.webp" alt="" />약관 보기
       </button>
@@ -163,7 +163,7 @@ export function FriendsSheet() {
       </div>
       <div className="npc">
         <Art id={NPC_ART[sel]} className="bust" alt={f.name} />
-        <div className="bubble">{f.broken ? def.breakLine : f.canBorrow ? `${f.name}: 필요하면 말해.` : '더는 빌려줄 수 없어.'}</div>
+        <div className="bubble"><span>{f.broken ? def.breakLine : f.canBorrow ? `${f.name}: 필요하면 말해.` : "더는 빌려줄 수 없어."}</span></div>
       </div>
       <div className="ledger">
         <div className="row sb"><span className="stat">빌린 돈 <b>{comma(f.debt)}</b></span><span className="sub">한도 {short(f.maxLoan)}</span></div>

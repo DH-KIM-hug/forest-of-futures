@@ -554,3 +554,109 @@ button.act.stamp { color: #fff; text-shadow: 0 1px 0 rgba(90, 20, 10, 0.4); back
 .pills.sub .pill.wallet, .pills.sub .pill.han { height: 44px; }
 .pills.sub .pill.debt { height: 36px; }
 @media (max-height: 700px) { .pills.sub .pill.debt { height: 34px; } }
+
+/* ======================= M8: 거래 · 시간표 ======================= */
+.app[data-tab='trade'] .pills.sub, .app[data-tab='trade'] .strip { display: none; }
+.trade { gap: 5px; padding: 6px 12px 4px; }
+.trade.locked { align-items: stretch; }
+.trade .sp { flex: 0 0 40px; }
+.lockbox { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px 8px; text-align: center; font-family: var(--display); font-size: 16px; }
+.lockbox img { width: 64px; height: 64px; }
+.lockbox p { margin: 0; padding: 6px 16px; border-radius: 18px; background: linear-gradient(#fffefa, #fdf3d8); border: 3px solid #fff; box-shadow: 0 2px 0 var(--cream-lo); }
+.mtabs { flex: 0 0 48px; }
+.mtabs button { position: relative; min-height: 44px; }
+.mtabs button span { font-size: 13px; }
+.mtabs button small { font-family: var(--display); font-size: 11px; font-weight: 400; }
+.mtabs button .pd { position: absolute; top: 3px; right: 6px; }
+.quote { flex: 0 0 auto; align-items: center; gap: 6px; justify-content: space-between; }
+.quote .px { gap: 8px; padding: 0 14px; height: 38px; }
+.quote .px b { font-weight: 400; font-size: 22px; font-variant-numeric: tabular-nums; }
+.quote .px span { font-size: 13px; }
+.quote .av { height: 32px; font-size: 12.5px; padding: 0 10px 0 6px; }
+.quote .mood { font-family: var(--display); font-size: 12px; padding: 3px 9px; border-radius: 11px; border: 2.5px solid #fff; background: linear-gradient(#fffefa, #fdf3d8); box-shadow: 0 2px 0 var(--cream-lo); white-space: nowrap; }
+.quote .mood.격동 { background: var(--pink); color: #8a2f20; }
+.statusline { flex: 0 0 auto; padding: 4px 12px; border-radius: 12px; background: #ffe5de; color: #8a2f20; font-size: 12.5px; font-weight: 700; text-align: center; }
+.chartbox { flex: 1 1 110px; min-height: 96px; }
+.metaline { flex: 0 0 auto; display: flex; gap: 10px; justify-content: space-between; align-items: baseline; padding: 0 4px; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; overflow: hidden; }
+.metaline .sl { overflow: hidden; text-overflow: ellipsis; text-align: right; color: var(--ink); }
+.gate { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; padding: 8px 12px 10px; border-radius: 20px; background: linear-gradient(#fffefa, #fdf3d8); border: 3px solid #fff; box-shadow: 0 3px 0 var(--cream-lo), var(--pop); }
+.gate .gl { font-size: 13.5px; font-weight: 700; }
+.gate .gl b { font-weight: 400; margin-right: 4px; }
+.gate .gl.ok { color: #2f7d2d; }
+.gate .gh { margin: 2px 0; font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+.posrow { flex: 0 0 auto; flex-wrap: wrap; min-height: 48px; height: auto; padding: 3px 12px 3px 6px; row-gap: 0; }
+.posrow .tx { gap: 8px; }
+.posrow .tg { flex: 1 0 100%; font-family: var(--sys); font-size: 11px; font-weight: 700; color: var(--ink-soft); padding: 0 0 2px 46px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.posrow .pnl small { font-family: var(--sys); font-size: 10.5px; color: var(--ink-soft); font-weight: 700; }
+.posrow .dir { background: var(--pink); }
+.tut { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 2px 12px 2px 6px; border-radius: 22px; background: linear-gradient(#f6fff0, #e1f3d4); border: 3px solid #fff; box-shadow: 0 2px 0 var(--mint-lo); min-height: 44px; }
+.tut .me { flex: 0 0 36px; width: 36px; height: 36px; object-fit: contain; }
+.tut p { margin: 0; font-family: var(--sys); font-size: 12px; font-weight: 700; line-height: 1.3; }
+.levrow { gap: 0; padding: 0; }
+.levrow .notch { flex: 1; min-height: 46px; min-width: 0; padding: 0; border-radius: 12px; justify-content: flex-start; }
+.levrow .notch .kn { width: 18px; height: 18px; margin-top: 4px; display: flex; align-items: center; justify-content: center; }
+.levrow .notch .kn img { width: 14px; height: 14px; }
+.levrow .notch b { font-family: var(--display); font-weight: 400; font-size: 13px; margin-top: 1px; }
+.levrow .notch.on .kn { transform: scale(1.35); box-shadow: 0 0 0 3px var(--leaf), 0 1px 0 var(--leaf-lo); }
+.levrow .notch.on b { font-size: 16px; }
+.levrow .notch.locked .kn { background: #cfc8b8; box-shadow: 0 1px 0 #a39a85; }
+.levrow .notch.locked { opacity: 0.8; }
+.levrow .track::before { display: none; }
+.levrow { position: relative; border-radius: 22px; background: linear-gradient(#fffefa, #fdf3d8); border: 3px solid #fff; box-shadow: 0 2px 0 var(--cream-lo); padding: 0 4px; }
+.mgrow { gap: 6px; }
+.mgrow button { min-height: 44px; font-size: 14px; }
+.hint { flex: 0 0 auto; min-height: 18px; font-size: 11.5px; line-height: 1.25; white-space: normal; overflow: visible; }
+.hint.bad { color: #a82f22; }
+.hint.ok { color: #2f7d2d; }
+.sltp .g { min-height: 46px; }
+.sltp .g .v { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 13.5px; }
+.sltp .g .v .ic { width: 20px; height: 20px; margin: 0; flex: 0 0 20px; }
+.orders { gap: 8px; }
+.orders button { min-height: 52px; font-size: 18px; }
+@media (max-height: 700px) {
+  .trade { gap: 3px; padding-top: 4px; }
+  .mtabs { flex-basis: 46px; }
+  .quote .px { height: 34px; }
+  .quote .px b { font-size: 19px; }
+  .levrow .notch { min-height: 44px; }
+  .orders button { min-height: 48px; font-size: 17px; }
+  .metaline { font-size: 10.5px; }
+  .hint { font-size: 11px; }
+  .posrow { min-height: 44px; }
+}
+
+/* 자리를 비운 사이 */
+.away { position: absolute; inset: 0; z-index: 45; display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top) + 10px) 12px calc(12px + env(safe-area-inset-bottom)); gap: 8px; background: linear-gradient(#e6f4d2, #f7f1d6); }
+.away h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 19px; padding: 8px 16px; border-radius: 22px; background: linear-gradient(var(--cream-hi), var(--cream)); border: 3px solid #fff; box-shadow: 0 3px 0 var(--cream-lo); }
+.away .mini { flex: 0 0 auto; height: 22cqh; min-height: 96px; max-height: 170px; border: 3px solid #fff; border-radius: 14px; background: #fffdf6; box-shadow: 0 3px 0 var(--cream-lo); position: relative; overflow: hidden; }
+.away .mini svg { width: 100%; height: 100%; display: block; }
+.away .rows { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; font-family: var(--sys); font-size: 13px; }
+.away .rows .r { display: flex; gap: 8px; padding: 6px 10px; border-radius: 12px; background: #fff; border: 2px solid #f1e4c4; line-height: 1.3; }
+.away .rows .r time { flex: 0 0 44px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.away .rows .r .t { flex: 1; min-width: 0; }
+.away .rows .r .t small { display: block; color: var(--ink-soft); font-size: 11.5px; }
+.away .rows .r.loss .a { color: var(--down); }
+.away .rows .r .a { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.away .foot { font-family: var(--sys); font-size: 12px; color: var(--ink-soft); font-weight: 600; margin: 0; }
+.away > button { flex: 0 0 auto; min-height: 56px; font-size: 19px; }
+
+/* 선물 계좌 개설 흐름 */
+.edu { display: flex; flex-direction: column; gap: 6px; }
+.edu .steps { display: flex; gap: 6px; align-items: center; font-family: var(--display); font-size: 12px; }
+.edu .steps i { flex: 1; height: 8px; border-radius: 4px; background: #e8dcc0; border: 2px solid #fff; }
+.edu .steps i.on { background: var(--leaf-lo); }
+.mock { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 16px; background: #f4f0ff; border: 3px solid #fff; box-shadow: 0 2px 0 #bba9e8; }
+.mock .btns button { min-height: 48px; }
+.fine { font-family: var(--sys); font-size: 11.5px; color: var(--ink-soft); font-weight: 600; margin: 0; }
+@media (max-width: 380px) {
+  .trade { padding-left: 6px; padding-right: 6px; }
+  .levrow { margin: 0 -6px; border: 0; border-radius: 18px; padding: 0; box-shadow: 0 2px 0 var(--cream-lo); }
+  .levrow .notch { min-width: 44px; }
+  .sltp { gap: 6px; }
+  .sltp .g .v .ic { display: none; }
+  .sltp .g .v { font-size: 12.5px; }
+  .sltp .g { padding: 0; }
+}
+.sltp .g { min-width: 0; }
+.sltp .g .v { min-width: 0; flex: 1 1 0; overflow: hidden; white-space: nowrap; }
+.sheet .bubble > span { display: block; }
