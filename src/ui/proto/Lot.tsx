@@ -7,6 +7,8 @@ import { say } from './watch';
 import { comma } from '../../engine/util';
 import { marketById } from '../../engine/data';
 import { ownedCoins, stage } from '../../engine/selectors';
+import { tapValue } from '../../engine/equipment';
+import { wheelByCoin } from '../../engine/data';
 import { positionView, type PositionView } from '../vm/trade';
 import { historyOf } from '../priceHistory';
 import { World } from './World';
@@ -77,26 +79,47 @@ export function Lot() {
   const rows = lotRows(g);
   const near = pos.some((p) => isNearLiq(p));
   const tapTimer = useRef<number | undefined>(undefined);
+  const upTimer = useRef<number | undefined>(undefined);
+  const tapUp = useProto((s) => s.tapUp);
+  const rideCoin = run.riding ?? ownedCoins(run)[0];
+  const wheeled = stage(run) > 0 && !!rideCoin;
   const [tapKey, setTapKey] = useState(0);
 
   const doTap = () => {
-    const before = useGame.getState().g.run.cash;
+    const g0 = useGame.getState().g;
+    const before = g0.run.cash;
+    const coin0 = g0.run.riding ?? ownedCoins(g0.run)[0];
+    const wheel = stage(g0.run) > 0 && !!coin0;
+    const worth = wheel ? Math.round(tapValue(g0, coin0)) : 0;
     const r = act({ type: 'tap' });
     if (!r.ok) return;
     const gain = useGame.getState().g.run.cash - before;
+    const sold = wheel && !!g0.run.coinWheels[coin0]?.autoSell;
     playTap();
     setTapKey((k) => k + 1);
     useProto.getState().patch({ tapping: true });
-    fx.emit({ kind: 'tap', gain: gain > 0 ? `+${comma(gain)}` : '+코인' });
+    fx.emit({ kind: 'tap', gain: wheel ? (sold ? `+${comma(gain)}` : `+${comma(worth)} 코인`) : gain > 0 ? `+${comma(gain)}` : '+코인', wheel, sold });
     window.clearTimeout(tapTimer.current);
     tapTimer.current = window.setTimeout(() => useProto.getState().patch({ tapping: false }), 700);
   };
   const buy = (r: Row): boolean => {
+    const g0 = useGame.getState().g;
+    const tc = g0.run.riding ?? ownedCoins(g0.run)[0];
+    const tap0 = tc ? tapValue(g0, tc) : 0;
     const res = r.kind === 'wheel' ? act({ type: 'buyWheel', coin: WHEEL_COIN }) : act({ type: 'buyEquip', tier: r.tier!, coin: ownedCoins(run)[0] ?? WHEEL_COIN });
     if (!res.ok) { say(res.msg ?? '살 수 없다'); play('insufficient'); return false; }
-    if (r.kind === 'wheel') act({ type: 'autoSell', coin: WHEEL_COIN, on: true });
+    if (r.kind === 'wheel') act({ type: 'autoSell', coin: WHEEL_COIN, on: true }); // 시제품 기본: 캐면 바로 팔기(지갑 시트에서 끌 수 있다)
     play(bought.has(r.key) ? 'buy' : 'new_equipment');
     bought.add(r.key);
+    if (r.kind !== 'wheel' && tc) {
+      const g1 = useGame.getState().g;
+      const up = tapValue(g1, tc) - tap0;
+      if (up > 0.04) {
+        useProto.getState().patch({ tapUp: `탭 +${up >= 1 ? comma(Math.round(up)) : up.toFixed(1)}` });
+        window.clearTimeout(upTimer.current);
+        upTimer.current = window.setTimeout(() => useProto.getState().patch({ tapUp: null }), 2400);
+      }
+    }
     fx.emit({ kind: 'buy', price: r.price, key: r.key });
     return true;
   };
@@ -111,9 +134,12 @@ export function Lot() {
         <div className="pr-rows">
           {pos.map((p) => <PinRow key={p.market} p={p} />)}
           <div className="pr-row tap">
-            <button className="tapbody" onPointerDown={doTap} aria-label="도토리 줍기">
-              <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind="pile" /></div>
-              <div className="mid"><div className="nm">도토리 줍기</div><div className="sb">탭마다 {stage(run) === 0 ? '도토리' : '코인'} · 줍기 {comma(run.acornTaps)}회</div></div>
+            <button className="tapbody" onPointerDown={doTap} aria-label={wheeled ? '쳇바퀴 달리기' : '도토리 줍기'}>
+              <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind={wheeled ? 'wheel' : 'pile'} /></div>
+              <div className="mid">
+                <div className="nm">{wheeled ? '쳇바퀴 달리기' : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
+                <div className="sb">{wheeled ? `탭마다 +${comma(Math.round(tapValue(g, rideCoin)))} ${wheelByCoin[rideCoin].name.replace(' 쳇바퀴', '')}어치 (코인 채굴)` : `탭마다 도토리 · 줍기 ${comma(run.acornTaps)}회`}</div>
+              </div>
               <div className="buy tapbtn"><span>줍기</span><small>탭!</small></div>
             </button>
           </div>

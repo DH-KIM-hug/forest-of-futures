@@ -11,11 +11,13 @@ import { UpgTab, MapTab, PhoneTab } from './Tabs';
 import { PeopleTab } from './People';
 import { EndingFlow } from './Ending';
 import { ProfitPrompt } from './ProfitPrompt';
+import { WalletSheet } from './Wallet';
 import { BOSS_NAME } from './text';
 import { isFast, isCheat } from './config';
 import { clone } from '../../engine/game';
 import { comma } from '../../engine/util';
-import { interestDue } from '../../engine/selectors';
+import { interestDue, ownedCoins, walletValue } from '../../engine/selectors';
+import { forecast } from '../../engine/settlement';
 import { balance, DEBT_IDS } from '../../engine/data';
 import { Acorn, RowIcon, O } from './art';
 import { LiveBadge } from '../../net/hlDirect/LiveBadge';
@@ -55,19 +57,27 @@ function Hud() {
     prevCash.current = run.cash;
   }, [run.cash]);
   const lot = tab === 'lot';
+  const [brk, setBrk] = useState(() => pdev === 'wallet' && /pbrk=1/.test(window.location.search));
+  const fc = forecast(g);
+  const rd = (n: number) => comma(Math.round(n));
+  const hasWheel = ownedCoins(run).length > 0;
   return (
     <header className={'pr-hud' + (lot ? ' over' : '')}>
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span>이자 {comma(interest)}/정산</span></div>}
+          {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span>이자 {comma(interest)}/정산</span>{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
         </div>
         <DevBar />
         <div className="acorn">
           <div className="n"><span key={bump.k} className={bump.k ? 'v n-' + bump.dir : 'v'}>{comma(cash)}</span><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
-          {ps !== null && <div className={'ps' + (ps < 0 ? ' neg' : '')}>정산당 {ps >= 0 ? '+' : '−'}{comma(Math.abs(ps))}</div>}
+          {ps !== null && <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} onClick={() => setBrk((b) => !b)}>정산당 {ps >= 0 ? '+' : '−'}{comma(Math.abs(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i></button>}
+          {hasWheel && <button className="walbtn" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
         </div>
       </div>
+      {brk && ps !== null && (
+        <div className="brk" role="status">채굴 <b className="up">+{rd(fc.mined)}</b> · 전기 <b className="dn">−{rd(fc.power)}</b> · 이자 <b className="dn">−{rd(fc.interest)}</b> · 생활비 <b className="dn">−{rd(fc.living)}</b> = <b className={fc.net >= 0 ? 'up' : 'dn'}>{fc.net >= 0 ? '+' : '−'}{rd(Math.abs(fc.net))}</b></div>
+      )}
       {lot && (
         <>
           <div key={'g' + gi} className="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
@@ -162,8 +172,8 @@ function CutIn() {
       {!c.win && <div className="stamp">증거금 부족</div>}
       <div className="say">
         <div className="tag">{BOSS_NAME}</div>
-        <p>{c.win ? '이번 회차 이자 수금 완료!' : '…장부에 적어 두죠.'}</p>
-        <div className="meta"><span>이번 정산 <b className={c.net >= 0 ? 'up' : 'dn'}>{c.net >= 0 ? '+' : '−'}{comma(Math.abs(c.net))}</b></span><span>이자 {comma(c.interest)}</span></div>
+        <p>{c.win ? `이자 ${comma(c.interest)} 수금 완료!` : `이자 ${comma(c.interest)}… 장부에 적어 두죠.`}</p>
+        <div className="meta"><span>내 정산 합계 <b className={c.net >= 0 ? 'up' : 'dn'}>{c.net >= 0 ? '+' : '−'}{comma(Math.abs(c.net))}</b></span><span>채굴·전기·이자·생활비 합</span></div>
         <div className="dots" aria-label={`정산 ${c.no}회째`}>{[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= c.no ? 'on' : ''} />)}</div>
         <em>탭하면 계속</em>
       </div>
@@ -232,6 +242,7 @@ export function ProtoApp() {
       <LiqStamp onShake={shake} />
       <EndingFlow />
       <ProfitPrompt />
+      <WalletSheet />
       {pdev === 'sounds' && <SoundLab />}
     </div>
   );

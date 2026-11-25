@@ -18,7 +18,7 @@ const VOL: Record<string, number> = {
   order_long: 0.65, order_short: 0.65, close_profit: 0.85, close_loss: 0.8, near_liq_heartbeat: 0.5,
   liquidation: 1, ending_bankrupt_stamp: 1, rebirth: 0.9, shutter: 0.7,
 };
-const MUSIC_VOL: Record<string, number> = { bgm_lot_day: 0.5, bgm_lot_night: 0.5, bgm_trade: 0.45, bgm_ending: 0.55 };
+const MUSIC_VOL: Record<string, number> = { bgm_lot_day_a: 0.5, bgm_lot_day_b: 0.5, bgm_lot_day_c: 0.5, bgm_lot_night_a: 0.5, bgm_lot_night_b: 0.5, bgm_trade_a: 0.45, bgm_trade_b: 0.45, bgm_ending: 0.55 };
 const MIN_GAP: Record<string, number> = { tap_gather: 55, acorn_arrive: 110, ui_tap: 80, insufficient: 250, default: 40 };
 
 const PREF_KEY = 'fof_audio_v1';

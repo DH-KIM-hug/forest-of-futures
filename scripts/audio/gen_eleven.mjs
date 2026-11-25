@@ -52,12 +52,25 @@ async function generate(j, rawPath) {
 function polish(j, rawPath, outPath) {
   const tmp = outPath + '.tmp.wav';
   const isMusic = j.kind === 'music';
+  // 0) seam 곡: 소리 모양이 가장 닮은 두 지점을 찾아 그 사이만 쓴다(도입부·끝맺음 버림, 40ms 이음). FOF_PY=numpy·scipy 있는 python
+  if (isMusic && j.seam) {
+    const cut = outPath + '.cut.wav';
+    const r = execFileSync(process.env.FOF_PY || 'python3', [path.join(root, 'scripts/audio/loop_music.py'), rawPath, cut], { encoding: 'utf8' });
+    console.log(`  loop ${j.id}: ${r.trim()}`);
+    const tmp2 = outPath + '.tmp.wav';
+    ff(['-i', cut, '-ar', '44100', '-ac', '2', tmp2]); fs.unlinkSync(cut);
+    return finish(j, tmp2, outPath, true);
+  }
   // 1) 앞 무음 자르기 (SFX 는 즉시 반응해야 하므로 -50dB 이하만 제거)
   const base = ['-i', rawPath, '-af', 'silenceremove=start_periods=1:start_threshold=-50dB:start_duration=0.01,asetpts=PTS-STARTPTS', '-ar', '44100', ...(isMusic ? ['-ac', '2'] : ['-ac', '1'])];
   ff([...base, tmp]);
+  return finish(j, tmp, outPath, false);
+}
+function finish(j, tmp, outPath, seamDone) {
+  const isMusic = j.kind === 'music';
   let cur = tmp;
   // 2) 루프 이음매: 꼬리를 머리에 교차 페이드
-  if (j.loop) {
+  if (j.loop && !seamDone) {
     const D = probe(cur);
     const X = isMusic ? 2.5 : Math.min(0.25, D / 6);
     const loopf = outPath + '.loop.wav';

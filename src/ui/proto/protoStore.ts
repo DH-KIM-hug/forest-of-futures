@@ -22,6 +22,8 @@ interface P {
   toast: string | null;
   collector: Collector | null;
   tapping: boolean;
+  wallet: boolean;
+  tapUp: string | null;
   gen: number;
   profit: CardData | null;
   wins: number;
@@ -33,8 +35,8 @@ interface P {
 
 export const useProto = create<P>((set) => ({
   tab: 'lot', visited: { lot: true }, everUnlocked: { lot: true }, mapBought: false, peopleBought: false, bearBought: false, tip: null, goalIdx: 0, everOpened: false,
-  cutin: null, cutCount: 0, toast: null, collector: null, tapping: false, gen: 0, profit: null, wins: 0, closes: 0,
+  cutin: null, cutCount: 0, toast: null, collector: null, tapping: false, wallet: false, tapUp: null, gen: 0, profit: null, wins: 0, closes: 0,
   setTab: (tab) => set((s) => ({ tab, visited: { ...s.visited, [tab]: true } })),
   patch: (p) => set(p as any),
-  resetLife: (gen) => set({ tab: 'lot', visited: { lot: true }, everUnlocked: { lot: true }, mapBought: false, peopleBought: false, bearBought: false, tip: null, goalIdx: 0, everOpened: false, cutin: null, collector: null, toast: null, gen, profit: null, wins: 0, closes: 0 }),
+  resetLife: (gen) => set({ tab: 'lot', visited: { lot: true }, everUnlocked: { lot: true }, mapBought: false, peopleBought: false, bearBought: false, tip: null, goalIdx: 0, everOpened: false, cutin: null, collector: null, toast: null, wallet: false, tapUp: null, gen, profit: null, wins: 0, closes: 0 }),
 }));

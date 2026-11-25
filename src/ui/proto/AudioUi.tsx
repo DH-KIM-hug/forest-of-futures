@@ -6,6 +6,28 @@ import { armUnlock, duck, getPrefs, later, manifest, play, preview, setHeartbeat
 import { tintAt, useClock } from './fx';
 import { pdev } from './config';
 
+// 배경음 후보 고르기: 칸(낮/밤/거래)마다 a/b/c 중 하나. localStorage fof.proto.bgmPick = {day,night,trade}
+export type BgmSlot = 'day' | 'night' | 'trade';
+const SLOT_ID: Record<BgmSlot, string> = { day: 'bgm_lot_day', night: 'bgm_lot_night', trade: 'bgm_trade' };
+const SLOT_NAME: Record<BgmSlot, string> = { day: '마을 낮', night: '마을 밤', trade: '거래 화면' };
+const BGM_DEFAULT: Record<BgmSlot, string> = { day: 'b', night: 'a', trade: 'b' };
+const PICK_KEY = 'fof.proto.bgmPick';
+const pickListeners = new Set<() => void>();
+const candidates = (slot: BgmSlot) => Object.keys(manifest).filter((i) => i.startsWith(SLOT_ID[slot] + '_') && /^_[a-z]$/.test(i.slice(SLOT_ID[slot].length)));
+function getPick(): Record<BgmSlot, string> {
+  let saved: Partial<Record<BgmSlot, string>> = {};
+  try { saved = JSON.parse(localStorage.getItem(PICK_KEY) ?? '{}') ?? {}; } catch { /* 저장소 막힘 */ }
+  const out = { ...BGM_DEFAULT };
+  (Object.keys(out) as BgmSlot[]).forEach((k) => { if (saved[k] && manifest[`${SLOT_ID[k]}_${saved[k]}`]) out[k] = saved[k] as string; });
+  return out;
+}
+function setPick(slot: BgmSlot, letter: string): void {
+  try { localStorage.setItem(PICK_KEY, JSON.stringify({ ...getPick(), [slot]: letter })); } catch { /* 저장소 막힘 */ }
+  pickListeners.forEach((f) => f());
+}
+const usePick = () => { const [, f] = useState(0); useEffect(() => { const g = () => f((n) => n + 1); pickListeners.add(g); return () => { pickListeners.delete(g); }; }, []); return getPick(); };
+const bgmId = (slot: BgmSlot, pick: Record<BgmSlot, string>) => `${SLOT_ID[slot]}_${pick[slot]}`;
+
 const usePrefs = () => { const [, f] = useState(0); useEffect(() => subscribe(() => f((n) => n + 1)), []); return getPrefs(); };
 
 /** 장면에 따라 곡·심장박동·컷인 소리 낮춤·탭 소리·엔딩/환생 소리를 고른다. */
@@ -14,11 +36,12 @@ export function useAudioDirector(near: boolean): void {
   const cutin = useProto((s) => s.cutin);
   const step = useGame((s) => s.g.estate?.step ?? null);
   const night = tintAt(useClock()).night;
+  const pick = usePick();
   useEffect(() => armUnlock(), []);
   useEffect(() => {
     if (pdev === 'sounds') { setMusic(null); return; }
-    setMusic(step === 'card' ? 'bgm_ending' : tab === 'phone' ? 'bgm_trade' : night ? 'bgm_lot_night' : 'bgm_lot_day');
-  }, [tab, night, step]);
+    setMusic(step === 'card' ? 'bgm_ending' : bgmId(tab === 'phone' ? 'trade' : night ? 'night' : 'day', pick));
+  }, [tab, night, step, pick]);
   useEffect(() => { setHeartbeat(near && !step && pdev !== 'sounds'); }, [near, step]);
   useEffect(() => { duck(!!cutin); }, [cutin]);
   const prevTab = useRef(tab);
@@ -64,19 +87,29 @@ export function SoundBtn() {
 export function SoundLab() {
   const [now, setNow] = useState<string | null>(null);
   const ids = Object.keys(manifest);
-  const group = (k: 'sfx' | 'music') => ids.filter((i) => manifest[i].kind === k);
-  const row = (id: string) => (
-    <li key={id} className={now === id ? 'on' : ''}>
-      <button onClick={() => { if (now === id) { stopPreview(); setNow(null); } else { preview(id); setNow(id); window.setTimeout(() => setNow((n) => (n === id ? null : n)), manifest[id].dur * 1000); } }} aria-label={`${id} 재생`}>{now === id ? '■' : '▶'}</button>
-      <div><b>{id}</b> <i>{manifest[id].dur.toFixed(1)}s{manifest[id].loop ? ' · 반복' : ''}</i><p>{manifest[id].prompt}</p></div>
-    </li>
-  );
+  const pick = usePick();
+  const slots = Object.keys(SLOT_ID) as BgmSlot[];
+  const isCand = (i: string) => slots.some((sl) => candidates(sl).includes(i));
+  const group = (k: 'sfx' | 'music') => ids.filter((i) => manifest[i].kind === k && !isCand(i));
+  const row = (id: string, slot?: BgmSlot) => {
+    const letter = slot ? id.slice(-1) : '';
+    const chosen = !!slot && pick[slot] === letter;
+    return (
+      <li key={id} className={now === id ? 'on' : ''}>
+        <button onClick={() => { if (now === id) { stopPreview(); setNow(null); } else { preview(id); setNow(id); window.setTimeout(() => setNow((n) => (n === id ? null : n)), manifest[id].dur * 1000); } }} aria-label={`${id} 재생`}>{now === id ? '■' : '▶'}</button>
+        <div><b>{id}</b> <i>{manifest[id].dur.toFixed(1)}s{manifest[id].loop ? ' · 반복' : ''}{chosen ? ' · 지금 게임에 쓰는 곡' : ''}</i><p>{manifest[id].prompt}</p></div>
+        {slot && <button onClick={() => setPick(slot, letter)} disabled={chosen} aria-label={`${id} 을 게임에 쓰기`}>{chosen ? '쓰는 중' : '이걸로'}</button>}
+      </li>
+    );
+  };
   return (
     <div className="pr-lab" role="dialog" aria-label="소리 오디션">
       <h2>소리 오디션</h2>
       <p className="hint">▶ 를 눌러 들어 보세요. 이름 끝에 _b 가 붙은 것은 같은 자리의 다른 후보입니다.</p>
-      <h3>배경음 (ElevenLabs Music)</h3><ul>{group('music').map(row)}</ul>
-      <h3>효과음 (ElevenLabs Sound Effects)</h3><ul>{group('sfx').map(row)}</ul>
+      <h3>배경음 후보 — 마음에 드는 곡에서 "이걸로"를 누르면 게임이 그 곡을 씁니다</h3>
+      {slots.map((sl) => (<div key={sl}><h4>{SLOT_NAME[sl]}</h4><ul>{candidates(sl).map((i) => row(i, sl))}</ul></div>))}
+      <h3>그 밖의 배경음</h3><ul>{group('music').map((i) => row(i))}</ul>
+      <h3>효과음 (ElevenLabs Sound Effects)</h3><ul>{group('sfx').map((i) => row(i))}</ul>
     </div>
   );
 }

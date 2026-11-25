@@ -3,10 +3,11 @@
 //   중: 구입(새 물건 팝), 정산(막대 번쩍), 추심원 도착
 //   대: 강제 청산(장면 흔들림 + '청산' 도장), 파산
 import { useEffect, useRef, useState } from 'react';
-import { acornSvg } from './art';
+import { acornSvg, C, O } from './art';
 
 export type FxEvent =
-  | { kind: 'tap'; gain: string }
+  | { kind: 'tap'; gain: string; wheel?: boolean; sold?: boolean }
+  | { kind: 'settle'; mined: number; sold: boolean }
   | { kind: 'buy'; price: number; key: string }
   | { kind: 'liq'; market: string };
 
@@ -55,6 +56,38 @@ export function flyAcorns(from: DOMRect | null, n = 3): void {
       live--;
       target.animate([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 160, easing: 'ease-out' });
     };
+  }
+}
+
+export const coinSvg = (size = 16): string =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="${C.dtc}" stroke="${O}" stroke-width="2.2"/><circle cx="12" cy="12" r="5" fill="none" stroke="${O}" stroke-width="1.6" opacity=".55"/></svg>`;
+
+/** 작은 그림(코인 등)이 from 에서 to 로 날아간다. 동시에 16개까지. */
+export function flyIcons(html: string, from: DOMRect | null, to: DOMRect | null, n = 1, o: { delay?: number; size?: number; onEnd?: () => void } = {}): void {
+  if (!from || !to || reduced()) { if (o.onEnd) o.onEnd(); return; }
+  const size = o.size ?? 16;
+  for (let i = 0; i < n && live < 16; i++) {
+    const el = document.createElement('div');
+    el.className = 'pr-fly';
+    el.style.width = el.style.height = `${size}px`;
+    el.innerHTML = html;
+    const sx = from.left + from.width / 2 + (Math.random() - 0.5) * 10;
+    const sy = from.top + from.height / 2;
+    el.style.left = `${sx - size / 2}px`;
+    el.style.top = `${sy - size / 2}px`;
+    document.body.appendChild(el);
+    live++;
+    const dx = to.left + to.width / 2 - sx, dy = to.top + to.height / 2 - sy;
+    const arc = -26 - Math.random() * 12;
+    const a = el.animate(
+      [
+        { transform: 'translate(0,0) scale(.6)', opacity: 0.5 },
+        { transform: `translate(${dx * 0.4}px,${dy * 0.4 + arc}px) scale(1.1)`, opacity: 1, offset: 0.4 },
+        { transform: `translate(${dx}px,${dy}px) scale(.75)`, opacity: 1 },
+      ],
+      { duration: 460, delay: (o.delay ?? 0) + i * 60, easing: 'cubic-bezier(.4,0,.7,.7)', fill: 'both' },
+    );
+    a.onfinish = () => { el.remove(); live--; if (i === n - 1 && o.onEnd) o.onEnd(); };
   }
 }
 

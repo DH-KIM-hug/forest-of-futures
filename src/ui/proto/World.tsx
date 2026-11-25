@@ -6,7 +6,8 @@ import { useProto } from './protoStore';
 import { ownedCoins } from '../../engine/selectors';
 import { comma } from '../../engine/util';
 import { C, O, Dia, Cube, Room, Tent, Tree, Wheel, Hamster, Badger, Squirrel, Spiky, Round, Device } from './art';
-import { useFx, flyAcorns, tintAt, useClock } from './fx';
+import { useFx, flyAcorns, flyIcons, coinSvg, tintAt, useClock } from './fx';
+import { sellFeeRate } from '../../engine/mining';
 import heroFront from './img/hero_front.png';
 import heroSide from './img/hero_side.png';
 import { COLLECTOR_NAME } from './text';
@@ -67,8 +68,26 @@ export function World({ near }: { near: boolean }) {
   useFx((e) => {
     if (e.kind === 'tap') {
       setTapKey((k) => k + 1);
-      addFloat(e.gain, hx + (Math.random() - 0.5) * 18, hy - hh - 8);
-      flyAcorns(heroRef.current?.getBoundingClientRect() ?? null, 2 + (idRef.current % 2));
+      if (e.wheel) {
+        // 쳇바퀴 → 지갑으로 코인이 날아가고, 바로 팔기면 지갑 → 도토리 숫자로 도토리가 날아간다
+        const wal = document.getElementById('pr-wallet-dev')?.getBoundingClientRect() ?? null;
+        flyIcons(coinSvg(16), document.getElementById('pr-wheel1')?.getBoundingClientRect() ?? null, wal, 1, { onEnd: () => { if (e.sold) flyAcorns(wal, 1); } });
+        addFloat(e.gain, 128 + (Math.random() - 0.5) * 14, 350, e.sold ? '' : 'coin');
+      } else {
+        addFloat(e.gain, hx + (Math.random() - 0.5) * 18, hy - hh - 8);
+        flyAcorns(heroRef.current?.getBoundingClientRect() ?? null, 2 + (idRef.current % 2));
+      }
+    } else if (e.kind === 'settle') {
+      // 정산: 돌고 있는 모든 쳇바퀴에서 코인이 전선을 타고 지갑으로
+      const wal = document.getElementById('pr-wallet-dev')?.getBoundingClientRect() ?? null;
+      const whs = Array.from(document.querySelectorAll('.pr-whfx'));
+      whs.forEach((el, i) => flyIcons(coinSvg(16), el.getBoundingClientRect(), wal, 2, { delay: i * 90 }));
+      if (e.sold) {
+        window.setTimeout(() => {
+          addFloat(`+${comma(Math.round(e.mined * (1 - sellFeeRate(useGame.getState().g.run))))}`, 128, 340);
+          flyAcorns(document.getElementById('pr-wallet-dev')?.getBoundingClientRect() ?? null, 4);
+        }, 650 + whs.length * 90);
+      }
     } else if (e.kind === 'buy') {
       addFloat(`−${comma(e.price)}`, 230, 250, 'neg');
     }
@@ -89,22 +108,27 @@ export function World({ near }: { near: boolean }) {
     ) });
   }
   if (wheels > 0) {
-    items.push({ y: 358, key: 'w1', node: <g className="pa-pop"><Dia cx={214} cy={378} hw={44} fill={C.dirt} sw={2} /><Wheel cx={214} cy={360} w={72} col={C.dtc} spin={running} /></g> });
-    items.push({ y: 394, key: 'dev', node: <g className="pa-pop"><Cube cx={128} cy={396} hw={10} h={10} fill={C.wall} /><Device x={128} y={374} k={0.75} /></g> });
+    items.push({ y: 358, key: 'w1', node: <g className="pa-pop"><Dia cx={214} cy={378} hw={44} fill={C.dirt} sw={2} /><g id="pr-wheel1" className="pr-whfx"><Wheel cx={214} cy={360} w={72} col={C.dtc} spin={running} /></g></g> });
+    items.push({ y: 394, key: 'dev', node: (
+      <g className="pa-pop pr-wal-hit" role="button" tabIndex={0} aria-label="콜드월렛 열기" onClick={() => useProto.getState().patch({ wallet: true })} onKeyDown={(e) => { if (e.key === 'Enter') useProto.getState().patch({ wallet: true }); }}>
+        <circle cx={128} cy={384} r={26} fill="transparent" />
+        <Cube cx={128} cy={396} hw={10} h={10} fill={C.wall} /><g id="pr-wallet-dev"><Device x={128} y={374} k={0.75} /></g>
+      </g>
+    ) });
     // 쳇바퀴 → 콜드월렛 전선: 돌 때 전기가 흘러 들어간다
     items.push({ y: 340, key: 'wire', node: <path d="M190 372 Q160 396 138 388" fill="none" stroke={running ? '#E8B830' : '#8A8378'} strokeWidth={3} strokeLinecap="round" className={running ? 'pa-flow' : undefined} strokeDasharray={running ? '6 7' : undefined} /> });
   }
   for (let i = 0; i < Math.min(eq.wheel2 ?? 0, 3); i++) {
     const [x, y, w, col] = WHEEL2_SLOTS[i];
-    items.push({ y, key: `w2${i}`, node: <g className="pa-pop"><Dia cx={x} cy={y + 16} hw={w * 0.55} fill={C.dirt} sw={2} /><Wheel cx={x} cy={y} w={w} col={col} spin={running} /></g> });
+    items.push({ y, key: `w2${i}`, node: <g className="pa-pop"><Dia cx={x} cy={y + 16} hw={w * 0.55} fill={C.dirt} sw={2} /><g className="pr-whfx"><Wheel cx={x} cy={y} w={w} col={col} spin={running} /></g></g> });
   }
   for (let i = 0; i < Math.min(eq.helper ?? 0, 3); i++) {
     const [x, y] = HELPER_SLOTS[i];
     // 알바 햄스터는 저마다 작은 쳇바퀴 안에서 달린다(equipment.json helper: "알바 햄스터가 옆 쳇바퀴를 돌린다")
     const w = 42, wy = y - w * 0.56;
-    items.push({ y, key: `h${i}`, node: <g className="pa-pop"><Dia cx={x} cy={y + 12} hw={w * 0.55} fill={C.dirt} sw={2} /><Wheel cx={x} cy={y} w={w} col={C.cream} spin={!near} /><Hamster cx={x} cy={wy + w * 0.3} h={20} run={!near} /></g> });
+    items.push({ y, key: `h${i}`, node: <g className="pa-pop"><Dia cx={x} cy={y + 12} hw={w * 0.55} fill={C.dirt} sw={2} /><g className="pr-whfx"><Wheel cx={x} cy={y} w={w} col={C.cream} spin={!near} /></g><Hamster cx={x} cy={wy + w * 0.3} h={20} run={!near} /></g> });
   }
-  if (eq.row) items.push({ y: 266, key: 'row', node: <g className="pa-pop"><Dia cx={206} cy={276} hw={42} fill={C.dirt} sw={2} />{[180, 206, 232].map((x, i) => <Wheel key={x} cx={x} cy={262 + (i === 1 ? 4 : 0)} w={28} col={[C.dtc, C.bth, C.mdt][i]} spin={running} />)}</g> });
+  if (eq.row) items.push({ y: 266, key: 'row', node: <g className="pa-pop pr-whfx"><Dia cx={206} cy={276} hw={42} fill={C.dirt} sw={2} />{[180, 206, 232].map((x, i) => <Wheel key={x} cx={x} cy={262 + (i === 1 ? 4 : 0)} w={28} col={[C.dtc, C.bth, C.mdt][i]} spin={running} />)}</g> });
   if (eq.generator) items.push({ y: 398, key: 'gen', node: <g className="pa-pop"><Cube cx={336} cy={404} hw={12} h={16} fill="#A9A39A" /><path d="M338 366 l-6 9 h6 l-3 8 l8 -11 h-6 l3 -6z" fill={C.mdt} stroke={O} strokeWidth={1.6} strokeLinejoin="round" /></g> });
   if (eq.shed) items.push({ y: 372, key: 'shed', node: <g className="pa-pop"><Room cx={350} cy={374} hw={26} h={18} wall="#B98552" /></g> });
   if (eq.powerroom) items.push({ y: 270, key: 'pw', node: <g className="pa-pop"><Cube cx={262} cy={272} hw={16} h={26} fill="#8FB8B0" /></g> });

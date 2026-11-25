@@ -49,6 +49,18 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       P.patch({ wins: 2, closes: 3, profit: { coin: marketById.DTC.name, dir: 1, lev: 50, roe: 128.4, pnl: 38520, entry: 0.8421, exit: 0.8441, heldSec: 187, wins: 2, closes: 3, gen: 2, date: new Date() } });
       return g;
     }
+    case 'wallet': {
+      // 지갑 시트 확인용: 도토코인 쳇바퀴 + 코인 몇 가지를 들고 있다(바로 팔기는 끔)
+      const g = ready();
+      g.run.cash = 12_480;
+      for (const c of ['DTC', 'MDT', 'BTH']) {
+        g.run.coinWheels[c] ??= { on: true, autoSell: false, tagBy: null };
+        g.run.wallet[c] = { qty: c === 'DTC' ? 0.0418 : c === 'MDT' ? 12.25 : 0.368, locked: 0 };
+      }
+      g.run.coinWheels.DTC.autoSell = true;
+      P.patch({ tab: 'lot', wallet: new URLSearchParams(window.location.search).get('pwal') === '1' });
+      return clone(g);
+    }
     case 'debt': { const g = ready(); g.run.settleIn = 2; return g; }
     case 'broke': case 'rebirth': {
       const g = buildScenario('ending', base);

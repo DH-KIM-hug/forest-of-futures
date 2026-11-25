@@ -5,6 +5,7 @@ import { currentGoal, TIP_EVERY } from './model';
 import { makeTip } from './bearTip';
 import { perSettle } from './model';
 import { DEBT_IDS, marketById } from '../../engine/data';
+import { ownedCoins } from '../../engine/selectors';
 import { fx } from './fx';
 import { play, later } from './audio';
 import { closeBack, pnlOf, roePct } from '../../engine/futures';
@@ -48,6 +49,7 @@ export function startWatch(): void {
       const od = overdueSum(g) > overdueSum(prev);
       const net = Math.round(r.mined - r.power - r.interest - r.living);
       play('settle_bell');
+      if (r.mined > 0) fx.emit({ kind: 'settle', mined: r.mined, sold: ownedCoins(g.run).some((c) => g.run.coinWheels[c].autoSell) });
       if (r.interest > 0) {
         useProto.getState().patch({ collector: { interest: r.interest, fill: od ? Math.min(0.85, r.paid / Math.max(1, r.interest)) : 1, overdue: od, at: Date.now() } });
         later(300, () => play('cutin_whoosh'));
@@ -58,7 +60,7 @@ export function startWatch(): void {
         const no = useProto.getState().cutCount + 1;
         const full = no <= FULL_CUTINS;
         useProto.getState().patch({ cutCount: no, cutin: full ? { win: !od, net, interest: r.interest, no, full } : null });
-        if (!full) say(od ? `오소리: …장부에 적어 두죠. (정산 ${net >= 0 ? '+' : '−'}${Math.abs(net).toLocaleString('ko-KR')})` : `오소리: 이자 수금 완료! (정산 ${net >= 0 ? '+' : '−'}${Math.abs(net).toLocaleString('ko-KR')})`);
+        if (!full) { const iv = Math.round(r.interest).toLocaleString('ko-KR'); say(od ? `오소리: 이자 ${iv}… 장부에 적어 두죠.` : `오소리: 이자 ${iv} 수금 완료!`); }
       } else say(`땡! 정산 ${net >= 0 ? '+' : '−'}${Math.abs(net).toLocaleString('ko-KR')}`);
     }
     // 강제 청산: 흔들림 + 도장

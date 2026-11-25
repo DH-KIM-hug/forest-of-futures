@@ -279,33 +279,73 @@
   "lufs": -22.9,
   "date": "2026-11-25"
  },
- "bgm_lot_day": {
-  "file": "bgm_lot_day_2cea5f0f.mp3",
+ "bgm_lot_day_a": {
+  "file": "bgm_lot_day_a_37a3aaeb.mp3",
   "kind": "music",
   "loop": true,
-  "dur": 65.51,
-  "prompt": "Cozy cheerful instrumental loop for a cute forest village idle game in daytime: warm acoustic ukulele strums, soft marimba melody, light shaker and brushed percussion, gentle upright bass, relaxed mid-tempo around 100 BPM, sunny and wholesome, steady groove with no big build or ending, consistent energy throughout, no vocals",
-  "max": -6.5,
+  "dur": 52.18,
+  "prompt": "Lo-fi daytime track: gently fingerpicked acoustic guitar playing a repeating C major progression (C Am F G), soft glockenspiel doubling a simple melody, mellow warm bass, very light brushed drums, steady 92 BPM. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -6.1,
+  "lufs": -20.5,
+  "date": "2026-11-25"
+ },
+ "bgm_lot_day_b": {
+  "file": "bgm_lot_day_b_48ed3e2c.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 60,
+  "prompt": "Sunny daytime track: soft marimba playing a simple bouncy melody over light ukulele strums in G major (G Em C D), quiet shaker, tiny bass, steady 96 BPM, relaxed and cheerful. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -7.6,
+  "lufs": -20.5,
+  "date": "2026-11-25"
+ },
+ "bgm_lot_day_c": {
+  "file": "bgm_lot_day_c_35d8c5ac.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 48,
+  "prompt": "Gentle daytime track: kalimba and music box playing a slow simple melody in F major (F Dm Bb C) over a warm soft synth pad, very soft kick-less pulse, steady 90 BPM, dreamy and wholesome. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -1.9,
   "lufs": -20.4,
   "date": "2026-11-25"
  },
- "bgm_lot_night": {
-  "file": "bgm_lot_night_af21a5a6.mp3",
+ "bgm_lot_night_a": {
+  "file": "bgm_lot_night_a_d4e392e4.mp3",
   "kind": "music",
   "loop": true,
-  "dur": 65.51,
-  "prompt": "Soft calm instrumental loop for a cute forest at night: gentle music box and kalimba melody, warm soft pad, very light ukulele plucks, slow tempo around 80 BPM, sleepy and cozy, steady and consistent with no big build or ending, quiet, no vocals",
-  "max": -5,
+  "dur": 66.66,
+  "prompt": "Sleepy night track: sparse kalimba notes over a soft warm pad in D major (D Bm G A), long gaps between notes, no drums, steady 72 BPM, very quiet and calm. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -10,
+  "lufs": -20.5,
+  "date": "2026-11-25"
+ },
+ "bgm_lot_night_b": {
+  "file": "bgm_lot_night_b_544e6d4b.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 42.68,
+  "prompt": "Sleepy night track: soft felt piano and gentle music box playing a slow simple melody in A minor (Am F C G), faint airy pad, no drums, steady 68 BPM, tender and quiet. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -8.2,
+  "lufs": -20.5,
+  "date": "2026-11-25"
+ },
+ "bgm_trade_a": {
+  "file": "bgm_trade_a_74b3ef2c.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 36.92,
+  "prompt": "Playful light-tension track for a trading screen: soft ticking clock as the rhythm, quiet pizzicato strings playing a repeating motif in A minor (Am Dm E Am), soft round plucked bass, steady 104 BPM, slightly tense but cute, comedic. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -3,
   "lufs": -20.4,
   "date": "2026-11-25"
  },
- "bgm_trade": {
-  "file": "bgm_trade_c7c02117.mp3",
+ "bgm_trade_b": {
+  "file": "bgm_trade_b_86ce0197.mp3",
   "kind": "music",
   "loop": true,
-  "dur": 65.51,
-  "prompt": "Light tense but cute instrumental loop for a trading screen: bouncy pizzicato strings and plucked bass, a steady clock tick percussion, soft marimba pings, playful suspense, tempo around 110 BPM, constant energy with no big build or ending, quirky and comedic, no vocals",
-  "max": -2.3,
+  "dur": 66.66,
+  "prompt": "Playful light-tension track for a trading screen: muted xylophone and woodblock tick-tock rhythm, bouncy walking upright bass, tiny pizzicato accents in D minor (Dm Gm A Dm), steady 108 BPM, curious and cute, quiet. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds.",
+  "max": -4.4,
   "lufs": -20.4,
   "date": "2026-11-25"
  },

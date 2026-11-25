@@ -1,206 +1,241 @@
 {
- "settings": {
-  "sfxModel": "eleven_text_to_sound_v2",
-  "musicModel": "music_v2_5",
-  "promptInfluence": 0.5
- },
- "jobs": [
-  {
-   "id": "tap_gather_a",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "Cute cartoon wooden pop sound effect, a small acorn being tapped with a fingertip, soft marimba-like tick"
+  "settings": {
+    "sfxModel": "eleven_text_to_sound_v2",
+    "musicModel": "music_v2_5",
+    "promptInfluence": 0.5
   },
-  {
-   "id": "tap_gather_b",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "Cute cartoon woodblock pop sound effect, a light higher-pitched acorn tap, soft and bubbly"
-  },
-  {
-   "id": "tap_gather_c",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "Cute cartoon bubbly pop with a small wooden thunk, a lower-pitched acorn tap, soft"
-  },
-  {
-   "id": "acorn_arrive",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "Tiny bright coin tick, a single toy glockenspiel note, light and cute"
-  },
-  {
-   "id": "buy",
-   "kind": "sfx",
-   "dur": 1.0,
-   "prompt": "A cute cartoon pop followed by a quick sparkle of tiny bells, happy purchase sound, toy-like, soft"
-  },
-  {
-   "id": "unlock_tab",
-   "kind": "sfx",
-   "dur": 1.5,
-   "prompt": "A magical sparkle chime, ascending soft glockenspiel and harp glissando, something new unlocked, cute and gentle"
-  },
-  {
-   "id": "unlock_tab_b",
-   "kind": "sfx",
-   "dur": 1.5,
-   "prompt": "A twinkly music box arpeggio rising up with a soft bell at the end, cute unlock jingle, gentle and warm"
-  },
-  {
-   "id": "new_equipment",
-   "kind": "sfx",
-   "dur": 2.0,
-   "prompt": "A short cheerful fanfare played on kalimba and marimba, three rising notes then a happy flourish, cute cartoon reward, soft"
-  },
-  {
-   "id": "goal_complete",
-   "kind": "sfx",
-   "dur": 1.5,
-   "prompt": "A soft happy chime, two bright bell notes ascending, goal achieved, cute xylophone and glockenspiel"
-  },
-  {
-   "id": "settle_bell",
-   "kind": "sfx",
-   "dur": 1.5,
-   "prompt": "A soft cute bell ding like a small cartoon clock chime, single warm ding with gentle decay"
-  },
-  {
-   "id": "collector_steps",
-   "kind": "sfx",
-   "dur": 2.0,
-   "prompt": "Cartoon footsteps of a small heavy badger walking, comedic pizzicato and woodblock steps, four steps, slightly ominous but funny"
-  },
-  {
-   "id": "collector_paid",
-   "kind": "sfx",
-   "dur": 1.5,
-   "prompt": "A cute rubber ledger stamp thump followed by a toy cash register ka-ching bell, cartoon, light and comedic"
-  },
-  {
-   "id": "overdue_stamp",
-   "kind": "sfx",
-   "dur": 1.0,
-   "prompt": "A heavy rubber stamp thud on paper, deep dull thump with a short comedic low tuba note, cartoon, not scary"
-  },
-  {
-   "id": "cutin_whoosh",
-   "kind": "sfx",
-   "dur": 0.8,
-   "prompt": "A soft cartoon whoosh, quick airy swish with a tiny pop at the end, comic transition, gentle"
-  },
-  {
-   "id": "phone_open",
-   "kind": "sfx",
-   "dur": 1.0,
-   "prompt": "A cute phone unlock sound, two quick rising soft bubble pops and a tiny chime, toy-like, gentle"
-  },
-  {
-   "id": "order_long",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "A short rising blip, two quick ascending marimba notes, cute and bright, upbeat"
-  },
-  {
-   "id": "order_short",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "A short falling blip, two quick descending marimba notes, cute and slightly mischievous"
-  },
-  {
-   "id": "close_profit",
-   "kind": "sfx",
-   "dur": 2.0,
-   "prompt": "A toy cash register ka-ching with a cascade of cartoon coins pouring and a happy sparkle, cute and cheerful, not realistic"
-  },
-  {
-   "id": "close_profit_b",
-   "kind": "sfx",
-   "dur": 2.0,
-   "prompt": "A cheerful xylophone run with a cute coin jingle and a bright bell on the end, winning sound, cartoon, soft"
-  },
-  {
-   "id": "close_loss",
-   "kind": "sfx",
-   "dur": 2.0,
-   "prompt": "A sad cartoon slide whistle sliding downward followed by a tiny deflating tuba wah-wah, funny and sad, soft"
-  },
-  {
-   "id": "near_liq_heartbeat",
-   "kind": "sfx",
-   "dur": 2.0,
-   "loop": true,
-   "prompt": "A soft low heartbeat thump-thump, gentle and muffled, with a faint ticking clock, repeating twice, quiet and tense but cute"
-  },
-  {
-   "id": "liquidation",
-   "kind": "sfx",
-   "dur": 3.0,
-   "prompt": "A comic disaster: a glass crack, a heavy rubber stamp thud, then a low cartoon boom and a sad trombone note, big but funny and not scary"
-  },
-  {
-   "id": "liquidation_b",
-   "kind": "sfx",
-   "dur": 3.0,
-   "prompt": "Cartoon crash of breaking toy glass, a deep thud like a giant stamp, a low soft boom, then a tiny deflating slide whistle, comedic not scary"
-  },
-  {
-   "id": "ending_bankrupt_stamp",
-   "kind": "sfx",
-   "dur": 1.5,
-   "prompt": "A very heavy rubber stamp slam with a deep low boom and a short sad tuba note, final and comedic, not scary"
-  },
-  {
-   "id": "rebirth",
-   "kind": "sfx",
-   "dur": 3.0,
-   "prompt": "A magical soft shimmer, glowing ribbon of harp glissando, gentle choir-like pad and twinkling bells, warm rebirth, cute and hopeful"
-  },
-  {
-   "id": "shutter",
-   "kind": "sfx",
-   "dur": 0.8,
-   "prompt": "A cute camera shutter click with a tiny sparkle chime, toy camera, short"
-  },
-  {
-   "id": "ui_tap",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "Soft wooden click, a gentle quiet button tap, cute"
-  },
-  {
-   "id": "insufficient",
-   "kind": "sfx",
-   "dur": 0.6,
-   "prompt": "Soft low cartoon boop, a single muted bubble note, polite denied sound, cute"
-  },
-  {
-   "id": "bgm_lot_day",
-   "kind": "music",
-   "dur": 68,
-   "loop": true,
-   "prompt": "Cozy cheerful instrumental loop for a cute forest village idle game in daytime: warm acoustic ukulele strums, soft marimba melody, light shaker and brushed percussion, gentle upright bass, relaxed mid-tempo around 100 BPM, sunny and wholesome, steady groove with no big build or ending, consistent energy throughout, no vocals"
-  },
-  {
-   "id": "bgm_lot_night",
-   "kind": "music",
-   "dur": 68,
-   "loop": true,
-   "prompt": "Soft calm instrumental loop for a cute forest at night: gentle music box and kalimba melody, warm soft pad, very light ukulele plucks, slow tempo around 80 BPM, sleepy and cozy, steady and consistent with no big build or ending, quiet, no vocals"
-  },
-  {
-   "id": "bgm_trade",
-   "kind": "music",
-   "dur": 68,
-   "loop": true,
-   "prompt": "Light tense but cute instrumental loop for a trading screen: bouncy pizzicato strings and plucked bass, a steady clock tick percussion, soft marimba pings, playful suspense, tempo around 110 BPM, constant energy with no big build or ending, quirky and comedic, no vocals"
-  },
-  {
-   "id": "bgm_ending",
-   "kind": "music",
-   "dur": 30,
-   "loop": false,
-   "prompt": "Short melancholic solo music box melody with a few soft sad notes and a gentle faint pad, slow, lonely but cute, slightly comedic sadness, fades gently at the end, no vocals"
-  }
- ]
+  "jobs": [
+    {
+      "id": "tap_gather_a",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "Cute cartoon wooden pop sound effect, a small acorn being tapped with a fingertip, soft marimba-like tick"
+    },
+    {
+      "id": "tap_gather_b",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "Cute cartoon woodblock pop sound effect, a light higher-pitched acorn tap, soft and bubbly"
+    },
+    {
+      "id": "tap_gather_c",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "Cute cartoon bubbly pop with a small wooden thunk, a lower-pitched acorn tap, soft"
+    },
+    {
+      "id": "acorn_arrive",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "Tiny bright coin tick, a single toy glockenspiel note, light and cute"
+    },
+    {
+      "id": "buy",
+      "kind": "sfx",
+      "dur": 1.0,
+      "prompt": "A cute cartoon pop followed by a quick sparkle of tiny bells, happy purchase sound, toy-like, soft"
+    },
+    {
+      "id": "unlock_tab",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "A magical sparkle chime, ascending soft glockenspiel and harp glissando, something new unlocked, cute and gentle"
+    },
+    {
+      "id": "unlock_tab_b",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "A twinkly music box arpeggio rising up with a soft bell at the end, cute unlock jingle, gentle and warm"
+    },
+    {
+      "id": "new_equipment",
+      "kind": "sfx",
+      "dur": 2.0,
+      "prompt": "A short cheerful fanfare played on kalimba and marimba, three rising notes then a happy flourish, cute cartoon reward, soft"
+    },
+    {
+      "id": "goal_complete",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "A soft happy chime, two bright bell notes ascending, goal achieved, cute xylophone and glockenspiel"
+    },
+    {
+      "id": "settle_bell",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "A soft cute bell ding like a small cartoon clock chime, single warm ding with gentle decay"
+    },
+    {
+      "id": "collector_steps",
+      "kind": "sfx",
+      "dur": 2.0,
+      "prompt": "Cartoon footsteps of a small heavy badger walking, comedic pizzicato and woodblock steps, four steps, slightly ominous but funny"
+    },
+    {
+      "id": "collector_paid",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "A cute rubber ledger stamp thump followed by a toy cash register ka-ching bell, cartoon, light and comedic"
+    },
+    {
+      "id": "overdue_stamp",
+      "kind": "sfx",
+      "dur": 1.0,
+      "prompt": "A heavy rubber stamp thud on paper, deep dull thump with a short comedic low tuba note, cartoon, not scary"
+    },
+    {
+      "id": "cutin_whoosh",
+      "kind": "sfx",
+      "dur": 0.8,
+      "prompt": "A soft cartoon whoosh, quick airy swish with a tiny pop at the end, comic transition, gentle"
+    },
+    {
+      "id": "phone_open",
+      "kind": "sfx",
+      "dur": 1.0,
+      "prompt": "A cute phone unlock sound, two quick rising soft bubble pops and a tiny chime, toy-like, gentle"
+    },
+    {
+      "id": "order_long",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "A short rising blip, two quick ascending marimba notes, cute and bright, upbeat"
+    },
+    {
+      "id": "order_short",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "A short falling blip, two quick descending marimba notes, cute and slightly mischievous"
+    },
+    {
+      "id": "close_profit",
+      "kind": "sfx",
+      "dur": 2.0,
+      "prompt": "A toy cash register ka-ching with a cascade of cartoon coins pouring and a happy sparkle, cute and cheerful, not realistic"
+    },
+    {
+      "id": "close_profit_b",
+      "kind": "sfx",
+      "dur": 2.0,
+      "prompt": "A cheerful xylophone run with a cute coin jingle and a bright bell on the end, winning sound, cartoon, soft"
+    },
+    {
+      "id": "close_loss",
+      "kind": "sfx",
+      "dur": 2.0,
+      "prompt": "A sad cartoon slide whistle sliding downward followed by a tiny deflating tuba wah-wah, funny and sad, soft"
+    },
+    {
+      "id": "near_liq_heartbeat",
+      "kind": "sfx",
+      "dur": 2.0,
+      "loop": true,
+      "prompt": "A soft low heartbeat thump-thump, gentle and muffled, with a faint ticking clock, repeating twice, quiet and tense but cute"
+    },
+    {
+      "id": "liquidation",
+      "kind": "sfx",
+      "dur": 3.0,
+      "prompt": "A comic disaster: a glass crack, a heavy rubber stamp thud, then a low cartoon boom and a sad trombone note, big but funny and not scary"
+    },
+    {
+      "id": "liquidation_b",
+      "kind": "sfx",
+      "dur": 3.0,
+      "prompt": "Cartoon crash of breaking toy glass, a deep thud like a giant stamp, a low soft boom, then a tiny deflating slide whistle, comedic not scary"
+    },
+    {
+      "id": "ending_bankrupt_stamp",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "A very heavy rubber stamp slam with a deep low boom and a short sad tuba note, final and comedic, not scary"
+    },
+    {
+      "id": "rebirth",
+      "kind": "sfx",
+      "dur": 3.0,
+      "prompt": "A magical soft shimmer, glowing ribbon of harp glissando, gentle choir-like pad and twinkling bells, warm rebirth, cute and hopeful"
+    },
+    {
+      "id": "shutter",
+      "kind": "sfx",
+      "dur": 0.8,
+      "prompt": "A cute camera shutter click with a tiny sparkle chime, toy camera, short"
+    },
+    {
+      "id": "ui_tap",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "Soft wooden click, a gentle quiet button tap, cute"
+    },
+    {
+      "id": "insufficient",
+      "kind": "sfx",
+      "dur": 0.6,
+      "prompt": "Soft low cartoon boop, a single muted bubble note, polite denied sound, cute"
+    },
+    {
+      "id": "bgm_lot_day_a",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Lo-fi daytime track: gently fingerpicked acoustic guitar playing a repeating C major progression (C Am F G), soft glockenspiel doubling a simple melody, mellow warm bass, very light brushed drums, steady 92 BPM. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_lot_day_b",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Sunny daytime track: soft marimba playing a simple bouncy melody over light ukulele strums in G major (G Em C D), quiet shaker, tiny bass, steady 96 BPM, relaxed and cheerful. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_lot_day_c",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Gentle daytime track: kalimba and music box playing a slow simple melody in F major (F Dm Bb C) over a warm soft synth pad, very soft kick-less pulse, steady 90 BPM, dreamy and wholesome. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_lot_night_a",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Sleepy night track: sparse kalimba notes over a soft warm pad in D major (D Bm G A), long gaps between notes, no drums, steady 72 BPM, very quiet and calm. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_lot_night_b",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Sleepy night track: soft felt piano and gentle music box playing a slow simple melody in A minor (Am F C G), faint airy pad, no drums, steady 68 BPM, tender and quiet. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_trade_a",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Playful light-tension track for a trading screen: soft ticking clock as the rhythm, quiet pizzicato strings playing a repeating motif in A minor (Am Dm E Am), soft round plucked bass, steady 104 BPM, slightly tense but cute, comedic. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_trade_b",
+      "kind": "music",
+      "dur": 80,
+      "loop": true,
+      "seam": true,
+      "prompt": "Playful light-tension track for a trading screen: muted xylophone and woodblock tick-tock rhythm, bouncy walking upright bass, tiny pizzicato accents in D minor (Dm Gm A Dm), steady 108 BPM, curious and cute, quiet. Simple, steady, loop-friendly background music for a cozy cute forest idle game. One single consistent section from start to finish: no intro, no outro, no build-up, no drop, no key change, no solo, no fill. Repeating 4-bar chord pattern, clear tonal center, soft even dynamics, plain predictable melody, very quiet and unobtrusive. Instrumental only, no vocals, no choir, no humming, no voice-like sounds."
+    },
+    {
+      "id": "bgm_ending",
+      "kind": "music",
+      "dur": 30,
+      "loop": false,
+      "prompt": "Short melancholic solo music box melody with a few soft sad notes and a gentle faint pad, slow, lonely but cute, slightly comedic sadness, fades gently at the end, no vocals"
+    }
+  ]
 }
