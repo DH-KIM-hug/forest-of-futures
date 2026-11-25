@@ -5,6 +5,7 @@ import { currentGoal } from './model';
 import { perSettle } from './model';
 import { DEBT_IDS, marketById } from '../../engine/data';
 import { fx } from './fx';
+import { play, later } from './audio';
 import { closeBack, pnlOf, roePct } from '../../engine/futures';
 import type { GameState } from '../../engine/types';
 
@@ -45,8 +46,12 @@ export function startWatch(): void {
       const r = g.run.lastSettlement;
       const od = overdueSum(g) > overdueSum(prev);
       const net = Math.round(r.mined - r.power - r.interest - r.living);
+      play('settle_bell');
       if (r.interest > 0) {
         useProto.getState().patch({ collector: { interest: r.interest, fill: od ? Math.min(0.85, r.paid / Math.max(1, r.interest)) : 1, overdue: od, at: Date.now() } });
+        later(300, () => play('cutin_whoosh'));
+        later(700, () => play('collector_steps'));
+        later(2400, () => play(od ? 'overdue_stamp' : 'collector_paid'));
         window.clearTimeout(collTimer);
         collTimer = window.setTimeout(() => useProto.getState().patch({ collector: null }), 9000);
         const no = useProto.getState().cutCount + 1;
@@ -58,6 +63,7 @@ export function startWatch(): void {
     // 강제 청산: 흔들림 + 도장
     const lc = g.run.lastClose;
     if (lc && lc.liq && (!prev.run.lastClose || prev.run.lastClose.tick !== lc.tick || prev.run.lastClose.market !== lc.market)) {
+      play('liquidation');
       fx.emit({ kind: 'liq', market: marketById[lc.market]?.name ?? lc.market });
     }
     // 포지션이 닫혔다(청산 제외 이익 판정은 noteClose 가 한다)
@@ -73,14 +79,14 @@ export function startWatch(): void {
     // 탭 해금·목표
     const un = { ...useProto.getState().everUnlocked };
     const before = JSON.stringify(un);
-    if (g.run.equipment.length > 0 && !un.upg) { un.upg = true; say('강화 탭이 열렸다!'); }
-    if (g.run.futures.open && !un.phone) { un.phone = true; say('폰 탭이 열렸다!'); }
-    if (useProto.getState().mapBought && !un.map) { un.map = true; say('지도 탭이 열렸다!'); }
+    if (g.run.equipment.length > 0 && !un.upg) { un.upg = true; say('강화 탭이 열렸다!'); play('unlock_tab'); }
+    if (g.run.futures.open && !un.phone) { un.phone = true; say('폰 탭이 열렸다!'); play('unlock_tab'); }
+    if (useProto.getState().mapBought && !un.map) { un.map = true; say('지도 탭이 열렸다!'); play('unlock_tab'); }
     if (JSON.stringify(un) !== before) useProto.getState().patch({ everUnlocked: un });
     const everOpened = useProto.getState().everOpened || Object.keys(g.run.positions).length > 0;
     if (everOpened !== useProto.getState().everOpened) useProto.getState().patch({ everOpened });
     const gi = currentGoal(g, useProto.getState().goalIdx, { everOpened });
-    if (gi !== useProto.getState().goalIdx) useProto.getState().patch({ goalIdx: gi });
+    if (gi !== useProto.getState().goalIdx) { if (gi > useProto.getState().goalIdx) play('goal_complete'); useProto.getState().patch({ goalIdx: gi }); }
     prev = g;
   });
 }

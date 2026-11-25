@@ -12,8 +12,11 @@ import { historyOf } from '../priceHistory';
 import { World } from './World';
 import { RowIcon, C } from './art';
 import { fx } from './fx';
+import { play, playTap } from './audio';
 
 const roeTxt = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}%`;
+
+const bought = new Set<string>(); // 이번 접속에서 처음 사는 물건이면 짧은 팡파르
 
 function Spark({ market, up }: { market: string; up: boolean }) {
   const h = historyOf(market).slice(-90);
@@ -81,6 +84,7 @@ export function Lot() {
     const r = act({ type: 'tap' });
     if (!r.ok) return;
     const gain = useGame.getState().g.run.cash - before;
+    playTap();
     setTapKey((k) => k + 1);
     useProto.getState().patch({ tapping: true });
     fx.emit({ kind: 'tap', gain: gain > 0 ? `+${comma(gain)}` : '+코인' });
@@ -89,8 +93,10 @@ export function Lot() {
   };
   const buy = (r: Row): boolean => {
     const res = r.kind === 'wheel' ? act({ type: 'buyWheel', coin: WHEEL_COIN }) : act({ type: 'buyEquip', tier: r.tier!, coin: ownedCoins(run)[0] ?? WHEEL_COIN });
-    if (!res.ok) { say(res.msg ?? '살 수 없다'); return false; }
+    if (!res.ok) { say(res.msg ?? '살 수 없다'); play('insufficient'); return false; }
     if (r.kind === 'wheel') act({ type: 'autoSell', coin: WHEEL_COIN, on: true });
+    play(bought.has(r.key) ? 'buy' : 'new_equipment');
+    bought.add(r.key);
     fx.emit({ kind: 'buy', price: r.price, key: r.key });
     return true;
   };

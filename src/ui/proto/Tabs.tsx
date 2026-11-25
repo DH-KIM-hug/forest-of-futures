@@ -12,6 +12,7 @@ import { interestDue, lenderLimit } from '../../engine/selectors';
 import type { LenderId } from '../../engine/types';
 import { ProtoTrade } from './Trade';
 import { RowIcon } from './art';
+import { play } from './audio';
 
 /** 강화 탭: 한 번만 사는 카드. 탭 해금이 여기서 일어난다(U-4·U-5). */
 export function UpgTab() {
@@ -31,13 +32,14 @@ export function UpgTab() {
     for (let i = 0; i < eduNeeded(g); i++) act({ type: 'eduPage' });
     if (mockNeeded(g) > 0) act({ type: 'mockTrade' });
     const r = act({ type: 'openAccount' });
-    if (!r.ok) say(r.msg ?? '아직 안 된다');
+    if (!r.ok) { say(r.msg ?? '아직 안 된다'); play('insufficient'); }
     else useProto.getState().setTab('phone');
   };
   const buyMap = () => {
     // 시제품 가짜: 지도 값을 엔진 밖에서 현금에서 뗀다(엔진에는 이 카드가 없다).
     const c = clone(g);
-    if (c.run.cash < MAP_PRICE) { say('도토리가 부족합니다'); return; }
+    if (c.run.cash < MAP_PRICE) { say('도토리가 부족합니다'); play('insufficient'); return; }
+    play('buy');
     c.run.cash -= MAP_PRICE;
     setGame(c);
     useProto.getState().patch({ mapBought: true });
@@ -79,8 +81,8 @@ export function MapTab() {
   const run = g.run;
   const ids = (['bank', 'capital', 'shark1', 'shark2'] as const).filter((id) => id !== 'shark2' || run.shark2Open);
   void DEBT_IDS;
-  const doBorrow = (id: LenderId) => { const r = act({ type: 'borrow', lender: id, consent: true }); setMsg(r.ok ? `${lenderById[id].name}: +${comma(r.amount ?? 0)} 받았다` : r.msg ?? '안 된다'); };
-  const doPay = (id: LenderId, mult: 1 | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); setMsg(r.ok ? `${lenderById[id].name}: ${comma((r as any).paid ?? 0)} 갚았다` : r.msg ?? '안 된다'); };
+  const doBorrow = (id: LenderId) => { const r = act({ type: 'borrow', lender: id, consent: true }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${lenderById[id].name}: +${comma(r.amount ?? 0)} 받았다` : r.msg ?? '안 된다'); };
+  const doPay = (id: LenderId, mult: 1 | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${lenderById[id].name}: ${comma((r as any).paid ?? 0)} 갚았다` : r.msg ?? '안 된다'); };
   return (
     <div className="pr-pane">
       <div className="pr-title"><b>마을 지도</b><span>빚 {comma(['bank', 'capital', 'shark1', 'shark2'].reduce((a, id) => a + run.debts[id as LenderId].principal, 0))}</span></div>

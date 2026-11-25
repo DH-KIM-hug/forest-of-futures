@@ -22,6 +22,7 @@ import {
 } from '../vm/trade';
 import { Acorn } from './art';
 import { flyAcorns, reduced } from './fx';
+import { play } from './audio';
 import heroFront from './img/hero_front.png';
 import './trade.css';
 
@@ -296,6 +297,7 @@ export function ProtoTrade() {
       setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev }));
       window.clearTimeout(resT.current);
       resT.current = window.setTimeout(() => setResult(null), 5200);
+      if (!liq) play(pnl > 0 ? 'close_profit' : 'close_loss'); // 청산 소리는 watch.ts 가 낸다
       if (pnl > 0) { flyAcorns(plRef.current?.getBoundingClientRect() ?? null, Math.min(7, 3 + Math.floor(pnl / 8000))); swing(true); }
     }
     if (raw && (!was || was.market !== market)) { setResult(null); }
@@ -305,7 +307,8 @@ export function ProtoTrade() {
 
   const doOpen = (dir: 1 | -1) => {
     const r = act({ type: 'open', market, dir, lev, marginPct: pct, sl: tr.sl, tp: tr.tp });
-    if (!r.ok) { say(r.msg ?? '들어갈 수 없습니다'); return; }
+    if (!r.ok) { say(r.msg ?? '들어갈 수 없습니다'); play('insufficient'); return; }
+    play(dir === 1 ? 'order_long' : 'order_short');
     setSheet(null);
     setResult(null);
     setEntered((k) => k + 1);
@@ -313,7 +316,8 @@ export function ProtoTrade() {
   };
   const doAdd = () => {
     const r = act({ type: 'add', market, marginPct: pct });
-    if (!r.ok) { say(r.msg ?? '더 넣을 수 없습니다'); return; }
+    if (!r.ok) { say(r.msg ?? '더 넣을 수 없습니다'); play('insufficient'); return; }
+    play(pos?.dir === -1 ? 'order_short' : 'order_long');
     setSheet(null);
     setEntered((k) => k + 1);
     swing();

@@ -16,3 +16,6 @@ server/data/
 *.log
 docs/ui/ref/jumo_clicker/
 docs/art/ref/tsuki_style/
+
+# 오디오 원본(ElevenLabs 생성 직후, 가공 전)
+assets_src/audio/raw/

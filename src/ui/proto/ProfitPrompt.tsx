@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useProto } from './protoStore';
 import { renderCard, saveCard } from './shareCard';
 import { comma } from '../../engine/util';
+import { play } from './audio';
 
 type Stage = 'ask' | 'busy' | 'done';
 
@@ -26,6 +27,7 @@ export function ProfitPrompt() {
       setThumb(cv.toDataURL('image/png'));
       (window as unknown as { __lastCard?: string }).__lastCard = cv.toDataURL('image/png');
       const r = await saveCard(cv, p.date);
+      if (r !== 'cancelled') play('shutter');
       setNote(r === 'shared' ? '공유했어요' : r === 'downloaded' ? '이미지로 저장했어요' : '저장하지 않았어요');
     } catch { setNote('그림을 만들지 못했어요'); }
     setStage('done');

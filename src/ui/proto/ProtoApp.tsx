@@ -17,6 +17,8 @@ import { comma } from '../../engine/util';
 import { interestDue } from '../../engine/selectors';
 import { balance, DEBT_IDS } from '../../engine/data';
 import { Acorn, RowIcon, O } from './art';
+import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
+import { pdev } from './config';
 import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
 import './proto.css';
 
@@ -55,7 +57,7 @@ function Hud() {
     <header className={'pr-hud' + (lot ? ' over' : '')}>
       <div className="r1">
         <div className="lt">
-          <div className="clock">{clockText(now)}</div>
+          <div className="clock">{clockText(now)} <SoundBtn /></div>
           {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span>이자 {comma(interest)}/정산</span></div>}
         </div>
         <DevBar />
@@ -204,6 +206,7 @@ export function ProtoApp() {
   const tab = useProto((s) => s.tab);
   const toast = useProto((s) => s.toast);
   const dark = useOpenPositions().some((p) => isNearLiq(p));
+  useAudioDirector(dark);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)
@@ -227,6 +230,7 @@ export function ProtoApp() {
       <LiqStamp onShake={shake} />
       <EndingFlow />
       <ProfitPrompt />
+      {pdev === 'sounds' && <SoundLab />}
     </div>
   );
 }

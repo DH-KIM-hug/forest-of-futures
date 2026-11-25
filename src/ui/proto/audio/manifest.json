@@ -1,0 +1,322 @@
+{
+ "tap_gather_a": {
+  "file": "tap_gather_a_c8e5dd48.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "Cute cartoon wooden pop sound effect, a small acorn being tapped with a fingertip, soft marimba-like tick",
+  "max": -3.3,
+  "lufs": -21.7,
+  "date": "2026-11-25"
+ },
+ "tap_gather_b": {
+  "file": "tap_gather_b_9ee9e96c.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "Cute cartoon woodblock pop sound effect, a light higher-pitched acorn tap, soft and bubbly",
+  "max": -3.5,
+  "lufs": -23.3,
+  "date": "2026-11-25"
+ },
+ "tap_gather_c": {
+  "file": "tap_gather_c_bd9c2c93.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.58,
+  "prompt": "Cute cartoon bubbly pop with a small wooden thunk, a lower-pitched acorn tap, soft",
+  "max": -3.5,
+  "lufs": -26.9,
+  "date": "2026-11-25"
+ },
+ "acorn_arrive": {
+  "file": "acorn_arrive_87224d0f.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "Tiny bright coin tick, a single toy glockenspiel note, light and cute",
+  "max": -2.7,
+  "lufs": -21.4,
+  "date": "2026-11-25"
+ },
+ "buy": {
+  "file": "buy_75d3b68e.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.99,
+  "prompt": "A cute cartoon pop followed by a quick sparkle of tiny bells, happy purchase sound, toy-like, soft",
+  "max": -3.4,
+  "lufs": -20.2,
+  "date": "2026-11-25"
+ },
+ "unlock_tab": {
+  "file": "unlock_tab_ce7c0099.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "A magical sparkle chime, ascending soft glockenspiel and harp glissando, something new unlocked, cute and gentle",
+  "max": -3.4,
+  "lufs": -21.6,
+  "date": "2026-11-25"
+ },
+ "unlock_tab_b": {
+  "file": "unlock_tab_b_279c5b7b.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "A twinkly music box arpeggio rising up with a soft bell at the end, cute unlock jingle, gentle and warm",
+  "max": -3.4,
+  "lufs": -21.5,
+  "date": "2026-11-25"
+ },
+ "new_equipment": {
+  "file": "new_equipment_4647dddc.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.99,
+  "prompt": "A short cheerful fanfare played on kalimba and marimba, three rising notes then a happy flourish, cute cartoon reward, soft",
+  "max": -3.8,
+  "lufs": -16.4,
+  "date": "2026-11-25"
+ },
+ "goal_complete": {
+  "file": "goal_complete_e4d41612.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "A soft happy chime, two bright bell notes ascending, goal achieved, cute xylophone and glockenspiel",
+  "max": -3.5,
+  "lufs": -23.6,
+  "date": "2026-11-25"
+ },
+ "settle_bell": {
+  "file": "settle_bell_c24d6af4.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "A soft cute bell ding like a small cartoon clock chime, single warm ding with gentle decay",
+  "max": -3.4,
+  "lufs": -19.7,
+  "date": "2026-11-25"
+ },
+ "collector_steps": {
+  "file": "collector_steps_8b2b5a01.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.96,
+  "prompt": "Cartoon footsteps of a small heavy badger walking, comedic pizzicato and woodblock steps, four steps, slightly ominous but funny",
+  "max": -1.8,
+  "lufs": -21.1,
+  "date": "2026-11-25"
+ },
+ "collector_paid": {
+  "file": "collector_paid_7640cc14.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.45,
+  "prompt": "A cute rubber ledger stamp thump followed by a toy cash register ka-ching bell, cartoon, light and comedic",
+  "max": -2.3,
+  "lufs": -24.1,
+  "date": "2026-11-25"
+ },
+ "overdue_stamp": {
+  "file": "overdue_stamp_61f96fd5.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.99,
+  "prompt": "A heavy rubber stamp thud on paper, deep dull thump with a short comedic low tuba note, cartoon, not scary",
+  "max": -3.5,
+  "lufs": -25.4,
+  "date": "2026-11-25"
+ },
+ "cutin_whoosh": {
+  "file": "cutin_whoosh_44c3280d.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.73,
+  "prompt": "A soft cartoon whoosh, quick airy swish with a tiny pop at the end, comic transition, gentle",
+  "max": -3.4,
+  "lufs": -21.7,
+  "date": "2026-11-25"
+ },
+ "phone_open": {
+  "file": "phone_open_2d6c749f.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.99,
+  "prompt": "A cute phone unlock sound, two quick rising soft bubble pops and a tiny chime, toy-like, gentle",
+  "max": -3.4,
+  "lufs": -18.5,
+  "date": "2026-11-25"
+ },
+ "order_long": {
+  "file": "order_long_97816d0c.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "A short rising blip, two quick ascending marimba notes, cute and bright, upbeat",
+  "max": -3.6,
+  "lufs": -12.1,
+  "date": "2026-11-25"
+ },
+ "order_short": {
+  "file": "order_short_148da34d.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "A short falling blip, two quick descending marimba notes, cute and slightly mischievous",
+  "max": -3.3,
+  "lufs": -19,
+  "date": "2026-11-25"
+ },
+ "close_profit": {
+  "file": "close_profit_47118b7b.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.99,
+  "prompt": "A toy cash register ka-ching with a cascade of cartoon coins pouring and a happy sparkle, cute and cheerful, not realistic",
+  "max": -1.6,
+  "lufs": -16.9,
+  "date": "2026-11-25"
+ },
+ "close_profit_b": {
+  "file": "close_profit_b_6f98efbb.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.99,
+  "prompt": "A cheerful xylophone run with a cute coin jingle and a bright bell on the end, winning sound, cartoon, soft",
+  "max": -1.4,
+  "lufs": -16.6,
+  "date": "2026-11-25"
+ },
+ "close_loss": {
+  "file": "close_loss_88d92121.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.99,
+  "prompt": "A sad cartoon slide whistle sliding downward followed by a tiny deflating tuba wah-wah, funny and sad, soft",
+  "max": -6.1,
+  "lufs": -16.4,
+  "date": "2026-11-25"
+ },
+ "near_liq_heartbeat": {
+  "file": "near_liq_heartbeat_b442507b.mp3",
+  "kind": "sfx",
+  "loop": true,
+  "dur": 1.99,
+  "prompt": "A soft low heartbeat thump-thump, gentle and muffled, with a faint ticking clock, repeating twice, quiet and tense but cute",
+  "max": -2,
+  "lufs": -18.3,
+  "date": "2026-11-25"
+ },
+ "liquidation": {
+  "file": "liquidation_790af2d1.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 2.99,
+  "prompt": "A comic disaster: a glass crack, a heavy rubber stamp thud, then a low cartoon boom and a sad trombone note, big but funny and not scary",
+  "max": -3.7,
+  "lufs": -16.5,
+  "date": "2026-11-25"
+ },
+ "liquidation_b": {
+  "file": "liquidation_b_40a1758c.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 2.99,
+  "prompt": "Cartoon crash of breaking toy glass, a deep thud like a giant stamp, a low soft boom, then a tiny deflating slide whistle, comedic not scary",
+  "max": -6.5,
+  "lufs": -16.4,
+  "date": "2026-11-25"
+ },
+ "ending_bankrupt_stamp": {
+  "file": "ending_bankrupt_stamp_90a1cd0e.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "A very heavy rubber stamp slam with a deep low boom and a short sad tuba note, final and comedic, not scary",
+  "max": -3.5,
+  "lufs": -23.4,
+  "date": "2026-11-25"
+ },
+ "rebirth": {
+  "file": "rebirth_c0023bf7.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 2.99,
+  "prompt": "A magical soft shimmer, glowing ribbon of harp glissando, gentle choir-like pad and twinkling bells, warm rebirth, cute and hopeful",
+  "max": -3.5,
+  "lufs": -16.4,
+  "date": "2026-11-25"
+ },
+ "shutter": {
+  "file": "shutter_fece6047.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.78,
+  "prompt": "A cute camera shutter click with a tiny sparkle chime, toy camera, short",
+  "max": -4.1,
+  "lufs": -24.2,
+  "date": "2026-11-25"
+ },
+ "ui_tap": {
+  "file": "ui_tap_a5d70369.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "Soft wooden click, a gentle quiet button tap, cute",
+  "max": -3.5,
+  "lufs": -26.8,
+  "date": "2026-11-25"
+ },
+ "insufficient": {
+  "file": "insufficient_872ba978.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.59,
+  "prompt": "Soft low cartoon boop, a single muted bubble note, polite denied sound, cute",
+  "max": -3.2,
+  "lufs": -22.9,
+  "date": "2026-11-25"
+ },
+ "bgm_lot_day": {
+  "file": "bgm_lot_day_2cea5f0f.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 65.51,
+  "prompt": "Cozy cheerful instrumental loop for a cute forest village idle game in daytime: warm acoustic ukulele strums, soft marimba melody, light shaker and brushed percussion, gentle upright bass, relaxed mid-tempo around 100 BPM, sunny and wholesome, steady groove with no big build or ending, consistent energy throughout, no vocals",
+  "max": -6.5,
+  "lufs": -20.4,
+  "date": "2026-11-25"
+ },
+ "bgm_lot_night": {
+  "file": "bgm_lot_night_af21a5a6.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 65.51,
+  "prompt": "Soft calm instrumental loop for a cute forest at night: gentle music box and kalimba melody, warm soft pad, very light ukulele plucks, slow tempo around 80 BPM, sleepy and cozy, steady and consistent with no big build or ending, quiet, no vocals",
+  "max": -5,
+  "lufs": -20.4,
+  "date": "2026-11-25"
+ },
+ "bgm_trade": {
+  "file": "bgm_trade_c7c02117.mp3",
+  "kind": "music",
+  "loop": true,
+  "dur": 65.51,
+  "prompt": "Light tense but cute instrumental loop for a trading screen: bouncy pizzicato strings and plucked bass, a steady clock tick percussion, soft marimba pings, playful suspense, tempo around 110 BPM, constant energy with no big build or ending, quirky and comedic, no vocals",
+  "max": -2.3,
+  "lufs": -20.4,
+  "date": "2026-11-25"
+ },
+ "bgm_ending": {
+  "file": "bgm_ending_7c1f3251.mp3",
+  "kind": "music",
+  "loop": false,
+  "dur": 30,
+  "prompt": "Short melancholic solo music box melody with a few soft sad notes and a gentle faint pad, slow, lonely but cute, slightly comedic sadness, fades gently at the end, no vocals",
+  "max": -5.4,
+  "lufs": -20.4,
+  "date": "2026-11-25"
+ }
+}

@@ -304,3 +304,19 @@
 .pr-profit .th { width: 96px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid var(--o); background: #fff; }
 @keyframes profitIn { from { transform: translateY(24px) scale(.92); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .pr-profit { animation: none; } }
+
+/* ---- 소리 스티커 · 오디션 페이지 ---- */
+.pr-snd { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; padding: 1px 8px 1px 5px; vertical-align: middle; border-radius: 12px; border: 2px solid var(--o); background: var(--card); box-shadow: var(--drop); font: inherit; cursor: pointer; transform: rotate(-3deg); }
+.pr-snd small { font-size: 11px; font-weight: 700; color: var(--sub); }
+.pr-snd:not(.on) { opacity: .8; }
+.pr-lab { position: fixed; inset: 0; z-index: 99; overflow-y: auto; padding: calc(env(safe-area-inset-top) + 16px) 16px 40px; background: #F3E7C6; color: #3b3630; font-family: var(--dsp, inherit); }
+.pr-lab h2 { margin: 0 0 4px; font-size: 22px; }
+.pr-lab h3 { margin: 18px 0 6px; font-size: 15px; }
+.pr-lab .hint { margin: 0; font-size: 12.5px; opacity: .75; }
+.pr-lab ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pr-lab li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; background: #fff8; border: 2px solid #4A4640; }
+.pr-lab li.on { background: #BCD48E; }
+.pr-lab li button { flex: 0 0 40px; height: 40px; border-radius: 50%; border: 2px solid #4A4640; background: #fff; font-size: 16px; cursor: pointer; }
+.pr-lab li b { font-size: 14px; }
+.pr-lab li i { font-style: normal; font-size: 11.5px; opacity: .65; }
+.pr-lab li p { margin: 3px 0 0; font-size: 11.5px; line-height: 1.35; opacity: .8; font-family: system-ui, sans-serif; }
