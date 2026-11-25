@@ -89,6 +89,8 @@ export function World({ near }: { near: boolean }) {
   if (wheels > 0) {
     items.push({ y: 358, key: 'w1', node: <g className="pa-pop"><Dia cx={214} cy={378} hw={44} fill={C.dirt} sw={2} /><Wheel cx={214} cy={360} w={72} col={C.dtc} spin={running} /></g> });
     items.push({ y: 394, key: 'dev', node: <g className="pa-pop"><Cube cx={128} cy={396} hw={10} h={10} fill={C.wall} /><Device x={128} y={374} k={0.75} /></g> });
+    // 쳇바퀴 → 콜드월렛 전선: 돌 때 전기가 흘러 들어간다
+    items.push({ y: 340, key: 'wire', node: <path d="M190 372 Q160 396 138 388" fill="none" stroke={running ? '#E8B830' : '#8A8378'} strokeWidth={3} strokeLinecap="round" className={running ? 'pa-flow' : undefined} strokeDasharray={running ? '6 7' : undefined} /> });
   }
   for (let i = 0; i < Math.min(eq.wheel2 ?? 0, 3); i++) {
     const [x, y, w, col] = WHEEL2_SLOTS[i];
@@ -96,7 +98,9 @@ export function World({ near }: { near: boolean }) {
   }
   for (let i = 0; i < Math.min(eq.helper ?? 0, 3); i++) {
     const [x, y] = HELPER_SLOTS[i];
-    items.push({ y, key: `h${i}`, node: <g className="pa-pop"><Hamster cx={x} cy={y} h={28} run={!near} /></g> });
+    // 알바 햄스터는 저마다 작은 쳇바퀴 안에서 달린다(equipment.json helper: "알바 햄스터가 옆 쳇바퀴를 돌린다")
+    const w = 42, wy = y - w * 0.56;
+    items.push({ y, key: `h${i}`, node: <g className="pa-pop"><Dia cx={x} cy={y + 12} hw={w * 0.55} fill={C.dirt} sw={2} /><Wheel cx={x} cy={y} w={w} col={C.cream} spin={!near} /><Hamster cx={x} cy={wy + w * 0.3} h={20} run={!near} /></g> });
   }
   if (eq.row) items.push({ y: 266, key: 'row', node: <g className="pa-pop"><Dia cx={206} cy={276} hw={42} fill={C.dirt} sw={2} />{[180, 206, 232].map((x, i) => <Wheel key={x} cx={x} cy={262 + (i === 1 ? 4 : 0)} w={28} col={[C.dtc, C.bth, C.mdt][i]} spin={running} />)}</g> });
   if (eq.generator) items.push({ y: 398, key: 'gen', node: <g className="pa-pop"><Cube cx={336} cy={404} hw={12} h={16} fill="#A9A39A" /><path d="M338 366 l-6 9 h6 l-3 8 l8 -11 h-6 l3 -6z" fill={C.mdt} stroke={O} strokeWidth={1.6} strokeLinejoin="round" /></g> });

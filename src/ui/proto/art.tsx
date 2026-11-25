@@ -60,6 +60,12 @@ export const Tree = ({ cx, cy, r, h }: { cx: number; cy: number; r: number; h: n
   </g>
 );
 /** 쳇바퀴: 받침 + 두께 + 바퀴 + 안쪽 살 줄무늬(돌면 줄무늬가 흐른다). (cx, cy) = 받침 발밑 */
+/** 쳇바퀴가 돌 때 튀는 전기(번개 하나). 쳇바퀴 = 발전 → 채굴 */
+export const Zap = ({ cx, cy, s = 1, delay = 0 }: { cx: number; cy: number; s?: number; delay?: number }) => (
+  <g className="pa-zap" style={{ animationDelay: `${delay}s`, transformOrigin: `${cx}px ${cy}px` }}>
+    <path transform={`translate(${cx} ${cy}) scale(${s})`} d="M2 -12 L-6 1 H0 L-3 12 L7 -2 H1 L4 -12 Z" fill="#F8D648" stroke={O} strokeWidth={2} strokeLinejoin="round" />
+  </g>
+);
 export const Wheel = ({ cx, cy, w, col, spin = false }: { cx: number; cy: number; w: number; col: string; spin?: boolean }) => {
   const y = cy - w * 0.56;
   return (
@@ -69,6 +75,8 @@ export const Wheel = ({ cx, cy, w, col, spin = false }: { cx: number; cy: number
       <ellipse cx={cx} cy={y} rx={w * 0.4} ry={w * 0.46} fill={col} stroke={O} strokeWidth={2.5} />
       <ellipse cx={cx} cy={y} rx={w * 0.28} ry={w * 0.33} fill={C.cream} stroke={O} strokeWidth={2} />
       <ellipse className={spin ? 'pa-spin' : undefined} cx={cx} cy={y} rx={w * 0.34} ry={w * 0.395} fill="none" stroke={O} strokeOpacity={0.55} strokeWidth={w * 0.05} strokeDasharray={`${w * 0.06} ${w * 0.1}`} />
+      {spin && <Zap cx={cx + w * 0.42} cy={y - w * 0.42} s={Math.max(0.8, w / 50)} />}
+      {spin && <Zap cx={cx - w * 0.44} cy={y - w * 0.2} s={Math.max(0.65, w / 64)} delay={0.45} />}
     </g>
   );
 };

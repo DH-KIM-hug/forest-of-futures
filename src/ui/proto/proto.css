@@ -75,6 +75,10 @@
 .pa-spin { animation: spin .6s linear infinite; }
 .pa-leaves { animation: sway 5s ease-in-out infinite alternate; }
 .pa-hop { animation: hop .32s ease-in-out infinite alternate; }
+.pa-zap { animation: zap .9s steps(1, end) infinite; }
+@keyframes zap { 0% { opacity: 1; transform: scale(1); } 30% { opacity: 1; transform: scale(1.18) rotate(-8deg); } 55% { opacity: 0; } 100% { opacity: 0; } }
+.pa-flow { animation: flow .5s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -13; } }
 .pa-blink { animation: blink 4s steps(1) infinite; }
 .pa-jiggle { animation: jiggle .2s ease-out; }
 .pa-window { opacity: 0; transition: opacity .6s; }
@@ -285,7 +289,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pr *, .pr *::before, .pr *::after { animation-duration: .15s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .15s !important; }
-  .pa-hero, .pa-spin, .pa-leaves, .pa-hop, .pa-firefly, .pa-sweat, .pa-blink, .pr-tabs .bdg.hot, .pr-pin .warn, .pr .pr-pin.call { animation: none !important; }
+  .pa-hero, .pa-spin, .pa-leaves, .pa-hop, .pa-zap, .pa-flow, .pa-firefly, .pa-sweat, .pa-blink, .pr-tabs .bdg.hot, .pr-pin .warn, .pr .pr-pin.call { animation: none !important; }
   .pa-walkin, .pa-pop, .pr-cutin .bust, .pr-end .polaroid { animation-name: fadeIn !important; }
   .pa-cut { animation: none !important; transform: scaleX(var(--left, 0)); }
 }
