@@ -11,14 +11,14 @@ lendersMeta.offers.rollProbPerSettlement = 0;
 export function fresh(seed = 1): GameState {
   return createGame({ seed });
 }
-export const tickOf = (g: GameState, over: Record<string, number> = {}): Tick => ({
+export const tickOf = (g: GameState, over: Record<string, number> = {}, st: Tick['st'] = 'open'): Tick => ({
   n: g.run.tick + 1,
-  st: 'open',
+  st,
   p: Object.fromEntries(Object.entries({ ...g.run.prices, ...over }).map(([k, v]) => [k, [v, 1, 0.5] as [number, number, number]])),
 });
 /** 가격을 그대로 두고 n 틱 진행. */
-export function tickN(g: GameState, n: number, over: Record<string, number> = {}): void {
-  for (let i = 0; i < n; i++) stepMut(g, { type: 'tick', tick: tickOf(g, over) });
+export function tickN(g: GameState, n: number, over: Record<string, number> = {}, st: Tick['st'] = 'open'): void {
+  for (let i = 0; i < n; i++) stepMut(g, { type: 'tick', tick: tickOf(g, over, st) });
 }
 /** 다음 정산이 끝날 때까지(정산 수 +k). */
 export function settleOnce(g: GameState, k = 1): void {
@@ -54,3 +54,25 @@ export function noDebts(g: GameState): void {
   for (const d of Object.values(g.run.debts)) d.principal = 0;
 }
 export { clone };
+
+/** 선물 계좌가 열린 상태로 만든다(배율 상한 200). */
+export function openFutures(g: GameState, cap = 200): void {
+  g.run.futures.open = true;
+  g.run.futures.levCap = cap;
+  g.run.futures.openedAtSettle = g.run.settleNo;
+}
+export function pushBar(g: GameState, coin: string, b: Partial<{ o: number; h: number; l: number; c: number; vol: number; buy: number }>) {
+  const p = g.run.prices[coin];
+  const bar = { n: g.run.tick, o: p, h: p, l: p, c: p, vol: 1, buy: 0.5, jump: false, ...b };
+  (g.run.mkt.bars[coin] ??= []).push(bar);
+}
+/** 떠난 틱 이후 flat 1분 봉(전 종목). 한 봉만 바꾸려면 mod. */
+export function flatBars(g: GameState, minutes: number, mod?: (k: number, market: string) => Partial<{ o: number; h: number; l: number; c: number; st: 'open' | 'halted' | 'delayed' }> | undefined) {
+  const out: import('../../src/engine/feed/types').Bar[] = [];
+  for (let k = 0; k < minutes; k++)
+    for (const m of Object.keys(g.run.prices)) {
+      const p = g.run.prices[m];
+      out.push({ market: m, n0: g.run.lastSeenTick + k * 60, o: p, h: p, l: p, c: p, vol: 60, buy: 0.5, st: 'open', ...(mod?.(k, m) ?? {}) });
+    }
+  return out;
+}

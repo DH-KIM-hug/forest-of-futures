@@ -49,3 +49,23 @@
 
 ### 지운 v1 테스트 (GDD_v2 가 없앤·바꾼 규칙)
 `tests/engine/ac_start_labor`(일자리·급여·자루 노동), `ac_trading_settlement`(v1 정산·v1 시세 모델·전 종목 포지션·크레딧), `ac_loans_friends_housing`(v1 한도·집 유지비·일자리 해금), `ac_endings_misc`(v1 엔딩 판정·도감), `fuzz`(v1 엔진), `heroPose`·`ui_smoke`(v1 화면). 규칙이 남은 것(대출·친구·집·정산 순서·시작 상태·퍼즈)은 숫자를 v2 로 고쳐 `tests/engine/ac_*` 로 옮겼다. 선물 거래식·엔딩 판정 테스트는 M2·M3 에서 새 엔진에 맞춰 다시 쓴다.
+
+## M2 거래·진행·정보·오프라인
+
+새 파일: `futures.ts`(진입·추가·정리·청산·손절익절·펀딩비·`processBar`·`levCapNow`·`shortInsurance`), `market.ts`(틱 -> 정산 봉), `tips.ts`(11개 출처·꼬리표·수첩 적중), `progression.ts`(선물 계좌 조건·`tradeGate`), `offline.ts`(`catchUp` 포지션 전 구간 + 경제 상한, `replayTicks`, `onBackground`). 행동: `eduPage` `mockTrade` `openAccount` `signWaiver` `open` `add` `close` `stops` `view` `visit` `background` `foreground`, 입력: `hello`(서버의 '평소' 값).
+
+### 해석·벗어난 것
+- **정산 봉을 상태에 둔다**: GDD 5.2 는 시세 기록을 저장하지 않는 런타임으로 두지만, 순수 엔진(`step`)이 결정적이려면 정보 규칙이 읽는 정산 봉(최근 40개)과 '평소' 값이 상태에 있어야 한다. `run.mkt` 로 두었다(저장해도 작다). '평소' 값은 서버 `hello` 가 없으면 `data/tips.json` `defaultAvg`(σ√n×1.6, 고가-저가 폭)를 쓴다.
+- **ROE 는 최초 증거금 기준**: `ROE = PnL / margin0`(펀딩비로 줄기 전). 손절·익절가 `진입가 × (1 + 방향 × ROE / 배율)` 도 같은 기준. 청산가만 펀딩비를 뺀 현재 증거금으로 계산한다(3.10 공식 그대로).
+- **정리 금액**: `floor(max(0, 증거금 + 손익 − ceil(명목 × 0.04%)))`. 진입 수수료도 올림. 청산은 돌려받는 돈 0, 수수료 없음.
+- **시장 지연**: 진입 막힘, 정리·손절익절 변경은 예약(`closeReserved`, `reservedStops`)하고 시장이 다시 열린 첫 틱에 처리. 지연 중 청산·손절은 가격이 얼어 있으므로 따로 막지 않는다. 정지: 손익·청산·펀딩비 모두 건너뛰고 정산(경제)은 계속.
+- **배율 상한**: `futures.levCap` 은 '바닥'(개설 직후 10, 집안 내력·한 방 체질이면 그 값), 실제 상한은 `levCapNow`(끝난 거래 3건 -> 50, 10건 + `waiver` -> 200). 한 방 체질은 기본 배율(`futures.defaultLev`)도 50. 청산도 끝난 거래로 센다.
+- **모의거래**는 플래그일 뿐(손익 없음). 사전교육 장 수·모의거래 필요 횟수는 `prep` 5단계면 0.
+- **정보 출처 방향**: `wire_break`·`wire_flow` 는 방향이 있어 수첩에 센다(`counted: true`로 바꿈, 토끼·다람쥐·`wire_vol` 은 방향 없음). `mom5`·`weasel`·`bear` 의 '15분 기준 폭'은 `range180 × √5`, 임계 배수는 `tips.json` params(`riseMul` 1.0, `dropMul` 1.5, 리딩방 `prob` 0.15)에 넣었다. `weasel` 의 한도 상향·`viper` 의 선이자 대출 묶음은 문구만 있고 효과는 연결하지 않았다(M4 이후 [제안] 항목).
+- **꼬리표**: 진입 20초 안의 같은 종목·같은 방향 정보 중 마지막 출처가 `tipSource`(친구는 `friend:fox` 식). 반대 방향 속보(fact)는 `fadedWire`. `fundedBy` 는 `fundedByAt`(60초) 결과(`friend` 도 포함).
+- **경제 정산과 펀딩비(오프라인)**: `catchUp` 의 경제 정산은 `settle(g,{skipFunding:true})` 로 돌고 펀딩비는 봉 처리가 유효 틱 180마다 따로 붙인다(정지 봉은 유효 틱에 안 센다). 정산 시각은 떠난 틱 + 180×k, 그때까지 처리된 봉의 종가 시세로 돈다. 연체 보호는 한 정산을 복제해 먼저 돌려 보고(`probe`) 연체가 한도-1 이 되거나 파산이면 그 앞에서 멈춘다.
+- **파산 원인 2번(LIQ/TIP)**: 이번·직전 정산의 거래 실현 손실 합(`liqLossCur+Prev`)이 마지막 미납액 이상이면, 그 정산들의 가장 큰 손실 포지션에 `tipSource` 가 있으면 TIP.
+- **디버그 화면**: 선물 계좌 조건 표시·교육/모의/개설·종목별 롱/숏 10배·정리·확인서 버튼만 추가.
+
+### 닫은 연기 항목
+AC-v2-45(숏 보험), AC-v2-61(포지션 꼬리표), AC-v2-72(실제 청산에서 즉시 파산 호출)를 `tests/engine/ac_i_futures.test.ts` 에서 시험한다.

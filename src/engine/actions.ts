@@ -7,9 +7,24 @@ import { acceptOffer, declineOffer } from './offers';
 import { purchaseWheel } from './progression';
 import { borrowFriend, stampFriend } from './friends';
 import { buyUpgrade } from './upgrades';
-import type { CoinId, GameState, LenderId, DebtId, Res } from './types';
+import type { CoinId, GameState, LenderId, DebtId, Res, Dir } from './types';
+import { eduPage, mockTrade, openAccount, signWaiver } from './progression';
+import { addToPosition, closePosition, openPosition, setStops } from './futures';
+import { onBackground, onForeground, visit } from './offline';
 
 export type Action =
+  | { type: 'eduPage' }
+  | { type: 'mockTrade' }
+  | { type: 'openAccount' }
+  | { type: 'signWaiver' }
+  | { type: 'open'; market: string; dir: Dir; lev: number; margin?: number; marginPct?: number; sl?: number | null; tp?: number | null }
+  | { type: 'add'; market: string; margin?: number; marginPct?: number }
+  | { type: 'close'; market: string }
+  | { type: 'stops'; market: string; sl: number | null; tp: number | null }
+  | { type: 'view'; tab: 'village' | 'trade' }
+  | { type: 'visit'; place: string }
+  | { type: 'background' }
+  | { type: 'foreground' }
   | { type: 'tap' }
   | { type: 'ride'; coin: CoinId }
   | { type: 'buyWheel'; coin: CoinId }
@@ -33,6 +48,18 @@ export type Action =
 
 export function act(g: GameState, a: Action): Res {
   switch (a.type) {
+    case 'eduPage': return eduPage(g);
+    case 'mockTrade': return mockTrade(g);
+    case 'openAccount': return openAccount(g);
+    case 'signWaiver': return signWaiver(g);
+    case 'open': return openPosition(g, a);
+    case 'add': return addToPosition(g, a);
+    case 'close': return closePosition(g, a.market);
+    case 'stops': return setStops(g, a.market, a.sl, a.tp);
+    case 'view': g.run.view.tab = a.tab; return { ok: true };
+    case 'visit': return visit(g, a.place);
+    case 'background': return onBackground(g);
+    case 'foreground': return onForeground(g);
     case 'tap': return tap(g);
     case 'ride': return ride(g, a.coin);
     case 'buyWheel': return purchaseWheel(g, a.coin);

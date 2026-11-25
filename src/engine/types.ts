@@ -65,17 +65,118 @@ export interface UpgradeState {
 }
 
 export interface Position {
-  // M2 에서 채운다 (선물 엔진). 자리만 둔다.
   market: string;
-  kind: 'perp';
+  kind: 'perp'; // 2단계(옵션)에서 'option' 이 붙는다
   dir: Dir;
   lev: number;
-  margin: number;
+  margin: number; // 지금 증거금(펀딩비 차감 후)
+  margin0: number; // 넣은 증거금 합
   notional: number;
   entry: number;
   openTick: number;
+  openSettle: number;
+  slRoe: number | null; // %
+  tpRoe: number | null; // %
+  adds: number;
+  marginPct: number; // 진입 때 현금 대비 증거금(%)
+  feesPaid: number;
+  fundingPaid: number;
+  peakRoe: number; // %
+  roeLowSec: number; // ROE -80% 아래에 머문 초
+  marginCalled: boolean;
   fundedBy: string | null;
   tipSource: string | null;
+  tipAgree: number;
+  entryAtHigh: boolean;
+  entryAtLow: boolean;
+  fadedWire: boolean;
+  newsAfterEntry: 'up' | 'down' | null;
+  closeReserved: boolean; // 시장 지연 중 예약된 정리
+  reservedStops: { sl: number | null; tp: number | null } | null;
+  revenge: { dir: 'same' | 'opposite'; within: number } | null; // 청산 뒤 다시 들어간 포지션
+}
+
+/** 끝난 마지막 포지션(손실이면 우선)의 기록. 엔딩 조건 `lev`·`dir`... 이 읽는다. */
+export interface LastPos {
+  market: string;
+  dir: Dir;
+  lev: number;
+  margin0: number;
+  marginPct: number;
+  holdSettles: number;
+  holdTicks: number;
+  sl: 'none' | 'set';
+  tp: 'none' | 'set';
+  tpRoe: number | null;
+  adds: number;
+  viaJump: boolean;
+  viaFunding: boolean;
+  fundedBy: string | null;
+  tipSource: string | null;
+  tipWasRight: boolean;
+  tipAgree: number;
+  revenge: { dir: 'same' | 'opposite'; within: number } | null;
+  entryAtHigh: boolean;
+  entryAtLow: boolean;
+  fadedWire: boolean;
+  newsAfterEntry: 'up' | 'down' | null;
+  maxRoe: number;
+  roeLowMin: number;
+  fundingPaid: number;
+  pnl: number; // 실현 손익(수수료 포함, 청산이면 -증거금)
+  ended: 'liq' | 'sl' | 'tp' | 'close';
+  settleNo: number;
+  tick: number;
+}
+
+export interface TipRecord {
+  id: string;
+  source: string;
+  market: string;
+  dir: 0 | 1 | -1;
+  tick: number;
+  settleNo: number;
+  base: number; // 말한 때의 가격
+  counted: boolean;
+  fact: boolean;
+  result: 'hit' | 'miss' | null;
+}
+
+export interface SettleBar {
+  n: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  vol: number; // 평소 = 1
+  buy: number; // 매수 체결 비율
+  jump: boolean;
+}
+
+export interface MarketAvg {
+  vol180: number;
+  range180: number;
+  range300s: number;
+}
+
+export interface AwayEntry {
+  tick: number;
+  kind: string;
+  text: string;
+  amount?: number;
+  market?: string;
+}
+
+export interface AwayReport {
+  awayHours: number;
+  awaySec: number;
+  fromTick: number;
+  toTick: number;
+  economySettlements: number;
+  openAtLeave: { market: string; dir: Dir; lev: number; margin: number }[];
+  entries: AwayEntry[];
+  bankrupt: boolean;
+  settlementSummary: { mined: number; power: number; interest: number };
 }
 
 export interface ActiveEffect {
@@ -141,8 +242,11 @@ export interface FamilyState {
 
 export interface FuturesState {
   open: boolean;
+  edu: number; // 본 사전교육 장 수
+  mock: boolean; // 모의거래를 마쳤는가
+  defaultLev: number;
   openedAtSettle: number | null;
-  levCap: 10 | 50 | 200;
+  levCap: number;
   closedTrades: number;
   waiver: boolean;
 }
@@ -197,7 +301,14 @@ export interface RunState {
   shark2Open: boolean;
   eventLog: EventLogItem[];
   tradeLog: unknown[];
-  recentTips: unknown[];
+  recentTips: TipRecord[];
+  mkt: { cur: Record<string, SettleBar & { ticks: number }>; bars: Record<string, SettleBar[]>; avg: Record<string, MarketAvg>; avgFromServer: boolean };
+  lastPos: LastPos | null;
+  lastClose: { market: string; dir: Dir; settleNo: number; tick: number; liq: boolean } | null;
+  tipCooldown: Record<string, number>;
+  reserved: { kind: 'close'; market: string }[];
+  view: { tab: 'village' | 'trade' };
+  report: AwayEntry[] | null;
   recentBorrows: RecentBorrow[];
   stats: Record<string, any>;
   peakNetWorth: number;
@@ -219,8 +330,22 @@ export interface RunState {
 }
 
 export interface PendingEnding {
-  // M3 에서 채운다.
-  id: string;
+  id: string; // END-xxx
+  cause: string;
+  isNew: boolean;
+  via: 'normal' | 'repeat';
+  nth: number; // 이 엔딩을 얻은 횟수(이번 포함)
+  title: string;
+  line: string; // {laborTaps} 등을 채운 대사
+  lastThree: EventLogItem[];
+  nearMisses: { id: string; hint: string; missing: string }[]; // 한 끗 차이(최대 2)
+  nextGen: { trait: string | null; trace: string; heirloom: string | null };
+  collected: number; // 장부에 모은 수(이번 포함)
+  peakNetWorth: number;
+  settleNo: number;
+  offline: boolean;
+  awayHours: number | null;
+  snapshot: Record<string, any>;
 }
 
 export interface Settings {

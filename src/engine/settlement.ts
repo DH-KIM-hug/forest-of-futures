@@ -7,6 +7,9 @@ import { equipGross, equipNetNow, equipPower, isActive, removeEquip, spokesGross
 import { settleFriends, brokenCount } from './friends';
 import { depositMined, forcedSell, payFromWallet } from './mining';
 import { rollOffer } from './offers';
+import { applyFunding } from './futures';
+import { closeBars } from './market';
+import { runTips } from './tips';
 import { ensureTag, removeTags, seizeFor } from './seizure';
 import { interestDue, livingDue, netWorth, ownedCoins, price, refPrice } from './selectors';
 import { bump } from './stats';
@@ -35,7 +38,7 @@ export function forecast(g: GameState) {
   return { mined, power, interest, living, net: mined - power - interest - living };
 }
 
-export function settle(g: GameState): void {
+export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void {
   const run = g.run;
   const st = run.stats;
   const rep = { settleNo: run.settleNo + 1, mined: 0, power: 0, interest: 0, living: 0, tax: 0, paid: 0, unpaid: 0, forcedSold: 0 };
@@ -66,7 +69,9 @@ export function settle(g: GameState): void {
   }
   powerRemainder = ceilS(powerRemainder);
 
-  // 3. 펀딩비: M2(선물 엔진)에서 채운다.
+  // 3. 펀딩비(열린 포지션마다 명목의 0.001%, 뺀 뒤 청산 검사). 오프라인에서는 봉 처리가 따로 붙인다.
+  if (!opts.skipFunding) applyFunding(g);
+  if (run.over) return;
 
   // 4. 청구액
   const due: Record<string, number> = {};
@@ -206,6 +211,18 @@ export function settle(g: GameState): void {
   if ((st.garnishBySettle as number[]).length > 3) (st.garnishBySettle as number[]).shift();
   void forcedBefore;
   if (trig.length) declareBankruptcy(g, trig[0]);
+
+  // 정산 봉을 닫고 정보 규칙을 돌린다
+  if (!run.over) {
+    closeBars(run);
+    runTips(g);
+  }
+  st.liqLossPrev = st.liqLossCur ?? 0;
+  st.liqLossCur = 0;
+  st.liqTipPrev = st.liqTipCur ?? null;
+  st.liqTipCur = null;
+  st.liqLossTop = 0;
+  st.liqsThisCycle = 0;
 
   // 11. 통계·최고 순자산·알림
   run.settleNo += 1;

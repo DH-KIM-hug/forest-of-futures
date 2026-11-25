@@ -18,7 +18,8 @@ export function determineCause(g: GameState, ctx: BankruptCtx): string {
   // 1. 절교 3명
   if (brokenCount(run) >= balance.bankruptcy.friendsBrokenLimit) return 'FRIEND';
   // 2. 청산 직후 즉시 파산이거나, 이번·직전 정산의 거래 실현 손실 >= 마지막 미납액 (M2 가 stats 를 채운다)
-  if (ctx.immediate || (st.recentLiqLoss ?? 0) > 0 && (st.recentLiqLoss ?? 0) >= ctx.shortfall) return st.recentLiqTip ? 'TIP' : 'LIQ';
+  const liqLoss = (st.liqLossCur ?? 0) + (st.liqLossPrev ?? 0);
+  if (ctx.immediate || (liqLoss > 0 && liqLoss >= ctx.shortfall)) return (st.liqTipCur ?? st.liqTipPrev) ? 'TIP' : 'LIQ';
   // 3. 마지막 연체처가 세무서이거나 남은 빚의 절반 이상이 승계 빚·세금
   const inherited = DEBT_IDS.reduce((a, id) => a + run.debts[id].inherited, 0) + run.debts.tax.principal;
   const total = totalDebt(run);

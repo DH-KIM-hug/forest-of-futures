@@ -19,6 +19,7 @@ export function logEvent(run: RunState, kind: string, text: string, amount?: num
   if (amount !== undefined) item.amount = amount;
   run.eventLog.push(item);
   if (run.eventLog.length > 12) run.eventLog.shift();
+  if (run.report) run.report.push({ tick: run.tick, kind, text, ...(amount !== undefined ? { amount } : {}) });
 }
 
 export function lastLogKinds(run: RunState, n: number): string[] {

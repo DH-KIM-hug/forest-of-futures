@@ -35,6 +35,10 @@ function randomAction(g: GameState, r: { rng: number }): Action | null {
   if (x < 0.9 && g.run.equipment.length) return { type: 'sellEquip', uid: pick(g.run.equipment).uid };
   if (x < 0.92) return { type: 'ride', coin };
   if (x < 0.94 && g.run.offers.length) return { type: 'acceptOffer', id: g.run.offers[0].id };
+  if (x < 0.95) return { type: pick(['eduPage', 'mockTrade', 'openAccount', 'signWaiver'] as const) };
+  if (x < 0.965) return { type: 'open', market: pick(['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']), dir: pick([1, -1] as const), lev: pick([1, 5, 10, 50, 200]), marginPct: pick([10, 50, 100]), sl: pick([null, -25]), tp: pick([null, 50]) };
+  if (x < 0.975) return { type: 'close', market: pick(['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']) };
+  if (x < 0.985) return { type: 'add', market: pick(['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']), marginPct: 25 };
   return null;
 }
 
@@ -68,6 +72,8 @@ function check(g: GameState) {
     expect(w.qty, c).toBeGreaterThanOrEqual(0);
   }
   expect(run.equipment.length).toBeLessThanOrEqual(tierDefs.length * 3);
+  expect(Object.keys(run.positions).length).toBeLessThanOrEqual(5);
+  for (const p of Object.values(run.positions)) expect(Number.isFinite(p.margin) && p.notional <= 200000000).toBe(true);
 }
 
 describe('엔진 코어', () => {

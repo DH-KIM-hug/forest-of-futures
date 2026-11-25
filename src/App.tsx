@@ -7,6 +7,8 @@ import { wheelStatus } from './engine/progression';
 import { comma, abbrev, timeOfDay } from './engine/util';
 import { affordableUpgrades } from './engine/upgrades';
 import { upgradeTracks } from './engine/data';
+import { futuresGate } from './engine/progression';
+import { levCapNow, roePct, liqPrice } from './engine/futures';
 
 const TIME = ['아침', '낮', '저녁', '밤'];
 
@@ -98,6 +100,33 @@ export default function App() {
           <button key={h.stage} style={btn} onClick={() => act({ type: 'move', to: h.stage })}>{h.name}</button>
         ))}
       </div>
+      <h3>선물 {run.futures.open ? `(상한 ${levCapNow(run)}배, 끝난 거래 ${run.futures.closedTrades})` : '(계좌 없음)'}</h3>
+      {!run.futures.open && (
+        <div>
+          {futuresGate(g).conditions.map((c) => <span key={c.id}>{c.id} {c.met ? 'O' : 'X'} {c.current}/{c.need} · </span>)}
+          <button style={btn} onClick={() => act({ type: 'eduPage' })}>사전교육 ({run.futures.edu}/3)</button>
+          <button style={btn} onClick={() => act({ type: 'mockTrade' })}>모의거래</button>
+          <button style={btn} onClick={() => act({ type: 'openAccount' })}>계좌 개설</button>
+        </div>
+      )}
+      {run.futures.open && (
+        <div>
+          {['DTC', 'BTH', 'SMS', 'MDT', 'JQQ'].map((m) => (
+            <div key={m}>
+              {m} {run.prices[m].toFixed(2)}{' '}
+              <button style={btn} onClick={() => act({ type: 'open', market: m, dir: 1, lev: 10, marginPct: 25 })}>롱 10x</button>
+              <button style={btn} onClick={() => act({ type: 'open', market: m, dir: -1, lev: 10, marginPct: 25 })}>숏 10x</button>
+              {run.positions[m] && (
+                <>
+                  {run.positions[m].dir === 1 ? '롱' : '숏'} {run.positions[m].lev}x 증거금 {comma(run.positions[m].margin)} ROE {roePct(run.positions[m], run.prices[m]).toFixed(1)}% 청산가 {liqPrice(run.positions[m]).toFixed(2)}
+                  <button style={btn} onClick={() => act({ type: 'close', market: m })}>정리</button>
+                </>
+              )}
+            </div>
+          ))}
+          <button style={btn} onClick={() => act({ type: 'signWaiver' })}>확인서 도장</button>
+        </div>
+      )}
       <h3>속보·기록</h3>
       <ul>{run.notices.slice(-5).reverse().map((n, i) => <li key={i}>{n.text}</li>)}</ul>
       <ul style={{ color: '#666' }}>{run.eventLog.slice().reverse().map((e, i) => <li key={i}>{e.kind} {e.text} {e.amount ?? ''}</li>)}</ul>

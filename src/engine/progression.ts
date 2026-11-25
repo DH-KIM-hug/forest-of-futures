@@ -66,3 +66,92 @@ export function purchaseWheel(g: GameState, coin: CoinId): Res {
 
 export const wheelOffers = (g: GameState): WheelStatus[] => coinWheelDefs.map((w) => wheelStatus(g, w.coin as CoinId)).filter((s) => s.visible);
 export { ownedCoins };
+
+// ── 선물 계좌 개설과 배율 상한 (GDD_v2 2.4) ─────────────────────────────
+import { levCapNow } from './futures';
+import { traitVal } from './legacy';
+import { logEvent, notify } from './util';
+import { refuse } from './loans';
+import { walletValue as walletValueOf } from './selectors';
+
+export const eduNeeded = (g: GameState): number => (treeLevel(g.family, 'prep') >= treeById.prep.maxLevel ? 0 : balance.progression.futures.eduPages);
+export const mockNeeded = (g: GameState): number => (treeLevel(g.family, 'prep') >= treeById.prep.maxLevel ? 0 : balance.progression.futures.mockTrades);
+
+export interface GateCondition { id: 'mined' | 'deposit' | 'edu'; met: boolean; current: number; need: number }
+export interface FuturesGate {
+  conditions: GateCondition[];
+  buttonVisible: boolean; // 캐피탈 창구의 [선물 계좌 개설] 버튼(누적 채굴 조건을 넘어야 보인다)
+  canOpen: boolean;
+}
+export function futuresGate(g: GameState): FuturesGate {
+  const run = g.run;
+  const f = run.futures;
+  const needMined = futuresMinedValueNeeded(g);
+  const dep = balance.progression.futures.depositCheck;
+  const eduDone = f.edu >= eduNeeded(g) && (f.mock || mockNeeded(g) === 0);
+  const conditions: GateCondition[] = [
+    { id: 'mined', met: run.minedValue >= needMined, current: Math.floor(run.minedValue), need: needMined },
+    { id: 'deposit', met: run.cash + walletValueOf(run) >= dep, current: Math.floor(run.cash + walletValueOf(run)), need: dep },
+    { id: 'edu', met: eduDone, current: f.edu + (f.mock ? 1 : 0), need: eduNeeded(g) + mockNeeded(g) },
+  ];
+  const visible = conditions[0].met && !f.open && stage(run) >= 1;
+  return { conditions, buttonVisible: visible, canOpen: visible && conditions.every((c) => c.met) };
+}
+
+/** 거래 탭의 잠금 상태: 단계 0 은 자물쇠, 단계 1 은 읽기 전용 차트 + 조건 줄, 단계 2 는 주문. */
+export function tradeGate(g: GameState): { mode: 'locked' | 'readonly' | 'orders'; text: string | null; conditions: GateCondition[] } {
+  const run = g.run;
+  if (stage(run) === 0) return { mode: 'locked', text: '쳇바퀴를 사면 시세가 보입니다', conditions: [] };
+  if (!run.futures.open) return { mode: 'readonly', text: null, conditions: futuresGate(g).conditions };
+  return { mode: 'orders', text: null, conditions: [] };
+}
+
+export function eduPage(g: GameState): Res {
+  const f = g.run.futures;
+  if (f.edu >= eduNeeded(g)) return refuse('done', '사전교육을 모두 마쳤습니다.');
+  f.edu += 1;
+  return { ok: true };
+}
+/** 모의거래: 눌러 보면 통과. 손익은 현금에 반영되지 않는다. */
+export function mockTrade(g: GameState): Res {
+  if (g.run.futures.mock) return refuse('done', '이미 마쳤습니다.');
+  g.run.futures.mock = true;
+  return { ok: true };
+}
+
+export function openAccount(g: GameState): Res {
+  const run = g.run;
+  const f = run.futures;
+  if (f.open) return refuse('open', '이미 개설되었습니다.');
+  const gate = futuresGate(g);
+  if (!gate.buttonVisible) return refuse('locked', '개설 조건이 아직 아닙니다.');
+  if (!gate.conditions[1].met) return refuse('deposit', '예탁금이 확인되지 않습니다.');
+  if (!gate.conditions[2].met) return refuse('edu', '사전교육과 모의거래를 마쳐야 합니다.');
+  f.open = true;
+  f.openedAtSettle = run.settleNo;
+  let cap = balance.progression.futures.levCaps[0].cap as number;
+  const nerve = treeLevel(g.family, 'nerve');
+  if (nerve > 0) cap = Math.max(cap, treeById.nerve.effect.levels[nerve - 1]);
+  if (nerve >= 2) f.waiver = true; // 확인서는 '가문 보관분'으로 갈음
+  const onehit = traitVal(g, 'defaultLeverage');
+  if (onehit) {
+    cap = Math.max(cap, onehit);
+    f.defaultLev = onehit;
+  }
+  f.levCap = cap;
+  logEvent(run, 'open_account', '선물 계좌 개설');
+  notify(run, '축하드립니다, 고객님. 이제 내려도 벌 수 있습니다.', 'bubble', 'bubble:open_account');
+  return { ok: true };
+}
+
+export function signWaiver(g: GameState): Res {
+  const run = g.run;
+  const f = run.futures;
+  if (!f.open || f.waiver) return refuse('none', '받을 확인서가 없습니다.');
+  if (f.closedTrades < (balance.progression.futures.levCaps[2].closedTrades as number)) return refuse('trades', '끝난 거래가 모자랍니다.');
+  f.waiver = true;
+  logEvent(run, 'waiver', '고위험 거래 확인서에 도장');
+  notify(run, '확인서가 접수되었습니다.', 'info', 'wire:waiver');
+  return { ok: true };
+}
+export { levCapNow };

@@ -1,18 +1,25 @@
 // 게임 생성과 step(state, input) -> state (GDD_v2 5.4). 순수: 시계·네트워크·DOM 을 모른다. 난수는 저장된 시드.
-import { balance, COINS, marketDefs, friendDefs } from './data';
+import { balance, COINS, marketDefs, friendDefs, tipsData } from './data';
 import { createFriends } from './friends';
 import { initialRunStats } from './stats';
 import { settle, forecast } from './settlement';
 import { netWorth, walletValue } from './selectors';
 import { refreshShark2Open } from './loans';
 import { notify } from './util';
+import { updateBars, setAvg } from './market';
+import { processPrice } from './futures';
+import { resolveTips } from './tips';
+import { bump } from './stats';
 import { act, type Action } from './actions';
 import type { FamilyState, GameState, RunState, Settings } from './types';
 import type { Tick } from './feed/types';
 
 export const SAVE_VERSION = 2;
 
-export type Input = { type: 'tick'; tick: Tick } | { type: 'action'; action: Action };
+export type Input =
+  | { type: 'tick'; tick: Tick }
+  | { type: 'action'; action: Action }
+  | { type: 'hello'; avg: Record<string, { vol180: number; range180: number; range300s: number }> };
 
 export function newFamily(): FamilyState {
   return {
@@ -39,11 +46,13 @@ export function newRun(seed: number, prices?: Record<string, number>): RunState 
     cash: balance.start.cash, cashLocked: 0, wallet: {}, walletTagBy: null, walletPeakValue: 0,
     coinWheels: {}, equipment: [], upgrades: { body: {}, run: {}, coinWheel: {}, tier: {} }, riding: null,
     acornTaps: 0, acornFrac: 0, minedValue: 0,
-    futures: { open: false, openedAtSettle: null, levCap: 10, closedTrades: 0, waiver: false },
+    futures: { open: false, edu: 0, mock: false, defaultLev: balance.trading.defaultLeverage, openedAtSettle: null, levCap: 10, closedTrades: 0, waiver: false },
     debts, taxDueIn: null, upkeepArrears: 0, upkeepOverdue: 0,
     friends: createFriends(), house: balance.start.house, positions: {},
     effects: [], pendingEvents: [], offers: [], offerSeen: {}, shark2Open: false,
-    eventLog: [], tradeLog: [], recentTips: [], recentBorrows: [], stats: initialRunStats(),
+    eventLog: [], tradeLog: [], recentTips: [], recentBorrows: [],
+    mkt: { cur: {}, bars: {}, avg: JSON.parse(JSON.stringify(tipsData.defaultAvg)), avgFromServer: false },
+    lastPos: null, lastClose: null, tipCooldown: {}, reserved: [], view: { tab: 'village' }, report: null, stats: initialRunStats(),
     peakNetWorth: 0, lastSeenTick: 0, over: false,
     uidSeq: 0, tapsThisTick: 0, garnishAcc: {}, rolloverPending: {}, waivePending: {}, promos: {},
     subsidyUsed: false, surplusAnnounced: false, firstWheelHintShown: false, notices: [], bankruptcy: null, lastSettlement: null,
@@ -78,6 +87,13 @@ function tickMut(g: GameState, t: Tick): void {
   run.tapsThisTick = 0;
   run.marketStatus = t.st;
   for (const [id, cell] of Object.entries(t.p)) run.prices[id] = cell[0];
+  updateBars(run, t);
+  for (const m of Object.keys(run.positions)) {
+    processPrice(g, m, run.prices[m]);
+    if (run.over) return;
+  }
+  resolveTips(g);
+  if (run.view.tab === 'trade' && Object.keys(run.positions).length) bump(run, 'watchSec', 1);
   const wv = walletValue(run);
   if (wv > run.walletPeakValue) run.walletPeakValue = wv;
   run.settleIn -= 1;
@@ -100,6 +116,10 @@ function checkSurplus(g: GameState): void {
 
 /** 제자리 수정 버전(테스트·시뮬레이션·루프용). 행동의 결과를 돌려준다. */
 export function stepMut(g: GameState, input: Input) {
+  if (input.type === 'hello') {
+    setAvg(g.run, input.avg);
+    return { ok: true };
+  }
   if (input.type === 'tick') {
     tickMut(g, input.tick);
     checkSurplus(g);
