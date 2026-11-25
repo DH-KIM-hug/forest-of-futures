@@ -14,3 +14,5 @@ server/data/
 *.sqlite-shm
 *.db
 *.log
+docs/ui/ref/jumo_clicker/
+docs/art/ref/tsuki_style/
