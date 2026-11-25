@@ -115,7 +115,10 @@
 .pr .buy.on { background: var(--orange); border-color: var(--o); color: var(--o); box-shadow: 0 0 0 3px #fff, inset 0 -4px 0 var(--orange-lo), 0 4px 8px 3px rgba(74, 70, 64, .2); }
 .pr .buy.popped { animation: buyPop .34s cubic-bezier(.34, 1.56, .64, 1); }
 .pr .buy.pay { background: var(--card); border-color: var(--o); color: var(--o); }
-.pr-row.tap { padding: 0; background: #E5F0DC; }
+.pr-row.tap { padding: 0; background: #E5F0DC; display: flex; align-items: center; gap: 4px; padding-right: 10px; }
+.pr-row.tap .tapbody { flex: 1; min-width: 0; }
+.pr .tapbody .sb.ms { color: var(--o); opacity: .75; font-size: 12px; }
+.pr .buy.lvup { flex: none; }
 .pr .tapbody { width: 100%; min-height: 72px; display: flex; align-items: center; gap: 10px; padding: 8px 10px; text-align: left; border-radius: 12px; }
 .pr .tapbody:active { transform: scale(.97); }
 .pr .tapbody .ic.boing { animation: squash .26s cubic-bezier(.34, 1.56, .64, 1); }

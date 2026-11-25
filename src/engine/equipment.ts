@@ -41,14 +41,32 @@ export const isReverseMargin = (g: GameState, u: EquipmentUnit): boolean => equi
 export function spokesGross(g: GameState, coin: string): number {
   return 150 * wheelLevel(g.run, coin, 'spokes') * wheelByCoin[coin].yieldMul;
 }
-/** 켜진 설비 전체의 기준 초당 순수입 합(탭 값에 0.54 배로 들어간다). */
+/** 켜진 설비 전체의 기준 초당 순수입 합(달리기 레벨 연동 몫만큼 탭에 들어간다). */
 export const baseNetPerSecSum = (run: RunState): number => run.equipment.reduce((a, u) => a + (isActive(run, u) ? tierById[u.tier].netPerSec : 0), 0);
 
-/** 탭 1회 채굴 어치(세대 시작가 기준). */
+type TapMilestone = { lv: number; mul?: number; linkPct?: number };
+const TL = (M as unknown as { tapLevel: { perLevel: number; milestones: TapMilestone[] } }).tapLevel;
+export const TAP_MILESTONES: readonly TapMilestone[] = TL.milestones;
+/** 달리기 레벨(탭타이탄식, body 줄 'shoes'). 레벨 n 의 탭 배수와 설비 연동 몫. */
+export function tapLevelParts(lv: number): { flat: number; mul: number; link: number } {
+  let mul = 1;
+  let link = M.autoShare;
+  for (const m of TL.milestones) {
+    if (lv < m.lv) continue;
+    if (m.mul) mul *= m.mul;
+    if (m.linkPct) link += m.linkPct / 100;
+  }
+  return { flat: M.tapBase + TL.perLevel * lv, mul, link };
+}
+/** 다음 마일스톤(없으면 null). */
+export const nextTapMilestone = (lv: number): TapMilestone | null => TL.milestones.find((m) => m.lv > lv) ?? null;
+
+/** 탭 1회 채굴 어치(세대 시작가 기준). 탭은 설비를 공짜로 따라가지 않는다: 달리기 레벨을 사야 오른다. */
 export function tapValue(g: GameState, coin: CoinId): number {
   const run = g.run;
-  const base = M.tapBase + M.autoShare * baseNetPerSecSum(run);
-  return base * wheelByCoin[coin].tapMul * (1 + 0.03 * bodyLevel(run, 'shoes')) * (1 + 0.1 * treeLevel(g.family, 'grip')) * traitMul(g, 'tapMul');
+  const p = tapLevelParts(bodyLevel(run, 'shoes'));
+  const base = p.flat * p.mul + p.link * baseNetPerSecSum(run);
+  return base * wheelByCoin[coin].tapMul * (1 + 0.1 * treeLevel(g.family, 'grip')) * traitMul(g, 'tapMul');
 }
 
 /** 켜진 설비의 캐는 값 가운데 가장 큰 종목의 비중(%, 내림)과 그 종목. */

@@ -79,14 +79,14 @@ describe('D. 업그레이드', () => {
     expect(g.run.cash - c1).toBe(Math.floor(1031 * 0.97));
   });
 
-  it('AC-v2-52 운동화 5단계(+15%) × 가문 특성 grip 2단계(+20%) = 채굴 1회 37.26어치', () => {
+  it('AC-v2-52 달리기 Lv5(+2×5) × 가문 특성 grip 2단계(+20%) = 채굴 1회 (27+10)×1.2 = 44.4어치', () => {
     const g = fresh();
     giveWheel(g, 'DTC');
     g.run.upgrades.body.shoes = 5;
     g.family.tree.grip = 2;
-    expect(tapValue(g, 'DTC')).toBeCloseTo(37.26, 9);
+    expect(tapValue(g, 'DTC')).toBeCloseTo(44.4, 9);
     A(g, { type: 'tap' });
-    expect(g.run.wallet.DTC.qty * g.run.refPrice.DTC).toBeCloseTo(37.26, 9);
+    expect(g.run.wallet.DTC.qty * g.run.refPrice.DTC).toBeCloseTo(44.4, 9);
   });
 
   it('AC-v2-53 현금이 다음 값 이상이면 살 수 있는 목록에 오르고, 값은 줄여 쓴다', () => {

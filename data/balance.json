@@ -66,7 +66,33 @@
   },
   "mining": {
     "tapBase": 27,
-    "autoShare": 0.54,
+    "autoShare": 0,
+    "tapLevel": {
+      "_doc": "달리기 레벨(탭타이탄식): 레벨마다 탭 +perLevel, 정해진 레벨에서 탭 ×mul 또는 설비 초당 순수입의 linkPct% 를 탭에 더한다",
+      "perLevel": 2,
+      "milestones": [
+        {
+          "lv": 10,
+          "mul": 1.5
+        },
+        {
+          "lv": 15,
+          "linkPct": 2
+        },
+        {
+          "lv": 20,
+          "mul": 1.5
+        },
+        {
+          "lv": 25,
+          "linkPct": 3
+        },
+        {
+          "lv": 30,
+          "mul": 1.5
+        }
+      ]
+    },
     "sellFee": 0.005,
     "sellFeeMin": 0.002,
     "forcedSellFee": 0.03,

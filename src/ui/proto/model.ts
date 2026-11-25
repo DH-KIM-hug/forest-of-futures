@@ -82,7 +82,7 @@ export function upgRows(g: GameState): UpgRow[] {
   };
   if (!coin) push('glove', undefined, '도토리 줍기 탭마다 +4%', 'pile');
   if (coin) {
-    push('shoes', undefined, '쳇바퀴 달리기 탭마다 +3%', 'wheel');
+    // 달리기 레벨(shoes)은 공터의 '쳇바퀴 달리기' 줄에서만 올린다(같은 걸 두 군데서 사지 않는다).
     push('oil', coin, '설비가 캐는 값 +2%', 'wheel2');
     push('spokes', coin, '혼자 도는 양 정산당 +150', 'wheel');
     push('power', coin, '전기세 −1%', 'generator');

@@ -33,7 +33,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
     expect(b.progression.firstWheelUnlockTaps).toBe(30);
     expect(b.progression.stage0OfflineSettlements).toBe(0);
     expect(b.progression.futures.levCaps.map((c: any) => c.cap)).toEqual([10, 50, 200]);
-    expect(b.mining.autoShare).toBe(0.54);
+    expect(b.mining.autoShare).toBe(0);
     expect(b.assets.costGrowth).toBe(1.25);
     expect(b.seizure.garnishRate).toBe(0.3);
     expect(b.trading.leverageOptions).toEqual([1, 2, 5, 10, 25, 50, 100, 200]);
@@ -70,7 +70,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
 
   it('upgrades.json: 7줄, 비용식 변수가 3.4a 표와 같다', () => {
     expect(D.upgradeTracks.map((t) => [t.id, t.maxLevel, t.r])).toEqual([
-      ['glove', 10, 1.15], ['shoes', 15, 1.12], ['oil', 20, 1.1], ['spokes', 10, 1.15], ['power', 15, 1.12], ['tier', 10, 1.12], ['fee', 10, 1.15],
+      ['glove', 10, 1.15], ['shoes', 30, 1.15], ['oil', 20, 1.1], ['spokes', 10, 1.15], ['power', 15, 1.12], ['tier', 10, 1.12], ['fee', 10, 1.15],
     ]);
     expect(D.trackById.glove.baseCost).toBe(4000);
     expect(D.trackById.oil.baseCostOfWheel).toBe(0.2);

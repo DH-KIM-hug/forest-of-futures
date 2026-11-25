@@ -7,7 +7,8 @@ import { say } from './watch';
 import { comma } from '../../engine/util';
 import { marketById, balance } from '../../engine/data';
 import { ownedCoins, stage } from '../../engine/selectors';
-import { tapValue } from '../../engine/equipment';
+import { nextTapMilestone, tapValue } from '../../engine/equipment';
+import { bodyLevel, upgradeCost } from '../../engine/upgrades';
 import { wheelByCoin } from '../../engine/data';
 import { positionView, type PositionView } from '../vm/trade';
 import { historyOf } from '../priceHistory';
@@ -123,6 +124,29 @@ export function Lot() {
     fx.emit({ kind: 'buy', price: r.price, key: r.key });
     return true;
   };
+  // 달리기 레벨(탭타이탄식): 탭은 설비를 공짜로 따라가지 않는다. 돈을 내고 주인공 레벨을 올린다.
+  const runLv = bodyLevel(run, 'shoes');
+  const lvCost = upgradeCost(run, 'shoes');
+  const ms = nextTapMilestone(runLv);
+  const msText = ms ? `Lv ${ms.lv}: ${ms.mul ? `탭 ×${ms.mul}` : `설비 수입 ${ms.linkPct}% 탭에 더함`}` : '';
+  const levelUp = () => {
+    const g0 = useGame.getState().g;
+    const tc = g0.run.riding ?? ownedCoins(g0.run)[0];
+    const tap0 = tc ? tapValue(g0, tc) : 0;
+    const res = act({ type: 'upgrade', track: 'shoes' });
+    if (!res.ok) { say(res.msg === '현금 부족' ? '도토리가 부족합니다' : res.msg ?? '올릴 수 없다'); play('insufficient'); return; }
+    const g1 = useGame.getState().g;
+    const lv1 = bodyLevel(g1.run, 'shoes');
+    const hit = ms && lv1 === ms.lv;
+    play(hit ? 'new_equipment' : 'buy');
+    if (hit) say(`달리기 Lv ${lv1}! ${ms!.mul ? `탭이 ×${ms!.mul}` : `설비 수입의 ${ms!.linkPct}%가 탭에 붙는다`}`);
+    const up = tc ? tapValue(g1, tc) - tap0 : 0;
+    if (up > 0.04) {
+      useProto.getState().patch({ tapUp: `탭 +${up >= 1 ? comma(Math.round(up)) : up.toFixed(1)}` });
+      window.clearTimeout(upTimer.current);
+      upTimer.current = window.setTimeout(() => useProto.getState().patch({ tapUp: null }), 2400);
+    }
+  };
   const nextPrice = rows.find((r) => r.kind !== 'locked' && !r.canBuy && r.price > run.cash)?.price ?? 0;
   const short = run.cash < nextPrice;
 
@@ -137,11 +161,17 @@ export function Lot() {
             <button className="tapbody" onPointerDown={doTap} data-tap aria-label={wheeled ? '쳇바퀴 달리기 (코인 채굴)' : '도토리 줍기'}>
               <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind={wheeled ? 'wheel' : 'pile'} /></div>
               <div className="mid">
-                <div className="nm">{wheeled ? <>쳇바퀴 달리기 <small>(코인 채굴)</small></> : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
-                <div className="sb">{wheeled ? `탭마다 ${wheelByCoin[rideCoin].name.replace(' 쳇바퀴', '')} +${comma(Math.round(tapValue(g, rideCoin)))}어치 → 콜드월렛${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔림' : ''}` : `탭마다 도토리 +${balance.progression.acornPerTap} · 줍기 ${comma(run.acornTaps)}회`}</div>
+                <div className="nm">{wheeled ? <>쳇바퀴 달리기 <small>Lv {runLv}</small></> : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
+                <div className="sb">{wheeled ? `탭마다 코인 +${comma(Math.round(tapValue(g, rideCoin)))}어치${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔림' : ' → 콜드월렛'}` : `탭마다 도토리 +${balance.progression.acornPerTap} · 줍기 ${comma(run.acornTaps)}회`}</div>
+                {wheeled && msText && <div className="sb ms">다음 {msText}</div>}
               </div>
-              <div className="buy tapbtn"><span>{wheeled ? '달리기' : '줍기'}</span><small>탭!</small></div>
+              {!wheeled && <div className="buy tapbtn"><span>줍기</span><small>탭!</small></div>}
             </button>
+            {wheeled && (
+              <button className={'buy lvup' + (lvCost !== null && run.cash >= lvCost ? ' on' : '')} disabled={lvCost === null} data-lvup onClick={levelUp} aria-label="달리기 레벨 올리기">
+                <span>{lvCost === null ? '만렙' : '레벨업'}</span>{lvCost !== null && <small>{comma(lvCost)}</small>}
+              </button>
+            )}
           </div>
           {rows.map((r) => <ProdRow key={r.key} r={r} onBuy={buy} />)}
         </div>

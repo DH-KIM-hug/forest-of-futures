@@ -49,16 +49,18 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(g.run.wallet.BTH.qty * ref(g, 'BTH')).toBeCloseTo(27 * 1.07, 9);
   });
 
-  it('AC-v2-29 켜진 설비의 기준 초당 순수입 합이 100 이면 탭 1번 81어치', () => {
+  it('AC-v2-29 탭은 설비를 공짜로 따라가지 않는다: 설비 초당 100이어도 달리기 Lv0 이면 27, Lv15 면 (27+30)×1.5 + 100×2% = 87.5', () => {
     const g = fresh();
     giveWheel(g, 'DTC');
     const old = tierById.wheel2.netPerSec;
     tierById.wheel2.netPerSec = 100;
     try {
       giveEquip(g, 'wheel2', 'DTC', 20000);
-      expect(tapValue(g, 'DTC')).toBeCloseTo(81, 9);
+      expect(tapValue(g, 'DTC')).toBeCloseTo(27, 9);
+      g.run.upgrades.body.shoes = 15;
+      expect(tapValue(g, 'DTC')).toBeCloseTo(87.5, 9);
       A(g, { type: 'tap' });
-      expect(g.run.wallet.DTC.qty * ref(g, 'DTC')).toBeCloseTo(81, 9);
+      expect(g.run.wallet.DTC.qty * ref(g, 'DTC')).toBeCloseTo(87.5, 9);
     } finally {
       tierById.wheel2.netPerSec = old;
     }

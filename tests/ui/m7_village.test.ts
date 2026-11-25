@@ -78,11 +78,11 @@ describe('AC-v2-53 업그레이드 초록 점과 줄여 쓴 숫자', () => {
     const g = fresh();
     g.run.cash = 100;
     expect(workModel(g).affordableDot).toBe(false);
-    g.run.cash = 4000;
+    g.run.cash = 2000;
     const w = workModel(g);
     expect(w.affordableDot).toBe(true);
-    expect(w.upgrades.find((u) => u.track === 'glove')!.afford).toBe(true);
-    expect(w.upgrades.find((u) => u.track === 'shoes')!.afford).toBe(false);
+    expect(w.upgrades.find((u) => u.track === 'glove')!.afford).toBe(false);
+    expect(w.upgrades.find((u) => u.track === 'shoes')!.afford).toBe(true);
   });
   it('줄여 쓰기: 12,345 -> 1.2만 · 9,500 -> 9,500 · 150,000,000 -> 1.5억', () => {
     expect(short(12345)).toBe('1.2만');

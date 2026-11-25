@@ -27,22 +27,23 @@
       "id": "shoes",
       "scope": "body",
       "names": [
+        "맨발 달리기",
         "시장표 운동화",
         "러닝화",
-        "한정판"
+        "한정판 러닝화"
       ],
       "effect": {
         "stat": "mineTap",
-        "addPct": 3
+        "addValue": 2
       },
-      "maxLevel": 15,
-      "baseCost": 5000,
-      "r": 1.12,
+      "maxLevel": 30,
+      "baseCost": 1500,
+      "r": 1.15,
       "lookAt": [
         1,
-        5,
         10,
-        15
+        20,
+        30
       ]
     },
     {

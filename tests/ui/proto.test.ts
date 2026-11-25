@@ -56,7 +56,7 @@ describe('시제품 읽기 모델', () => {
     expect(upgRows(g).map((r) => r.track)).toEqual(['glove']);
     tapN(g, 30);
     A(g, { type: 'buyWheel', coin: 'DTC' });
-    expect(upgRows(g).map((r) => r.track)).toEqual(['shoes', 'oil', 'spokes', 'power', 'fee']);
+    expect(upgRows(g).map((r) => r.track)).toEqual(['oil', 'spokes', 'power', 'fee']);
     A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' });
     g.run.cash = 200000;
     A(g, { type: 'buyEquip', tier: 'helper', coin: 'DTC' });
