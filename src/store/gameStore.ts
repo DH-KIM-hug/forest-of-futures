@@ -22,7 +22,13 @@ const persist = (g: GameState) => {
 };
 
 const hasWindow = typeof window !== 'undefined';
-export const feedMode: FeedMode = hasWindow ? pickFeedMode(window.location.search, (import.meta as any).env?.VITE_FEED) : 'sim';
+// 시제품(?proto=1)은 feed 값이 없으면 서버 없이 도는 sim 을 쓴다.
+const feedSearch = (): string => {
+  const s = window.location.search;
+  const q = new URLSearchParams(s);
+  return q.get('proto') === '1' && !q.get('feed') ? s + (s ? '&' : '?') + 'feed=sim' : s;
+};
+export const feedMode: FeedMode = hasWindow ? pickFeedMode(feedSearch(), (import.meta as any).env?.VITE_FEED) : 'sim';
 
 const simFeed = new SimFeed(Date.now() & 0xffff);
 const first = simFeed.snapshot();

@@ -1,0 +1,105 @@
+// 시제품 반응(juice) 한 곳: 사건 → 등급별 묶음. 시뮬레이션은 건드리지 않는다(game-feel).
+//   소: 줍기 탭(눌림 + +n + 도토리 2~3알이 HUD 로 날아감), 숫자 굴러 오름
+//   중: 구입(새 물건 팝), 정산(막대 번쩍), 추심원 도착
+//   대: 강제 청산(장면 흔들림 + '청산' 도장), 파산
+import { useEffect, useRef, useState } from 'react';
+import { acornSvg } from './art';
+
+export type FxEvent =
+  | { kind: 'tap'; gain: string }
+  | { kind: 'buy'; price: number; key: string }
+  | { kind: 'liq'; market: string };
+
+const subs = new Set<(e: FxEvent) => void>();
+export const fx = {
+  emit(e: FxEvent) { subs.forEach((f) => f(e)); },
+  on(f: (e: FxEvent) => void) { subs.add(f); return () => { subs.delete(f); }; },
+};
+export function useFx(f: (e: FxEvent) => void): void {
+  const ref = useRef(f);
+  ref.current = f;
+  useEffect(() => fx.on((e) => ref.current(e)), []);
+}
+
+export const reduced = (): boolean => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+let live = 0;
+/** 도토리 몇 알이 from 에서 HUD 도토리 숫자로 포물선을 그리며 날아간다. 동시에 12알까지. */
+export function flyAcorns(from: DOMRect | null, n = 3): void {
+  if (!from || reduced()) return;
+  const target = document.getElementById('pr-acorn-ic');
+  if (!target) return;
+  const to = target.getBoundingClientRect();
+  for (let i = 0; i < n && live < 12; i++) {
+    const el = document.createElement('div');
+    el.className = 'pr-fly';
+    el.innerHTML = acornSvg(18);
+    const sx = from.left + from.width / 2 + (Math.random() - 0.5) * 24;
+    const sy = from.top + from.height * 0.35;
+    el.style.left = `${sx - 9}px`;
+    el.style.top = `${sy - 9}px`;
+    document.body.appendChild(el);
+    live++;
+    const dx = to.left + to.width / 2 - sx, dy = to.top + to.height / 2 - sy;
+    const side = (i % 2 ? 1 : -1) * (18 + Math.random() * 16);
+    const a = el.animate(
+      [
+        { transform: 'translate(0,0) scale(.5) rotate(0deg)', opacity: 0.4 },
+        { transform: `translate(${side}px,-34px) scale(1.15) rotate(${side * 3}deg)`, opacity: 1, offset: 0.28 },
+        { transform: `translate(${dx}px,${dy}px) scale(.7) rotate(${side * 8}deg)`, opacity: 1 },
+      ],
+      { duration: 560 + i * 70, delay: i * 45, easing: 'cubic-bezier(.45,0,.75,.6)', fill: 'forwards' },
+    );
+    a.onfinish = () => {
+      el.remove();
+      live--;
+      target.animate([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 160, easing: 'ease-out' });
+    };
+  }
+}
+
+/** 숫자가 목표로 굴러간다(ease-out 350ms). 동작 줄이기면 바로 바뀐다. */
+export function useCountUp(v: number, ms = 380): number {
+  const [d, setD] = useState(v);
+  const cur = useRef(v);
+  useEffect(() => {
+    const from = cur.current;
+    if (from === v) return;
+    if (reduced() || Math.abs(v - from) < 2) { cur.current = v; setD(v); return; }
+    let raf = 0;
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms);
+      const val = Math.round(from + (v - from) * (1 - Math.pow(1 - k, 3)));
+      cur.current = val;
+      setD(val);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [v, ms]);
+  return d;
+}
+
+/** 실제 시계에 따른 시간대 색조(§10.3). */
+export interface Tint { name: string; color: string; op: number; night: boolean }
+export function tintAt(d = new Date()): Tint {
+  const m = d.getHours() * 60 + d.getMinutes();
+  const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ptime') : null; // 화면 확인용 덮어쓰기(예: ptime=2130)
+  const mm = q ? +q.slice(0, -2) * 60 + +q.slice(-2) : m;
+  if (mm >= 300 && mm < 420) return { name: '새벽', color: '#C9D6F2', op: 0.3, night: false };
+  if (mm >= 420 && mm < 960) return { name: '낮', color: '#ffffff', op: 0, night: false };
+  if (mm >= 960 && mm < 1080) return { name: '늦은 오후', color: '#F6D9A8', op: 0.18, night: false };
+  if (mm >= 1080 && mm < 1170) return { name: '노을', color: '#F2B27A', op: 0.32, night: false };
+  if (mm >= 1170 && mm < 1320) return { name: '저녁', color: '#8E86C7', op: 0.42, night: true };
+  return { name: '밤', color: '#4E5C96', op: 0.55, night: true };
+}
+export function useClock(): Date {
+  const [d, setD] = useState(() => new Date());
+  useEffect(() => { const t = window.setInterval(() => setD(new Date()), 15000); return () => window.clearInterval(t); }, []);
+  return d;
+}
+export const clockText = (d: Date): string => {
+  const h = d.getHours();
+  return `${h < 12 ? '오전' : '오후'} ${h % 12 === 0 ? 12 : h % 12}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
