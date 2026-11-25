@@ -22,14 +22,15 @@ export function borrowFriend(g: GameState, id: string): Res {
   const fs = run.friends[id];
   if (run.over) return { ok: false };
   if (fs.broken) return refuse('broken', '문이 닫혀 있습니다.');
-  if (fs.trust < friendRules.minTrustToBorrow || fs.debt + f.borrowUnit > f.maxLoan) {
+  const amt = Math.min(f.borrowUnit, Math.max(0, f.maxLoan - fs.debt)); // 남은 한도만큼만(U-20)
+  if (fs.trust < friendRules.minTrustToBorrow || amt <= 0) {
     logEvent(run, 'refused:friend', `${f.name}: 거절`);
     return refuse('refuse', fs.trust < friendRules.minTrustToBorrow ? '지금은 곤란해.' : '더는 빌려줄 수 없어.');
   }
   if (fs.debt === 0) fs.dueAt = run.settleNo + friendRules.dueCycles;
-  fs.debt += f.borrowUnit;
+  fs.debt += amt;
   fs.trust += friendRules.trustPerBorrow;
-  run.cash += f.borrowUnit;
+  run.cash += amt;
   bump(run, 'friendBorrows', 1);
   if (!fs.everBorrowed) {
     fs.everBorrowed = true;
@@ -38,8 +39,8 @@ export function borrowFriend(g: GameState, id: string): Res {
   if (!fs.maxedOut && fs.debt >= f.maxLoan) fs.maxedOut = true;
   run.recentBorrows = run.recentBorrows.filter((b) => run.tick - b.tick <= 120);
   run.recentBorrows.push({ src: 'friend', kind: 'friend', tick: run.tick, counted: false });
-  logEvent(run, `borrow:friend`, `${f.name}에게 빌림`, f.borrowUnit);
-  return { ok: true, amount: f.borrowUnit };
+  logEvent(run, `borrow:friend`, `${f.name}에게 빌림`, amt);
+  return { ok: true, amount: amt };
 }
 
 export function stampFriend(g: GameState, id: string, mult: Mult = 1): Res {

@@ -41,7 +41,7 @@ export function PeopleTab() {
   const f = friendById.squirrel;
   const fs = run.friends.squirrel;
   const left = f.maxLoan - fs.debt;
-  const canBorrow = !fs.broken && fs.trust >= friendRules.minTrustToBorrow && left >= f.borrowUnit;
+  const canBorrow = !fs.broken && fs.trust >= friendRules.minTrustToBorrow && left > 0;
   const overdue = fs.debt > 0 && fs.dueAt !== null && run.settleNo >= fs.dueAt;
   const lv = Math.max(1, Math.ceil(fs.trust / 20));
   const dueIn = fs.dueAt !== null ? Math.max(0, fs.dueAt - run.settleNo) : 0;
@@ -77,21 +77,8 @@ export function PeopleTab() {
 
   return (
     <div className="pr-pane">
-      <div className="pr-title"><b>인맥</b><span>아는 사이 {1 + (hams.length > 0 ? 1 : 0) + (bearBought ? 1 : 0)}명</span></div>
+      <div className="pr-title"><b>인맥</b><span>아는 사이 {1 + (bearBought ? 1 : 0)}명</span></div>
       <p className="pr-note left">사이가 깊을수록 그 사람이 주는 것이 는다. 싸우는 사람은 없다.</p>
-
-      <div className="pr-card plc person">
-        <div className="plc-top"><div className="ic"><RowIcon kind="helper" /></div><div className="mid">
-          <div className="nm">알바 햄스터 <small>사이 Lv {hams.length}</small></div>
-          <div className="eff">{hams.length > 0 ? `${hams.length}마리 · 정산마다 +${comma(hamMine)} 캔다` : '아직 아무도 없다 · 한 마리마다 쳇바퀴를 돌린다'}</div>
-          <div className="sq">「일당만 주시면 밤새 돌게요!」</div>
-        </div></div>
-        <div className="pr-bar sm" aria-label="고용 비용 모으기"><i style={{ width: pct(hamMaxed ? 1 : run.cash / hamPrice) }} /></div>
-        <div className="btns"><button className={'buy' + (hamCan ? ' on' : '')} disabled={!hamCan} onClick={hire}>
-          <span>{hamMaxed ? '만렙(3마리)' : hamCan ? '한 마리 더' : hamWhy === '현금 부족' ? '부족' : '잠김'}</span><small>{hamMaxed ? '' : comma(hamPrice)}</small>
-        </button></div>
-        {!hamCan && !hamMaxed && hamWhy !== '현금 부족' && <div className="gl">{hamWhy}</div>}
-      </div>
 
       <div className={'pr-card plc person' + (fs.broken ? ' gone' : '')}>
         <div className="plc-top"><div className="ic"><RowIcon kind="squirrel" /></div><div className="mid">
@@ -102,7 +89,7 @@ export function PeopleTab() {
         <div className="pr-bar sm" aria-label={`믿음 ${fs.trust}`}><i className="trust" style={{ width: pct(fs.trust / friendRules.trustMax) }} /></div>
         <div className={'gl' + (overdue || fs.broken ? ' bad' : '')}>{warn}</div>
         <div className="btns">
-          <button className={'buy' + (canBorrow ? ' on' : '')} disabled={!canBorrow} onClick={borrow}><span>빌리기</span><small>+{comma(f.borrowUnit)}</small></button>
+          <button className={'buy' + (canBorrow ? ' on' : '')} disabled={!canBorrow} onClick={borrow}><span>빌리기</span><small>+{comma(Math.min(f.borrowUnit, left))}</small></button>
           <button className={'buy' + (fs.debt > 0 ? ' pay' : '')} disabled={fs.debt <= 0} onClick={repay}><span>갚기</span><small>−{comma(Math.min(f.stampUnit, fs.debt || f.stampUnit))}</small></button>
         </div>
       </div>

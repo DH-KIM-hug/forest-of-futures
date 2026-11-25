@@ -34,7 +34,9 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
   if (run.over) return { ok: false };
   if (id === 'shark2' && !run.shark2Open) return refuse('locked', '아직 갈 일이 없는 골목입니다.');
   if (closedNow(g, id)) return closedRes(g, id);
-  const unit = unitOverride ?? l.borrowUnit!;
+  // 한 번에 빌리는 단위보다 남은 한도가 적으면 남은 만큼만 빌린다(DECISIONS_LOG U-20). 남은 한도가 0 이면 거절.
+  const room = Math.max(0, lenderLimit(g, id) - run.debts[id].principal);
+  const unit = unitOverride ?? (room > 0 ? Math.min(l.borrowUnit!, room) : l.borrowUnit!);
   if (id === 'bank' && run.house <= 0) {
     bump(run, 'bankRefusals', 1);
     logEvent(run, 'refused:bank', `${l.name}: 담보가 확인되지 않음`);

@@ -118,7 +118,8 @@ export function MapTab() {
               <div className="sb">한도 {comma(lenderLimit(g, id))} · 금리 {(l.rate * 100).toFixed(0)}%{l.upfront ? ' · 선이자 ' + l.upfront * 100 + '%' : ''}</div>
             </div></div>
             <div className="btns">
-              <button className="buy on" onClick={() => doBorrow(id)}><span>빌리기</span><small>+{comma(l.borrowUnit!)}</small></button>
+              {(() => { const room = Math.max(0, lenderLimit(g, id) - d.principal); const amt = Math.min(l.borrowUnit!, room); return (
+                <button className={'buy' + (amt > 0 ? ' on' : '')} disabled={amt <= 0} onClick={() => doBorrow(id)}><span>{amt > 0 ? '빌리기' : '한도 다 씀'}</span><small>{amt > 0 ? '+' + comma(amt) : ''}</small></button>); })()}
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(l.stampUnit)}</small></button>
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} onClick={() => doPay(id, 'all')}><span>전부</span><small>갚기</small></button>
             </div>
