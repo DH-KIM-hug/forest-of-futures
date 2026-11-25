@@ -11,7 +11,7 @@ import { UpgTab, MapTab, PhoneTab } from './Tabs';
 import { EndingFlow } from './Ending';
 import { ProfitPrompt } from './ProfitPrompt';
 import { BOSS_NAME } from './text';
-import { isFast } from './config';
+import { isFast, isCheat } from './config';
 import { clone } from '../../engine/game';
 import { comma } from '../../engine/util';
 import { interestDue } from '../../engine/selectors';
@@ -189,7 +189,7 @@ function LiqStamp({ onShake }: { onShake: () => void }) {
 
 function DevBar() {
   const setGame = useGame((s) => s.setGame);
-  if (!isFast) return null;
+  if (!isCheat) return null;
   const mut = (f: (g: ReturnType<typeof clone<ReturnType<typeof useGame.getState>['g']>>) => void) => { const g = clone(useGame.getState().g); f(g); setGame(g); };
   return (
     <div className="pr-dev" aria-label="개발 단추">
