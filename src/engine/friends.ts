@@ -80,6 +80,9 @@ export function processBreaks(g: GameState): void {
     addToSet(run, 'broken', f.id);
     run.stats.lastBroken = f.id;
     run.stats.cashAtBreak = run.cash;
+    run.stats.friendDebtAtBreak = fs.debt;
+    if (run.stats.firstBreakSettle === undefined) run.stats.firstBreakSettle = run.settleNo;
+    if ((run.stats.friendsBroken as number) >= 3 && run.stats.brokenWithinSettles === undefined) run.stats.brokenWithinSettles = run.settleNo - run.stats.firstBreakSettle;
     if (f.onBreak === 'sellClaim' && fs.debt > 0) {
       run.debts.shark2.principal += fs.debt;
       bump(run, 'claimsSold', fs.debt);

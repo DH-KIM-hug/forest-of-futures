@@ -7,6 +7,7 @@ import { wheelStatus } from './engine/progression';
 import { comma, abbrev, timeOfDay } from './engine/util';
 import { affordableUpgrades } from './engine/upgrades';
 import { upgradeTracks } from './engine/data';
+import { previewEnding } from './engine/endings';
 import { futuresGate } from './engine/progression';
 import { levCapNow, roePct, liqPrice } from './engine/futures';
 
@@ -126,6 +127,17 @@ export default function App() {
           ))}
           <button style={btn} onClick={() => act({ type: 'signWaiver' })}>확인서 도장</button>
         </div>
+      )}
+      <h3>엔딩</h3>
+      {run.over && g.pendingEnding ? (
+        <div>
+          <b>{g.pendingEnding.id} {g.pendingEnding.title}</b> ({g.pendingEnding.cause}, {g.pendingEnding.isNew ? '새 엔딩' : `${g.pendingEnding.nth}번째`}) — {g.pendingEnding.line}
+          <div>마지막 세 장면: {g.pendingEnding.lastThree.map((e) => e.text).join(' / ')}</div>
+          <div>한 끗 차이: {g.pendingEnding.nearMisses.map((m) => `${m.id}(${m.missing})`).join(', ') || '없음'}</div>
+          <div>다음 세대에 남는 것: {g.pendingEnding.nextGen.trait} · {g.pendingEnding.nextGen.trace}</div>
+        </div>
+      ) : (
+        <div>이대로 가면 → {previewEnding(g).ending.id} {previewEnding(g).lantern ? '(등불 켜짐: ' + previewEnding(g).ending.clue + ')' : '(이미 수집)'}</div>
       )}
       <h3>속보·기록</h3>
       <ul>{run.notices.slice(-5).reverse().map((n, i) => <li key={i}>{n.text}</li>)}</ul>

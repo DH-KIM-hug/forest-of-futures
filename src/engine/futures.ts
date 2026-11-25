@@ -138,6 +138,7 @@ export function openPosition(g: GameState, o: OpenParams): Res {
   run.positions[o.market] = p;
   bump(run, 'tradesOpened', 1);
   if (p.tipSource) bump(run, 'tipTrades', 1);
+  if (p.tipSource === 'leadroom') bump(run, 'leadroomFollowed', 1);
   run.tradeLog.push({ n: run.tick, market: o.market, dir: o.dir, lev: o.lev, margin, price, kind: 'entry' });
   logEvent(run, 'entry', `${marketById[o.market].name} ${o.dir === 1 ? '롱' : '숏'} ${o.lev}배 진입`, margin);
   return { ok: true, amount: margin };
@@ -196,6 +197,7 @@ function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: {
   bump(run, p.lev === 200 ? 'lev200Trades' : 'nonLev200Trades', 1);
   if (kind === 'liq') {
     bump(run, 'liqStreak', 1);
+    bump(run, 'liqCount', 1);
     bump(run, 'liqsThisCycle', 1);
   } else run.stats.liqStreak = 0;
   run.stats.winStreak = pnl > 0 ? (run.stats.winStreak ?? 0) + 1 : 0;

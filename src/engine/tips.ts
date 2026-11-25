@@ -4,6 +4,7 @@ import { nextRandom } from './rng';
 import { roePct } from './futures';
 import { tipKey } from './futures';
 import { logEvent, notify } from './util';
+import { bump } from './stats';
 import type { GameState, MarketAvg, SettleBar, TipRecord } from './types';
 
 interface Source {
@@ -70,6 +71,7 @@ function speak(g: GameState, src: Source, market: string, dir: 0 | 1 | -1, vol?:
   const text = (lines[0] ?? '').replace('{market}', marketById[market].name).replace('{vol}', vol ? (Math.round(vol * 10) / 10).toString() : '');
   notify(run, src.kind === 'fact' ? text : `${src.name}: ${text}`, src.kind === 'fact' ? 'wire' : 'bubble', `tip:${src.id}:${run.tick}`);
   logEvent(run, `tip:${src.id}`, text);
+  if (dir !== 0) bump(run, 'tipsSeen', 1);
   if (rec.counted) {
     const b = (g.family.tipBook[src.id] ??= { said: 0, hit: 0 });
     b.said += 1;

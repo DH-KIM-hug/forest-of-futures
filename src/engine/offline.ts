@@ -42,7 +42,7 @@ export function economyCatchUp(g: GameState, awaySec: number): number {
 import { balance as bal } from './data';
 import { processBar, applyFundingOne, positionList, liqPrice } from './futures';
 import { logEvent, notify } from './util';
-import { refuse } from './loans';
+import { bump } from './stats';
 import type { Bar } from './feed/types';
 import type { AwayReport, Res } from './types';
 
@@ -63,6 +63,7 @@ export function onForeground(g: GameState): Res {
 }
 /** 건물 방문 기록(연체 뒤 조합 방문 횟수 같은 통계용). */
 export function visit(g: GameState, place: string): Res {
+  if (place === 'terms.shark2') bump(g.run, 'termsOpened.shark2', 1);
   const k = `visitsSinceOverdue.${place}`;
   if (g.run.stats[k] !== undefined && g.run.stats[k] !== null) g.run.stats[k] += 1;
   return { ok: true };

@@ -69,3 +69,25 @@
 
 ### 닫은 연기 항목
 AC-v2-45(숏 보험), AC-v2-61(포지션 꼬리표), AC-v2-72(실제 청산에서 즉시 파산 호출)를 `tests/engine/ac_i_futures.test.ts` 에서 시험한다.
+
+## M3 엔딩 엔진
+
+새 파일: `snapshot.ts`(`buildSnapshot`: `meta.stats` 의 키 전부를 만든다), `endings.ts`(조건 평가·`candidatesFor`·`chooseEnding`·`previewEnding`(등불)·`nearMisses`(한 끗 차이)·`archiveEntry`(기록관 표시)·`finalizeEnding`(장부·계보·가문 통계·`pendingEnding`)). `declareBankruptcy` 가 원인을 고른 뒤 `finalizeEnding` 을 부르고 나서 'bankrupt' 기록을 남긴다(그래서 "마지막 세 장면"에 파산 줄이 끼지 않는다).
+
+### 해석·벗어난 것
+- **값을 모르는 키는 null, null 과 비교하는 조건은 거짓**: 예) 이사한 적이 없으면 `netWorthAtMove` 는 null 이라 `<= 0` 이 거짓. 한 번도 포지션이 끝나지 않았으면 `lev`·`dir` 등도 null.
+- **마지막 포지션 키**: 끝난 포지션 가운데 손실이면 가장 최근 손실, 손실이 없으면 가장 최근 것(`run.lastPos`). 열린 포지션만 있고 끝난 것이 없으면 null.
+- **`credit`**: GDD 에 정의가 없어 `max(1, 10 − 연체 누적 횟수)` 로 두었다(END-028 "연체 누적 9회 이상 = 1점"에 맞춤). `ltv` 는 조합 원금 ÷ 집 평가액(%), 집이 없으면 null.
+- **`last3` 별칭**: 오소리·독사 도장·대출 기록은 `stamp:shark`/`borrow:shark` 도 함께 들어간다(CSV 조건이 그 이름을 쓴다). 제안 수락은 `promo_loan`(족제비 반값)·`discount_today`(오소리·독사 이자 감면)으로 `offerTaken` 에 쌓는다.
+- **`lastLender in grudge`**: 값 `grudge` 는 '원한 품은 채권처 집합에 든다'로 읽는다(`family.lenderRelations`, 채워지는 곳은 M4).
+- **`tp` 식**: `maxRoe >= 0.9 * tp` 의 `tp` 는 마지막 포지션의 익절 ROE(%) 숫자(`_tpRoe`), 조건 `tp = set` 의 `tp` 는 걸었는지(`set`/`none`).
+- **가문 통계**: `fam.*` 는 `family.stats`(숫자만) + 이번 세대 몫. `fam.bankruptcies` 는 이번 파산을 포함, `fam.collected` 는 이번 엔딩을 넣기 전 장부 수. 연속 같은 원인은 `sameCause.<원인>`.
+- **M4 가 채울 키(지금은 null/0)**: `parentInherit`, `parentCause`, `estateNet`, `pawned`, `pawnedHeirloomAge`, `inheritedPaid`, 원한(`grudge`), `houseInherited`.
+- **이대로 가면**: 지금 파산한다면의 마지막 연체처 = 연체가 가장 깊은 채권처(없으면 유지비 연체, 그것도 없으면 독사 > 오소리 > 캐피탈 > 조합 중 빚이 있는 곳), 미납액 = 다음 정산 예상 이자 + 생활비. 상태를 바꾸지 않는다.
+- **한 끗 차이**: 같은 원인의 미수집 엔딩 가운데 조건이 정확히 하나만 거짓인 것, 희귀도 높은 순·번호 순으로 2개. `missing` 에 거짓인 조건 문자열.
+- **기록관 ★3**: 조건 하나(`hiddenCondIndex`)가 `키 ?` 로 보이고 `clueVisible=false`. 같은 원인이면서 조건 키를 하나라도 함께 쓰는 엔딩(`neighborsOf`)을 하나 모으면 열린다.
+- **`firstAt`**: 장부에 처음 올린 때는 시계를 읽지 않기 위해 세대 번호를 넣는다(표시용 날짜는 화면 쪽이 저장 시각으로 채울 수 있다).
+- **디버그 화면**: 이대로 가면(등불)·엔딩 카드 데이터를 한 줄씩 보여 준다.
+
+### 닫은 연기 항목
+AC-v2-125 의 "엔진 통계에 있음"(`missingKeys(buildSnapshot) = []`), 엔딩 200개 각각이 "조건을 만족하는 상태를 만들면 후보에 든다"(`tests/data/endings_generated.test.ts`, 원인 여러 개면 원인마다).

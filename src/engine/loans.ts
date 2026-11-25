@@ -53,7 +53,10 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
   run.cash += received;
   run.debts[id].principal += unit;
   bump(run, 'upfrontPaid', unit - received);
+  if (id === 'shark1' || id === 'shark2') bump(run, 'sharkBorrowed', unit);
+  if (id === 'shark2' && run.stats.flyerOpen) bump(run, 'flyerLoans', 1);
   if (id === 'shark2') bump(run, 'borrow.shark2', 1);
+  if (id === 'bank' && run.stats['visitsSinceOverdue.bank'] != null) run.stats['visitsSinceOverdue.bank'] += 1;
   run.recentBorrows = run.recentBorrows.filter((b) => run.tick - b.tick <= balance.trading.fundedByWindowSec * 2);
   run.recentBorrows.push({ src: id, kind: 'lender', tick: run.tick, counted: false });
   logEvent(run, `borrow:${id}`, `${l.name}에서 빌림`, received);
@@ -105,6 +108,7 @@ export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {
   bump(run, 'stamps', Math.max(1, ceilS(amt / l.stampUnit)));
   if (id === 'shark2') bump(run, 'stamps.shark2', 1);
   run.stats.lastStampAmount = amt;
+  run.stats.stampedCycle = 1;
   noteRepay(g, id, 'lender');
   logEvent(run, `stamp:${id}`, `${l.name}에 도장`, amt);
   const cleared = d.principal === 0;

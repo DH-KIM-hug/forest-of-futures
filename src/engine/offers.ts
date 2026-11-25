@@ -52,11 +52,11 @@ export function acceptOffer(g: GameState, id: string): Res {
     res = rollover(g, target);
   } else if (fx.type === 'flyer') {
     run.shark2Open = true;
-    bump(run, 'flyerLoans', 0);
+    run.stats.flyerOpen = true;
   }
   if (!res.ok) return res;
   run.offers = run.offers.filter((o) => o.id !== id);
-  addToSet(run, 'offerTaken', id);
+  addToSet(run, 'offerTaken', id === 'promo' ? 'promo_loan' : id === 'waive' || id === 'fake_waive' ? 'discount_today' : id);
   refreshShark2Open(g);
   return { ok: true };
 }

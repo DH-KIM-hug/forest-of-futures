@@ -97,6 +97,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   rep.living = livingDue(g);
   due.upkeep = rep.living + run.upkeepArrears + powerRemainder;
   const claim = Object.values(due).reduce((a, b) => a + b, 0);
+  st.lastClaim = claim;
 
   // 5. 급매
   if (run.cash < claim) rep.forcedSold = forcedSell(g, claim - run.cash);
@@ -153,6 +154,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
       if (id === 'bank' || id === 'capital') bump(run, 'odInstitution', 1);
       if (id === 'shark2') bump(run, 'od.shark2', 1);
       logEvent(run, `overdue:${id}`, `${lenderById[id].name} 이자 연체 ${d.overdue}회`, unpaid[id]);
+      if (id === 'bank' && st['visitsSinceOverdue.bank'] == null) st['visitsSinceOverdue.bank'] = 0;
     } else if (due[id] > 0 || d.principal <= 0) {
       d.overdue = 0;
     }
@@ -228,6 +230,9 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   run.settleNo += 1;
   const nw = netWorth(run);
   if (nw > run.peakNetWorth) run.peakNetWorth = nw;
+  if (run.peakNetWorth > g.family.peakNetWorth && nw >= run.peakNetWorth) st.familyRecordTick = run.tick;
+  st.interestOnlyStreak = rep.interest > 0 && !st.stampedCycle ? (st.interestOnlyStreak ?? 0) + 1 : 0;
+  st.stampedCycle = 0;
   run.lastSettlement = rep;
   if (!run.over)
     notify(run, `정산: 캔 값 +${comma(rep.mined)} / 전기세 -${comma(rep.power)} / 이자·생활비 -${comma(rep.interest + rep.living)}`, 'settle');
