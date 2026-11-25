@@ -1,12 +1,12 @@
 // 임시 디버그용 스토어(M7 전). 엔진은 순수라 여기서만 시계와 시세 출처를 붙인다.
 // 시세 출처: 기본 게임 서버(ServerFeed). ?feed=sim|replay 면 서버 없이 SimFeed·ReplayFeed (개발용).
 import { create } from 'zustand';
-import { createGame, step } from '../engine/game';
+import { clone, createGame, step, stepMut } from '../engine/game';
 import type { Action } from '../engine/actions';
 import { SimFeed } from '../engine/feed/simFeed';
 import { ReplayFeed, type Recording } from '../engine/feed/replayFeed';
 import type { Tick } from '../engine/feed/types';
-import type { AwayReport, GameState } from '../engine/types';
+import type { AwayReport, GameState, Res } from '../engine/types';
 import { loadGame, localStorageAdapter, saveGame } from '../engine/save';
 import { pickFeedMode, serverUrl, type FeedMode } from '../net/feedMode';
 import { ServerFeed, type FeedStatus } from '../net/serverFeed';
@@ -14,7 +14,9 @@ import { attachServerFeed, type Session } from '../net/session';
 
 const adapter = localStorageAdapter();
 let lastSaved = 0;
+export const persistFlag = { on: true };
 const persist = (g: GameState) => {
+  if (!persistFlag.on) return;
   void saveGame(adapter, g, Date.now());
   lastSaved = g.run.settleNo;
 };
@@ -44,7 +46,8 @@ interface Store {
   g: GameState;
   speed: number;
   net: NetInfo;
-  act: (a: Action) => void;
+  act: (a: Action) => Res;
+  setGame: (g: GameState) => void;
   advance: (seconds: number) => void;
   reset: () => void;
   hydrate: () => Promise<string | null>;
@@ -58,10 +61,13 @@ export const useGame = create<Store>((set, get) => ({
   speed: 1,
   net: baseNet(),
   act: (action) => {
-    const g = step(get().g, { type: 'action', action });
+    const g = clone(get().g);
+    const res = stepMut(g, { type: 'action', action });
     set({ g });
-    persist(g);
+    if (action.type !== 'tap') persist(g);
+    return res;
   },
+  setGame: (g) => set({ g }),
   advance: (seconds) => {
     if (feedMode === 'server') return; // 서버 시계는 앞당길 수 없다
     let g = get().g;
