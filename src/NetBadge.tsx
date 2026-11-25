@@ -7,10 +7,10 @@ const MARKET: Record<string, string> = { open: '시장 열림', delayed: '시세
 export function NetBadge() {
   const net = useGame((s) => s.net);
   const run = useGame((s) => s.g.run);
-  const bad = net.source === 'server' && (net.conn !== 'open' || run.marketStatus !== 'open');
+  const bad = (net.source === 'server' || net.source === 'hl') && (net.conn !== 'open' || run.marketStatus !== 'open');
   return (
     <p style={{ margin: '4px 0', padding: '4px 8px', background: bad ? '#fde8e8' : '#e8f3ea', borderRadius: 4 }}>
-      시세 출처: <b>{net.source === 'server' ? '게임 서버' : net.source === 'sim' ? '난수(SimFeed)' : '기록 재생(ReplayFeed)'}</b>
+      시세 출처: <b>{net.source === 'server' ? '게임 서버' : net.source === 'sim' ? (net.fallback ? '난수(SimFeed, 실시간 연결 실패)' : '난수(SimFeed)') : net.source === 'hl' ? '실시간(브라우저 직결)' : '기록 재생(ReplayFeed)'}</b>
       {net.url && <> ({net.url})</>} · 연결: <b>{CONN[net.conn] ?? net.conn}</b> · 시장: <b>{MARKET[run.marketStatus]}</b>
       {net.stale && <b style={{ color: 'crimson' }}> · 틱이 안 옴</b>}
       {net.source === 'server' && net.conn === 'local' && <span> · 시장에 연결할 수 없습니다(포지션 얼림)</span>}

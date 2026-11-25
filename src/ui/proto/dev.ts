@@ -56,6 +56,19 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       if (name === 'rebirth') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
       return g;
     }
+    case 'friends': case 'friendsup': case 'friendsbor': {
+      // 인맥: friendsup = 강화 탭(카드 사기 전), friends = 인맥 탭, friendsbor = 빌린 뒤 + 곰 형 영입
+      const g = ready();
+      g.run.cash = name === 'friendsbor' ? 40_000 : 60_000;
+      if (name === 'friendsup') { P.patch({ everUnlocked: { lot: true, upg: true }, visited: { lot: true, upg: true }, mapBought: true, tab: 'upg' }); return g; }
+      P.patch({ peopleBought: true, everUnlocked: { ...un }, visited: { lot: true, upg: true, phone: true, map: true }, tab: 'people' });
+      if (name === 'friendsbor') {
+        stepMut(g, { type: 'action', action: { type: 'borrowFriend', friend: 'squirrel' } });
+        g.run.cash = 40_000;
+        P.patch({ bearBought: true, tip: { coin: 'DTC', dir: 1, price: g.run.prices.DTC * 0.998, no: 2 } });
+      }
+      return clone(g);
+    }
     default: return base;
   }
 }

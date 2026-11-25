@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
-import { MAP_PRICE } from './model';
+import { MAP_PRICE, PEOPLE_PRICE } from './model';
+import { ownedCoins } from '../../engine/selectors';
 import { say } from './watch';
 import { comma } from '../../engine/util';
 import { clone } from '../../engine/game';
@@ -20,13 +21,15 @@ export function UpgTab() {
   const act = useGame((s) => s.act);
   const setGame = useGame((s) => s.setGame);
   const mapBought = useProto((s) => s.mapBought);
+  const peopleBought = useProto((s) => s.peopleBought);
   const run = g.run;
   const gate = futuresGate(g);
   const lines = gateLines(g);
   const depositOk = gate.conditions[1].met;
   const canPhone = gate.buttonVisible && depositOk;
-  const total = 2;
-  const bought = (run.futures.open ? 1 : 0) + (mapBought ? 1 : 0);
+  const total = 3;
+  const bought = (run.futures.open ? 1 : 0) + (mapBought ? 1 : 0) + (peopleBought ? 1 : 0);
+  const peopleOpen = ownedCoins(run).length > 0;
 
   const openPhone = () => {
     for (let i = 0; i < eduNeeded(g); i++) act({ type: 'eduPage' });
@@ -43,6 +46,15 @@ export function UpgTab() {
     c.run.cash -= MAP_PRICE;
     setGame(c);
     useProto.getState().patch({ mapBought: true });
+  };
+  const buyPeople = () => {
+    // 시제품 가짜: 지도와 같이 값을 엔진 밖에서 현금에서 뗀다.
+    const c = clone(g);
+    if (c.run.cash < PEOPLE_PRICE) { say('도토리가 부족합니다'); play('insufficient'); return; }
+    play('buy');
+    c.run.cash -= PEOPLE_PRICE;
+    setGame(c);
+    useProto.getState().patch({ peopleBought: true });
   };
   return (
     <div className="pr-pane">
@@ -67,8 +79,16 @@ export function UpgTab() {
           <button className={'buy' + (run.cash >= MAP_PRICE ? ' on' : '')} disabled={run.cash < MAP_PRICE} onClick={buyMap}><span>{run.cash >= MAP_PRICE ? '구입' : '부족'}</span><small>{comma(MAP_PRICE)}</small></button>
         </div>
       )}
-      <div className="pr-card locked"><div className="ic"><span className="q">?</span></div><div className="mid"><div className="nm">아는 사이 늘리기</div><div className="sb">인맥 탭 · 시제품 범위 밖</div></div><button className="buy" disabled><span>잠김</span></button></div>
-      {run.futures.open && mapBought && <p className="pr-note">살 수 있는 카드를 다 샀다. 이제 빚만 남았다.</p>}
+      {!peopleBought && (peopleOpen ? (
+        <div className="pr-card">
+          <div className="ic"><RowIcon kind="people" /></div>
+          <div className="mid"><div className="nm">아는 사이 늘리기</div><div className="eff">인맥 탭이 열린다 · 알바 햄스터, 단짝 다람쥐</div><div className="sq">다람쥐 「요즘 뭐 해? 밥은 먹었고?」</div></div>
+          <button className={'buy' + (run.cash >= PEOPLE_PRICE ? ' on' : '')} disabled={run.cash < PEOPLE_PRICE} onClick={buyPeople}><span>{run.cash >= PEOPLE_PRICE ? '구입' : '부족'}</span><small>{comma(PEOPLE_PRICE)}</small></button>
+        </div>
+      ) : (
+        <div className="pr-card locked"><div className="ic"><span className="q">?</span></div><div className="mid"><div className="nm">????</div><div className="sb">첫 쳇바퀴를 사면 보인다</div></div><button className="buy" disabled><span>잠김</span></button></div>
+      ))}
+      {run.futures.open && mapBought && peopleBought && <p className="pr-note">살 수 있는 카드를 다 샀다. 이제 빚만 남았다.</p>}
     </div>
   );
 }

@@ -97,9 +97,10 @@ describe('AC-v2-138 앱 번들에 시세 출처 주소·실제 종목 이름이 
     }
     expect(hits).toEqual([]);
   });
-  it('앱이 여는 네트워크 연결은 ServerFeed 의 baseUrl(게임 서버) 하나뿐이다', () => {
+  it('앱이 네트워크를 여는 곳은 두 군데뿐이다: ServerFeed(게임 서버)와 시제품 직결 시세의 io.ts(주소는 서버 설정 파일에서 읽음)', () => {
+    // 의도는 그대로다: 연결을 여는 코드가 흩어지지 않고, 주소·종목 이름 문자열이 src 에 없다(위 테스트). 시제품(GitHub Pages)은 서버가 없어서 io.ts 가 하나 더 있다.
     const files = walk(join(root, 'src')).filter((f) => !f.includes('/engine/'));
     const users = files.filter((f) => /\bfetch\(|new WebSocket\(|fetchFn\(|wsFactory\(/.test(readFileSync(f, 'utf8')));
-    expect(users.map((f) => f.replace(root, ''))).toEqual(['src/net/serverFeed.ts']);
+    expect(users.map((f) => f.replace(root, '')).sort()).toEqual(['src/net/hlDirect/io.ts', 'src/net/serverFeed.ts']);
   });
 });

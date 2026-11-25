@@ -93,6 +93,33 @@ export const Hamster = ({ cx, cy, h, run = false }: { cx: number; cy: number; h:
     <circle cx={cx + h * 0.1} cy={cy - h * 0.7} r={1.6} fill={O} />
   </g>
 );
+/** 다람쥐(단짝): 회갈색 몸, 큰 꼬리, 리본 없음 */
+export const Squirrel = ({ cx, cy, h, hop = false }: { cx: number; cy: number; h: number; hop?: boolean }) => (
+  <g className={hop ? 'pa-hop' : undefined} style={{ transformOrigin: `${cx}px ${cy}px` }}>
+    <ellipse cx={cx} cy={cy + 1} rx={h * 0.34} ry={h * 0.08} fill="#000" opacity={0.13} />
+    <path d={`M${cx + h * 0.2} ${cy - h * 0.12} q${h * 0.5} ${-h * 0.05} ${h * 0.3} ${-h * 0.62} q${-h * 0.1} ${h * 0.08} ${-h * 0.16} ${h * 0.02} q${h * 0.08} ${h * 0.22} ${-h * 0.14} ${h * 0.4}z`} fill="#A98B6E" stroke={O} strokeWidth={2} strokeLinejoin="round" />
+    <ellipse cx={cx} cy={cy - h * 0.3} rx={h * 0.28} ry={h * 0.31} fill="#9C8168" stroke={O} strokeWidth={2} />
+    <ellipse cx={cx} cy={cy - h * 0.24} rx={h * 0.16} ry={h * 0.2} fill="#E8DCC6" />
+    <path d={`M${cx - h * 0.24} ${cy - h * 0.92} l${h * 0.04} ${-h * 0.14} l${h * 0.12} ${h * 0.1}z M${cx + h * 0.24} ${cy - h * 0.92} l${-h * 0.04} ${-h * 0.14} l${-h * 0.12} ${h * 0.1}z`} fill="#8B7158" stroke={O} strokeWidth={2} strokeLinejoin="round" />
+    <circle cx={cx} cy={cy - h * 0.68} r={h * 0.29} fill="#9C8168" stroke={O} strokeWidth={2} />
+    <ellipse cx={cx} cy={cy - h * 0.58} rx={h * 0.17} ry={h * 0.11} fill="#E8DCC6" />
+    <circle cx={cx - h * 0.1} cy={cy - h * 0.7} r={1.7} fill={O} />
+    <circle cx={cx + h * 0.1} cy={cy - h * 0.7} r={1.7} fill={O} />
+    <ellipse cx={cx} cy={cy - h * 0.62} rx={h * 0.04} ry={h * 0.028} fill={O} />
+  </g>
+);
+/** 곰(동네 형) 얼굴만: 카드 아이콘용 */
+export const BearFace = ({ cx, cy, r }: { cx: number; cy: number; r: number }) => (
+  <g>
+    <circle cx={cx - r * 0.72} cy={cy - r * 0.72} r={r * 0.32} fill="#8A6445" stroke={O} strokeWidth={2} />
+    <circle cx={cx + r * 0.72} cy={cy - r * 0.72} r={r * 0.32} fill="#8A6445" stroke={O} strokeWidth={2} />
+    <circle cx={cx} cy={cy} r={r} fill="#A67B55" stroke={O} strokeWidth={2.2} />
+    <ellipse cx={cx} cy={cy + r * 0.3} rx={r * 0.44} ry={r * 0.34} fill="#E8D2AC" />
+    <ellipse cx={cx} cy={cy + r * 0.12} rx={r * 0.13} ry={r * 0.09} fill={O} />
+    <circle cx={cx - r * 0.38} cy={cy - r * 0.15} r={1.8} fill={O} />
+    <circle cx={cx + r * 0.38} cy={cy - r * 0.15} r={1.8} fill={O} />
+  </g>
+);
 /** 오소리(추심원·대부): 회색 몸, 흰 얼굴 줄, 짙은 눈 줄 */
 export const Badger = ({ cx, cy, h }: { cx: number; cy: number; h: number }) => (
   <g>
@@ -169,6 +196,10 @@ export function RowIcon({ kind, size = 44 }: { kind: string; size?: number }) {
       return <Ico size={size}><Wheel cx={20} cy={47} w={34} col={C.dtc} /><Wheel cx={33} cy={47} w={26} col={C.mdt} /></Ico>;
     case 'helper':
       return <Ico size={size}><Hamster cx={25} cy={46} h={38} /></Ico>;
+    case 'squirrel':
+      return <Ico size={size}><Squirrel cx={24} cy={46} h={40} /></Ico>;
+    case 'bear':
+      return <Ico size={size}><BearFace cx={25} cy={28} r={16} /></Ico>;
     case 'row':
       return <Ico size={size}><Dia cx={25} cy={46} hw={22} fill={C.dirt} sw={2} /><Wheel cx={14} cy={40} w={20} col={C.dtc} /><Wheel cx={25} cy={44} w={22} col={C.bth} /><Wheel cx={36} cy={40} w={20} col={C.mdt} /></Ico>;
     case 'generator':

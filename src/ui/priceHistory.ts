@@ -15,6 +15,13 @@ export function pushPrices(prices: Record<string, number>, tick: number): void {
     if (a.length > HIST_LEN) a.splice(0, a.length - HIST_LEN);
   }
 }
+/** 시작할 때 봉으로 복원한 지난 가격을 앞에 붙인다(이미 쌓인 최근 값은 그대로 뒤에 남는다). */
+export function prependHistory(past: Record<string, number[]>): void {
+  for (const [k, v] of Object.entries(past)) {
+    const a = (hist[k] ??= []);
+    hist[k] = [...v, ...a].slice(-HIST_LEN);
+  }
+}
 export const historyOf = (market: string): number[] => hist[market] ?? [];
 export function resetHistory(): void {
   for (const k of Object.keys(hist)) delete hist[k];

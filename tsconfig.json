@@ -9,6 +9,7 @@
     "noUnusedLocals": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "isolatedModules": true,
     "noEmit": true,

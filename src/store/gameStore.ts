@@ -11,6 +11,10 @@ import { loadGame, localStorageAdapter, saveGame } from '../engine/save';
 import { pickFeedMode, serverUrl, type FeedMode } from '../net/feedMode';
 import { ServerFeed, type FeedStatus } from '../net/serverFeed';
 import { attachServerFeed, type Session } from '../net/session';
+import { HlDirectFeed } from '../net/hlDirect/feed';
+import { attachHlFeed, type HlSession } from '../net/hlDirect/attach';
+import { openSocket, postJson } from '../net/hlDirect/io';
+import { prependHistory } from '../ui/priceHistory';
 
 const adapter = localStorageAdapter();
 let lastSaved = 0;
@@ -22,11 +26,11 @@ const persist = (g: GameState) => {
 };
 
 const hasWindow = typeof window !== 'undefined';
-// 시제품(?proto=1)은 feed 값이 없으면 서버 없이 도는 sim 을 쓴다.
+// 시제품(?proto=1)은 feed 값이 없으면 서버 없이 브라우저가 직접 받는 실시간 시세(hl)를 쓴다. &feed=sim 은 오프라인용 난수 시세.
 const feedSearch = (): string => {
   const s = window.location.search;
   const q = new URLSearchParams(s);
-  return q.get('proto') === '1' && !q.get('feed') ? s + (s ? '&' : '?') + 'feed=sim' : s;
+  return q.get('proto') === '1' && !q.get('feed') ? s + (s ? '&' : '?') + 'feed=hl' : s;
 };
 export const feedMode: FeedMode = hasWindow ? pickFeedMode(feedSearch(), (import.meta as any).env?.VITE_FEED) : 'sim';
 
@@ -37,6 +41,10 @@ const pricesOf = (t: Tick) => Object.fromEntries(Object.entries(t.p).map(([k, v]
 let serverFeed: ServerFeed | null = null;
 let replayFeed: ReplayFeed | null = null;
 let session: Session | null = null;
+let hlFeed: HlDirectFeed | null = null;
+let hlSession: HlSession | null = null;
+/** 이 시간 안에 첫 시세가 안 오면 연습 시세(sim)로 바꾼다. */
+const HL_GIVE_UP_MS = 8000;
 
 export interface NetInfo {
   source: FeedMode;
@@ -46,6 +54,8 @@ export interface NetInfo {
   everConnected: boolean;
   url?: string;
   away: AwayReport | null;
+  /** hl 모드에서 실시간 시세를 못 받아 연습 시세(sim)로 돌고 있다. */
+  fallback?: boolean;
 }
 
 interface Store {
@@ -60,7 +70,7 @@ interface Store {
   setSpeed: (n: number) => void;
 }
 
-const baseNet = (): NetInfo => ({ source: feedMode, conn: feedMode === 'server' ? 'idle' : 'local', market: 'open', stale: false, everConnected: false, away: null });
+const baseNet = (): NetInfo => ({ source: feedMode, conn: feedMode === 'server' ? 'idle' : feedMode === 'hl' ? 'connecting' : 'local', market: 'open', stale: false, everConnected: false, away: null });
 
 export const useGame = create<Store>((set, get) => ({
   g: createGame({ seed: 1, prices: pricesOf(first) }),
@@ -76,6 +86,7 @@ export const useGame = create<Store>((set, get) => ({
   setGame: (g) => set({ g }),
   advance: (seconds) => {
     if (feedMode === 'server') return; // 서버 시계는 앞당길 수 없다
+    if (feedMode === 'hl' && !get().net.fallback) return; // 실시간 시세도 앞당길 수 없다
     let g = get().g;
     for (let i = 0; i < seconds; i++) g = step(g, { type: 'tick', tick: (replayFeed ?? simFeed).next() });
     set({ g });
@@ -115,6 +126,7 @@ export async function startLoop(): Promise<void> {
     feed.connect();
     return;
   }
+  if (feedMode === 'hl') startHl();
   if (feedMode === 'replay') {
     const rec: Recording = (await import('../../docs/gdd/v2/sim/data/hl_3m.json')).default as unknown as Recording;
     replayFeed = new ReplayFeed(rec, 0, 0);
@@ -125,4 +137,37 @@ export async function startLoop(): Promise<void> {
   }, 1000);
 }
 
-export const feedHandles = () => ({ serverFeed, session });
+/** 브라우저 직결 실시간 시세. 못 붙으면 연습 시세로 내려간다. */
+function startHl(): void {
+  const feed = new HlDirectFeed({ socketFactory: openSocket, post: postJson });
+  hlFeed = feed;
+  hlSession = attachHlFeed(
+    feed,
+    {
+      get: () => useGame.getState().g,
+      set: (g) => {
+        useGame.setState({ g });
+        if (g.run.settleNo !== lastSaved) persist(g);
+      },
+      onAway: (away) => useGame.setState((s) => ({ net: { ...s.net, away } })),
+    },
+    prependHistory,
+  );
+  feed.onStatus((s) =>
+    useGame.setState((st) => (st.net.fallback ? st : { net: { ...st.net, conn: s.conn === 'idle' ? 'idle' : s.conn === 'live' ? 'open' : s.conn, market: s.market, stale: s.conn === 'down', everConnected: s.everConnected } })),
+  );
+  document.addEventListener('visibilitychange', () => {
+    if (useGame.getState().net.fallback) return;
+    if (document.hidden) hlSession?.background();
+    else hlSession?.foreground();
+  });
+  feed.connect();
+  setTimeout(() => {
+    if (feed.status.everConnected) return;
+    hlSession?.detach();
+    feed.disconnect();
+    useGame.setState((s) => ({ net: { ...s.net, source: 'sim', conn: 'local', market: 'open', stale: false, fallback: true } }));
+  }, HL_GIVE_UP_MS);
+}
+
+export const feedHandles = () => ({ serverFeed, session, hlFeed, hlSession });

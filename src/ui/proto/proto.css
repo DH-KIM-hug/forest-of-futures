@@ -325,3 +325,20 @@
 .pr-lab li i { font-style: normal; font-size: 11.5px; opacity: .65; }
 .pr-lab li p { margin: 3px 0 0; font-size: 11.5px; line-height: 1.35; opacity: .8; font-family: system-ui, sans-serif; }
 .pr.tab-phone .pr-profit { top: auto; bottom: calc(300px + env(safe-area-inset-bottom, 0px)); }
+
+/* 인맥 탭 */
+.pr-note.left { text-align: left; margin: -4px 4px 0; }
+.pr-card.person .eff { font-size: 13px; }
+.pr-card.person .nm small { margin-left: 4px; padding: 1px 7px; border-radius: 9px; background: #fff; border: 1.8px solid var(--o); font-size: 12px; font-weight: 800; color: var(--teal); }
+.pr-card.person.locked .nm small { color: var(--sub); }
+.pr-card.person .sb { font-size: 13px; color: var(--sub); line-height: 1.45; }
+.pr-card.person .sb b { color: var(--o); font-variant-numeric: tabular-nums; }
+.pr-bar.sm { height: 10px; margin: 0 2px; border-radius: 5px; }
+.pr-bar.sm i.trust { background: var(--mint); }
+.pr-card.person .gl.bad { color: var(--red-ink); font-weight: 800; }
+.pr-card.person.gone { opacity: .7; border-style: dashed; }
+.pr-card.person .tip { padding: 8px 12px; border-radius: 12px; background: #fff; border: 2px solid var(--o); }
+.pr-card.person .tip p { margin: 0; font-size: 15px; font-weight: 800; }
+.pr-card.person .tip small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--sub); font-variant-numeric: tabular-nums; }
+.pr-card.person .tip .up { color: #B8432C; } .pr-card.person .tip .dn { color: #3F6CB0; }
+.pr-card .buy.wide { width: 100%; }

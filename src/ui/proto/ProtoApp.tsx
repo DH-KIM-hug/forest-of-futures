@@ -8,6 +8,7 @@ import { startWatch } from './watch';
 import { startHistory } from '../priceHistory';
 import { Lot, useOpenPositions } from './Lot';
 import { UpgTab, MapTab, PhoneTab } from './Tabs';
+import { PeopleTab } from './People';
 import { EndingFlow } from './Ending';
 import { ProfitPrompt } from './ProfitPrompt';
 import { BOSS_NAME } from './text';
@@ -17,6 +18,7 @@ import { comma } from '../../engine/util';
 import { interestDue } from '../../engine/selectors';
 import { balance, DEBT_IDS } from '../../engine/data';
 import { Acorn, RowIcon, O } from './art';
+import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
 import { pdev } from './config';
 import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
@@ -57,7 +59,7 @@ function Hud() {
     <header className={'pr-hud' + (lot ? ' over' : '')}>
       <div className="r1">
         <div className="lt">
-          <div className="clock">{clockText(now)} <SoundBtn /></div>
+          <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
           {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span>이자 {comma(interest)}/정산</span></div>}
         </div>
         <DevBar />
@@ -222,7 +224,7 @@ export function ProtoApp() {
         {tab === 'upg' && <UpgTab />}
         {tab === 'map' && <MapTab />}
         {tab === 'phone' && <PhoneTab />}
-        {tab === 'people' && <div className="pr-pane"><p className="pr-note">인맥은 시제품 범위 밖.</p></div>}
+        {tab === 'people' && <PeopleTab />}
         {toast && <div className="pr-toast" role="status">{toast}</div>}
       </main>
       <TabBar />

@@ -11,6 +11,9 @@ import type { CoinId, GameState } from '../../engine/types';
 
 export const WHEEL_COIN: CoinId = 'DTC';
 export const MAP_PRICE = 3000;
+export const PEOPLE_PRICE = 5000;
+export const BEAR_PRICE = 30000;
+export const TIP_EVERY = 2; // 곰 형이 정산 몇 번마다 말해 주나
 
 // ── 목표 사슬 ────────────────────────────────────────────────────────────
 export interface Goal { label: string; cur: number; need: number; done: boolean }

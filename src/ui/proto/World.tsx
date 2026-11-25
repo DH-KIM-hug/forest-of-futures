@@ -5,12 +5,13 @@ import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
 import { ownedCoins } from '../../engine/selectors';
 import { comma } from '../../engine/util';
-import { C, O, Dia, Cube, Room, Tent, Tree, Wheel, Hamster, Badger, Spiky, Round, Device } from './art';
+import { C, O, Dia, Cube, Room, Tent, Tree, Wheel, Hamster, Badger, Squirrel, Spiky, Round, Device } from './art';
 import { useFx, flyAcorns, tintAt, useClock } from './fx';
 import heroFront from './img/hero_front.png';
 import heroSide from './img/hero_side.png';
 import { COLLECTOR_NAME } from './text';
 
+const isFriendDev = typeof window !== 'undefined' && /pdev=friends/.test(window.location.search);
 type Item = { y: number; key: string; node: ReactNode };
 const WHEEL2_SLOTS: [number, number, number, string][] = [[278, 336, 56, C.mdt], [150, 330, 54, C.bth], [328, 364, 50, C.sms]];
 const HELPER_SLOTS: [number, number][] = [[262, 388], [296, 380], [236, 398]];
@@ -35,6 +36,7 @@ export function World({ near }: { near: boolean }) {
   const g = useGame((s) => s.g);
   const tapping = useProto((s) => s.tapping);
   const collector = useProto((s) => s.collector);
+  const peopleOpen = useProto((s) => !!s.everUnlocked.people);
   const run = g.run;
   const now = useClock();
   const tint = tintAt(now);
@@ -117,6 +119,14 @@ export function World({ near }: { near: boolean }) {
       {near && <path className="pa-sweat" d={`M${hx - 20} ${hy - hh + 8} q-5 8 0 11 q5 -3 0 -11z`} fill="#BFE3F2" stroke={O} strokeWidth={1.6} />}
     </g>
   ) });
+  // 단짝 다람쥐가 놀러 온다: 사이가 끊기지 않았으면 15초 창 세 개 중 하나에서 앉아 있다(1분 주기)
+  const visit = peopleOpen && !run.friends.squirrel.broken && Math.floor(now.getTime() / 15000) % 4 === 1;
+  if (visit || (peopleOpen && isFriendDev)) {
+    items.push({ y: 396, key: 'squirrel', node: (
+      <g key="squirrel" className="pa-walkin"><Squirrel cx={64} cy={396} h={40} hop={false} />
+        {run.friends.squirrel.debt > 0 && <Round x={30} y={338} w={78} h={26} text="빌려줬지~" tail={20} />}</g>
+    ) });
+  }
   // 추심원(§3.7): 길목에서 걸어 들어와 집 앞에 선다. 이자 막대가 정산 상환액만큼 깎인다.
   if (collector && collector.interest > 0) {
     const left = collector.overdue ? 1 - collector.fill : 0;

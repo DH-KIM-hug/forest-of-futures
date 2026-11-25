@@ -1,7 +1,8 @@
 // 게임 상태 변화를 보고 시제품 화면 사건(정산 컷인·추심원·탭 해금·목표)을 만든다. 엔진은 건드리지 않는다.
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
-import { currentGoal } from './model';
+import { currentGoal, TIP_EVERY } from './model';
+import { makeTip } from './bearTip';
 import { perSettle } from './model';
 import { DEBT_IDS, marketById } from '../../engine/data';
 import { fx } from './fx';
@@ -76,12 +77,15 @@ export function startWatch(): void {
         noteClose({ market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: g.family.generation });
       }
     }
+    // 곰 형의 확실한 정보(화면에서만: 규칙은 건드리지 않는다)
+    if (g.run.settleNo > prev.run.settleNo && useProto.getState().bearBought && g.run.settleNo % TIP_EVERY === 0) useProto.getState().patch({ tip: makeTip(g) });
     // 탭 해금·목표
     const un = { ...useProto.getState().everUnlocked };
     const before = JSON.stringify(un);
     if (g.run.equipment.length > 0 && !un.upg) { un.upg = true; say('강화 탭이 열렸다!'); play('unlock_tab'); }
     if (g.run.futures.open && !un.phone) { un.phone = true; say('폰 탭이 열렸다!'); play('unlock_tab'); }
     if (useProto.getState().mapBought && !un.map) { un.map = true; say('지도 탭이 열렸다!'); play('unlock_tab'); }
+    if (useProto.getState().peopleBought && !un.people) { un.people = true; say('인맥 탭이 열렸다!'); play('unlock_tab'); }
     if (JSON.stringify(un) !== before) useProto.getState().patch({ everUnlocked: un });
     const everOpened = useProto.getState().everOpened || Object.keys(g.run.positions).length > 0;
     if (everOpened !== useProto.getState().everOpened) useProto.getState().patch({ everOpened });
