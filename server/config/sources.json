@@ -1,0 +1,22 @@
+{
+  "_doc": "시세 출처와 가상 종목의 대응. 이 파일은 서버 밖으로 나가지 않는다(GDD_v2 4.2, 6장). 키 IDX_XRP 는 지수 전용 구성원(거래 종목 아님).",
+  "primary": {
+    "kind": "hyperliquid",
+    "url": "wss://api.hyperliquid.xyz/ws",
+    "coins": { "DTC": "BTC", "BTH": "ETH", "SMS": "SOL", "MDT": "DOGE", "IDX_XRP": "XRP" }
+  },
+  "secondary": {
+    "kind": "dex",
+    "pools": {
+      "DTC": "arbitrum:uniswap-v3:WBTC/USDC",
+      "BTH": "arbitrum:uniswap-v3:WETH/USDC",
+      "SMS": "solana:orca-raydium:SOL/USDC"
+    }
+  },
+  "index": {
+    "id": "JQQ",
+    "primaryMembers": ["DTC", "BTH", "SMS", "MDT", "IDX_XRP"],
+    "secondaryMembers": ["DTC", "BTH", "SMS"]
+  },
+  "volumeKeys": ["DTC", "BTH", "SMS", "MDT", "IDX_XRP"]
+}

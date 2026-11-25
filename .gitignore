@@ -6,3 +6,11 @@ dist
 # 이미지 생성 원본(가공 전 사본)·로그 — 최종 PNG만 커밋
 *.raw.png
 docs/art/**/logs/
+
+# 서버 DB·로그
+server/data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.log

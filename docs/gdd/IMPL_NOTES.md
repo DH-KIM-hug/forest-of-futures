@@ -145,3 +145,36 @@ AC-v2-125 의 "엔진 통계에 있음"(`missingKeys(buildSnapshot) = []`), 엔�
 2. `data/balance.json` `inheritance.renounceCash` 70,000 → 100,000: 16 / 16 / 12 / 12. 1·2번을 같이 하면 15 / 14 / 12 / 8.2 로 4·5세대가 목표에 가까워지지만 둘째 세대(26 목표)는 너무 빨라진다 — 둘 중 하나만.
 3. 한정승인 잉여금에 상한을 둔다(`balance.inheritance` 에 `limitedSurplusCap`, 예: 30만; 코드 한 줄 필요). 지금은 부모의 재산 전부가 현금이 되어 "빚 없이 시작하지 않는다"는 규칙이 첫 접속에 무력해진다.
 `heirwheel` 3단계에 알바 칩멍크를 더하는 안은 시험했지만 효과가 거의 없었다(24 / 18 / 15 / 12 그대로).
+
+## M5 서버 릴레이 (`server/`)
+
+실행: `npm run server:install`(처음 한 번) → `npm run server`(= `server/` 의 `npm run dev`, 파일이 바뀌면 다시 뜸). 기본 포트 8787. 앱은 다른 터미널에서 `npm run dev`. 환경 변수: `PORT`·`HOST`(기본 0.0.0.0)·`DB_PATH`(기본 `server/data/fof.sqlite`)·`TICK_EPOCH`(초, 처음 한 번만 DB 에 고정)·`SOURCES_PATH`·`MARKETS_PATH`·`PRIMARY_URL`·`DISABLE_SECONDARY=1`·`CORS_ORIGIN`·`QUIET=1`. 테스트는 루트 `npm test` 가 `server/tests` 까지 돈다(`server/` 에서 `npm test` 도 됨). `cd server && npm run typecheck` 로 서버 타입 검사.
+
+**벗어난 곳·고른 해석**
+- **SQLite = `node:sqlite`(Node 내장)**. `better-sqlite3` 대신. 이 Mac 은 Node 24 라 내장 모듈이 있고 네이티브 빌드가 필요 없다(의존성은 `ws` 하나). 실험 모듈이라 실행에 `--disable-warning=ExperimentalWarning` 을 붙인다. vitest 2(vite 5)가 `node:sqlite` 를 못 찾아서 `createRequire` 로 부른다. `engines.node >= 22.18`(타입 제거 실행 때문).
+- **TypeScript 를 컴파일하지 않고 Node 의 타입 제거로 바로 실행**(`node src/index.ts`). 그래서 `.ts` 확장자 import, enum·생성자 파라미터 프로퍼티 금지(`erasableSyntaxOnly`). 빌드 산출물 없음. 배포 때 번들이 필요하면 그때 추가.
+- **저장 형식**: `ticks.p` 는 가격·거래량 지수·매수 비율을 JSON 텍스트 한 칸에(GDD 는 열 15개). 읽기는 틱 번호 범위뿐이라 충분하다. `raw_ticks` 에는 원본 mid·체결 금액(서버 안에서만). `bars_180.avg60` 칸 = 정산 봉의 마지막 60틱 평균(11장 자리).
+- **틱 번호 기준 `epoch`**: 처음 가동한 시각 −1초를 DB `meta.tickEpoch` 에 고정(운영에서 정하려면 `TICK_EPOCH`). 프로토콜의 `epoch`(주 1회 가격대 재설정 자리)는 항상 1 이고 hello 의 `ts` 는 `n + tickEpoch`(초). `hello` 는 마지막 틱 `n` 을 준다.
+- **봉**: `vol`·`buy` 는 틱 평균(엔진의 `SettleBar` 와 같은 뜻). 정지(`halted`) 틱은 OHLC 에서 빼고, 전부 정지인 봉은 직전 가격의 납작한 봉 `st=2`. 봉 상태 코드 0 open / 1 delayed / 2 halted. `/v1/bars` 의 "20,000개" 는 **시간 칸 수**(종목이 5개여도 칸 20,000개 = 응답 봉 10만 개). 응답 모양 `{res, from, to, markets, bars:{종목:[[n0,o,h,l,c,vol,buy,st]…]}, next?}`, 틱은 `{from,to,ticks:[{n,ts,st,p}]}`(최대 600).
+- **'평소' 값(`avg`)**: `vol180` = 최근 정산 봉 vol 평균, `range180` = 정산 봉 (고−저)/시가 평균, `range300s` = 연속 1분 봉 5개 묶음의 (고−저)/시가 평균(24시간). 봉이 없으면 GDD 예시값(0.0021 / 0.0026). hello 는 30초 캐시.
+- **거래량 지수**: 초당 체결 금액 ÷ 지수 이동 평균(반감기 1시간, 시작은 단순 평균, 재시작 때 `raw_ticks` 최근 1시간으로 시드), 상한 50. 지수 JQQ 는 구성원 평균.
+- **전환 규칙**: GDD 6.3 대로(5초 조용 → 보조, 60초 정상 → 복귀, 수익률 0.5%p 이상 30초 → 보조 + 알림 로그). 복귀·전환·정지 해제 때는 모두 새 mid 로 앵커를 다시 잡아 **이어 붙인다**. GDD 는 `halted` 뒤만 "멈춘 동안 움직임 버림"이라 했지만 `delayed`(5~60초) 뒤에도 같이 버린다(한 틱에 5~60초치 움직임이 튀는 것을 막으려는 해석).
+- **재시작**: 저장된 마지막 틱의 가격에서 이어 가고, 꺼져 있던 초(5초 넘게)는 `halted` 틱으로 채워 틱 번호에 구멍이 없게 한다. 진행 중이던 봉은 저장된 틱으로 복원.
+- **보조 출처**: `DexAdapterStub.start()` 가 `NotImplementedError` 를 던지고, 릴레이는 보조를 "없음"으로 표시한다(그동안 주 출처가 죽으면 곧바로 `delayed` → `halted`). 전환 로직은 가짜 보조로 시험(AC-v2-136). 실제 RPC 는 M10.
+- **구독 수**: 종목마다 `bbo` + `trades` = 10개(제한 10 이내). ping 15초, 5초 무소식이면 소켓을 끊고 백오프 재연결(1→2→4…30초, ±20%, 데이터가 오면 초기화).
+- **랭킹**: `/v1/rank*` 는 501(M10). `/healthz` 는 출처를 `A`/`B` 로만 말한다.
+- 서버 시작 직후 hello 의 `st` 는 첫 표본이 오기까지 `delayed`(5초 안에 `open`).
+
+**AC 대응(서버 테스트 `server/tests/ac_m_*.test.ts`)**: AC-v2-133~140 모두(138 은 서버가 내는 hello·k·REST 직렬화에 원본 가격 문자열·종목 이름·출처 주소가 없음을 검사; 앱 번들 쪽은 M6). 141(랭킹)·136 의 실제 어댑터는 M10. "기록한 원본 메시지 재생 테스트"는 가짜 소켓·가짜 시계 시나리오로 대신했고 "실제 연결 1시간 무중단"은 하지 않았다(아래 20초 연결만).
+
+**실연결 스모크(20초, `cd server && npm run smoke -- 20`, 인메모리 DB, 로컬 ws 클라이언트)** — 가상 값과 개수만:
+```
+hello: markets=DTC,BTH,SMS,MDT,JQQ warmBarsDTC=0 st=delayed
+ws messages=21 ticks=20 hello=true
+hl: connects=1 messages=755
+first: n+0 st=open DTC=68000 BTH=3400 SMS=78.5 MDT=210 JQQ=520
+last : n+19 st=open DTC=68014.43 BTH=3400.82833 SMS=78.5219757 MDT=210.032855 JQQ=520.082602
+healthz: {"ok":true,"st":"open","source":"A","lastTickAgeSec":0,"ticks":21}
+rest ticks returned=20
+```
+(Hyperliquid 에서 20초 동안 755개 메시지, 재연결 없음, 틱 20개가 끊김 없이 방송·REST 로 조회됨.)

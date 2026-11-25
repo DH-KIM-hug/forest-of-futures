@@ -1,0 +1,17 @@
+{
+  "name": "fof-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "선물의 숲 시세 릴레이 (GDD_v2 6장). Node 22.5+ (node:sqlite), 타입은 Node 의 타입 제거로 실행한다.",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.ts",
+    "start": "node --disable-warning=ExperimentalWarning src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "cd .. && vitest run server",
+    "smoke": "node --disable-warning=ExperimentalWarning scripts/smoke.ts"
+  },
+  "dependencies": { "ws": "^8.18.0" },
+  "devDependencies": { "@types/node": "^24.0.0", "@types/ws": "^8.5.12", "typescript": "^5.6.3" }
+}
