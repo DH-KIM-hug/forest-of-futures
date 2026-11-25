@@ -169,7 +169,7 @@ export function World({ near }: { near: boolean }) {
     ) });
   }
   items.sort((a, b) => a.y - b.y);
-  const houseName = houseDefs[run.house]?.name ?? '공터 텐트';
+  const houseName = houseDefs[run.house]?.name ?? '낡은 텐트';
 
   return (
     <div className={'pr-world' + (near ? ' near' : '') + (tint.night ? ' night' : '')} aria-label={houseName} role="img">
