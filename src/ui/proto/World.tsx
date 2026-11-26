@@ -14,6 +14,8 @@ import { COLLECTOR_NAME } from './text';
 import { EXTRA_WHEEL } from './model';
 import { HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, WHEEL_FACE, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, WALLET_SPOT, TAP_AREA, assignSlots, homeCam, type Pt } from './home';
 import { HOME_BY_LEVEL, sprite, spriteOr } from './sprites';
+import { Think } from './Think';
+import type { HeroMood } from './tension';
 
 /** 그림 픽셀 → SVG 단위(390 너비) */
 const K = 390 / HOME_IMG.w;
@@ -54,7 +56,7 @@ function WheelAt({ foot, spin, staffed, tagged, label, bump, id, pop }: { foot: 
   );
 }
 
-export function World({ near, cover, open, onRoll }: { near: boolean; /** 아래 판이 덮는 높이(px) */ cover: number; /** 판이 펴져 있다(빈 자리 표시를 보여 준다) */ open: boolean; onRoll: () => void }) {
+export function World({ near, mood = 'idle', cover, open, onRoll }: { near: boolean; /** 포지션을 들고 있는 동안의 몸(tension.ts heroMood): 폰만 본다 · 서성인다 · 들썩인다 · 굳는다 */ mood?: HeroMood; /** 아래 판이 덮는 높이(px) */ cover: number; /** 판이 펴져 있다(빈 자리 표시를 보여 준다) */ open: boolean; onRoll: () => void }) {
   const g = useGame((s) => s.g);
   const tapping = useProto((s) => s.tapping);
   const collector = useProto((s) => s.collector);
@@ -94,7 +96,8 @@ export function World({ near, cover, open, onRoll }: { near: boolean; /** 아래
   const hh = HERO_H * K;
   const heroImg = (near ? spriteOr('heroNear', 'hero') : tapping ? spriteOr('heroRun', 'hero') : sprite('hero'))!;
   const hw = hh * (heroImg.w / heroImg.h);
-  const heroCls = near ? ' stare' : tapping ? ' squash' : ' idle';
+  // 굴리는 동안에는 굴리는 몸이 먼저다. 그 밖에는 손익이 몸에 보인다(U-39 ①)
+  const heroCls = near || mood === 'frozen' ? ' stare' : tapping ? ' squash' : mood === 'pace' ? ' pace' : mood === 'hop' ? ' hopjoy' : mood === 'phone' ? ' phone' : ' idle';
 
   const addFloat = (t: string, x: number, y: number, cls = '') => {
     const id = ++idRef.current;
@@ -153,12 +156,12 @@ export function World({ near, cover, open, onRoll }: { near: boolean; /** 아래
   }
   // 주인공: 엄마의 쳇바퀴 옆에 서 있다. 굴리면 움찔, 청산이 가까우면 폰만 본다.
   items.push({ y: hy, key: 'hero', node: (
-    <g id="pr-hero">
+    <g id="pr-hero" data-mood={near ? 'frozen' : mood}>
       <ellipse cx={hx + 1} cy={hy - 1} rx={hw * 0.42} ry={4.5} fill="#5A3A1E" opacity={0.2} />
       <g key={`t${tapping ? tapKey : 0}`} className={'pa-hero' + heroCls} style={{ transformOrigin: `${hx}px ${hy}px` }}>
         <image href={heroImg.src} x={hx - hw / 2} y={hy - hh} width={hw} height={hh} />
       </g>
-      {near && <path className="pa-sweat" d={`M${hx - 16} ${hy - hh + 6} q-5 8 0 11 q5 -3 0 -11z`} fill="#BFE3F2" stroke={O} strokeWidth={1.6} />}
+      {(near || mood === 'frozen' || mood === 'pace') && <path className="pa-sweat" d={`M${hx - 16} ${hy - hh + 6} q-5 8 0 11 q5 -3 0 -11z`} fill="#BFE3F2" stroke={O} strokeWidth={1.6} />}
     </g>
   ) });
   // 추심원: 뒷벽 둥근 문으로 들어와 문 앞에 선다. 기다리는 동안에도 서 있다. 이자 막대가 정산 상환액만큼 깎인다.
@@ -221,6 +224,7 @@ export function World({ near, cover, open, onRoll }: { near: boolean; /** 아래
           {waiting && <Round {...bubble(150)} y={cy0 - 114} w={150} h={28} text={<SvgSay who="collector" text="사무소로 오세요오." delay={0.9} mute={talking} />} />}
           {floats.map((f) => <text key={f.id} x={f.x} y={f.y} textAnchor="middle" className={'pa-float ' + f.cls}>{f.t}</text>)}
         </svg>
+        <Think cls="home" style={{ left: pct(HERO_SPOT[0], HOME_IMG.w), top: pct(HERO_SPOT[1] - HERO_H - 34, HOME_IMG.h) }} />
         {hint && <div className="pr-tok" style={{ left: pct(WHEEL_SLOTS[0][0] + WHEEL_FACE.dx, HOME_IMG.w), top: pct(WHEEL_SLOTS[0][1] + WHEEL_BOX.dy - 14, HOME_IMG.h) }} aria-hidden="true">쳇바퀴를 톡톡</div>}
       </div>
       <div className="pr-place" aria-hidden="true">{houseName}</div>

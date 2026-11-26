@@ -4,6 +4,7 @@ import { buildSnapshot, type SnapCtx } from './snapshot';
 import { forecast } from './settlement';
 import { determineCause } from './bankruptcy';
 import { netWorth } from './selectors';
+import { act1On, act1Text } from './act1';
 import type { GameState, PendingEnding, PayId } from './types';
 
 type Snap = Record<string, any>;
@@ -59,14 +60,17 @@ export function chooseEnding(cands: EndingDef[], collected: Set<string>): { endi
 
 /** 1막 시제품(balance.act1, U-38)에 없는 것을 말하는 엔딩인가: 친구·정보·세금·조합·집·대물림은 1막에 없고, 독사·캐피탈은 실제로 빌린 생에만 나온다.
  *  (엔딩 200개는 2막 이후까지의 것이다. 하지 않은 일이 엔딩 문구에 나오지 않게 거른다.) */
-const ACT1_NEVER = /친구|단짝|절교|곰 형|토끼|여우|추천인|리딩방|전단지|속보|소문|세무서|세금|증여|조합|은행|금융|부엉이|지점장|담보|LTV|저택|별장|아파트|통나무|오두막에 사는|이사|아버지|할아버지|부모|자식|손주|대물림|가업|가문|세대|유산|3대|월세|텐트|수레|모니터/;
+const ACT1_NEVER = /친구|단짝|절교|곰 형|토끼|여우|추천인|리딩방|전단지|속보|소문|세무서|세금|증여|조합|은행|금융|부엉이|지점장|담보|LTV|저택|별장|아파트|통나무|오두막에 사는|이사|아버지|할아버지|부모|자식|손주|대물림|대를 이어|가업|가문|세대|유산|3대|월세|셋방|텐트|수레|모니터|가게|일터|좌판|간판|주운|주웠|석 달/;
 export function act1Coherent(e: EndingDef, g: GameState): boolean {
-  if (!(balance as { act1?: unknown }).act1) return true;
-  const t = e.title + ' ' + e.line;
+  if (!act1On()) return true;
+  // 1막용으로 고쳐 쓴 글(data/endings_act1.json)이 있으면 그 글을 본다. 글이 빈 엔딩은 보여 줄 것이 없으므로 고르지 않는다(U-39 ③)
+  const x = act1Text(e);
+  if (!x.line.trim()) return false;
+  const t = x.title + ' ' + x.line;
   if (ACT1_NEVER.test(t)) return false;
   const st = g.run.stats;
   if (/독사|뒷골목|밤시장/.test(t) && !((st['borrow.shark2'] as number | undefined) ?? 0)) return false;
-  if (/캐피탈|족제비/.test(t) && !((st['borrow.capital'] as number | undefined) ?? 0) && g.run.debts.capital.principal <= 0) return false;
+  if (/캐피탈|족제비|너구리/.test(t) && !((st['borrow.capital'] as number | undefined) ?? 0) && g.run.debts.capital.principal <= 0) return false;
   return true;
 }
 
@@ -184,7 +188,7 @@ export function finalizeEnding(g: GameState, ctx: SnapCtx & { settleNo?: number 
   const level = (n: number) => (heir ? heir.thresholds.filter((t: number) => n >= t).length : 0);
   const heirloom = heir && level(after) > level(before) ? `${heir.name} ${level(after)}단계` : null;
   const pending: PendingEnding = {
-    id: ending.id, cause: ctx.cause, isNew, via, nth, title: ending.title, line: fillLine(ending.line, snap), lastThree,
+    id: ending.id, cause: ctx.cause, isNew, via, nth, title: act1Text(ending).title, line: fillLine(act1Text(ending).line, snap), lastThree,
     nearMisses: misses, nextGen: { trait: trait?.name ?? null, trace: ending.trace, heirloom },
     collected: Object.keys(f.ledger).length, peakNetWorth: nw, settleNo: run.settleNo, offline: snap.offline === true,
     awayHours: snap.awayHours ?? null, snapshot: snap,

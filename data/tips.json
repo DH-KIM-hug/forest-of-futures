@@ -101,7 +101,7 @@
     },
     {
       "id": "weasel",
-      "name": "족제비 대표",
+      "name": "창구 너구리",
       "kind": "pitch",
       "rule": "chaseLong",
       "params": {

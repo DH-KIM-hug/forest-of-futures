@@ -11,6 +11,8 @@ export interface CardData {
   coin: string; dir: 1 | -1; lev: number;
   roe: number; pnl: number; entry: number; exit: number;
   heldSec: number; wins: number; closes: number; gen: number; date: Date;
+  /** 금테 인증서(스킬트리 B4 전설의 몰빵) */
+  gold?: boolean;
 }
 
 const O = '#4A4640';
@@ -45,10 +47,16 @@ export async function renderCard(d: CardData): Promise<HTMLCanvasElement> {
   c.fillStyle = 'rgba(74,70,64,.07)';
   for (let y = 30; y < CARD_H; y += 44) for (let x = ((y / 44) % 2) * 22 + 20; x < CARD_W; x += 44) { c.beginPath(); c.arc(x, y, 3, 0, 7); c.fill(); }
   box(c, 28, 28, CARD_W - 56, CARD_H - 56, 44, 'rgba(0,0,0,0)', 10);
+  // 금테(B4 전설의 몰빵): 바깥 테 안쪽에 금빛 두 줄과 네 귀퉁이 못. 숫자는 그대로다
+  if (d.gold) {
+    c.lineWidth = 14; c.strokeStyle = '#D9A92E'; rr(c, 44, 44, CARD_W - 88, CARD_H - 88, 34); c.stroke();
+    c.lineWidth = 4; c.strokeStyle = '#F6E08A'; rr(c, 47, 47, CARD_W - 94, CARD_H - 94, 32); c.stroke();
+    for (const [x, y] of [[80, 80], [CARD_W - 80, 80], [80, CARD_H - 80], [CARD_W - 80, CARD_H - 80]]) { c.beginPath(); c.arc(x, y, 13, 0, 7); c.fillStyle = '#F3D774'; c.fill(); c.lineWidth = 5; c.strokeStyle = O; c.stroke(); }
+  }
 
   // 머리띠
-  box(c, 70, 70, 940, 120, 30, '#BCD48E');
-  text(c, '수익 인증서', 110, 148, 62);
+  box(c, 70, 70, 940, 120, 30, d.gold ? '#F3D774' : '#BCD48E');
+  text(c, d.gold ? '금테 수익 인증서' : '수익 인증서', 110, 148, d.gold ? 54 : 62);
   text(c, 'FRX 숲거래소 · 선물시장', 970, 146, 30, '#3d4a2a', 'right');
 
   // 종목 줄

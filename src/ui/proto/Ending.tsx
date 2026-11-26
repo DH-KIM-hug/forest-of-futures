@@ -8,11 +8,12 @@ import { Room, Wheel, C } from './art';
 import heroSit from './img/hero_sit.png';
 import heroFront from './img/hero_front.png';
 import { treeView, type NodeView } from '../../engine/skilltree';
-import { skillById } from '../../engine/data';
+import { endingById, skillById, skillPathEndings } from '../../engine/data';
+import { act1Text } from '../../engine/act1';
 import { play } from './audio';
 
-/** 장부·사건 기록의 채권처 이름을 지도에 적힌 이름으로(데이터의 옛 이름 '황금저축·캐피탈' → '숲속 캐피탈') */
-const placeName = (t: string): string => t.replace(/황금저축·캐피탈/g, '숲속 캐피탈').replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
+/** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
+const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
 
 /** 폴라로이드 속 마지막 사진: 색을 뺀 빈 오두막(§10.3 엔딩은 색을 뺀다). 주인공은 앉아서 폰을 본다. */
 function Photo() {
@@ -39,12 +40,13 @@ export function EndingFlow() {
   if (e.step === 'card') {
     const m = endingCardModel(g);
     if (!m) return null;
+    const retired = m.cause === 'RETIRE'; // 빚을 다 갚고 닫은 생(U-39 ⑧): 도장만 다르고 흐름은 같다
     return (
-      <div className="pr-end" role="dialog" aria-label="엔딩">
+      <div className={'pr-end' + (retired ? ' retired' : '')} data-ending={m.id} data-cause={m.cause} role="dialog" aria-label="엔딩">
         <figure className="polaroid">
           <Photo />
           <figcaption>{m.title}</figcaption>
-          <div className="stamp" aria-label="파산">파산</div>
+          <div className={'stamp' + (retired ? ' gold' : '')} aria-label={retired ? '은퇴' : '파산'}>{retired ? '은퇴' : '파산'}</div>
         </figure>
         <div className="card">
           <div className="cause" style={{ background: m.color }}>{m.no} · {m.causeLabel}</div>
@@ -62,13 +64,14 @@ export function EndingFlow() {
   if (e.step === 'statement') return <div className="pr-end"><p className="sub">…</p></div>;
   const run = g.run;
   const repaid = Math.round((run.stats['repaid.shark1'] as number | undefined) ?? 0);
+  const retired = g.pendingEnding?.cause === 'RETIRE';
   return (
     <div className="pr-end re tree" role="dialog" aria-label="환생">
       <div className="re-top">
         <img src={heroFront} alt="" width={54} height={52} />
         <div>
           <h2>다시 눈을 뜬다</h2>
-          <p>폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.</p>
+          <p>{retired ? '빚 없는 아침이 며칠 지났다. 폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.' : '폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.'}</p>
         </div>
       </div>
       <div className="award" data-award={e.gold ?? 0}>
@@ -97,8 +100,12 @@ const posOf = (v: NodeView): { x: number; y: number } => {
   return { x: v.tier === 3 ? x + (v.id.endsWith('a') ? -8.5 : 8.5) : x, y: ROWY[v.tier] };
 };
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
+/** 켜고 끄는 노드의 숫자 꼬리 표기(U-39 ⑨) */
+const tailFmt = (id: string, x: number): string =>
+  id === 'A3a' ? `+${Math.round(x)}초` : id === 'B2' ? `−${(x * 100).toFixed(2)}%p` : id === 'B3b' ? `${(x * 100).toFixed(1)}%` : id === 'C4' ? `+${(x * 100).toFixed(1)}%p` : `−${(x * 100).toFixed(1)}%`;
 /** 노드 효과 한 줄: 지금 → 다음 */
 function effectText(v: NodeView): string {
+  if (v.tail) return `${v.tail.text} ${v.level > 0 ? `지금 ${tailFmt(v.id, v.tail.now)}` : '열면'}${v.tail.next !== null ? ` → ${tailFmt(v.id, v.tail.next)}` : ''}`;
   if (v.kind !== 'scaled') return v.level > 0 ? '열림' : '';
   const what = v.id === 'C2' ? '청산 때 돌려받는 증거금' : v.id === 'B1' ? '50배 이상 수수료' : '거래 수수료';
   const sign = v.id === 'C2' ? '' : '−';
@@ -111,12 +118,16 @@ function SkillTree() {
   const act = useGame((s) => s.act);
   const [sel, setSel] = useState<string>('R');
   const [msg, setMsg] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
   const nodes = treeView(g);
   const byId = Object.fromEntries(nodes.map((v) => [v.id, v]));
   const cur = byId[sel] ?? nodes[0];
   const gold = g.family.gold ?? 0;
   const edges: [string, string][] = [];
   for (const v of nodes) for (const r of skillById[v.id].requires) edges.push([r, v.id]);
+  // 이 길의 엔딩(U-39 ⑪): 봤으면 이름, 못 봤으면 ???? — 누르면 단서(본 것은 글)
+  const pathEnds = cur.path === 'R' ? [] : ((skillPathEndings[cur.path] as string[] | undefined) ?? []).filter((id) => endingById[id]);
+  const seenEnd = (id: string) => !!g.family.ledger[id];
   const buy = () => { const r = act({ type: 'treeBuy', id: cur.id }); if (r.ok) { play('new_equipment'); setMsg(null); } else { play('insufficient'); setMsg(r.msg ?? '살 수 없다'); } };
   const pick = () => { const r = act({ type: 'treePick', id: cur.id }); if (r.ok) play('ui_tap'); };
   return (
@@ -131,9 +142,9 @@ function SkillTree() {
           const p = posOf(v);
           const cls = 'nd p-' + v.path + (v.level > 0 ? ' own' : '') + (v.canBuy ? ' can' : '') + (v.level > 0 && !v.picked ? ' off' : '') + (v.id === sel ? ' sel' : '');
           return (
-            <button key={v.id} className={cls} data-node={v.id} data-level={v.level} style={{ left: `${p.x}%`, top: `${p.y}%` }} onClick={() => { setSel(v.id); setMsg(null); play('ui_tap'); }}
+            <button key={v.id} className={cls} data-node={v.id} data-level={v.level} style={{ left: `${p.x}%`, top: `${p.y}%` }} onClick={() => { setSel(v.id); setMsg(null); setHint(null); play('ui_tap'); }}
               aria-label={`${v.name}${v.level > 0 ? ` 레벨 ${v.level}` : ' 잠김'}`}>
-              <i>{v.level > 0 ? (v.kind === 'scaled' ? v.level : '✓\uFE0E') : v.cost ?? ''}</i>
+              <i>{v.level > 0 ? (v.kind === 'scaled' || v.tail ? v.level : '✓\uFE0E') : v.cost ?? ''}</i>
               <em>{v.name}</em>
             </button>
           );
@@ -141,9 +152,9 @@ function SkillTree() {
       </div>
       <div className="tr-info" data-info={cur.id}>
         <div className="l">
-          <b>{cur.name}{cur.level > 0 && cur.kind === 'scaled' ? ` Lv${cur.level}` : ''}</b>
+          <b>{cur.name}{cur.level > 0 && (cur.kind === 'scaled' || cur.tail) ? ` Lv${cur.level}` : ''}</b>
           <p>{cur.desc}</p>
-          {effectText(cur) && cur.kind === 'scaled' && <small>{effectText(cur)}</small>}
+          {effectText(cur) && (cur.kind === 'scaled' || cur.tail) && <small data-effect>{effectText(cur)}</small>}
           {cur.level > 0 && !cur.picked && <small>지금은 짝 노드가 켜져 있다. 한 생에 둘 중 하나만.</small>}
           {msg && <small className="bad">{msg}</small>}
         </div>
@@ -153,6 +164,17 @@ function SkillTree() {
             ? <button className={'buy' + (cur.canBuy ? ' on' : '')} data-buy disabled={!cur.canBuy} onClick={buy}><span>{cur.level > 0 ? '키운다' : '연다'}</span><small>{cur.canBuy ? `황금 ${cur.cost}개` : cur.reason ?? ''}</small></button>
             : <span className="have">열림</span>}
       </div>
+      {pathEnds.length > 0 && (
+        <div className={'tr-ends p-' + cur.path} data-path-ends={cur.path}>
+          <b>{PATHS.find((p) => p.id === cur.path)?.name}의 엔딩 {pathEnds.filter(seenEnd).length}/{pathEnds.length}</b>
+          <span>{pathEnds.map((id) => {
+            const e = endingById[id];
+            const got = seenEnd(id);
+            return <button key={id} className={got ? 'got' : ''} data-end={id} data-got={got ? '1' : '0'} onClick={() => { play('ui_tap'); setHint(got ? `「${act1Text(e).title}」 ${act1Text(e).line}` : `???? — ${e.clue}`); }}>{got ? act1Text(e).title : '????'}</button>;
+          })}</span>
+          {hint && <small data-end-hint>{hint}</small>}
+        </div>
+      )}
     </section>
   );
 }

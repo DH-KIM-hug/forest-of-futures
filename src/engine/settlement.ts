@@ -193,10 +193,16 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   for (const p of Object.values(run.promos)) void p;
   if (unpaid.upkeep > 0) {
     if (run.house === 0) {
-      run.debts.capital.principal += unpaid.upkeep; // 빈 오두막(0단계): 비상금 대출로 자동 전환(한도와 무관)
+      // 빈 오두막(0단계): 못 낸 생활비는 빚으로 넘어간다(한도와 무관).
+      // 1막 시제품(balance.act1): 숲속 캐피탈과 거래한 적 없는 생이면 아는 곳은 오소리 사무소뿐이다 — 오소리 장부에 얹는다(만난 적 없는 캐피탈이 장부에 생기지 않게, U-39 ③).
+      const act1 = !!(balance as { act1?: unknown }).act1;
+      const knowsCapital = ((st['borrow.capital'] as number | undefined) ?? 0) > 0 || run.debts.capital.principal > 0;
+      const to: 'shark1' | 'capital' = act1 && !knowsCapital ? 'shark1' : 'capital';
+      run.debts[to].principal += unpaid.upkeep;
       run.upkeepArrears = 0;
       run.upkeepOverdue = 0;
-      logEvent(run, 'overdue:upkeep', '생활비를 못 내 캐피탈 비상금 대출로 넘어감', unpaid.upkeep);
+      bump(run, `livingToDebt.${to}`, unpaid.upkeep);
+      logEvent(run, 'overdue:upkeep', to === 'shark1' ? '생활비를 못 내 오소리 장부에 얹음' : `생활비를 못 내 ${lenderById.capital.name} 비상금 대출로 넘어감`, unpaid.upkeep);
     } else {
       run.upkeepArrears = unpaid.upkeep;
       run.upkeepOverdue += 1;

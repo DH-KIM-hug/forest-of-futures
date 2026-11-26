@@ -10,7 +10,8 @@ import { buyUpgrade } from './upgrades';
 import type { CoinId, GameState, LenderId, DebtId, Res, Dir } from './types';
 import { eduPage, mockTrade, openAccount, signWaiver } from './progression';
 import { addMargin, addToPosition, closePosition, marginCallDone, openPosition, setStops } from './futures';
-import { buyNode, pickNode, setDayLimit } from './skilltree';
+import { buyNode, callLoanCut, pickNode, setDayLimit } from './skilltree';
+import { retireAct1 } from './act1Retire';
 import { buyTree, chooseBranch, estateNext, pawn, retire, startNextGeneration, type ChoiceBranch } from './generation';
 import { onBackground, onForeground, visit } from './offline';
 
@@ -19,7 +20,7 @@ export type Action =
   | { type: 'mockTrade' }
   | { type: 'openAccount'; sponsor?: boolean }
   | { type: 'signWaiver' }
-  | { type: 'open'; market: string; dir: Dir; lev: number; margin?: number; marginPct?: number; sl?: number | null; tp?: number | null }
+  | { type: 'open'; market: string; dir: Dir; lev: number; margin?: number; marginPct?: number; sl?: number | null; tp?: number | null; flip?: boolean }
   | { type: 'add'; market: string; margin?: number; marginPct?: number }
   | { type: 'close'; market: string }
   | { type: 'stops'; market: string; sl: number | null; tp: number | null }
@@ -40,7 +41,8 @@ export type Action =
   | { type: 'sellEquip'; uid: string }
   | { type: 'sell'; coin: CoinId; part: 'all' | 'half' }
   | { type: 'upgrade'; track: string; target?: string }
-  | { type: 'borrow'; lender: LenderId; consent?: boolean }
+  /** call = 마진콜 전화(B2)를 받는 중에 그 자리에서 빌린다(오소리 대부만, 꼬리만큼 금리 할인) */
+  | { type: 'borrow'; lender: LenderId; consent?: boolean; call?: boolean }
   | { type: 'stamp'; lender: DebtId; mult?: Mult }
   | { type: 'rollover'; lender: LenderId }
   | { type: 'borrowFriend'; friend: string }
@@ -49,6 +51,8 @@ export type Action =
   | { type: 'acceptOffer'; id: string }
   | { type: 'declineOffer'; id: string }
   | { type: 'retire' }
+  /** 1막: 빚을 다 갚은 생을 닫는다(엔딩 카드 → 환생) */
+  | { type: 'retireAct1' }
   | { type: 'estateNext' }
   | { type: 'inherit'; branch: ChoiceBranch }
   | { type: 'buyTree'; id: string }
@@ -88,7 +92,7 @@ export function act(g: GameState, a: Action): Res {
     case 'sellEquip': return sellEquip(g, a.uid);
     case 'sell': return sell(g, a.coin, a.part);
     case 'upgrade': return buyUpgrade(g, a.track, a.target);
-    case 'borrow': return borrow(g, a.lender, a.consent ?? false);
+    case 'borrow': return borrow(g, a.lender, a.consent ?? false, undefined, a.call && a.lender === 'shark1' && g.run.marginCall ? callLoanCut(g.run) : 0);
     case 'stamp': return stamp(g, a.lender, a.mult ?? 1);
     case 'rollover': return rollover(g, a.lender);
     case 'borrowFriend': return borrowFriend(g, a.friend);
@@ -97,6 +101,7 @@ export function act(g: GameState, a: Action): Res {
     case 'acceptOffer': return acceptOffer(g, a.id);
     case 'declineOffer': return declineOffer(g, a.id);
     case 'retire': return retire(g);
+    case 'retireAct1': return retireAct1(g);
     case 'estateNext': return estateNext(g);
     case 'inherit': return chooseBranch(g, a.branch);
     case 'buyTree': return buyTree(g, a.id);

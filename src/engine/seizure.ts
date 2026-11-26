@@ -6,7 +6,7 @@ import { equipGross, equipNetNow, removeEquip, removeWheel } from './equipment';
 import { ownedCoins, price, walletValue } from './selectors';
 import { addToSet, bump } from './stats';
 import { josa, logEvent, notify } from './util';
-import { exemptWheel } from './skilltree';
+import { exemptWheel, seizeRate } from './skilltree';
 import type { CoinId, DebtId, EquipmentUnit, GameState, LenderId, RunState } from './types';
 
 type Tagger = LenderId | 'tax';
@@ -147,7 +147,7 @@ export function seizeFor(g: GameState, lender: DebtId): SeizeResult | null {
     const mine = own.filter((u) => u.tagBy === lender);
     const order = lender === 'tax' ? 'expensiveFirst' : lenderById[lender].tagOrder;
     const pick = (mine.length ? orderedEquip(g, mine, order) : orderedEquip(g, own, order === 'bankCollateralOnly' ? 'expensiveFirst' : order))[0];
-    const off = cut(pick.cost * balance.assets.auctionRate);
+    const off = cut(pick.cost * seizeRate(run));
     removeEquip(run, pick.uid);
     d.principal -= off;
     bump(run, 'assetsSeized', 1);
@@ -162,7 +162,7 @@ export function seizeFor(g: GameState, lender: DebtId): SeizeResult | null {
   const wheels = ownedCoins(run).filter((c) => c !== prot.wheel && c !== exemptWheel(run)).sort((a, b) => wheelByCoin[a].cost - wheelByCoin[b].cost);
   if (wheels.length) {
     const coin = wheels[0];
-    const off = cut(wheelByCoin[coin].cost * balance.assets.auctionRate);
+    const off = cut(wheelByCoin[coin].cost * seizeRate(run));
     removeWheel(run, coin);
     d.principal -= off;
     bump(run, 'assetsSeized', 1);

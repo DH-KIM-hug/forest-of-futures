@@ -174,6 +174,8 @@ export interface SkillNodeDef {
   requires: string[];
   /** 3단계의 짝(한 생에 하나만 켜진다) */
   pair?: string;
+  /** 켜고 끄는 노드의 숫자 꼬리(U-39 ⑨): Lv1 에서 도구가 켜지고, 레벨이 오르면 이 숫자가 상한(cap)에 다가간다 */
+  tail?: { cap: number; text: string };
 }
 
 export const balance = balanceJson as any;
@@ -216,6 +218,8 @@ export const friendById = Object.fromEntries(friendDefs.map((f) => [f.id, f])) a
 export const eventById = Object.fromEntries(eventDefs.map((e) => [e.id, e])) as Record<string, EventDef>;
 export const offerById = Object.fromEntries(offerDefs.map((o) => [o.id, o])) as Record<string, OfferDef>;
 export const traitById = Object.fromEntries(traitDefs.map((t) => [t.id, t])) as Record<string, TraitDef>;
+/** 길마다 이어지는 엔딩 id(환생 화면의 나무에 보인다) */
+export const skillPathEndings = (skilltreeJson as unknown as { pathEndings: Record<string, string[] | string> }).pathEndings;
 export const skillById = Object.fromEntries(skillNodes.map((n) => [n.id, n])) as Record<string, SkillNodeDef>;
 export const endingById = Object.fromEntries(endings.map((e) => [e.id, e])) as Record<string, EndingDef>;
 

@@ -7,7 +7,7 @@ import { checkLiquidationWipeout } from './bankruptcy';
 import { bump } from './stats';
 import { logEvent, notify, josa } from './util';
 import { totalDebt } from './selectors';
-import { dayLimitHit, effectiveLevCapsRun, feeRateRun, hasRun, liqRefund } from './skilltree';
+import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeRateRun, hasRun, liqRefund } from './skilltree';
 import type { Bar } from './feed/types';
 import type { Dir, GameState, LastPos, Position, Res, RunState } from './types';
 
@@ -29,7 +29,10 @@ export function marginFromPct(cash: number, lev: number, pct: number, rate: numb
   if (pct >= 100) return floorS(cash / (1 + lev * rate));
   return floorS((cash * pct) / 100);
 }
-export const closeBack = (p: Position, price: number): number => floorS(Math.max(0, p.margin + pnlOf(p, price) - entryFee(p.notional, p.feeRate ?? T.feeRate)));
+/** 지금 값에 정리하면 돌려받는 돈. exitMul = 나올 때 수수료에 곱하는 값(스킬트리 A2·C1 의 꼬리, 기본 1). */
+export const closeBack = (p: Position, price: number, exitMul = 1): number => floorS(Math.max(0, p.margin + pnlOf(p, price) - exitFee(p, exitMul)));
+/** 나올 때 수수료 */
+export const exitFee = (p: Position, exitMul = 1): number => entryFee(p.notional, (p.feeRate ?? T.feeRate) * exitMul);
 
 /** 지금 쓸 수 있는 배율 상한: 계좌 개설 직후 10 -> 끝난 거래 3건 50 -> 10건 + 확인서 200. */
 export function levCapNow(run: RunState): number {
@@ -63,6 +66,8 @@ export interface OpenParams {
   marginPct?: number;
   sl?: number | null;
   tp?: number | null;
+  /** 반대 단추(A3b)로 방금 정리한 포지션의 반대쪽에 들어간다(같은 틱 · 같은 종목 · 반대 방향일 때만 인정) */
+  flip?: boolean;
 }
 
 function blockReason(g: GameState, market: string): Res | null {
@@ -115,7 +120,9 @@ export function openPosition(g: GameState, o: OpenParams): Res {
   if (Object.keys(run.positions).length >= 5) return refuse('count', '포지션은 최대 5개입니다.');
   if (!T.leverageOptions.includes(o.lev)) return refuse('lev', '없는 배율입니다.');
   if (o.lev > levCapNow(run)) return refuse('cap', `배율 상한 ${levCapNow(run)}배`);
-  const rate = feeRateRun(run, o.lev);
+  const lc0 = run.lastClose;
+  const flip = !!o.flip && hasRun(run, 'A3b') && !!lc0 && lc0.market === o.market && lc0.tick === run.tick && lc0.dir !== o.dir;
+  const rate = feeRateRun(run, o.lev, { allIn: o.margin === undefined && (o.marginPct ?? T.defaultMarginPct) >= 100, flip });
   const margin = o.margin ?? marginFromPct(run.cash, o.lev, o.marginPct ?? T.defaultMarginPct, rate);
   if (margin < T.minMargin) return refuse('min', '증거금이 모자랍니다.');
   const notional = margin * o.lev;
@@ -156,7 +163,7 @@ export function addToPosition(g: GameState, o: { market: string; margin?: number
   const p = run.positions[o.market];
   if (!p) return refuse('none', '열린 포지션이 없습니다.');
   if (dayLimitHit(run)) return refuse('daylimit', DAY_LIMIT_MSG);
-  const rate = p.feeRate ?? T.feeRate;
+  const rate = (p.feeRate ?? T.feeRate) * addFeeMul(run); // 쪼개 넣기(C3a)의 꼬리: 추가 진입 수수료 할인
   const m2 = o.margin ?? marginFromPct(run.cash, p.lev, o.marginPct ?? T.defaultMarginPct, rate);
   if (m2 < T.minMargin) return refuse('min', '증거금이 모자랍니다.');
   const n2 = m2 * p.lev;
@@ -204,6 +211,7 @@ export function addMargin(g: GameState, market: string, amount: number): Res {
   run.cash -= amt;
   p.margin += amt;
   p.margin0 += amt;
+  p.marginAdded = (p.marginAdded ?? 0) + amt;
   bump(run, 'marginAdded', amt);
   logEvent(run, 'addMargin', `${marketById[market].name} 증거금 추가`, amt);
   if (run.marginCall?.market === market) run.marginCall = null;
@@ -221,8 +229,8 @@ type EndKind = 'liq' | 'sl' | 'tp' | 'close';
 function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: { viaFunding?: boolean } = {}): void {
   const run = g.run;
   // 강제 청산이면 돌아오는 돈이 없다. 비상금 주머니(C2)가 켜져 있으면 넣은 증거금의 일부만 돌아온다.
-  const refund = kind === 'liq' ? liqRefund(run, p.margin0) : 0;
-  const back = kind === 'liq' ? refund : closeBack(p, price);
+  const refund = kind === 'liq' ? liqRefund(run, p.margin0, p.marginAdded ?? 0) : 0;
+  const back = kind === 'liq' ? refund : closeBack(p, price, exitFeeMul(run, kind));
   run.cash += back;
   const pnl = back - p.margin0 - p.feesPaid + (kind === 'liq' ? 0 : 0);
   const loss = Math.max(0, -pnl);
@@ -269,7 +277,7 @@ function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: {
   else if (kind === 'tp') logEvent(run, 'tp', `${name} ${side} 익절`, pnl);
   else if (kind === 'sl') logEvent(run, 'sl', `${name} ${side} 손절`, pnl);
   else logEvent(run, 'close', `${name} ${side} 정리`, pnl);
-  if (refund > 0) logEvent(run, 'liq:refund', `비상금 주머니: 증거금 일부가 돌아왔다`, refund);
+  if (refund > 0) logEvent(run, 'liq:refund', `증거금 일부가 돌아왔다(비상금 주머니 · 물타기)`, refund);
   if (kind === 'liq') {
     notify(run, `${name} ${side} 강제 청산. 증거금 ${josa(p.margin0.toLocaleString('ko-KR'), '이', '가')} 사라졌습니다.`, 'warn');
     checkLiquidationWipeout(g);

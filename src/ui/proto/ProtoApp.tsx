@@ -3,7 +3,10 @@ import '@fontsource/jua/latin-400.css';
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Tab } from './protoStore';
-import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt } from './model';
+import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo } from './model';
+import { tensionOf } from './tension';
+import { awayMoney } from './away';
+import { historyOf } from '../priceHistory';
 import { startWatch } from './watch';
 import { startHistory } from '../priceHistory';
 import { Lot, useOpenPositions } from './Lot';
@@ -50,10 +53,12 @@ function Hud() {
   const now = useClock();
   const run = g.run;
   const ps = perSettle(g);
-  const total = balance.settlement.intervalSec;
+  // 첫 생의 첫 추심원은 60초 뒤에 온다(U-39 ⑤): 그 막대는 60초짜리다
+  const total = run.settleNo === 0 && lifeNo(g) <= 1 ? Math.max(firstVisitSec(balance.settlement.intervalSec), run.settleIn) : balance.settlement.intervalSec;
   const left = Math.max(0, run.settleIn);
   const gi = currentGoal(g, goalIdx, flags);
-  const goal0 = gi < GOAL_COUNT ? goalAt(g, gi, flags) : null;
+  // 빚이 0 이면 남은 튜토리얼 목표(첫 포지션 · 첫 상환)는 뜻이 없다: 장부가 깨끗하다고만 적는다(U-39 ⑧)
+  const goal0 = gi < GOAL_COUNT && lenderDebtTotal(run) > 0 ? goalAt(g, gi, flags) : null;
   // 튜토리얼 목표가 끝나면 오소리 장부가 목표다(U-38): 5만을 갚을 때마다 금박 도장 하나, 이자가 얼마 주는지도 같이
   const lg = goal0 ? null : ledgerGoal(g);
   const otherDebt = lenderDebtTotal(run) - run.debts.shark1.principal;
@@ -80,7 +85,7 @@ function Hud() {
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배 · {rate.remaining}회 남음</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
+          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배 · {rate.remaining}회 남음{run.debts.shark1.inherited > 0 ? ' · 엄마 빚 빼고' : ''}</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
         </div>
         <DevBar />
         <div className="acorn">
@@ -122,7 +127,9 @@ function TabBar() {
   const badge = (id: Tab): { t: string; hot: boolean } | null => {
     if (id === 'lot' && tab !== 'lot') return { t: mmss(Math.max(0, g.run.settleIn)), hot: g.run.settleIn <= 10 };
     if (id === 'phone' && near) return { t: `▼청산 ${near.liqDistPct.toFixed(1)}%`, hot: true };
-    if (id === 'phone' && pos.length) return { t: `${pos[0].roe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].roe).toFixed(0)}%`, hot: false };
+    // 청산이 지난 1분 폭의 세 배 안으로 들어오면 탭 꼬리표가 붉어진다(U-39 ①)
+    if (id === 'phone' && pos.length && ['tight', 'edge'].includes(tensionOf(pos[0].liqDistPct, historyOf(pos[0].market)).reach)) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}% !`, hot: true };
+    if (id === 'phone' && pos.length) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}%`, hot: false };
     if (id === 'map' && waiting) return { t: '사무소', hot: true };
     if (id === 'map' && overdue) return { t: '연체', hot: true };
     return null;
@@ -182,6 +189,32 @@ function DevBar() {
   );
 }
 
+/** 자리를 비운 사이(U-39 ④): 돌아왔을 때 한 장. 엔진이 따라잡은 기록(포지션은 전부, 정산은 2번까지)을 그대로 읽는다. */
+function AwayNote() {
+  const a = useProto((s) => s.away);
+  const scene = useProto((s) => s.scenes.length > 0);
+  const over = useGame((s) => s.g.run.over);
+  if (!a || scene || over) return null;
+  const close = () => { useProto.getState().patch({ away: null }); useGame.setState((s) => ({ net: { ...s.net, away: null } })); };
+  return (
+    <div className="pr-notice pr-away" role="dialog" aria-label="자리를 비운 사이" data-away>
+      <div className="box">
+        <h3>{a.title}</h3>
+        {a.note && <p className="col"><b>추심원의 쪽지</b>「{a.note}」</p>}
+        {a.left.length > 0 && <p className="sub">나갈 때 열어 둔 포지션: {a.left.join(', ')}{a.stillOpen > 0 ? ` · 아직 ${a.stillOpen}개 열려 있다` : ''}</p>}
+        {a.rows.length > 0 && (
+          <div className="rows">
+            {a.rows.map((r) => <div key={r.key} className={'rw ' + r.tone}><span>{r.text}{r.after && <small>{r.after}</small>}</span>{r.amount !== null && <b>{awayMoney(r.amount)}</b>}</div>)}
+          </div>
+        )}
+        {a.rows.length === 0 && !a.note && <p className="sub">아무 일도 없었다. 시세만 움직였다.</p>}
+        <div className="sum"><span>가진 돈 <b className={a.cashDelta >= 0 ? 'up' : 'dn'}>{awayMoney(a.cashDelta)}</b></span><span>빚 <b className={a.debtDelta > 0 ? 'dn' : 'up'}>{awayMoney(a.debtDelta)}</b></span></div>
+        <button className="buy on wide" data-away-ok onClick={close}><span>확인</span></button>
+      </div>
+    </div>
+  );
+}
+
 /** 튜토리얼 끝 알림(U-31): 방금 그 거래는 짜 둔 시세였고, 지금부터는 실제 시세라는 것을 그대로 말한다. */
 function TutorialNotice() {
   const on = useProto((s) => s.tutorial === 'notice');
@@ -207,8 +240,11 @@ export function ProtoApp() {
   const toast = useProto((s) => s.toast);
   const prologue = useProto((s) => s.prologue);
   const [skip] = useState(() => prologueSeen());
-  const dark = useOpenPositions().some((p) => isNearLiq(p));
-  useAudioDirector(dark);
+  const openPos = useOpenPositions();
+  const dark = openPos.some((p) => isNearLiq(p));
+  // 심장 소리: 청산 임박, 또는 청산이 지난 1분 폭의 세 배 안으로 들어왔을 때(U-39 ①)
+  const tense = openPos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, historyOf(p.market)).reach));
+  useAudioDirector(dark || tense);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); }, []);
   // 자동 플레이 검증용 읽기 전용 창(&e2e=1): 상태를 읽기만 한다. 바꾸는 길은 없다.
@@ -219,7 +255,8 @@ export function ProtoApp() {
       return { cash: r.cash, settleNo: r.settleNo, settleIn: r.settleIn, mined: r.minedValue, taps: r.stats.laborTaps ?? 0, wheels: Object.keys(r.coinWheels), equip: r.equipment.map((u) => u.tier), staffed: (r.coinWheels.DTC?.staffed ? 1 : 0) + r.equipment.filter((u) => u.staffed).length, speed: useGame.getState().speed, waiting: P.waiting, loanTaken: P.loanTaken, tutorial: P.tutorial, interest: (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0), overdue: r.debts.shark1.overdue, wheelTag: r.coinWheels.DTC?.tagBy ?? null, last: r.lastSettlement, over: r.over,
         fut: r.futures, pos: Object.values(r.positions).map((p) => ({ m: p.market, dir: p.dir, lev: p.lev, margin: p.margin0 })), debts: Object.fromEntries(Object.entries(r.debts).map(([k, v]) => [k, v.principal])), friend: r.friends.squirrel.debt,
         gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet,
-        repaid: r.stats['repaid.shark1'] ?? 0, gold: g.family.gold ?? 0, skill: g.family.skill ?? {}, runSkill: r.skill ?? {}, seen: Object.keys(P.seen), marginCall: r.marginCall ?? null, liqs: r.stats.liqCount ?? 0, cause: r.bankruptcy?.cause ?? null, ending: g.pendingEnding?.title ?? null, tradeUi: useUI.getState().trade };
+        repaid: r.stats['repaid.shark1'] ?? 0, gold: g.family.gold ?? 0, skill: g.family.skill ?? {}, runSkill: r.skill ?? {}, seen: Object.keys(P.seen), marginCall: r.marginCall ?? null, liqs: r.stats.liqCount ?? 0, cause: r.bankruptcy?.cause ?? null, ending: g.pendingEnding?.title ?? null, endingId: g.pendingEnding?.id ?? null, tradeUi: useUI.getState().trade,
+        think: P.think?.text ?? null, away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick };
     };
   }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)
@@ -243,6 +280,7 @@ export function ProtoApp() {
       <ProfitPrompt />
       <WalletSheet />
       <TutorialNotice />
+      <AwayNote />
       {prologue && <Prologue onDone={endPrologue} canSkip={skip} />}
       {pdev === 'sounds' && <SoundLab />}
     </div>

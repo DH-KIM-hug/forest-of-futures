@@ -134,7 +134,7 @@ describe('오소리 장부 (ledger.ts)', () => {
     expect(pay(100000)).toBe('momCleared');
     expect(ledgerGoal(g)).toBeNull();
     expect(goldStamps(g)).toBe(10);
-    for (const b of ['repeatCleared', 'firstCleared', 'mom20', 'mom10', 'momCleared']) expect(STORY.ledger(b, { cut: 6000, otherDebt: 0 }).length).toBeGreaterThanOrEqual(2);
+    for (const b of ['repeatCleared', 'firstCleared', 'mom20', 'mom10', 'momCleared']) expect(STORY.ledger(b, { cut: 6000, otherDebt: 0 }).length).toBeGreaterThanOrEqual(1); // 엄마 빚 20만·10만은 한 줄(단서는 momClue 가 따로, U-39 ⑫)
     expect(STORY.ledger('momCleared', { cut: 0, otherDebt: 50000 }).at(-1)!.who).toBe('hero');
   });
   it('남은 빚이 5만보다 적으면 목표는 남은 만큼', () => {

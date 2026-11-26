@@ -62,13 +62,19 @@ export function lenderLimit(g: GameState, id: LenderId): number {
   return floorS(lim * relMul);
 }
 
-export function rateMult(g: GameState): number {
+/** 마을 사건(금리 인상)이 이자에 곱하는 배수. 고정금리 몫(금리 상한이 붙은 물려받은 빚)에는 붙지 않는다. */
+export function eventRateMult(g: GameState): number {
   let m = 1;
   for (const e of g.run.effects) {
     if (e.type !== 'rateMultiplier') continue;
     m *= e.id === 'rate_hike' ? (traitVal(g, 'rateHikeMul') ?? e.multiplier) : e.multiplier;
   }
-  return m * Math.pow(treeById.haggle.effect.mulPerLevel, treeLevel(g.family, 'haggle'));
+  return m;
+}
+/** 가문 특성 '흥정'의 이자 할인(모든 몫에 붙는다) */
+export const haggleMult = (g: GameState): number => Math.pow(treeById.haggle.effect.mulPerLevel, treeLevel(g.family, 'haggle'));
+export function rateMult(g: GameState): number {
+  return eventRateMult(g) * haggleMult(g);
 }
 
 /** 이번 정산 이자(올림). 프로모션 대출은 3회 반값, 4~6회 두 배, 이자 유예·면제는 0. */
@@ -98,7 +104,18 @@ export function interestDue(g: GameState, id: DebtId): number {
     const f = p.n < cfg.halfSettlements ? cfg.halfMul : p.n < cfg.halfSettlements + cfg.doubleSettlements ? cfg.doubleMul : 1;
     extra += amt * rate * f;
   }
-  return ceilS((base * rate + extra - inhSave) * rateMult(g));
+  // 금리 상한이 붙은 물려받은 몫은 고정금리다("어머님 때 이자 그대로"): 금리 인상 사건의 배수를 받지 않는다(U-39 ⑥)
+  const fixed = inh * capRate;
+  return ceilS(((base * rate + extra - inhSave - fixed) * eventRateMult(g) + fixed) * haggleMult(g));
+}
+/** 그 채권처 빚 가운데 고정금리(금리 상한이 붙은 물려받은 몫)의 이자. 금리 인상에도 그대로다. */
+export function fixedInterest(g: GameState, id: DebtId): number {
+  const d = g.run.debts[id];
+  if (id === 'tax' || d.principal <= 0 || d.rateCap == null || !(d.inherited > 0)) return 0;
+  const rate = lenderById[id].rate + (g.family.lenderRelations[id] === 'grudge' ? balance.inheritance.grudge.ratePlus : 0);
+  if (!(d.rateCap < rate)) return 0;
+  const repeat = (d.tranches ?? []).reduce((a, t) => a + t.amount, 0);
+  return Math.min(d.inherited, Math.max(0, d.principal - repeat)) * d.rateCap * haggleMult(g);
 }
 import { offerById } from './data';
 function promoCfg() {

@@ -6,11 +6,16 @@ import { createGame, clone, stepMut, newRun } from '../../engine/game';
 import { netWorth } from '../../engine/selectors';
 import { prologueSeen } from './Prologue';
 import { KNOWN_AFTER_FIRST_LIFE } from './protoStore';
-import { balance, marketById } from '../../engine/data';
+import { balance, eventById, marketById } from '../../engine/data';
 import { pdev } from './config';
 import { resetGuide, setGuideOff, tips, MOMENT, type Moment } from './guide';
-import { tipArgs } from './model';
+import { tipArgs, firstVisitSec } from './model';
 import { applyBirth } from '../../engine/skilltree';
+import { catchUp } from '../../engine/offline';
+import { retireAct1 } from '../../engine/act1Retire';
+import type { Bar } from '../../engine/feed/types';
+import type { GameState } from '../../engine/types';
+import type { Action } from '../../engine/actions';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
@@ -21,7 +26,8 @@ export function freshGame(): ReturnType<typeof createGame> {
   const st = useGame.getState();
   const g = createGame({ seed: (Date.now() & 0xffff) | 1, prices: st.g.run.prices });
   g.settings.prologueSeen = true;
-  g.run.settleIn = balance.settlement.intervalSec;
+  // 첫 생의 첫 추심원은 60초 뒤에 온다(U-39 ⑤). 그 뒤의 정산과 다음 생은 정산 간격 그대로.
+  g.run.settleIn = firstVisitSec(balance.settlement.intervalSec);
   return g;
 }
 
@@ -68,6 +74,41 @@ export function rebirthOverride(): void {
   applyBirth(g); // 스킬트리: 지난 생까지 산 노드가 이번 생에 켜진다(뿌리 = 폰을 쥔 채 눈을 뜬다)
   run.peakNetWorth = netWorth(run);
   st.setGame(g);
+}
+
+/** 1막 그대로의 중반 살림(화면 확인용, U-39): 오소리에게 두 번 빌려 빚 50만 · 폰 · 쳇바퀴 두 대에 알바 둘 · 끝난 거래 3건(50배). 전부 엔진 행동으로 만든다. */
+function midgame(base: GameState, o: { cash?: number; closed?: number; waiver?: boolean; wheels?: number } = {}): GameState {
+  const g = clone(base);
+  const A = (action: Action) => stepMut(g, { type: 'action', action });
+  A({ type: 'borrow', lender: 'shark1' });
+  A({ type: 'openAccount', sponsor: true });
+  A({ type: 'borrow', lender: 'shark1' });
+  A({ type: 'hire', coin: 'DTC' });
+  g.run.cash = 400_000;
+  for (let i = 0; i < (o.wheels ?? 1); i++) A({ type: 'buyEquip', tier: 'wheel2', coin: 'DTC' });
+  g.run.equipment.forEach((u) => A({ type: 'hire', uid: u.uid }));
+  g.run.futures.closedTrades = o.closed ?? 3;
+  if (o.waiver) g.run.futures.waiver = true;
+  g.run.cash = o.cash ?? 100_000;
+  g.run.settleNo = 4;
+  g.run.settleIn = balance.settlement.intervalSec;
+  return g;
+}
+/** 자리를 비운 사이(화면 확인용): 지금 시세에서 조금씩 걸어가는 1분 봉을 만들어 엔진의 따라잡기(catchUp)에 그대로 먹인다. down = 열린 포지션에 불리한 쪽으로 가는 폭(%) */
+export function devAway(minutes: number, downPct: number): void {
+  const st = useGame.getState();
+  const g = clone(st.g);
+  const from = g.run.lastSeenTick + 1;
+  const bars: Bar[] = [];
+  for (let k = 0; k < minutes; k++) for (const [m, px] of Object.entries(g.run.prices)) {
+    const dir = g.run.positions[m]?.dir ?? 1;
+    const at = (i: number) => px * (1 - dir * (downPct / 100) * (i / minutes));
+    const o = at(k), c = at(k + 1);
+    bars.push({ market: m, n0: from + k * 60, o, h: Math.max(o, c) * 1.0002, l: Math.min(o, c) * 0.9998, c, vol: 0, buy: 0 });
+  }
+  const report = catchUp(g, bars, minutes * 60);
+  st.setGame(g);
+  useGame.setState((s) => ({ net: { ...s.net, away: report } }));
 }
 
 function scene(name: string, base: ReturnType<typeof createGame>) {
@@ -118,7 +159,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       const g = buildScenario('ending', base);
       P.patch({ everUnlocked: { ...un } });
       // 화면 확인용: 황금 도토코인 12개에 뿌리·단골 수수료 Lv2·한 손 정리·확인서 단골을 가진 가문
-      if (name === 'tree') { g.family.gold = 12; g.family.skill = { R: 1, A1: 2, A2: 1, B1: 1 }; if (g.estate) g.estate.gold = 3; g.run.stats['repaid.shark1'] = 150_000; }
+      if (name === 'tree') { g.family.gold = q.get('pgold') ? +q.get('pgold')! : 12; g.family.skill = { R: 1, A1: 2, A2: 1, B1: 1 }; if (g.estate) g.estate.gold = 3; g.run.stats['repaid.shark1'] = 150_000; }
       if (name !== 'broke') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
       return g;
     }
@@ -136,6 +177,56 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       g.run.cash = name === 'cabin0' ? 91_240 : 31_240;
       g.run.settleIn = balance.settlement.intervalSec;
       return clone(g);
+    }
+    // ── U-39 화면 확인용(1막 그대로의 살림) ──
+    case 'mid': P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true } }); return midgame(base);
+    case 'hold': case 'hold200': case 'squeeze': case 'awaypos': {
+      // 포지션을 들고 있다: hold = 50배 절반, hold200 = 200배 4분의 1, squeeze = 50배 전부(정산 때 낼 돈이 묶여 있다)
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'phone', seen: { ...seen, capitalSms: true } });
+      let g = midgame(base, { closed: name === 'hold200' ? 10 : 3, waiver: name === 'hold200' });
+      // squeeze 는 10배 전부(청산이 멀어 정산을 넘길 때까지 살아 있다), awaypos 는 50배 전부(비운 사이 청산된다)
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: name === 'hold200' ? 200 : name === 'squeeze' ? 10 : 50, marginPct: name === 'squeeze' || name === 'awaypos' ? 100 : name === 'hold200' ? 25 : 50, sl: null, tp: null } });
+      g.run.settleIn = name === 'squeeze' ? Math.min(48, balance.settlement.intervalSec - 2) : Math.round(balance.settlement.intervalSec * 0.7);
+      g = clone(g);
+      if (name === 'awaypos') window.setTimeout(() => devAway(12, 2.2), 2600); // 12분 비움: 50배 전부가 청산되고, 정산은 두 번만 돈다
+      return g;
+    }
+    case 'away': {
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true } });
+      window.setTimeout(() => devAway(12, 0.1), 2600);
+      return midgame(base);
+    }
+    case 'clear': {
+      // 빚이 1만 남았다: 지도에서 [전부]를 누르면 완납 장면 → 은퇴할지 고른다
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'map', seen: { ...seen, capitalSms: true, repay: true, ledger_repeatCleared: true, ledger_firstCleared: true, ledger_mom20: true, ledger_mom10: true } });
+      const g = midgame(base, { cash: 61_240, wheels: q.get('pwheels') ? +q.get('pwheels')! : 1 });
+      const d = g.run.debts.shark1;
+      d.principal = 10_000; d.inherited = 10_000; d.tranches = [];
+      g.run.stats['repaid.shark1'] = 490_000; g.run.stats.stamps = 49;
+      if (q.get('p200')) g.run.stats.lev200Trades = 2;
+      return clone(g);
+    }
+    case 'retired': {
+      P.patch({ everUnlocked: { ...un } });
+      const g = midgame(base, { cash: 61_240 });
+      const d = g.run.debts.shark1;
+      d.principal = 0; d.inherited = 0; d.tranches = [];
+      g.run.stats['repaid.shark1'] = 500_000;
+      (balance as { act1?: unknown }).act1 ??= { friends: false };
+      retireAct1(g);
+      return clone(g);
+    }
+    case 'rate': {
+      // 금리 인상 속보: 엄마 빚은 그대로
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true } });
+      // 화면이 뜬 뒤에 속보가 온다(엔진이 사건을 예고할 때와 같은 꼴: 알림 한 줄 + 다음 정산부터 시작)
+      window.setTimeout(() => {
+        const g = clone(useGame.getState().g);
+        g.run.notices.push({ id: 'event:rate_hike', tick: g.run.tick, text: eventById.rate_hike.text, kind: 'wire' });
+        g.run.pendingEvents.push({ id: 'rate_hike', startsIn: 1 });
+        useGame.getState().setGame(g);
+      }, 1500);
+      return midgame(base);
     }
     default: return base;
   }

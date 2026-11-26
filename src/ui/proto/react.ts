@@ -67,6 +67,7 @@ export interface SettleCtx {
   /** 다음 정산에 걷어 갈 돈 */ nextClaim: number;
   /** 다음 정산의 예상 합계(알바 수입 − 일당 − 이자 − 생활비) */ nextNet: number;
   overdue: boolean; posOpen: boolean;
+  /** 열린 포지션의 지금 손익 합(정리하면 더해지거나 빠지는 돈). 없으면 0 */ posPnl?: number;
   /** 잇따른 적자 정산 수(이번 포함) */ negStreak: number;
   /** 이번 생에 처음으로 남은 정산 */ firstPositive: boolean;
 }
@@ -84,7 +85,11 @@ export function settleRemark(c: SettleCtx): string {
     else if (runway !== null && runway <= 3) line = `이자 ${iv} 수금 완료요오. 이대로면 ${runway}번 뒤에 바닥이에요오.`;
     else if (c.firstPositive) line = `이자 ${iv} 수금 완료요오. 남기 시작했네요오. 원금에 쓰셔도 돼요오.`;
     else if (c.negStreak === 3) line = `이자 ${iv} 수금 완료요오. 세 번째 적자네요오. 제 일은 아니지만요오.`;
-    else if (c.posOpen) line = `이자 ${iv} 수금 완료요오. 거래 중이시네요오. 이자는 이자대로 가요오.`;
+    else if (c.posOpen) {
+      // 정산을 넘겨 들고 있는 포지션을 추심원이 흘끗 본다(U-39 ①): 크기는 이번 이자에 견준다
+      const p = c.posPnl ?? 0, big = Math.abs(p) >= Math.max(1, c.interest) * 0.3;
+      line = `이자 ${iv} 수금 완료요오. ${big && p > 0 ? `폰에 +${n(p)}이 떠 있네요오. 아직 도토리는 아니에요오.` : big && p < 0 ? `폰에 −${n(p)}이 떠 있네요오. 저는 못 본 걸로 할게요오.` : '거래 중이시네요오. 이자는 이자대로 가요오.'}`;
+    }
     else line = `이자 ${iv} 수금 완료요오.`;
   }
   return `추심원: ${line}${auto} ${sum}`;

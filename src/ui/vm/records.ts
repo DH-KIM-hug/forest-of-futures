@@ -3,6 +3,7 @@ import { endings, endingById, heirloomDefs, houseDefs, legacy, lenderById, tipsD
 import { archiveEntry, previewEnding, type ArchiveEntry } from '../../engine/endings';
 import { canRetire, hanTotal, statement, treeStatus, type BranchCard } from '../../engine/generation';
 import { comma } from '../../engine/util';
+import { act1On, ENDING_TOTAL } from '../../engine/act1';
 import { totalDebt, netWorth } from '../../engine/selectors';
 import type { EventLogItem, GameState } from '../../engine/types';
 
@@ -11,7 +12,7 @@ export const archiveCount = (g: GameState): number => Object.keys(g.family.ledge
 export const CAUSE: Record<string, { label: string; color: string }> = {
   LIQ: { label: '청산', color: '#e8a094' }, TIP: { label: '낚임', color: '#d9b0d0' }, SHARK: { label: '사채', color: '#c8b27a' },
   BANK: { label: '제도권', color: '#9db8d4' }, UPKEEP: { label: '생활비', color: '#d4c08a' }, SEIZE: { label: '압류', color: '#c89a80' },
-  FRIEND: { label: '절교', color: '#a8c8a8' }, LEGACY: { label: '물려받은 빚', color: '#b4acd4' },
+  FRIEND: { label: '절교', color: '#a8c8a8' }, LEGACY: { label: '물려받은 빚', color: '#b4acd4' }, RETIRE: { label: '은퇴', color: '#E8C24A' },
 };
 export const BRANCH_LABEL: Record<string, string> = { forced: '강제 상속', simple: '단순승인', limited: '한정승인', renounce: '상속포기', gift: '증여' };
 const TIME = ['아침', '낮', '저녁', '밤'];
@@ -49,7 +50,7 @@ export function endingCardModel(g: GameState): EndingCardModel | null {
     scenes: p.lastThree.map(sceneRow),
     misses: p.nearMisses.map((m) => ({ id: m.id, text: `${m.hint} → ${m.id} · ???` })),
     next: p.nextGen,
-    status: p.isNew ? '새 엔딩' : `이미 수집(${p.nth}번째)`, isNew: p.isNew, ledger: `${p.collected} / ${endings.length}`, offline: p.offline,
+    status: p.isNew ? '새 엔딩' : `이미 수집(${p.nth}번째)`, isNew: p.isNew, ledger: `${p.collected} / ${act1On() ? ENDING_TOTAL : endings.length}`, offline: p.offline,
     cta: '상속 개시',
   };
 }

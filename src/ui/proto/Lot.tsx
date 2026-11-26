@@ -5,7 +5,10 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useUI } from '../uiStore';
 import { useProto } from './protoStore';
-import { tiles, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, rateTxt, perSec, type Tile } from './model';
+import { tiles, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, rateTxt, perSec, claim, type Tile } from './model';
+import { heroMood, tensionOf, type HeroMood } from './tension';
+import { tradeNet } from './watch';
+import { historyOf } from '../priceHistory';
 import { TILE_GRID, afterDrag, DRAG_PX } from './home';
 import { say, sendAway } from './watch';
 import { comma } from '../../engine/util';
@@ -25,22 +28,33 @@ const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, 
 
 const bought = new Set<string>(); // 이번 접속에서 처음 사는 물건이면 짧은 팡파르
 
-export function useOpenPositions(): PositionView[] {
+/** 열린 포지션 + 이 거래로 지금까지 늘거나 준 돈(net: 들어갈 때·나올 때 수수료 포함)과 그 비율(netRoe, 넣은 돈 대비 %).
+ *  화면의 큰 숫자는 전부 이 값을 쓴다 — 시세만 본 손익(pnl·roe)은 수수료가 빠져 있어 200배에서는 "+1.3%"인데 닫으면 −15%였다(회차 2 에서 본 것). */
+export type OpenPos = PositionView & { net: number; netRoe: number };
+export function useOpenPositions(): OpenPos[] {
   const g = useGame((s) => s.g);
-  return Object.keys(g.run.positions).map((m) => positionView(g, m)!).filter(Boolean);
+  return Object.keys(g.run.positions).map((m) => {
+    const v = positionView(g, m);
+    const raw = g.run.positions[m];
+    if (!v || !raw) return null;
+    const net = tradeNet(raw, v.back);
+    return { ...v, net, netRoe: (net / Math.max(1, raw.margin0)) * 100 };
+  }).filter((x): x is OpenPos => !!x);
 }
 
 /** 내 포지션 한 줄(판 맨 위에 고정, 접혀 있어도 보인다): 누르면 거래소의 그 종목으로 */
-function PinRow({ p }: { p: PositionView }) {
+function PinRow({ p }: { p: OpenPos }) {
   const setTab = useProto((s) => s.setTab);
   const call = isNearLiq(p);
   const m = marketById[p.market];
+  const net = p.net;
+  const tn = tensionOf(p.liqDistPct, historyOf(p.market));
   return (
-    <button className={'pr-pin' + (call ? ' call' : '') + (p.roe >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
+    <button className={'pr-pin' + (call ? ' call' : '') + (net >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
       <span className="who"><i className="coin" style={{ background: C.dtc }} />{m.name}</span>
       <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
-      <span className="liq">{call ? '▼ 청산 임박 ' : '청산까지 '}{p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%</span>
-      <span className="roe"><b>{p.pnl >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(p.pnl)))}</b><small>{roeTxt(p.roe)}</small></span>
+      <span className={'liq r-' + tn.reach} data-reach={tn.reach}>{call ? '▼ 청산 임박 ' : '청산까지 '}{p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < tn.dots ? 'on' : ''} />)}</i></span>
+      <span className="roe"><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(net)))}</b><small>{roeTxt(p.netRoe)}</small></span>
     </button>
   );
 }
@@ -76,6 +90,13 @@ export function Lot() {
   const cells = tiles(g, slotOf);
   const sum = homeSummary(g);
   const near = pos.some((p) => isNearLiq(p));
+  // 주인공의 몸: 가장 급한 포지션 하나가 정한다(굳는다 > 서성인다 > 들썩인다 > 폰만 본다)
+  const cl = claim(g).total;
+  const RANK: HeroMood[] = ['idle', 'phone', 'hop', 'pace', 'frozen'];
+  const mood = pos.reduce<HeroMood>((best, p) => {
+    const m = heroMood({ hasPos: true, roe: p.netRoe, pnl: p.net, claim: cl, reach: tensionOf(p.liqDistPct, historyOf(p.market)).reach, nearLiq: isNearLiq(p) });
+    return RANK.indexOf(m) > RANK.indexOf(best) ? m : best;
+  }, 'idle');
   const tapTimer = useRef<number | undefined>(undefined);
   const hiTimer = useRef<number | undefined>(undefined);
 
@@ -162,7 +183,7 @@ export function Lot() {
 
   return (
     <div className={'pr-lot' + (open ? ' open' : '')} style={{ ['--cover' as string]: `${cover}px` }}>
-      <World near={near} cover={cover} open={open} onRoll={doTap} />
+      <World near={near} mood={mood} cover={cover} open={open} onRoll={doTap} />
       {open && <div className="pr-scrim" data-scrim onPointerDown={() => setPanel(false)} aria-hidden="true" />}
       <section className={'pr-panel' + (open ? ' open' : '')} data-panel={open ? 'open' : 'closed'} aria-label="집의 쳇바퀴">
         <div ref={headRef} className="hd">

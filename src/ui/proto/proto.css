@@ -712,3 +712,53 @@
 .pr-pinwrap { display: flex; gap: 6px; align-items: stretch; } .pr-pinwrap .pr-pin { flex: 1; min-width: 0; } .pr-pinwrap .pinclose { flex: 0 0 auto; min-width: 54px; padding: 0 8px; }
 .pr-liq .stamp.legend { color: #8A6410; border-color: #C59A2A; box-shadow: 0 0 0 5px #F3D774; }
 .pr-pinwrap .pr-pin { gap: 5px; padding: 4px 7px; } .pr-pinwrap .pr-pin .who { font-size: 0; gap: 0; } .pr-pinwrap .pr-pin .roe b { font-size: 16px; }
+
+/* ── U-39 ①: 주인공의 몸과 속마음 ── */
+.pa-hero.phone { animation: nodPhone 3.2s ease-in-out infinite; }
+.pa-hero.pace { animation: pace 2.6s ease-in-out infinite; }
+.pa-hero.hopjoy { animation: hopJoy .9s cubic-bezier(.34, 1.56, .64, 1) infinite; }
+@keyframes nodPhone { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-3deg) translateY(1px); } }
+@keyframes pace { 0%, 100% { transform: translateX(-13px) scaleX(-1); } 45% { transform: translateX(13px) scaleX(-1); } 50% { transform: translateX(13px) scaleX(1); } 95% { transform: translateX(-13px) scaleX(1); } }
+@keyframes hopJoy { 0%, 60%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-9px) scale(.97, 1.05); } }
+.pr-thinkbox { pointer-events: none; }
+.pr-thinkbox.home { position: absolute; z-index: 3; transform: translate(-50%, -100%); width: max-content; max-width: 250px; }
+.pr-think { position: relative; display: inline-block; max-width: 100%; padding: 4px 11px 5px; border-radius: 14px; background: #FFFDF6; border: 2px dashed var(--o); box-shadow: var(--drop); font-family: var(--dsp); font-size: 13.5px; line-height: 1.3; color: #5a5348; animation: popIn .28s cubic-bezier(.34, 1.56, .64, 1); }
+.pr-think .untyped { opacity: 0; }
+.pr-think.home::after { content: ''; position: absolute; left: 50%; bottom: -9px; width: 7px; height: 7px; margin-left: -3px; border-radius: 50%; background: #FFFDF6; border: 2px dashed var(--o); }
+.pr-pin .liq .dots { display: inline-flex; gap: 2px; margin-left: 5px; vertical-align: 1px; }
+.pr-pin .liq .dots u { width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid rgba(184, 67, 44, .5); }
+.pr-pin .liq .dots u.on { background: var(--red-ink); border-color: var(--red-ink); }
+.pr-pin .liq.r-far { background: #EFE9D6; color: var(--sub); } .pr-pin .liq.r-far .dots u { border-color: rgba(74, 70, 64, .35); }
+.pr-pin .liq.r-edge { animation: tick .7s steps(1) infinite; }
+/* 숲속 캐피탈의 조건(U-39 ⑩) */
+.pr-terms { margin: 7px 0 2px; padding: 7px 9px; border-radius: 11px; background: #F1F6EE; border: 2px dashed #9DB58C; display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; line-height: 1.35; color: var(--o); }
+.pr-terms i { display: inline-block; min-width: 38px; margin-right: 6px; padding: 0 5px; border-radius: 6px; background: #DDE9D2; font-style: normal; font-size: 11px; font-weight: 800; text-align: center; color: #4D6B3C; }
+.pr-terms b { font-family: var(--dsp); font-weight: 400; font-size: 13.5px; } .pr-terms small { color: var(--sub); font-weight: 700; }
+.pr-terms .hot { color: var(--red-ink); } .pr-terms .hot i { background: #FBE3DC; color: var(--red-ink); }
+.pr .buy.retire { width: 100%; margin-top: 8px; background: #F3D774; }
+/* 자리를 비운 사이(U-39 ④) */
+.pr-away .box { max-height: 86%; overflow-y: auto; }
+.pr-away p.col { padding: 7px 10px; border-radius: 12px; background: #FBF4DF; border: 2px dashed #B9A77E; font-size: 14px; }
+.pr-away p.col b { display: block; font-size: 11.5px; color: var(--sub); }
+.pr-away .rows { display: flex; flex-direction: column; gap: 4px; margin: 0 0 8px; }
+.pr-away .rw { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 9px; border-radius: 10px; background: #fff; border: 2px solid rgba(74, 70, 64, .3); font-size: 13px; font-weight: 700; line-height: 1.3; }
+.pr-away .rw small { display: block; font-size: 11px; color: var(--sub); }
+.pr-away .rw b { flex: 0 0 auto; font-family: var(--dsp); font-weight: 400; font-size: 16px; }
+.pr-away .rw.loss b { color: var(--red-ink); } .pr-away .rw.gain b { color: #2E6E4C; } .pr-away .rw.loss { border-color: var(--red); }
+.pr-away .sum { display: flex; justify-content: space-around; margin: 2px 0 8px; font-size: 13px; font-weight: 800; }
+.pr-away .sum b { font-family: var(--dsp); font-weight: 400; font-size: 18px; } .pr-away .sum .up { color: #2E6E4C; } .pr-away .sum .dn { color: var(--red-ink); }
+/* 은퇴 엔딩(U-39 ⑧): 사진에 색이 남아 있고 도장은 금빛이다 */
+.pr-end.retired { background: #4A3F2C; }
+.pr-end.retired .photo { filter: sepia(.35) saturate(.85); }
+.pr-end .polaroid .stamp.gold { color: #A9801A; border-color: #C59A2A; background: rgba(255, 248, 220, .9); }
+/* 나무: 이 길의 엔딩(U-39 ⑪) */
+.pr-tree .tr-ends { margin-top: 5px; padding: 5px 8px 6px; border-radius: 11px; background: color-mix(in srgb, var(--pc) 30%, #fff); border: 2px solid rgba(74, 70, 64, .3); text-align: left; }
+.pr-tree .tr-ends > b { font-family: var(--dsp); font-weight: 400; font-size: 13px; }
+.pr-tree .tr-ends span { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.pr-tree .tr-ends button { min-height: 26px; padding: 1px 8px; border-radius: 9px; border: 2px dashed #9C927E; background: #F6F1E2; font-family: var(--dsp); font-size: 12px; color: #8C8372; cursor: pointer; }
+.pr-tree .tr-ends button.got { border: 2px solid var(--o); background: #FFF3C4; color: var(--o); }
+.pr-tree .tr-ends small { display: block; margin-top: 4px; font-size: 11.5px; font-weight: 700; line-height: 1.35; color: var(--sub); }
+/* 금테 수익 인증서(스킬트리 B4) */
+.pr-profit.gold { border-color: #C59A2A; box-shadow: 0 0 0 3px #F3D774, 0 8px 16px rgba(40, 40, 20, .3); }
+@media (prefers-reduced-motion: reduce) { .pa-hero.pace, .pa-hero.hopjoy, .pa-hero.phone { animation: none !important; } }
+.pr-hud .debt .hike { white-space: nowrap; }

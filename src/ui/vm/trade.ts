@@ -4,7 +4,7 @@ import {
   closeBack, entryFee, levCapNow, liqPrice, marginFromPct, pnlOf, roePct, shortInsurance, stopPrice, waiverAvailable,
 } from '../../engine/futures';
 import { futuresGate, tradeGate } from '../../engine/progression';
-import { effectiveLevCaps, feeRate } from '../../engine/skilltree';
+import { effectiveLevCaps, exitFeeMul, feeRate } from '../../engine/skilltree';
 import { price, refPrice } from '../../engine/selectors';
 import { comma } from '../../engine/util';
 import type { AwayReport, GameState, Position } from '../../engine/types';
@@ -84,7 +84,7 @@ export interface OrderPreview {
 export function orderPreview(g: GameState, market: string, dir: 1 | -1, lev: number, pct: number): OrderPreview {
   const run = g.run;
   const p = price(run, market);
-  const rate = feeRate(g, lev); // 스킬트리 할인·보험료가 든 수수료율
+  const rate = feeRate(g, lev, { allIn: pct >= 100 }); // 스킬트리 할인·보험료가 든 수수료율
   const margin = marginFromPct(run.cash, lev, pct, rate);
   const fee = entryFee(margin * lev, rate);
   const liq = dir === 1 ? p * (1 - 1 / lev + T.maintenanceRate) : p * (1 + 1 / lev - T.maintenanceRate);
@@ -121,7 +121,7 @@ export function levRuler(g: GameState): Notch[] {
 
 // ── 포지션 줄 ───────────────────────────────────────────────────────────
 const TIP_LABEL: Record<string, string> = {
-  wire_break: '속보', wire_flow: '속보', wire_vol: '속보', weasel: '족제비 대표', bear: '곰 형', viper: '독사 대부', leadroom: '리딩방 전단지',
+  wire_break: '속보', wire_flow: '속보', wire_vol: '속보', weasel: '창구 너구리', bear: '곰 형', viper: '독사 대부', leadroom: '리딩방 전단지',
   'friend:fox': '여우 선배', 'friend:raccoon': '절친 너구리', 'friend:bear': '곰 형', 'friend:rabbit': '이웃 토끼', 'friend:squirrel': '단짝 다람쥐',
 };
 const FUND_LABEL: Record<string, string> = { bank: '조합', capital: '캐피탈', shark1: '오소리', shark2: '독사', friend: '친구', tax: '세무서' };
@@ -141,7 +141,7 @@ export function positionView(g: GameState, market: string): PositionView | null 
   return {
     market, name: marketById[market].name, dir: p.dir, dirText: p.dir === 1 ? '롱' : '숏', lev: p.lev, roe: roePct(p, px), pnl: pnlOf(p, px), margin: p.margin,
     entry: p.entry, liq: liqPrice(p), sl: p.slRoe !== null ? stopPrice(p, p.slRoe) : null, tp: p.tpRoe !== null ? stopPrice(p, p.tpRoe) : null,
-    slRoe: p.slRoe, tpRoe: p.tpRoe, tags, liqDistPct: (Math.abs(px - liqPrice(p)) / px) * 100, back: closeBack(p, px), reserved: p.closeReserved,
+    slRoe: p.slRoe, tpRoe: p.tpRoe, tags, liqDistPct: (Math.abs(px - liqPrice(p)) / px) * 100, back: closeBack(p, px, exitFeeMul(run)), reserved: p.closeReserved,
   };
 }
 

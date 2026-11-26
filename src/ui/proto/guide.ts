@@ -30,7 +30,9 @@ export const HL = {
   ruler: { tab: 'phone', label: '배율 눈금' },
   risk: { tab: 'phone', label: '증거금 · 청산 줄' },
   cond: { tab: 'phone', label: '손절 · 익절 줄' },
+  posNet: { tab: 'phone', label: '내 포지션의 손익(수수료 포함)' },
   posLiq: { tab: 'phone', label: '내 포지션의 청산까지' },
+  posTense: { tab: 'phone', label: '청산까지의 거리를 지난 1분 폭에 견준 줄' },
   closeBtn: { tab: 'phone', label: '정리하기 단추' },
 } satisfies Record<string, { tab?: Tab; panel?: 'open' | 'closed'; label: string }>;
 export type HlKey = keyof typeof HL;
@@ -128,7 +130,9 @@ export const TIPS = {
   'goal.fail': t('goal', 'boss', () => '끝내 못 갚으시면 파산입니다. …그래도 장부는 안 없어져요.', undefined, 'smile'),
   'goal.hero': t('goal', 'hero', () => '…쳇바퀴를 늘리든, 거래로 따든. 갚아야 끝난다.'),
   // ── 첫 진짜 포지션 ──
+  'pos.net': t('position', 'note', () => '큰 숫자는 지금 닫으면 늘거나 주는 돈이다. 수수료는 이미 뺐다.', 'posNet'),
   'pos.liq': t('position', 'note', () => "'청산까지'는 남은 거리다. 0이 되면 넣은 돈이 사라진다.", 'posLiq'),
+  'pos.tense': t('position', 'note', () => '그 거리를 지난 1분의 흔들림으로 잰 줄이다. 점이 찰수록 가깝다.', 'posTense'),
   'pos.close': t('position', 'note', () => '[정리하기]를 누르면 지금 손익 그대로 끝낸다.', 'closeBtn'),
 } satisfies Record<string, TipDef>;
 export type TipId = keyof typeof TIPS;

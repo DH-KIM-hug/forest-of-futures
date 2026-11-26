@@ -42,8 +42,10 @@ describe('스킬트리 데이터', () => {
     }
     for (const n of skillNodes) {
       expect(n.openCost).toBe(n.tier === 0 ? 1 : n.tier);
-      if (n.kind === 'scaled') { expect(n.cap).toBeGreaterThan(0); expect(n.cap).toBeLessThan(1); expect(n.maxLevel).toBeUndefined(); }
-      else expect(n.maxLevel).toBe(1);
+      // U-39 ⑨: 어떤 노드도 레벨의 끝이 없다. 숫자 노드는 cap, 켜고 끄는 노드는 숫자 꼬리(tail.cap)가 상한에 다가간다
+      expect(n.maxLevel).toBeUndefined();
+      if (n.kind === 'scaled') { expect(n.cap).toBeGreaterThan(0); expect(n.cap).toBeLessThan(1); expect(n.tail).toBeUndefined(); }
+      else { expect(n.tail!.cap).toBeGreaterThan(0); expect(n.tail!.text.length).toBeGreaterThan(5); }
       for (const r of n.requires) expect(skillById[r]).toBeDefined();
     }
     expect(skillMeta.levelMul).toBe(1.6);
@@ -85,8 +87,10 @@ describe('사기·고르기', () => {
     expect(canBuy(g, 'A1').ok).toBe(false); // 뿌리 먼저
     expect(buyNode(g, 'R').ok).toBe(true);
     expect(g.family.gold).toBe(2);
-    expect(nextCost(g, 'R')).toBeNull(); // binary 는 Lv1 이 끝
-    expect(buyNode(g, 'R').ok).toBe(false);
+    expect(nextCost(g, 'R')).toBe(2); // 켜고 끄는 노드도 레벨이 이어진다(U-39 ⑨): 1 × 1.6 올림
+    g.family.gold = 0;
+    expect(buyNode(g, 'R').ok).toBe(false); // 재화가 모자라다
+    g.family.gold = 2;
     expect(buyNode(g, 'A2').ok).toBe(false); // A1 먼저
     expect(buyNode(g, 'A1').ok).toBe(true);
     expect(nodeLevel(g, 'A1')).toBe(1);

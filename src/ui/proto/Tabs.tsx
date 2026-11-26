@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
-import { onFirstOfficeLoan, say } from './watch';
+import { onFirstOfficeLoan, retireNow, say } from './watch';
+import { canRetireAct1 } from '../../engine/act1Retire';
+import { treeAward } from '../../engine/skilltree';
+import { balance } from '../../engine/data';
+import { hamsterMath } from './model';
 import { comma } from '../../engine/util';
 import { lenderById } from '../../engine/data';
 import { interestDue, lenderLimit, nextBorrowRate } from '../../engine/selectors';
@@ -86,12 +90,17 @@ export function MapTab() {
               <div className="sb">새로 빌리는 돈 금리 {(nextBorrowRate(g, id) * 100).toFixed(0)}% · 더 빌릴 수 있는 돈 {comma(room)}{l.upfront ? ' · 선이자 ' + l.upfront * 100 + '%' : ''}</div>
               {first && <div className="sq">{pl.npc} 「오셨어요? 앉으세요. 도장 하나면 됩니다.」</div>}
             </div></div>
+            {id === 'capital' && <CapitalTerms room={room} />}
             {id === 'shark1' && loanTaken && <Ledger />}
             <div className="btns">
               <button className={'buy' + (amt > 0 ? ' on' : '')} disabled={amt <= 0} data-borrow={id} data-hl={id === 'shark1' ? 'borrow' : undefined} onClick={() => doBorrow(id)}><span>{amt > 0 ? '빌리기' : '한도 다 씀'}</span><small>{amt > 0 ? '+' + comma(got) : ''}</small></button>
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-pay={id} data-hl={id === 'shark1' ? 'pay' : undefined} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
-              <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} onClick={() => doPay(id, 'all')}><span>전부</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
+              <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-payall={id} onClick={() => doPay(id, 'all')}><span>전부</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
             </div>
+            {/* 빚을 다 갚은 생은 여기서 닫을 수 있다(U-39 ⑧): 은퇴 = 엔딩 카드 → 환생 */}
+            {id === 'shark1' && canRetireAct1(g) && (
+              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>빚 0 · 이 생을 닫는다 · 황금 +{treeAward(run)}</small></button>
+            )}
           </div>
         );
       })}
@@ -116,13 +125,33 @@ function Ledger() {
           <span className="nm">{r.label}</span>
           <span className="bar"><u style={{ width: `${r.start > 0 ? (r.left / r.start) * 100 : 0}%` }} /></span>
           <b className="amt">{r.left <= 0 ? '지움' : comma(r.left)}</b>
-          <small className="iv">{r.left <= 0 ? '' : `이자 ${comma(r.interest)}`}</small>
+          <small className="iv">{r.left <= 0 ? '' : `이자 ${comma(r.interest)}${r.fixed ? ' · 고정' : ''}`}</small>
         </div>
       ))}
       <div className="lg-st" data-stamps={stamps}>
         <span className="dots">{Array.from({ length: Math.min(10, stamps + 1) }, (_, i) => <i key={i} className={i < stamps ? 'on' : ''} />)}{stamps > 9 && <em>×{stamps}</em>}</span>
         <small>금박 도장 {stamps}개 · {g.run.debts.shark1.principal > 0 ? `${comma(Math.min(toNext, g.run.debts.shark1.principal))} 더 갚으면 하나` : '장부가 깨끗하다'}</small>
       </div>
+    </div>
+  );
+}
+
+/** 숲속 캐피탈의 조건(U-39 ⑩): 싸게 빌리는 길을 막지 않되, 값과 조건이 카드에서 읽히게 한다. 숫자는 전부 엔진 값이다. */
+function CapitalTerms({ room }: { room: number }) {
+  const g = useGame((s) => s.g);
+  const l = lenderById.capital;
+  const unit = Math.min(l.borrowUnit!, Math.max(room, 0)) || l.borrowUnit!;
+  const perUnit = Math.ceil(unit * l.rate - 1e-9);
+  const hm = hamsterMath(g);
+  const A = balance.assets as { appraisalRate: number; collateralLtvCapital: number };
+  const perWheel = Math.floor(50_000 * A.appraisalRate * A.collateralLtvCapital);
+  const od = g.run.debts.capital.overdue;
+  return (
+    <div className="pr-terms" data-terms="capital" aria-label="숲속 캐피탈 조건">
+      <div><i>값</i>{comma(unit)} 빌릴 때마다 정산마다 이자 <b>+{comma(perUnit)}</b> <small>(쳇바퀴 한 대가 남기는 돈 {comma(hm.net)})</small></div>
+      <div><i>한도</i>기본 {comma(l.limitByHouse![g.run.house])} + 쳇바퀴 한 대당 <b>+{comma(perWheel)}</b></div>
+      <div><i>걷기</i>자동이체 — 추심원이 오지 않는다. 손에 돈이 없으면 그대로 연체</div>
+      <div className={od > 0 ? 'hot' : ''}><i>밀리면</i>{l.maxOverdue}번째에 쳇바퀴를 실어 간다, <b>비싼 것부터</b>{od > 0 ? ` · 지금 ${od}번` : ''}</div>
     </div>
   );
 }

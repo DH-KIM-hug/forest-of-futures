@@ -105,6 +105,8 @@ export interface Position {
   feeRate?: number;
   /** 마진콜 전화(B2)를 이미 받았다 */
   called?: boolean;
+  /** 진입 뒤에 증거금만 더 넣은 돈(물타기 B3b · 마진콜 전화 B2). 물타기의 꼬리(청산 때 일부 환급)가 읽는다 */
+  marginAdded?: number;
 }
 
 /** 끝난 마지막 포지션(손실이면 우선)의 기록. 엔딩 조건 `lev`·`dir`... 이 읽는다. */

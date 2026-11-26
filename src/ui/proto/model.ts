@@ -3,7 +3,7 @@ import { tierById, wheelByCoin, balance, lenderById } from '../../engine/data';
 import { isActive, laborWage, nextTierCost, staffedWheelGross, tierBlockReason, tierMaxUnits, tierWage, equipGross, unitsOfTier } from '../../engine/equipment';
 import { sellFeeRate } from '../../engine/mining';
 import { forecast } from '../../engine/settlement';
-import { interestDue, lenderLimit, ownedCoins, totalDebt } from '../../engine/selectors';
+import { fixedInterest, interestDue, lenderLimit, ownedCoins, totalDebt } from '../../engine/selectors';
 import type { CoinId, GameState } from '../../engine/types';
 import { HOME_WHEEL_NAME } from './text';
 import { assignSlots, SLOT_COUNT } from './home';
@@ -15,6 +15,11 @@ export const WHEEL_COIN: CoinId = 'DTC';
 export const EXTRA_WHEEL = 'wheel2';
 /** 몇 번째 생인가(1부터). 엔진의 세대 번호는 2에서 시작한다. */
 export const lifeNo = (g: GameState): number => g.family.generation - balance.start.generation + 1;
+
+/** 첫 생의 첫 추심원이 오기까지(초). 굴려서는 안 된다는 것을 아는 데 40초면 충분하다 — 한 정산(180초)을 다 굴리게 하지 않는다(U-39 ⑤).
+ *  이 시간 동안 아무리 눌러도(초당 12번 × 2) 첫 청구액 5,500 에 못 미친다. 빠른 판과 다음 생, 그 뒤의 정산은 그대로다. */
+export const FIRST_VISIT_SEC = 60;
+export const firstVisitSec = (interval: number): number => Math.min(interval, FIRST_VISIT_SEC);
 
 /** 다음 정산에 걷어 갈 돈: 이자 + 생활비 */
 export function claim(g: GameState): { interest: number; living: number; total: number } {
@@ -140,6 +145,10 @@ export function perSettle(g: GameState): number {
 
 export const debtLine = (g: GameState): number => totalDebt(g.run);
 export const interestNow = (g: GameState): number => (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
+/** 고정금리 몫(엄마 빚)의 이자: 금리 인상 사건에도 그대로다 */
+export const fixedInterestNow = (g: GameState): number => Math.round((['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + fixedInterest(g, id), 0));
+/** 금리가 mult 배가 되면 이자가 얼마가 되는가(지금 사건이 없을 때의 셈): 고정금리 몫은 빼고 곱한다 */
+export const interestAfterHike = (g: GameState, mult: number): number => { const fx = fixedInterestNow(g); return Math.round(fx + (interestNow(g) - fx) * mult); };
 
 /** 청산 임박: 진입 때 청산까지 거리(약 100/배율 %)의 30% 아래로 줄었을 때. 최대 5%. 높은 배율에서 늘 울리지 않게. */
 export function isNearLiq(p: { liqDistPct: number; lev: number }): boolean {

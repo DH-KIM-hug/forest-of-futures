@@ -67,7 +67,7 @@ export function CapitalFutures() {
       {!eduDone && (
         <>
           <div className="npc">
-            <Art id="npc_weasel" className="bust" alt="족제비 대표" />
+            <Art id="npc_weasel" className="bust" alt="창구 너구리" />
             <div className="bubble"><span><b>{page.t}</b><br />{page.s}</span></div>
           </div>
           <button className="act" onClick={() => go({ type: 'eduPage' })}>{f.edu + 1 < need ? `다음 (${f.edu + 1}/${need})` : `교육 마치기 (${f.edu + 1}/${need})`}</button>

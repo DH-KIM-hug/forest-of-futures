@@ -1,6 +1,7 @@
 // 시제품의 사람·장소 이름과 1막 대사(docs/gdd/STORY_ACT1.md v3). 숫자는 엔진 값을 받아 끼운다.
 import type { Line, Who } from './protoStore';
 import { T, tips, type TipArgs } from './guide';
+import { josa } from '../../engine/util';
 
 export const COLLECTOR_NAME = '오소리 추심원';
 export const BOSS_NAME = '오소리 대부';
@@ -112,14 +113,34 @@ export const STORY = {
     L('note', '사무소 벽에 액자들. 그 사이 빈 못 하나와 액자 자국.'),
     L('boss', '어머님보다 빠르시네요.', 'smile'),
   ],
-  clear: (): Line[] => [L('boss', '깨끗하시네요. …그런데 이제 뭘로 사세요?', 'smile')],
+  /** 엄마 이야기의 단서(U-39 ⑫): 한 번에 하나, 지문 한 줄, 설명 없음. reason = 첫 금박 도장 · mirror = 갚다가 다시 빌린 때 · frame = 엄마 빚 줄에 처음 손이 닿은 때 */
+  momClue: (k: 'reason' | 'mirror' | 'frame'): Line[] => [L('note',
+    k === 'reason' ? '금박 도장 옆, 엄마의 장. 빌린 까닭을 적는 칸이 먹으로 지워져 있다.'
+    : k === 'mirror' ? '방금 적은 줄 위에 엄마의 줄이 있다. 10만까지 갚았다가, 다시 30만. 날짜는 한겨울이다.'
+    : '오소리 대부가 서랍에서 액자를 꺼내 빈 못에 건다. 뒤집힌 채로.')],
+  /** 모든 빚 0: 이 생을 닫을지 고른다(U-39 ⑧). 고르는 단추는 watch.ts 가 붙인다 */
+  clear: (): Line[] => [
+    L('boss', '깨끗하시네요. 장부에 더 적을 게 없습니다.', 'smile'),
+    L('boss', '…그런데 이제 뭘로 사세요?', 'smile'),
+    L('note', '빚 0. 이제 문을 두드릴 사람이 없다. 폰에는 FRX 숲거래소가 그대로 깔려 있다.'),
+  ],
+  /** [계속한다]를 고른 뒤: 2막의 문턱(족제비의 할부). 2막 자체는 아직 없다 */
+  act2Hook: (): Line[] => [
+    L('weasel', '소문 들었어요~ 빚이 하나도 없으시다면서요~', 'smile'),
+    L('weasel', '그럼 할부가 되시는 거예요~ 큰 쳇바퀴, 발전기, 통나무집까지~', 'smile'),
+    L('weasel', '카탈로그 챙겨서 다시 올게요~ 도장만 준비해 두세요~', 'smile'),
+    L('hero', '…빚이 없으니까, 빌릴 수 있다.'),
+  ],
   reborn: (phone = false): Line[] => [L('hero', phone ? '…다시 그 오두막이다. 손에 폰이 쥐여 있다. 리본도 그대로다.' : '…다시 그 오두막이다. 주머니 속 리본이 아직 따뜻하다.')],
 
   // ── U-38: 세상이 반응한다. 아래 장면은 전부 실제로 일어난 일(엔진 값)에 붙는다 ──
   /** 빌린 뒤에 이자를 못 낸 정산: 연체가 무엇을 하는지 그 자리에서 말한다 */
-  overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean }): Line[] => [
+  overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean; living?: number; locked?: number }): Line[] => [
     L('collector', `이자 ${n(o.interest)}… 모자라네요오. ${o.nth <= 1 ? '연체로 적을게요오.' : `이번 생 ${o.nth}번째 연체예요오.`}`, 'flat'),
+    // 돈이 없어서가 아니라 포지션에 묶여 있어서 못 낸 정산: 그렇다고 말해 준다(U-39 ①)
+    ...(o.locked && o.locked >= o.interest ? [L('collector', `돈은 있으시네요오. 거래소에 ${josa(n(o.locked), '이', '가')} 묶여 있어요오. 저는 거긴 못 들어가요오.`, 'flat')] : []),
     L('collector', '못 낸 이자는 원금에 얹었어요오.', 'flat'),
+    ...(o.living ? [L('collector', `생활비 ${n(o.living)}도 못 내셨네요오. 그것도 장부에 얹었어요오.`, 'flat')] : []),
     ...(o.tagged && !o.seized ? [L('collector', '쳇바퀴엔 딱지 붙였어요오. 캐는 것의 3할은 저희 거예요오.', 'flat')] : []),
     // 이번에 실어 가는 것이 있으면 다음 장면(압류)이 말한다
     ...(o.seized ? [] : [L('collector', o.nothingLeft ? '다음에도 밀리면 장부를 닫아요오. 그게 끝이에요오.' : '한 번 더 밀리면 실어 가요오. 싼 것부터요오.', 'flat')]),
@@ -153,9 +174,11 @@ export const STORY = {
     L('boss', o.broke ? '증거금을… 아, 넣을 돈이 없으시네요. 그럼 이만.' : '증거금 더 넣으시겠어요? 넣으면 버티고, 안 넣으면… 아시죠.', 'smile'),
   ],
   /** 금리 인상 속보: 이자가 얼마에서 얼마가 되는지 */
-  rateHike: (o: { text: string; from: number; to: number; times: number }): Line[] => [
+  rateHike: (o: { text: string; from: number; to: number; times: number; fixed?: number }): Line[] => [
     L('news', o.text),
     L('collector', `다음 ${o.times}번은 이자가 ${n(o.from)}에서 ${n(o.to)}이에요오.`, 'flat'),
+    // 엄마 빚은 고정금리다: "어머님 때 이자 그대로"(U-39 ⑥)
+    ...(o.fixed ? [L('collector', `어머님 빚 이자 ${n(o.fixed)}은 안 올라요오. 어머님 때 이자 그대로라서요오.`, 'flat')] : []),
     L('collector', '위에서 정한 거라서요오. 저도 월급은 그대로예요오.', 'flat'),
   ],
   // 숲속 캐피탈(창구 너구리)
@@ -167,7 +190,8 @@ export const STORY = {
     L('raccoon', '고객님~ 어서 오세요~ 숲속 캐피탈 창구 너구리예요~', 'smile'),
     L('raccoon', `${man(o.amount)} 나갔어요~ 이자는 정산마다 ${o.ratePct}%. 오소리보다 싸죠~`, 'smile'),
     L('raccoon', '쳇바퀴를 늘리시면 한도도 늘어요~ 저희는 쳇바퀴를 좋아해요~', 'smile'),
-    L('raccoon', '대신 석 번 밀리시면 전액을 한 번에 받으러 가요~ 웃으면서요~', 'flat'),
+    L('raccoon', '이자는 자동이체예요~ 추심원은 안 보내요~ 잔액만 채워 두세요~', 'smile'),
+    L('raccoon', '대신 석 번 밀리시면 쳇바퀴를 실어 가요~ 비싼 것부터요~ 웃으면서요~', 'flat'),
   ],
   // 뒷골목(독사 대부)
   viperSms: (): Line[] => [
@@ -182,7 +206,7 @@ export const STORY = {
   ],
   owlRefuse: (): Line[] => [L('owl', '고객님, 담보가 확인되지 않습니다. 딱지 붙은 집은 담보가 아닙니다.', 'flat')],
   // 오소리 장부(ledger.ts LedgerBeat): 갚아 나가는 길의 이야기
-  ledger: (beat: string, o: { cut: number; otherDebt: number }): Line[] => {
+  ledger: (beat: string, o: { cut: number; otherDebt: number; frame?: boolean }): Line[] => {
     switch (beat) {
       case 'repeatCleared': return [
         L('boss', '6% 몫을 지우셨네요. 비싼 것부터. 영리하십니다.', 'smile'),
@@ -192,19 +216,14 @@ export const STORY = {
         L('boss', '빌려 드린 돈은 다 갚으셨네요. 이제 어머님 장부만 남았습니다.', 'smile'),
         L('note', '장부 첫 장. 엄마 이름 옆에 날짜가 줄지어 있다. 한 줄도 밀리지 않았다.'),
       ];
-      case 'mom20': return [
-        L('note', '장부 둘째 장. 빌린 까닭을 적는 칸이 먹으로 지워져 있다.'),
-        L('boss', '그 칸은 어머님이 직접 지우셨습니다. 저는 안 읽었어요.', 'smile'),
-      ];
-      case 'mom10': return [
-        L('boss', '10만 남았네요. 어머님도 여기까지는 오셨습니다.', 'smile'),
-        L('note', '그 다음 줄. 엄마의 빚은 10만에서 다시 30만이 됐다. 날짜는 한겨울이다.'),
-      ];
+      // 엄마 이야기의 단서(지워진 사유 칸 · 10만에서 다시 30만 · 뒤집힌 액자)는 여기서 몰아 보여 주지 않는다 — momClue 가 한 번에 하나씩(U-39 ⑫)
+      case 'mom20': return [L('boss', '20만 남았습니다. 장부가 가벼워지네요.', 'smile')];
+      case 'mom10': return [L('boss', '10만 남았네요. 어머님도 여기까지는 오셨습니다.', 'smile')];
       default: return [
         L('note', '장부 마지막 줄에 붉은 도장. 「완납」.'),
         L('boss', '어머님 빚, 다 받았습니다. 수고하셨어요.', 'smile'),
-        L('note', '오소리 대부가 서랍에서 액자를 꺼내 빈 못에 건다. 뒤집힌 채로.'),
-        L('boss', '그건… 다음에 보시죠.', 'smile'),
+        // 액자를 건 것을 본 생에만(단서 frame)
+        ...(o.frame ? [L('boss', '벽의 액자요? 그건… 다음에 보시죠.', 'smile')] : []),
         ...(o.otherDebt > 0 ? [L('hero', `…아직 다른 빚 ${n(o.otherDebt)}이 남았다.`)] : []),
       ];
     }

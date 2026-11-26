@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { CardData } from './shareCard';
 import { tipSeen, type HlKey } from './guide';
 import { loadPanel, savePanel } from './home';
+import type { AwayCard } from './away';
 
 /** 탭 셋(U-29·U-30): 지도 · 집(가운데) · 거래소. 'phone' 은 거래소 탭의 내부 이름(중고폰 속 FRX 앱). */
 export type Tab = 'lot' | 'phone' | 'map';
@@ -76,6 +77,12 @@ interface P {
   slotOf: Record<string, number>;
   /** 방금 누른 칸의 자리(세상에서 잠깐 밝힌다) */
   slotHi: number | null;
+  /** 포지션을 들고 있는 동안 주인공이 속으로 하는 말(잠깐 떴다 사라진다, tension.ts holdBeat) */
+  think: { text: string; k: number } | null;
+  /** 엄마 이야기의 단서를 마지막으로 보여 준 정산 번호(한 번 들를 때 하나만) */
+  clueAt: number;
+  /** 자리를 비운 사이 보고서(돌아왔을 때 한 장, away.ts) */
+  away: AwayCard | null;
   setPanel: (open: boolean) => void;
   setTab: (t: Tab) => void;
   patch: (p: Partial<P>) => void;
@@ -89,6 +96,7 @@ const fresh = () => ({
   winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, negRun: 0, odSeen: 0,
   waiting: false, loanTaken: false, sentAwayAt: -1, tutorial: 'none' as P['tutorial'],
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
+  think: null as P['think'], away: null as P['away'], clueAt: -1,
 });
 
 export const useProto = create<P>((set) => ({

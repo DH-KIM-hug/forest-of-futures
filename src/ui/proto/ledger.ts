@@ -1,11 +1,11 @@
 // 오소리 사무소의 장부(U-38): 빚을 몫(금리)별 줄로 읽고, 튜토리얼 뒤의 목표("5만 더 갚기")와 금박 도장을 만든다.
 // 순수 읽기 모델이다. 규칙은 엔진의 것만 쓴다(갚는 순서 = loans.ts stamp: 비싼 몫 → 보통 몫 → 엄마 빚).
 import { balance, lenderById } from '../../engine/data';
-import { rateMult } from '../../engine/selectors';
+import { haggleMult, rateMult } from '../../engine/selectors';
 import type { GameState } from '../../engine/types';
 
 /** 장부 한 줄. repeat = 두 번째부터 빌린 돈(6%), first = 처음 빌린 돈(4%), mom = 엄마 빚(옛 이자 1.5%) */
-export interface LedgerRow { key: 'repeat' | 'first' | 'mom'; label: string; ratePct: number; left: number; start: number; interest: number }
+export interface LedgerRow { key: 'repeat' | 'first' | 'mom'; label: string; ratePct: number; left: number; start: number; interest: number; /** 고정금리(금리 인상 사건에도 그대로) */ fixed: boolean }
 
 /** 금박 도장 하나에 필요한 상환액. 환생 때 받는 황금 실물 도토코인과 같은 기준이다(SKILLTREE_TRADE.md: 갚은 원금 5만당 1개). */
 export const STAMP_STEP = 50_000;
@@ -29,13 +29,16 @@ export function ledgerRows(g: GameState): LedgerRow[] {
   const repeatRate = (d.tranches ?? [])[0]?.rate ?? l.repeatRate ?? l.rate;
   const momStart = (balance.start.debts as Record<string, number>).shark1 ?? 0;
   const rows: LedgerRow[] = [];
-  const row = (key: LedgerRow['key'], label: string, rate: number, left: number, start: number) => {
+  // 엄마 빚은 고정금리다("어머님 때 이자 그대로"): 금리 인상 사건의 배수를 받지 않는다(U-39 ⑥, 엔진 interestDue 와 같은 셈)
+  const momFixed = d.rateCap != null && d.rateCap < l.rate;
+  const row = (key: LedgerRow['key'], label: string, rate: number, left: number, start: number, fixed = false) => {
     if (start <= 0 && left <= 0) return;
-    rows.push({ key, label, ratePct: +(rate * 100).toFixed(1), left, start: Math.max(start, left), interest: ceil(left * rate * m) });
+    rows.push({ key, label, ratePct: +(rate * 100).toFixed(1), left, start: Math.max(start, left), interest: ceil(left * rate * (fixed ? haggleMult(g) : m)), fixed });
   };
   row('repeat', '더 빌린 돈', repeatRate, repeatLeft, Math.max(0, borrows - 1) * unit);
-  row('first', '처음 빌린 돈', l.rate, firstLeft, borrows >= 1 ? unit : 0);
-  row('mom', '엄마 빚', momRate, momLeft, momStart);
+  // 빌린 적이 없는데 이 줄에 돈이 있으면 못 낸 이자·생활비가 얹힌 것이다
+  row('first', borrows >= 1 ? '처음 빌린 돈' : '밀려서 얹힌 돈', l.rate, firstLeft, borrows >= 1 ? unit : 0);
+  row('mom', '엄마 빚', momRate, momLeft, momStart, momFixed);
   return rows;
 }
 
@@ -46,7 +49,7 @@ export function interestCut(g: GameState, amount: number): number {
   for (const r of ledgerRows(g)) {
     const a = Math.min(r.left, left);
     left -= a;
-    cut += a * (r.ratePct / 100) * m;
+    cut += a * (r.ratePct / 100) * (r.fixed ? haggleMult(g) : m);
   }
   return Math.floor(cut + 1e-9);
 }
@@ -76,5 +79,20 @@ export function ledgerBeat(before: GameState, after: GameState): LedgerBeat | nu
   if (was('mom') > 200_000 && now('mom') <= 200_000) return 'mom20';
   if ((was('first') > 0 || was('repeat') > 0) && now('first') <= 0 && now('repeat') <= 0) return 'firstCleared';
   if (was('repeat') > 0 && now('repeat') <= 0) return 'repeatCleared';
+  return null;
+}
+
+// ── 엄마 이야기의 단서 셋(U-39 ⑫, 사용자 "재밌으면 넣어") ─────────────────
+// 한 번에 하나만, 설명 없이, 내가 한 일에 묶여 나온다. 엄마도 10만까지 갚았다가 다시 30만이 됐다 — 내가 갚다가 다시 빌리는 바로 그때 보인다.
+export type MomClue = 'reason' | 'mirror' | 'frame';
+/** 지금 보여 줄 단서(없으면 null). seen = 이번 생에 이미 본 것, reborrowed = 방금 "갚은 적이 있는데 다시 빌렸다", shownThisVisit = 이번 방문(같은 정산 사이)에 이미 하나 보여 줬다.
+ *  reason(지워진 사유 칸) = 첫 금박 도장 · mirror(10만에서 다시 30만) = 갚다가 다시 빌린 때 · frame(뒤집힌 액자) = 엄마 빚 줄에 처음 손이 닿은 때 */
+export function momClueDue(g: GameState, seen: Partial<Record<MomClue, boolean>>, o: { reborrowed: boolean; shownThisVisit: boolean }): MomClue | null {
+  if (o.shownThisVisit) return null;
+  const momStart = (balance.start.debts as Record<string, number>).shark1 ?? 0;
+  const mom = ledgerRows(g).find((r) => r.key === 'mom');
+  if (!seen.mirror && o.reborrowed && repaidOffice(g) > 0) return 'mirror';
+  if (!seen.reason && goldStamps(g) >= 1) return 'reason';
+  if (!seen.frame && momStart > 0 && (mom?.left ?? 0) < momStart && repaidOffice(g) > 0) return 'frame';
   return null;
 }

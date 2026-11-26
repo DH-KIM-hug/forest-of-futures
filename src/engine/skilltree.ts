@@ -18,7 +18,12 @@ export function effectAt(def: SkillNodeDef, level: number): number {
   if (level <= 0) return 0;
   return def.kind === 'scaled' ? (def.cap ?? 0) * (1 - Math.pow(skillMeta.decay, level)) : 1;
 }
-export const maxLevelOf = (def: SkillNodeDef): number => (def.kind === 'binary' ? def.maxLevel ?? 1 : def.maxLevel ?? Infinity);
+/** 켜고 끄는 노드의 숫자 꼬리 = tail.cap × (1 − decay^레벨). 꼬리가 없으면 0. 도구는 Lv1 에서 켜지고, 꼬리만 끝없이 자란다(U-39 ⑨). */
+export function tailAt(def: SkillNodeDef, level: number): number {
+  if (level <= 0 || !def.tail) return 0;
+  return def.tail.cap * (1 - Math.pow(skillMeta.decay, level));
+}
+export const maxLevelOf = (def: SkillNodeDef): number => def.maxLevel ?? (def.kind === 'binary' && !def.tail ? 1 : Infinity);
 
 // ── 가문: 가진 것 ───────────────────────────────────────────────────────
 /** 가문이 가진 레벨(0 = 없음). */
@@ -76,6 +81,8 @@ export function activeLevels(g: GameState): Record<string, number> {
 // ── 생: 켜진 것 ─────────────────────────────────────────────────────────
 export const hasRun = (run: RunState, id: string): boolean => (run.skill?.[id] ?? 0) > 0;
 export const effectRun = (run: RunState, id: string): number => (skillById[id] ? effectAt(skillById[id], run.skill?.[id] ?? 0) : 0);
+/** 이번 생의 숫자 꼬리(없으면 0). */
+export const tailRun = (run: RunState, id: string): number => (skillById[id] ? tailAt(skillById[id], run.skill?.[id] ?? 0) : 0);
 /** 이번 생에 켜져 있는가(가졌고, 3단계라면 고른 쪽). */
 export const has = (g: GameState, id: string): boolean => hasRun(g.run, id);
 /** 이번 생의 효과 값(없으면 0). */
@@ -95,16 +102,33 @@ export function applyBirth(g: GameState): void {
 }
 
 // ── 효과 ────────────────────────────────────────────────────────────────
-/** 거래 수수료율 = 기본 × (1 − A1) × (1 − A4) × (50배 이상이면 1 − B1) + C2 보험료. 0 이 되지 않는다. */
-export function feeRateRun(run: RunState, lev: number): number {
+export interface FeeCtx { /** 가진 돈을 전부 건다 */ allIn?: boolean; /** 반대 단추로 뒤집어 들어간다 */ flip?: boolean }
+/** 거래 수수료율 = 기본 × (1 − A1) × (1 − A4) × (50배 이상이면 1 − B1) × 꼬리들 + C2 보험료. 0 이 되지 않는다.
+ *  꼬리(U-39 ⑨): R = 10배 이하 · B3a = 200배 · B4 = 전부 걸기 · A3b = 뒤집어 들어감 · C3b = 하루 한도를 걸어 둔 동안. */
+export function feeRateRun(run: RunState, lev: number, ctx: FeeCtx = {}): number {
   let r = balance.trading.feeRate as number;
   r *= 1 - effectRun(run, 'A1');
   r *= 1 - effectRun(run, 'A4');
   if (lev >= (skillMeta.highLev as number)) r *= 1 - effectRun(run, 'B1');
+  if (lev <= 10) r *= 1 - tailRun(run, 'R');
+  if (lev >= 200) r *= 1 - tailRun(run, 'B3a');
+  if (ctx.allIn) r *= 1 - tailRun(run, 'B4');
+  if (ctx.flip) r *= 1 - tailRun(run, 'A3b');
+  if (run.dayLossLimit !== null && run.dayLossLimit !== undefined) r *= 1 - tailRun(run, 'C3b');
   if (hasRun(run, 'C2')) r += skillMeta.premium.C2 as number;
   return r;
 }
-export const feeRate = (g: GameState, lev: number): number => feeRateRun(g.run, lev);
+export const feeRate = (g: GameState, lev: number, ctx: FeeCtx = {}): number => feeRateRun(g.run, lev, ctx);
+/** 나올 때 수수료에 곱하는 값: A2 = 어떤 정리든, C1 = 손절로 나올 때. 0 이 되지 않는다. */
+export const exitFeeMul = (run: RunState, kind: 'close' | 'sl' | 'tp' = 'close'): number => (1 - tailRun(run, 'A2')) * (kind === 'sl' ? 1 - tailRun(run, 'C1') : 1);
+/** 추가 진입 수수료에 곱하는 값(C3a). */
+export const addFeeMul = (run: RunState): number => 1 - tailRun(run, 'C3a');
+/** 마진콜 전화로 그 자리에서 빌리는 돈의 금리 할인(B2, %p). */
+export const callLoanCut = (run: RunState): number => tailRun(run, 'B2');
+/** 압류될 때 쳇바퀴를 구매가의 몇 할로 쳐 주는가(C4 꼬리: 경매가 + 상한 20%p). */
+export const seizeRate = (run: RunState): number => (balance.assets.auctionRate as number) + tailRun(run, 'C4');
+/** 초봉 차트(A3a)의 긴 창 길이(초): 2분 + 꼬리. */
+export const longChartSec = (run: RunState): number => 120 + Math.round(tailRun(run, 'A3a'));
 
 export interface LevCapStep { cap: number; closedTrades?: number; waiver?: boolean }
 /** 배율 단계: B1 = 50배가 처음부터, B3a = 200배가 거래 수 없이 확인서만으로. */
@@ -121,8 +145,9 @@ export const effectiveLevCaps = (g: GameState): LevCapStep[] => effectiveLevCaps
 /** C1 손절 습관: 새 포지션의 기본 손절(ROE %). 없으면 null. */
 export const defaultSl = (g: GameState): number | null => (hasRun(g.run, 'C1') ? (skillMeta.defaultSlRoe as number) : null);
 
-/** C2 비상금 주머니: 강제 청산 때 돌아오는 돈(넣은 증거금 × 효과). */
-export const liqRefund = (run: RunState, margin0: number): number => Math.floor(margin0 * effectRun(run, 'C2') + 1e-9);
+/** C2 비상금 주머니: 강제 청산 때 돌아오는 돈(넣은 증거금 × 효과). B3b 물타기의 꼬리: 나중에 더 넣은 증거금(added)의 일부도 돌아온다. */
+export const liqRefund = (run: RunState, margin0: number, added = 0): number =>
+  Math.floor(margin0 * effectRun(run, 'C2') + 1e-9) + Math.floor(Math.max(0, Math.min(added, margin0)) * tailRun(run, 'B3b') * (1 - effectRun(run, 'C2')) + 1e-9);
 
 /** C4 장부 정리: 압류가 건드리지 않는 쳇바퀴(엄마의 쳇바퀴). 없으면 null. */
 export const exemptWheel = (run: RunState): string | null => (hasRun(run, 'C4') ? (skillMeta.momWheel as string) : null);
@@ -163,6 +188,8 @@ export interface NodeView {
   level: number; cost: number | null; canBuy: boolean; reason: string | null;
   /** 지금 효과와 다음 레벨의 효과(scaled 는 0~cap, binary 는 0/1) */
   effect: number; nextEffect: number | null; cap: number | null;
+  /** 켜고 끄는 노드의 숫자 꼬리(지금 · 다음 레벨 · 상한 · 설명). 없으면 null */
+  tail: { now: number; next: number | null; cap: number; text: string } | null;
   pair: string | null; picked: boolean;
 }
 export function treeView(g: GameState): NodeView[] {
@@ -175,6 +202,7 @@ export function treeView(g: GameState): NodeView[] {
       id: def.id, path: def.path, tier: def.tier, name: def.name, desc: def.desc, kind: def.kind, level, cost,
       canBuy: c.ok, reason: c.ok ? null : c.reason ?? null, effect: effectAt(def, level), nextEffect: cost === null ? null : effectAt(def, level + 1),
       cap: def.cap ?? null, pair: def.pair ?? null, picked: !def.pair || (act[def.id] ?? 0) > 0,
+      tail: def.tail ? { now: tailAt(def, level), next: cost === null ? null : tailAt(def, level + 1), cap: def.tail.cap, text: def.tail.text } : null,
     };
   });
 }

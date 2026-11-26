@@ -14,7 +14,7 @@ import { futuresGate } from '../../engine/progression';
 interface B { id: string; name: string; x: number; y: number }
 const LAYOUT: B[] = [
   { id: 'bank', name: '숲속중앙조합', x: COL[0], y: ROW[0] },
-  { id: 'capital', name: '황금저축·캐피탈', x: COL[1], y: ROW[0] },
+  { id: 'capital', name: '숲속 캐피탈', x: COL[1], y: ROW[0] },
   { id: 'board', name: '광장 전광판', x: COL[2], y: ROW[0] },
   { id: 'archive', name: '마을 기록관', x: COL[0], y: ROW[1] },
   { id: 'home', name: '내 집', x: COL[1], y: ROW[1] },

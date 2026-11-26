@@ -26,8 +26,8 @@
     },
     {
       "id": "capital",
-      "name": "황금저축·캐피탈",
-      "npc": "족제비 대표",
+      "name": "숲속 캐피탈",
+      "npc": "창구 너구리",
       "rate": 0.02,
       "maxOverdue": 3,
       "limitByHouse": [
@@ -51,7 +51,7 @@
     {
       "id": "shark1",
       "name": "오소리 대부",
-      "npc": "오소리 소장",
+      "npc": "오소리 대부",
       "rate": 0.04,
       "maxOverdue": 2,
       "limitByHouse": [

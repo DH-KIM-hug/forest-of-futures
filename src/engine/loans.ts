@@ -29,7 +29,7 @@ function closedRes(g: GameState, id: DebtId): Res {
   return refuse('closed', lenderById.bank.lines.closed);
 }
 
-export function borrow(g: GameState, id: LenderId, consent = false, unitOverride?: number): Res {
+export function borrow(g: GameState, id: LenderId, consent = false, unitOverride?: number, rateCut = 0): Res {
   const run = g.run;
   const l = lenderById[id];
   if (run.over) return { ok: false };
@@ -55,7 +55,8 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
   const upfront = id === 'shark2' ? (traitVal(g, 'shark2Upfront') ?? l.upfront) : l.upfront;
   const received = floorS(unit * (1 - upfront));
   // 오소리 대부: 같은 생에 두 번째로 빌리는 돈부터는 더 높은 금리(그 몫에만)
-  const rateNow = nextBorrowRate(g, id);
+  // rateCut = 마진콜 전화로 그 자리에서 빌릴 때의 금리 할인(스킬트리 B2 의 꼬리). 그 채권처의 보통 금리 아래로는 내려가지 않는다.
+  const rateNow = Math.max(l.rate, nextBorrowRate(g, id) - Math.max(0, rateCut));
   if (rateNow !== l.rate) (run.debts[id].tranches ??= []).push({ amount: unit, rate: rateNow });
   run.cash += received;
   run.debts[id].principal += unit;
