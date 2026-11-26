@@ -1,11 +1,12 @@
 name = "forest-ranking"
+account_id = "cd3ea6ffa1b39e3226315118b70c63ee"
 main = "src/index.ts"
 compatibility_date = "2026-11-01"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "forest-ranking"
-database_id = "TO_BE_FILLED_AFTER_CREATE"
+database_id = "9ec6e64e-b28a-4e48-b0f1-cdeaa754fcff"
 
 [vars]
 ALLOWED_ORIGINS = "https://dh-kim-hug.github.io,http://localhost:5199,http://localhost:5173"
