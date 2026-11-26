@@ -1,0 +1,99 @@
+// 장의 상태를 읽어 준다(U-40). 순수 함수다 — 시세는 건드리지 않는다. 있는 그대로를 말로 옮길 뿐이다.
+//   - 종목마다 지난 1분의 출렁임(초 단위 실시간 기록으로만 잰다)
+//   - 삼솔전자 · 잣스닥은 주식 시세를 따라가는 종목이라 본장 시간 밖에는 조용하다: "장 마감 · 조용함"
+//     본장 시간은 달력으로 알고(삼솔전자 = 서울 09:00~15:30, 잣스닥 = 뉴욕 09:30~16:00, 평일), 정말 조용한지는 시세로 확인한다
+//     (휴일은 달력으로 모른다 — 장중인데 안 움직이면 "휴장인 듯"이라고 말한다. 장 마감인데 움직이면 움직인다고 말한다).
+//   - 오픈 기념 수수료 무료(엔진 skilltree.ts feeEventLeft)의 화면 글
+
+/** 지난 1분 폭(%)이 이만큼 아래면 "조용함". 초 단위 중간값 기준(회차 2 실측: 조용한 밤의 가운데 값 0.028%) */
+export const QUIET_PCT = 0.02;
+/** 이만큼 위면 "출렁" */
+export const LIVELY_PCT = 0.08;
+/** 주식을 따라가는 종목(삼솔전자 · 잣스닥)이 "조용하다"고 볼 문턱. 본장 밖 · 휴장일의 1분 폭은 0.00~0.03%, 본장 중은 0.09% 이상이었다(회차 3 실측, 1분 봉 사흘 반) */
+export const SESSION_QUIET_PCT = 0.04;
+
+export type Swing = 'wait' | 'still' | 'calm' | 'lively';
+/** 지난 1분 폭 → 네 단계. wait = 아직 재는 중 */
+export const swingOf = (rangePct: number | null): Swing => (rangePct === null ? 'wait' : rangePct < QUIET_PCT ? 'still' : rangePct < LIVELY_PCT ? 'calm' : 'lively');
+/** 종목 꼬리표에 넣는 짧은 글: "1분 0.08%" */
+export const swingText = (rangePct: number | null): string => (rangePct === null ? '재는 중' : `1분 ${rangePct < 0.095 ? rangePct.toFixed(2) : rangePct.toFixed(1)}%`);
+
+// ── 본장 시간(주식을 따라가는 종목) ─────────────────────────────────────
+interface SessionDef { tz: string; open: [number, number]; close: [number, number]; home: string }
+export const SESSIONS: Record<string, SessionDef> = {
+  SMS: { tz: 'Asia/Seoul', open: [9, 0], close: [15, 30], home: '서울' },
+  JQQ: { tz: 'America/New_York', open: [9, 30], close: [16, 0], home: '뉴욕' },
+};
+const WD: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+/** 그 시간대의 요일 · 시 · 분 */
+function wallClock(now: Date, tz: string): { day: number; min: number } {
+  const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+  const get = (t: string) => p.find((x) => x.type === t)?.value ?? '';
+  return { day: WD[get('weekday')] ?? 0, min: (+get('hour') % 24) * 60 + +get('minute') };
+}
+const hm = (m: number) => `${String(Math.floor((((m % 1440) + 1440) % 1440) / 60)).padStart(2, '0')}:${String((((m % 1440) + 1440) % 1440) % 60).padStart(2, '0')}`;
+/** 본장 시간을 한국 시간으로: 삼솔전자 "09:00~15:30", 잣스닥 "23:30~06:00"(미국 여름 시간에는 "22:30~05:00"). */
+export function sessionHoursKst(id: string, now: Date): string | null {
+  const s = SESSIONS[id];
+  if (!s) return null;
+  // 그 시간대와 서울의 시차(분)를 지금 시각으로 잰다(여름 시간이 저절로 들어간다)
+  const a = wallClock(now, s.tz), k = wallClock(now, 'Asia/Seoul');
+  let diff = k.min - a.min + (k.day - a.day) * 1440;
+  diff = ((diff % 1440) + 1440) % 1440; // 요일이 주를 넘겨도 하루 안의 시차만 본다
+  return `${hm(s.open[0] * 60 + s.open[1] + diff)}~${hm(s.close[0] * 60 + s.close[1] + diff)}`;
+}
+/** 달력으로 본장 시간 안인가(평일 · 개장~마감). 휴일은 모른다. */
+export function sessionOpen(id: string, now: Date): boolean | null {
+  const s = SESSIONS[id];
+  if (!s) return null;
+  const c = wallClock(now, s.tz);
+  if (c.day === 0 || c.day === 6) return false;
+  return c.min >= s.open[0] * 60 + s.open[1] && c.min < s.close[0] * 60 + s.close[1];
+}
+
+export interface Session {
+  /** 달력으로 본장 시간 안 */ open: boolean;
+  /** 시세로 본 지난 1분: 조용한가 */ quiet: boolean;
+  /** closed = 장 마감 · 조용함 / after = 장 마감인데 움직인다 / holiday = 장중인데 안 움직인다(휴장인 듯) / open = 장중 */
+  state: 'closed' | 'after' | 'holiday' | 'open';
+  /** 종목 꼬리표의 짧은 딱지(없으면 null) */ badge: string | null;
+  /** 시세 줄의 한 줄 */ text: string;
+  /** 본장 시간(한국 시간) */ hours: string;
+}
+/** 주식을 따라가는 종목의 지금 상태. 코인(늘 열려 있다)은 null. rangePct = 지난 1분 폭(%), 아직 못 쟀으면 null → 달력만 믿는다. */
+export function sessionOf(id: string, now: Date, rangePct: number | null): Session | null {
+  const open = sessionOpen(id, now);
+  if (open === null) return null;
+  const hours = sessionHoursKst(id, now)!;
+  const quiet = rangePct === null ? !open : rangePct < SESSION_QUIET_PCT;
+  const state: Session['state'] = open ? (quiet && rangePct !== null ? 'holiday' : 'open') : quiet ? 'closed' : 'after';
+  const home = SESSIONS[id].home;
+  const text = state === 'closed' ? `장 마감 · 조용함 (본장 ${hours})`
+    : state === 'after' ? `장 마감 · 그래도 움직인다 (본장 ${hours})`
+    : state === 'holiday' ? `장중인데 조용함 · ${home} 휴장인 듯`
+    : `장중 (본장 ${hours})`;
+  return { open, quiet, state, badge: state === 'closed' ? '장 마감' : state === 'holiday' ? '휴장?' : null, text, hours };
+}
+
+// ── 장 전체가 조용한가 ───────────────────────────────────────────────────
+/** 잰 종목이 셋 이상이고 전부 조용하면 true(주인공 · 오소리 대부가 그렇다고 말한다) */
+export function allQuiet(ranges: (number | null)[]): boolean {
+  const got = ranges.filter((r): r is number => r !== null);
+  return got.length >= 3 && got.every((r) => r < QUIET_PCT);
+}
+/** 가장 출렁이는 종목(전부 조용하거나 아직 못 쟀으면 null) */
+export function liveliest(ranges: { id: string; r: number | null }[]): { id: string; r: number } | null {
+  let best: { id: string; r: number } | null = null;
+  for (const x of ranges) if (x.r !== null && x.r >= QUIET_PCT && (!best || x.r > best.r)) best = { id: x.id, r: x.r };
+  return best;
+}
+
+// ── 오픈 기념 수수료 무료 ────────────────────────────────────────────────
+/** 주문 판의 딱지: 남은 정산 수 → 글. 끝났으면 지금 수수료율을 말한다. */
+export function feeEventChip(left: number, ratePct: number): { on: boolean; text: string } {
+  return left > 0
+    ? { on: true, text: `오픈 기념 수수료 무료 · 정산 ${left}번 남음` }
+    : { on: false, text: `거래 수수료 ${ratePct.toFixed(ratePct < 0.01 ? 3 : 2)}%` };
+}
+/** 이벤트 동안 수수료 없이 오간 크기(명목) → 끝난 뒤의 수수료율로 쳤다면 냈을 돈(들어갈 때 + 나올 때) */
+export const feeSaved = (eventNotional: number, afterRate: number): number => Math.round(eventNotional * afterRate * 2);

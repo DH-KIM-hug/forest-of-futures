@@ -5,7 +5,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
 import { comma } from '../../engine/util';
-import { C, O, Hamster, Badger, Spiky, Round, Device, Zap } from './art';
+import { C, O, Badger, Spiky, Round, Device, Zap } from './art';
 import { SvgSay } from './speech';
 import { useFx, flyAcorns, flyIcons, coinSvg, tintAt, useClock } from './fx';
 import { sellFeeRate } from '../../engine/mining';
@@ -13,7 +13,7 @@ import { houseDefs } from '../../engine/data';
 import { COLLECTOR_NAME } from './text';
 import { EXTRA_WHEEL } from './model';
 import { HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, WHEEL_FACE, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, WALLET_SPOT, TAP_AREA, assignSlots, homeCam, type Pt } from './home';
-import { HOME_BY_LEVEL, sprite, spriteOr } from './sprites';
+import { HOME_BY_LEVEL, sprite, spriteOr, type SpriteId } from './sprites';
 import { Think } from './Think';
 import type { HeroMood } from './tension';
 
@@ -22,31 +22,38 @@ const K = 390 / HOME_IMG.w;
 const VB_H = HOME_IMG.h * K;
 const at = (p: Pt): Pt => [p[0] * K, p[1] * K];
 const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
+/** 알바가 도는 쳇바퀴 · 주인공이 굴리는 쳇바퀴 그림의 키(집 그림 픽셀). 주인공(HERO_H)에 견준 크기는 docs/art/v5/cast_v5.png */
+const HAM_WHEEL_H = 150, RIDE_H = 196;
 /** 굴려 본 횟수가 이만큼 되기 전에는 쳇바퀴 위에 "쳇바퀴를 톡톡"을 띄운다 */
 export const TAP_HINT_TAPS = 8;
 
 type Item = { y: number; key: string; node: ReactNode };
 
 /** 쳇바퀴 한 대: 그림 + (돌면) 앞면을 도는 줄과 번개 + (알바가 있으면) 햄스터. foot = 발밑(SVG 단위) */
-function WheelAt({ foot, spin, staffed, tagged, label, bump, id, pop }: { foot: Pt; spin: boolean; staffed: boolean; tagged: boolean; label?: string; bump?: number; id?: string; pop?: boolean }) {
+function WheelAt({ foot, spin, staffed, tagged, label, bump, id, pop, rider = null }: { foot: Pt; spin: boolean; staffed: boolean; tagged: boolean; label?: string; bump?: number; id?: string; pop?: boolean; /** 주인공이 직접 굴리는 중(쳇바퀴 안에 주인공이 든 그림 한 장으로 바꾼다) */ rider?: 'hero' | null }) {
   const [x, y] = foot;
   const img = sprite('wheel')!;
-  const ham = sprite('hamster');
+  // 알바가 도는 쳇바퀴 · 주인공이 굴리는 쳇바퀴는 쳇바퀴까지 든 그림 한 장이다(U-40). 알바 없는 빈 쳇바퀴만 집 그림에서 오려 낸 쳇바퀴를 쓴다
+  const one = rider === 'hero' ? sprite('heroWheel') : staffed ? sprite('hamsterWheel') : null;
+  const oh = (rider === 'hero' ? RIDE_H : HAM_WHEEL_H) * K, ow = one ? oh * (one.w / one.h) : 0;
   const cx = x + WHEEL_FACE.dx * K, cy = y + WHEEL_FACE.dy * K;
   return (
     <g className={pop ? 'pa-pop' : undefined} data-wheel={staffed ? 'run' : 'idle'}>
       <ellipse cx={x + 6} cy={y - 3} rx={WHEEL_BOX.w * K * 0.5} ry={8} fill="#5A3A1E" opacity={0.16} />
       <g key={bump ?? 0} className={bump ? 'pa-thump' : undefined} style={{ transformOrigin: `${x}px ${y}px` }}>
-        <g id={id} className={'pr-whfx' + (staffed ? ' on' : '')}>
-          <image href={img.src} x={x + WHEEL_BOX.dx * K} y={y + WHEEL_BOX.dy * K} width={WHEEL_BOX.w * K} height={WHEEL_BOX.h * K} />
+        <g id={id} className={'pr-whfx' + (staffed ? ' on' : '')} data-art={one ? (rider === 'hero' ? 'heroWheel' : 'hamsterWheel') : 'wheel'}>
+          {one
+            ? <image className={spin ? 'pa-jog' : undefined} href={one.src} x={x - ow / 2} y={y + 5 * K - oh} width={ow} height={oh} />
+            : <image href={img.src} x={x + WHEEL_BOX.dx * K} y={y + WHEEL_BOX.dy * K} width={WHEEL_BOX.w * K} height={WHEEL_BOX.h * K} />}
         </g>
-        {/* 도는 표시: 앞면 타원 안에서 밝은 호 셋이 돈다 */}
+        {/* 도는 표시(빈 쳇바퀴를 손으로 굴릴 때만): 앞면 타원 안에서 밝은 호 셋이 돈다 */}
+        {!one && (
         <g transform={`translate(${cx} ${cy}) rotate(${WHEEL_FACE.tilt}) scale(${WHEEL_FACE.rx * K} ${WHEEL_FACE.ry * K})`} className={'pr-turn' + (spin ? ' on' : '')} aria-hidden="true">
           <g className="arcs">
             {[0, 120, 240].map((a) => <path key={a} transform={`rotate(${a})`} d="M0.78 0 A0.78 0.78 0 0 1 0.39 0.675" fill="none" stroke="#FFF6DC" strokeWidth={2.6} strokeLinecap="round" vectorEffect="non-scaling-stroke" />)}
           </g>
         </g>
-        {staffed && (ham ? <image className={spin ? 'pa-hop' : undefined} href={ham.src} x={cx + 2 - 12 * (ham.w / ham.h)} y={cy - 7} width={24 * (ham.w / ham.h)} height={24} /> : <Hamster cx={cx + 2} cy={cy + 17} h={24} run={spin} />)}
+        )}
       </g>
       {spin && <Zap cx={cx + 22} cy={cy - 26} s={1.1} />}
       {spin && <Zap cx={cx - 24} cy={cy - 12} s={0.85} delay={0.45} />}
@@ -94,8 +101,14 @@ export function World({ near, mood = 'idle', cover, open, onRoll }: { near: bool
   const [wx, wy] = at(WHEEL_SLOTS[0]);
   const [hx, hy] = at(HERO_SPOT);
   const hh = HERO_H * K;
-  const heroImg = (near ? spriteOr('heroNear', 'hero') : tapping ? spriteOr('heroRun', 'hero') : sprite('hero'))!;
-  const hw = hh * (heroImg.w / heroImg.h);
+  // 주인공의 몸(U-40 그림): 폰을 받기 전에는 빈손 · 청산 직후에는 주저앉는다 · 크게 따는 중이면 폰을 치켜든다 · 잃는 중이면 걷는다(서성인다)
+  // 엄마의 쳇바퀴를 직접 굴리는 동안에는 쳇바퀴 안에 들어가 있다(서 있는 그림은 그리지 않는다)
+  const justLiq = !!run.lastClose?.liq && run.tick - run.lastClose.tick < 25;
+  const riding = tapping && !!first && !first.staffed && !near && !!sprite('heroWheel');
+  const heroId: SpriteId = near ? 'hero' : justLiq ? 'heroSad' : !run.futures.open ? 'heroEmpty' : mood === 'hop' ? 'heroHappy' : mood === 'pace' ? 'heroWalk' : 'hero';
+  const heroImg = spriteOr(heroId, 'hero')!;
+  const hScale = heroId === 'heroSad' ? 0.9 : heroId === 'heroHappy' ? 1.1 : 1;
+  const hw = hh * hScale * (heroImg.w / heroImg.h);
   // 굴리는 동안에는 굴리는 몸이 먼저다. 그 밖에는 손익이 몸에 보인다(U-39 ①)
   const heroCls = near || mood === 'frozen' ? ' stare' : tapping ? ' squash' : mood === 'pace' ? ' pace' : mood === 'hop' ? ' hopjoy' : mood === 'phone' ? ' phone' : ' idle';
 
@@ -131,7 +144,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll }: { near: bool
   // 엄마의 쳇바퀴(자리 0): 그림 속 쳇바퀴는 바닥 조각으로 덮고, 같은 그림을 그 자리에 얹는다(눌리면 들썩이고, 실려 가면 없다)
   if (first) {
     const spin = !near && (!!first.staffed || tapping);
-    items.push({ y: wy, key: 'w0', node: <WheelAt foot={[wx, wy]} id="pr-wheel1" spin={spin} staffed={!!first.staffed} tagged={!!first.tagBy} bump={first.staffed ? 0 : tapKey} /> });
+    items.push({ y: wy, key: 'w0', node: <WheelAt foot={[wx, wy]} id="pr-wheel1" spin={spin} staffed={!!first.staffed} tagged={!!first.tagBy} bump={first.staffed ? 0 : tapKey} rider={riding ? 'hero' : null} /> });
   }
   // 더 놓은 쳇바퀴(자리 1~5): 알바가 있으면 돌고, 없으면 서 있다
   for (let s = 1; s < WHEEL_SLOTS.length; s++) {
@@ -150,24 +163,24 @@ export function World({ near, mood = 'idle', cover, open, onRoll }: { near: bool
       <g className="pr-wal-hit" role="button" tabIndex={0} aria-label="콜드월렛 열기" onClick={() => useProto.getState().patch({ wallet: true })} onKeyDown={(e) => { if (e.key === 'Enter') useProto.getState().patch({ wallet: true }); }}>
         <circle cx={dx} cy={dy - 10} r={24} fill="transparent" />
         <ellipse cx={dx} cy={dy + 2} rx={10} ry={4} fill="#5A3A1E" opacity={0.18} />
-        <g id="pr-wallet-dev">{sprite('wallet') ? <image href={sprite('wallet')!.src} x={dx - 11} y={dy - 28} width={22} height={30} /> : <Device x={dx} y={dy - 14} k={0.8} />}</g>
+        <g id="pr-wallet-dev">{sprite('wallet') ? <image data-art="wallet" href={sprite('wallet')!.src} x={dx - 14} y={dy - 30} width={28} height={32} /> : <Device x={dx} y={dy - 14} k={0.8} />}</g>
       </g>
     ) });
   }
   // 주인공: 엄마의 쳇바퀴 옆에 서 있다. 굴리면 움찔, 청산이 가까우면 폰만 본다.
-  items.push({ y: hy, key: 'hero', node: (
-    <g id="pr-hero" data-mood={near ? 'frozen' : mood}>
+  if (!riding) items.push({ y: hy, key: 'hero', node: (
+    <g id="pr-hero" data-mood={near ? 'frozen' : mood} data-art={heroId}>
       <ellipse cx={hx + 1} cy={hy - 1} rx={hw * 0.42} ry={4.5} fill="#5A3A1E" opacity={0.2} />
       <g key={`t${tapping ? tapKey : 0}`} className={'pa-hero' + heroCls} style={{ transformOrigin: `${hx}px ${hy}px` }}>
-        <image href={heroImg.src} x={hx - hw / 2} y={hy - hh} width={hw} height={hh} />
+        <image href={heroImg.src} x={hx - hw / 2} y={hy - hh * hScale} width={hw} height={hh * hScale} />
       </g>
       {(near || mood === 'frozen' || mood === 'pace') && <path className="pa-sweat" d={`M${hx - 16} ${hy - hh + 6} q-5 8 0 11 q5 -3 0 -11z`} fill="#BFE3F2" stroke={O} strokeWidth={1.6} />}
     </g>
   ) });
   // 추심원: 뒷벽 둥근 문으로 들어와 문 앞에 선다. 기다리는 동안에도 서 있다. 이자 막대가 정산 상환액만큼 깎인다.
   const [cx0, cy0] = at(VISITOR_SPOT);
-  const colImg = sprite('collector');
-  const col = colImg ? <image href={colImg.src} x={cx0 - 26 * (colImg.w / colImg.h)} y={cy0 - 52} width={52 * (colImg.w / colImg.h)} height={52} /> : <Badger cx={cx0} cy={cy0} h={52} />;
+  const colImg = sprite('cCollector');
+  const col = colImg ? <image data-art="cCollector" href={colImg.src} x={cx0 - 26 * (colImg.w / colImg.h)} y={cy0 - 52} width={52 * (colImg.w / colImg.h)} height={52} /> : <Badger cx={cx0} cy={cy0} h={52} />;
   if (waiting) {
     items.push({ y: cy0, key: 'colwait', node: <g className="pa-walkin door">{col}<g transform={`translate(${cx0 - 40} ${cy0 - 60})`}><rect x={0} y={-18} width={80} height={18} rx={9} fill={O} /><text x={40} y={-5} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{COLLECTOR_NAME}</text></g></g> });
   } else if (collector && collector.interest > 0) {

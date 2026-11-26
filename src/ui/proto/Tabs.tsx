@@ -14,6 +14,20 @@ import { ProtoTrade } from './Trade';
 import { PLACE, STORY } from './text';
 import { ledgerRows, goldStamps, repaidOffice, STAMP_STEP } from './ledger';
 import { RowIcon } from './art';
+import { sprite, PLACE_ART } from './sprites';
+
+/** 가게 안 그림 한 띠(U-40): 그 가게의 방과 거기 서 있는 사람. 지도 카드 맨 위에 붙는다. */
+function PlaceArt({ id }: { id: string }) {
+  const a = PLACE_ART[id];
+  const bg = a && sprite(a.scene), npc = a && sprite(a.npc);
+  if (!bg) return null;
+  return (
+    <div className={'plc-art a-' + id} data-art={a.scene} aria-hidden="true">
+      <img className="bg" src={bg.src} alt="" draggable={false} />
+      {npc && <img className="npc" data-art={a.npc} src={npc.src} alt="" draggable={false} />}
+    </div>
+  );
+}
 import { play } from './audio';
 
 /** 지도 탭: 추심원이 꽂고 간 쪽지. 처음엔 오소리 사무소만 그려져 있다. 빌리고 갚는 곳. */
@@ -64,6 +78,7 @@ export function MapTab() {
   return (
     <div className="pr-pane">
       <div className="pr-title"><b>마을 지도</b><span>빚 {comma(total)}</span></div>
+      {sprite('village') && <div className="pr-village" data-art="village" aria-hidden="true"><img src={sprite('village')!.src} alt="" draggable={false} /></div>}
       <p className="pr-note left">{waiting ? '추심원이 집 문 앞에서 기다린다. 사무소에서 빌리면 오늘 이자는 거기서 떼어 간다.' : '추심원이 꽂고 간 쪽지. 이자는 정산마다 걷어 가고, 원금은 직접 가서 갚는다.'}</p>
       {msg && <div className="pr-msg" role="status">{msg}</div>}
       {ids.map((id) => {
@@ -73,6 +88,7 @@ export function MapTab() {
         if (id === 'bank' && run.house <= 0) {
           return (
             <div key={id} className="pr-card plc locked" data-place={id} onClick={() => useProto.getState().pushScene({ id: 'owlRefuse', again: true, auto: 3500, lines: STORY.owlRefuse() })}>
+              <PlaceArt id={id} />
               <div className="plc-top"><div className="ic"><RowIcon kind={id} /></div><div className="mid"><div className="nm">{pl.name} <small>{pl.npc}</small></div><div className="sb">내 이름으로 된 집이 있어야 문을 열어 준다. 딱지 붙은 오두막은 담보가 아니다.</div></div></div>
             </div>
           );
@@ -84,6 +100,7 @@ export function MapTab() {
         const first = id === 'shark1' && !loanTaken;
         return (
           <div key={id} className={'pr-card plc' + (id === 'shark1' ? ' ring' : '') + (id === 'shark1' && (smsSeen || waiting) ? ' blink' : '') + (focus === id ? ' focus' : '')} data-place={id} data-hl={id === 'shark1' ? 'office' : undefined}>
+            <PlaceArt id={id} />
             <div className="plc-top"><div className="ic"><RowIcon kind={id} /></div><div className="mid">
               <div className="nm">{pl.name} <small>{pl.npc}</small></div>
               <div className="sb"><b>빚 {comma(d.principal)}</b> · 정산마다 이자 {comma(interestDue(g, id))}{d.overdue > 0 ? <em className="od"> · 연체 {d.overdue}회</em> : ''}</div>

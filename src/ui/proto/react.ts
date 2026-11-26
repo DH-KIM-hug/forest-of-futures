@@ -20,6 +20,7 @@ export interface TradeCtx {
   /** 잇따라 딴 수 · 잃은 수 · 본전치기 수(이 거래 포함) */ winStreak: number; lossStreak: number; tinyStreak: number;
   /** 이번 생에 낸 거래 수수료 합 */ feesLife: number;
   /** 이번 생에 이미 나온 반응 */ seen: Record<string, boolean>;
+  /** 이 거래에 수수료가 한 푼도 안 들었다(오픈 기념, U-40): 수수료를 말하는 줄은 거짓이 된다 */ feeFree?: boolean;
 }
 export interface Reaction { key: string; who: Who; lines: string[]; /** true = 컷인 장면, false = 한 줄 알림 */ scene: boolean; /** 이번 생에 한 번만 */ once: boolean }
 
@@ -41,15 +42,16 @@ export function tradeReaction(t: TradeEnd, c: TradeCtx): Reaction | null {
     return (t.allIn && c.cashAfter < 1000 ? R('liqAllIn', 'boss', ['전부 거셨군요. 전부 가져갔습니다.', '돈이 필요하시면 사무소는 늘 열려 있습니다.'], true) : null)
       ?? (t.fundedBy ? R('liqFunded', 'collector', [`빌린 돈이 ${held(t.heldSec)} 만에 거래소로 갔네요오.`, '이자는 그대로예요오.'], true) : null)
       ?? (c.liqs === 3 ? R('liq3', 'collector', ['청산 세 번째네요오. 장부엔 안 적어요오. 그냥 세어 봤어요오.']) : null)
-      ?? R('liqFirst', 'boss', ['청산이네요. 거래소는 수수료를 벌었고요.'])
+      ?? R('liqFirst', 'boss', [c.feeFree ? '청산이네요. 수수료는 공짜였는데, 증거금은 거래소가 가져갔고요.' : '청산이네요. 거래소는 수수료를 벌었고요.'])
       ?? (c.liqs % 2 ? R('liqA', 'collector', ['또 사라졌네요오. 이자는 안 사라져요오.'], false, false) : R('liqB', 'boss', ['다음엔 맞히시겠죠. 다들 그렇게 말해요.'], false, false));
   }
   if (t.pnl >= claim * 3) { const r = R('bigWin', 'boss', ['크게 따셨네요. 축하드립니다.', '갚으러 오실 거죠? 다들 그 돈으로 한 번 더 걸더라고요.'], true); if (r) return r; }
   if (t.pnl >= claim) { const w = wheelWorth(t.pnl, c.wheelNet); return R('winClaim', 'boss', [`이자 한 번 치를 버셨네요.${w ? ` ${w}입니다.` : ''}`], false, false); }
   if (t.pnl <= -claim) return R('lossClaim', 'collector', ['이자 한 번 치를 잃으셨네요오. 저는 그래도 제때 와요오.'], false, false);
-  if (c.tinyStreak >= 3) { const r = R('feeBleed', 'collector', [`수수료만 ${n(c.feesLife)} 내셨어요오. 거래소가 좋아해요오.`]); if (r) return r; }
+  if (c.tinyStreak >= 3 && c.feesLife >= 1) { const r = R('feeBleed', 'collector', [`수수료만 ${n(c.feesLife)} 내셨어요오. 거래소가 좋아해요오.`]); if (r) return r; }
   if (t.pnl > 0 && t.pnl >= claim * 0.1) { const r = R('firstWin', 'boss', ['거 보세요. 쳇바퀴보다 빠르죠?']); if (r) return r; }
   if (t.pnl < 0 && -t.pnl >= claim * 0.1) { const r = R('firstLoss', 'collector', ['…그냥 지나가다 들렀어요오.']); if (r) return r; }
+  if (c.tinyStreak >= 3 && c.feesLife < 1) { const r = R('flatFree', 'boss', ['세 판째 본전이시네요. 수수료가 공짜라 저도 드릴 말씀이 없습니다. 안 움직이는 코인에 거셨어요.']); if (r) return r; }
   if (c.winStreak === 3) return R('win3', 'hero', ['…감 잡았다. 이번엔 진짜다.']);
   if (c.lossStreak === 3) return R('loss3', 'hero', ['…다음엔 딴다. 다음엔.']);
   return null;
@@ -70,7 +72,9 @@ export interface SettleCtx {
   /** 열린 포지션의 지금 손익 합(정리하면 더해지거나 빠지는 돈). 없으면 0 */ posPnl?: number;
   /** 잇따른 적자 정산 수(이번 포함) */ negStreak: number;
   /** 이번 생에 처음으로 남은 정산 */ firstPositive: boolean;
+  /** 이번 생의 정산 순번(같은 줄이 되풀이되지 않게 번갈아 쓴다, U-40). 없으면 0 */ nth?: number;
 }
+const rot = (nth: number, ...v: string[]): string => v[((nth % v.length) + v.length) % v.length];
 /** 정산 알림 한 줄. 추심원은 오소리 대부의 이자만 걷는다. 다른 곳 이자는 자동이체로 적는다. */
 export function settleRemark(c: SettleCtx): string {
   const sum = `(내 정산 ${c.net >= 0 ? '+' : '−'}${n(c.net)})`;
@@ -88,9 +92,9 @@ export function settleRemark(c: SettleCtx): string {
     else if (c.posOpen) {
       // 정산을 넘겨 들고 있는 포지션을 추심원이 흘끗 본다(U-39 ①): 크기는 이번 이자에 견준다
       const p = c.posPnl ?? 0, big = Math.abs(p) >= Math.max(1, c.interest) * 0.3;
-      line = `이자 ${iv} 수금 완료요오. ${big && p > 0 ? `폰에 +${n(p)}이 떠 있네요오. 아직 도토리는 아니에요오.` : big && p < 0 ? `폰에 −${n(p)}이 떠 있네요오. 저는 못 본 걸로 할게요오.` : '거래 중이시네요오. 이자는 이자대로 가요오.'}`;
+      line = `이자 ${iv} 수금 완료요오. ${big && p > 0 ? `폰에 +${n(p)}이 떠 있네요오. 아직 도토리는 아니에요오.` : big && p < 0 ? `폰에 −${n(p)}이 떠 있네요오. 저는 못 본 걸로 할게요오.` : rot(c.nth ?? 0, '거래 중이시네요오. 이자는 이자대로 가요오.', '폰 보고 계시네요오. 저는 장부만 봐요오.', '아직 들고 계시네요오. 저는 다음에 또 와요오.')}`;
     }
-    else line = `이자 ${iv} 수금 완료요오.`;
+    else line = rot(c.nth ?? 0, `이자 ${iv} 수금 완료요오.`, `이자 ${iv}, 잘 받았어요오.`, `이자 ${iv} 수금 완료요오. 쳇바퀴 소리가 좋네요오.`, `이자 ${iv}, 장부에 적었어요오.`);
   }
   return `추심원: ${line}${auto} ${sum}`;
 }

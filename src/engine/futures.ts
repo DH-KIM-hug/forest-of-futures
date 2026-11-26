@@ -7,7 +7,7 @@ import { checkLiquidationWipeout } from './bankruptcy';
 import { bump } from './stats';
 import { logEvent, notify, josa } from './util';
 import { totalDebt } from './selectors';
-import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeRateRun, hasRun, liqRefund } from './skilltree';
+import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeEventLeft, feeRateRun, hasRun, liqRefund, openingEvent } from './skilltree';
 import type { Bar } from './feed/types';
 import type { Dir, GameState, LastPos, Position, Res, RunState } from './types';
 
@@ -17,7 +17,7 @@ const T = balance.trading;
 export const pnlOf = (p: Position, price: number): number => (p.dir * (price - p.entry)) / p.entry * p.notional;
 export const roePct = (p: Position, price: number): number => (pnlOf(p, price) / p.margin0) * 100;
 /** 수수료. rate 를 안 주면 기본 수수료율(스킬트리 없는 값). */
-export const entryFee = (notional: number, rate: number = T.feeRate): number => ceilS(notional * rate);
+export const entryFee = (notional: number, rate: number = T.feeRate): number => ceilS(notional * rate) + 0; // + 0: 수수료율이 0 일 때 −0 이 나오지 않게
 /** 청산가: 롱 진입가 × (1 − 증거금/N + 0.1%), 숏 진입가 × (1 + 증거금/N − 0.1%). 증거금은 펀딩비 차감 뒤 값. */
 export function liqPrice(p: Position): number {
   return p.dir === 1 ? p.entry * (1 - p.margin / p.notional + T.maintenanceRate) : p.entry * (1 + p.margin / p.notional - T.maintenanceRate);
@@ -148,6 +148,7 @@ export function openPosition(g: GameState, o: OpenParams): Res {
     if (lastC.dir !== o.dir && run.tick - lastC.tick <= balance.settlement.intervalSec) bump(run, 'flips', 1);
   }
   run.positions[o.market] = p;
+  if (feeEventLeft(run) > 0) bump(run, 'eventNotional', notional); // 오픈 기념 동안 수수료 없이 오간 크기(끝날 때 "아낀 수수료"를 셈한다)
   bump(run, 'tradesOpened', 1);
   if (p.tipSource) bump(run, 'tipTrades', 1);
   if (p.tipSource === 'leadroom') bump(run, 'leadroomFollowed', 1);
@@ -163,7 +164,10 @@ export function addToPosition(g: GameState, o: { market: string; margin?: number
   const p = run.positions[o.market];
   if (!p) return refuse('none', '열린 포지션이 없습니다.');
   if (dayLimitHit(run)) return refuse('daylimit', DAY_LIMIT_MSG);
-  const rate = (p.feeRate ?? T.feeRate) * addFeeMul(run); // 쪼개 넣기(C3a)의 꼬리: 추가 진입 수수료 할인
+  // 오픈 기념(U-40)이 있는 판: 무료일 때 연 포지션이라도 이벤트가 끝난 뒤의 추가 진입은 지금 수수료율로 낸다(나올 때 수수료율은 크기로 가중 평균)
+  const held = p.feeRate ?? T.feeRate;
+  const now = openingEvent() ? Math.max(held, feeRateRun(run, p.lev)) : held;
+  const rate = now * addFeeMul(run); // 쪼개 넣기(C3a)의 꼬리: 추가 진입 수수료 할인
   const m2 = o.margin ?? marginFromPct(run.cash, p.lev, o.marginPct ?? T.defaultMarginPct, rate);
   if (m2 < T.minMargin) return refuse('min', '증거금이 모자랍니다.');
   const n2 = m2 * p.lev;
@@ -172,12 +176,14 @@ export function addToPosition(g: GameState, o: { market: string; margin?: number
   if (m2 + fee > run.cash) return refuse('cash', '현금 부족');
   const price = run.prices[o.market];
   run.cash -= m2 + fee;
+  if (now !== held) p.feeRate = (held * p.notional + now * n2) / (p.notional + n2);
   p.entry = (p.notional + n2) / (p.notional / p.entry + n2 / price);
   p.notional += n2;
   p.margin += m2;
   p.margin0 += m2;
   p.feesPaid += fee;
   p.adds += 1;
+  if (feeEventLeft(run) > 0) bump(run, 'eventNotional', n2);
   logEvent(run, 'add', `${marketById[o.market].name} 추가 진입`, m2);
   run.tradeLog.push({ n: run.tick, market: o.market, dir: p.dir, lev: p.lev, margin: m2, price, kind: 'add' });
   return { ok: true, amount: m2 };

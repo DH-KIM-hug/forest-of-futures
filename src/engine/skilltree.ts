@@ -101,12 +101,30 @@ export function applyBirth(g: GameState): void {
   }
 }
 
+// ── FRX 숲거래소 오픈 기념(U-40) ─────────────────────────────────────────
+// 새로 문을 연 거래소라 생마다 처음 n 번의 정산 동안 거래 수수료를 받지 않는다. 끝나면 기본 수수료율이 afterFeeRate 가 되고, 나무의 할인은 거기서부터 붙는다.
+// 1막 시제품(balance.act1)에서만 켜진다. 시세·청산 공식은 그대로다(수수료만 다르다).
+interface OpeningEvent { freeSettlements: number; afterFeeRate: number }
+export const openingEvent = (): OpeningEvent | null =>
+  ((balance as { act1?: unknown }).act1 ? ((balance.trading as { openingEvent?: OpeningEvent }).openingEvent ?? null) : null);
+/** 수수료 무료가 몇 번의 정산 동안 더 남았는가(이벤트가 없으면 0). 지금 정산 구간도 센다. */
+export function feeEventLeft(run: RunState): number {
+  const ev = openingEvent();
+  return ev ? Math.max(0, ev.freeSettlements - run.settleNo) : 0;
+}
+/** 나무의 할인을 곱하기 전의 기본 수수료율: 이벤트 중 0, 끝난 뒤 afterFeeRate, 이벤트가 없는 판은 trading.feeRate. */
+export function baseFeeRate(run: RunState): number {
+  const ev = openingEvent();
+  if (!ev) return balance.trading.feeRate as number;
+  return feeEventLeft(run) > 0 ? 0 : ev.afterFeeRate;
+}
+
 // ── 효과 ────────────────────────────────────────────────────────────────
 export interface FeeCtx { /** 가진 돈을 전부 건다 */ allIn?: boolean; /** 반대 단추로 뒤집어 들어간다 */ flip?: boolean }
 /** 거래 수수료율 = 기본 × (1 − A1) × (1 − A4) × (50배 이상이면 1 − B1) × 꼬리들 + C2 보험료. 0 이 되지 않는다.
  *  꼬리(U-39 ⑨): R = 10배 이하 · B3a = 200배 · B4 = 전부 걸기 · A3b = 뒤집어 들어감 · C3b = 하루 한도를 걸어 둔 동안. */
 export function feeRateRun(run: RunState, lev: number, ctx: FeeCtx = {}): number {
-  let r = balance.trading.feeRate as number;
+  let r = baseFeeRate(run);
   r *= 1 - effectRun(run, 'A1');
   r *= 1 - effectRun(run, 'A4');
   if (lev >= (skillMeta.highLev as number)) r *= 1 - effectRun(run, 'B1');

@@ -5,7 +5,7 @@ import { useGame } from '../../store/gameStore';
 import { useProto, type Scene, type Who } from './protoStore';
 import { WHO_NAME } from './text';
 import { comma } from '../../engine/util';
-import { Badger, O } from './art';
+import { O } from './art';
 import { play } from './audio';
 import { Typed, useSpeech } from './speech';
 import { say } from './watch';
@@ -13,96 +13,17 @@ import { hlPanel, hlSel, hlTab, markTip } from './guide';
 
 const TAB_LABEL: Record<string, string> = { map: '지도', phone: '거래소', lot: '집' };
 import heroFront from './img/hero_front.png';
-import { sprite } from './sprites';
+import { sprite, BUST_OF } from './sprites';
 
-/** 오소리 대부 반신. win=웃음, 아니면 정색 */
-function BossBust({ win }: { win: boolean }) {
-  return (
-    <svg className="bust" viewBox="20 300 350 430" aria-hidden="true">
-      <polygon points="40,844 70,640 320,640 350,844" fill="#5d5446" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-      <polygon points="170,640 195,720 220,640" fill="#E9D9B4" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-      <circle cx={85} cy={360} r={46} fill="#8C8478" stroke={O} strokeWidth={3} /><circle cx={305} cy={360} r={46} fill="#8C8478" stroke={O} strokeWidth={3} />
-      <circle cx={85} cy={360} r={24} fill="#5d5446" stroke={O} strokeWidth={2} /><circle cx={305} cy={360} r={24} fill="#5d5446" stroke={O} strokeWidth={2} />
-      <ellipse cx={195} cy={470} rx={150} ry={150} fill="#8C8478" stroke={O} strokeWidth={3} />
-      <ellipse cx={195} cy={488} rx={100} ry={98} fill="#EFE8DA" stroke={O} strokeWidth={2.5} />
-      <polygon points="160,330 185,330 178,400 150,396" fill="#3d3a36" stroke={O} strokeWidth={2} /><polygon points="205,330 230,330 240,396 212,400" fill="#3d3a36" stroke={O} strokeWidth={2} />
-      <circle cx={152} cy={470} r={6} fill={O} /><circle cx={238} cy={470} r={6} fill={O} />
-      {win
-        ? <path d="M138 454 q14 -8 28 -2 M224 452 q14 -6 28 2" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
-        : <path d="M136 446 l30 10 M254 446 l-30 10" fill="none" stroke={O} strokeWidth={4} strokeLinecap="round" />}
-      <ellipse cx={195} cy={512} rx={13} ry={9} fill={O} />
-      {win
-        ? <path d="M158 538 q37 28 74 0" fill="none" stroke={O} strokeWidth={3.5} strokeLinecap="round" />
-        : <path d="M166 548 h58" fill="none" stroke={O} strokeWidth={3.5} strokeLinecap="round" />}
-      <g transform="rotate(-10 300 690)"><rect x={262} y={640} width={78} height={96} rx={6} fill="#F3E7C6" stroke={O} strokeWidth={3} /><path d="M276 666 h50 M276 684 h50 M276 702 h34" stroke={O} strokeWidth={2.5} strokeLinecap="round" /></g>
-    </svg>
-  );
-}
-
-/** 둥근 얼굴 하나로 그리는 조연(족제비·너구리): 귀 + 얼굴 + 주둥이. 새 그림은 만들지 않는다. */
-function Face({ fur, muzzle, mask, smile, slim }: { fur: string; muzzle: string; mask?: boolean; smile: boolean; slim?: boolean }) {
-  if (slim) return (
-    <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
-      <path d="M52 200 q6 -58 48 -58 q42 0 48 58z" fill={fur} stroke={O} strokeWidth={3} strokeLinejoin="round" />
-      <path d="M100 150 l-22 -12 v24z M100 150 l22 -12 v24z" fill="#C8553D" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-      <circle cx={66} cy={40} r={12} fill={fur} stroke={O} strokeWidth={3} /><circle cx={134} cy={40} r={12} fill={fur} stroke={O} strokeWidth={3} />
-      <ellipse cx={100} cy={88} rx={46} ry={62} fill={fur} stroke={O} strokeWidth={3} />
-      <path d="M70 96 q30 -34 60 0 q4 44 -30 50 q-34 -6 -30 -50z" fill={muzzle} />
-      <path d="M74 76 q8 -8 16 0 M110 76 q8 -8 16 0" fill="none" stroke={O} strokeWidth={3.2} strokeLinecap="round" />
-      <ellipse cx={100} cy={108} rx={6} ry={4.5} fill={O} />
-      <path d="M84 120 q16 14 32 0" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
-      <path d="M62 110 h-22 M62 118 l-20 6 M138 110 h22 M138 118 l20 6" stroke={O} strokeWidth={2} strokeLinecap="round" />
-    </svg>
-  );
-  return (
-    <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
-      <path d="M30 200 q10 -62 70 -62 q60 0 70 62z" fill={fur} stroke={O} strokeWidth={3} strokeLinejoin="round" />
-      <circle cx={52} cy={48} r={20} fill={fur} stroke={O} strokeWidth={3} /><circle cx={148} cy={48} r={20} fill={fur} stroke={O} strokeWidth={3} />
-      <ellipse cx={100} cy={92} rx={66} ry={60} fill={fur} stroke={O} strokeWidth={3} />
-      {mask && <path d="M40 80 q60 -22 120 0 q-4 30 -60 26 q-56 4 -60 -26z" fill="#4d4a45" />}
-      <ellipse cx={100} cy={114} rx={34} ry={26} fill={muzzle} />
-      <circle cx={76} cy={86} r={5} fill={mask ? '#fff' : O} /><circle cx={124} cy={86} r={5} fill={mask ? '#fff' : O} />
-      <ellipse cx={100} cy={104} rx={8} ry={6} fill={O} />
-      {smile ? <path d="M82 118 q18 16 36 0" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" /> : <path d="M86 122 h28" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />}
-    </svg>
-  );
-}
-
-function Bust({ who, smile }: { who: Who; smile: boolean }) {
-  // 새 그림이 들어온 인물은 그 그림으로(sprites.ts: boss · weasel · collector)
-  const art = who === 'boss' || who === 'weasel' || who === 'collector' ? sprite(who) : null;
-  if (art) return <img className="bust" src={art.src} alt="" />;
+function Bust({ who, sceneId, phone }: { who: Who; smile: boolean; sceneId?: string; phone?: boolean }) {
+  // 반신은 전부 새 그림이다(U-40, sprites.ts BUST_OF). 알바가 나가는 장면은 봇짐을 멘 햄스터가 같이 나온다.
+  if (who === 'weasel' && sceneId === 'quit' && sprite('hamsterQuit')) return <span className="bust duo"><img src={sprite('weasel')!.src} alt="" /><img className="prop" data-art="hamsterQuit" src={sprite('hamsterQuit')!.src} alt="" /></span>;
+  const id = BUST_OF[who];
+  const art = id ? sprite(id) : null;
+  if (art) return <img className="bust" data-art={id} src={art.src} alt="" />;
   switch (who) {
-    case 'boss': return <BossBust win={smile} />;
-    case 'collector': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Badger cx={100} cy={196} h={180} /></svg>;
-    case 'weasel': return <Face slim fur="#C9B08A" muzzle="#FFF8E4" smile={smile} />;
-    case 'hero': return <img className="bust hero" src={heroFront} alt="" />;
-    case 'raccoon': return <Face mask fur="#9A968C" muzzle="#F4EFE2" smile={smile} />;
-    case 'owl': return (
-      <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
-        <path d="M34 200 q6 -70 66 -70 q60 0 66 70z" fill="#8A6F52" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-        <path d="M44 62 l-8 -34 l30 16 M156 62 l8 -34 l-30 16" fill="#8A6F52" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-        <ellipse cx={100} cy={96} rx={66} ry={64} fill="#8A6F52" stroke={O} strokeWidth={3} />
-        <circle cx={74} cy={88} r={24} fill="#F1E6CC" stroke={O} strokeWidth={3} /><circle cx={126} cy={88} r={24} fill="#F1E6CC" stroke={O} strokeWidth={3} />
-        <circle cx={74} cy={88} r={7} fill={O} /><circle cx={126} cy={88} r={7} fill={O} />
-        <path d="M52 70 h44 M104 70 h44" stroke={O} strokeWidth={4} strokeLinecap="round" />
-        <path d="M100 100 l-9 16 h18z" fill="#E0A63C" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-        <path d="M100 150 l-14 -10 v20z M100 150 l14 -10 v20z" fill="#3F5E78" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-      </svg>
-    );
-    case 'viper': return (
-      <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
-        <path d="M58 200 q-4 -64 42 -70 q46 6 42 70z" fill="#5E7A56" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-        <path d="M100 138 l-18 -8 v22z M100 138 l18 -8 v22z" fill="#2E2B28" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-        <path d="M100 26 q62 6 60 62 q-4 46 -60 52 q-56 -6 -60 -52 q-2 -56 60 -62z" fill="#6E8C62" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-        <path d="M70 52 q30 -14 60 0" fill="none" stroke="#4E6A47" strokeWidth={6} strokeLinecap="round" />
-        <path d="M62 84 l28 8 M138 84 l-28 8" stroke={O} strokeWidth={4} strokeLinecap="round" />
-        <ellipse cx={78} cy={96} rx={7} ry={4} fill="#E8C24A" stroke={O} strokeWidth={2} /><ellipse cx={122} cy={96} rx={7} ry={4} fill="#E8C24A" stroke={O} strokeWidth={2} />
-        <path d="M78 93 v6 M122 93 v6" stroke={O} strokeWidth={2.2} strokeLinecap="round" />
-        <path d="M80 120 q20 10 40 0" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
-        <path d="M100 124 v12 l-5 7 M100 136 l5 7" fill="none" stroke="#C2413B" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    );
+    // 주인공 속마음: 폰을 받기 전에는 빈손
+    case 'hero': { const h = (phone ? sprite('hero') : sprite('heroEmpty')) ?? sprite('hero'); return h ? <img className="bust hero" data-art={phone ? 'hero' : 'heroEmpty'} src={h.src} alt="" /> : <img className="bust hero" src={heroFront} alt="" />; }
     case 'news': return (
       <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
         <g transform="rotate(-5 100 110)">
@@ -137,6 +58,7 @@ export function CutIn() {
 
 function CutInScene({ sc }: { sc: Scene }) {
   const [i, setI] = useState(0);
+  const phone = useGame((st0) => st0.g.run.futures.open);
   const [spot, setSpot] = useState<Spot | null>(null);
   const root = useRef<HTMLDivElement>(null);
   // 쳇바퀴를 연타하던 손가락이 대사를 넘겨 버리지 않게, 줄이 뜨고 0.6초는 탭을 받지 않는다
@@ -224,7 +146,7 @@ function CutInScene({ sc }: { sc: Scene }) {
     <div ref={root} className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win') + (line.hl ? ' hl' : '') + (spot ? ' spot' : '') + (top ? ' top' : '')} onClick={next} role="dialog" aria-label="컷인 대화"
       data-scene={sc.id} data-line={i} data-typing={sp.typing ? '1' : ''} data-tip={line.tip ?? ''} data-spot={spot ? line.hl : ''}>
       {spot && <div className="pr-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} aria-hidden="true"><i className={'arr ' + (top ? 'dn' : 'up')} /></div>}
-      <div key={line.who} className="bustbox"><Bust who={line.who} smile={smile} /></div>
+      <div key={line.who} className="bustbox"><Bust who={line.who} smile={smile} sceneId={sc.id} phone={phone} /></div>
       {st && !st.win && <div className="stamp">연체</div>}
       <div className={'say' + (line.who === 'note' ? ' note' : '') + (line.who === 'sms' ? ' sms' : '')}>
         {WHO_NAME[line.who] && <div className="tag">{WHO_NAME[line.who]}</div>}

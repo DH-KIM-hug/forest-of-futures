@@ -87,22 +87,28 @@ export interface HoldSnap {
   /** 이 포지션에서 본 가장 큰 이익 · 가장 깊은 손실(ROE %) */ peakPnl: number; lowRoe: number;
   /** 들고 있는 사이 지나간 정산 수 */ settles: number;
   /** 다음 정산에 낼 돈이 포지션에 묶여 있다(그리고 정산이 1분 안이다) */ squeezed?: boolean;
+  /** 이 포지션에 낸 수수료(0 이면 오픈 기념 무료 — "수수료만 냈다"는 말은 거짓이 된다) */ feesPaid?: number;
 }
+/** 같은 열쇠의 줄을 포지션마다 번갈아 쓴다(U-40): nth = 이번 생에 연 포지션 순번. 첫 줄은 회차 2 의 줄 그대로다. */
+const rot = (nth: number, ...v: string[]): string => v[((nth % v.length) + v.length) % v.length];
 export interface HoldBeat { key: string; text: string }
 /** 포지션 하나를 들고 있는 동안 주인공이 속으로 하는 말. 위에서부터 처음 맞는 것 하나, 포지션마다 열쇠당 한 번. 전부 실제 숫자에서 나온다. */
-export function holdBeat(s: HoldSnap, seen: Record<string, boolean>): HoldBeat | null {
+export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): HoldBeat | null {
   const claim = Math.max(1, s.claim);
-  const B = (key: string, text: string): HoldBeat | null => (seen[key] ? null : { key, text });
-  return (s.reach === 'edge' ? B('edge', '…지금 흔들리는 만큼만 더 가면 끝이다.') : null)
-    ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '…한 번만 더 출렁이면 닿는다.') : null)
-    ?? (s.squeezed ? B('squeeze', '…정산이 온다. 낼 돈이 전부 여기 묶여 있다.') : null)
-    ?? (s.roe >= 100 ? B('double', '…두 배다. 두 배면… 조금만 더.') : null)
-    ?? (s.pnl >= claim ? B('claim', `…이자 한 번 치다. 지금 닫으면 ${n(s.pnl)}.`) : null)
-    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `…아까는 +${n(s.peakPnl)}이었다. 아까 닫을 걸.`) : null)
-    ?? (s.roe <= -50 ? B('half', '…넣은 돈의 절반이 녹았다.') : null)
-    ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '…본전이다. 본전이면 나가야 하는데.') : null)
-    ?? (s.settles >= 1 ? B('settled', '…정산이 한 번 지나갔다. 아직 들고 있다.') : null)
-    ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakPnl < claim * 0.1 ? B('flat', '…안 움직인다. 수수료만 냈다.') : null);
+  const B = (key: string, ...v: string[]): HoldBeat | null => (seen[key] ? null : { key, text: rot(nth, ...v) });
+  const free = s.feesPaid === 0;
+  return (s.reach === 'edge' ? B('edge', '…지금 흔들리는 만큼만 더 가면 끝이다.', '…숨 한 번 쉬는 폭 안에 청산선이 있다.', '…눈을 깜빡이면 없어질 것 같다.') : null)
+    ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '…한 번만 더 출렁이면 닿는다.', '…한 번이다. 한 번만 반대로 가면.', '…청산선이 보인다. 보이면 안 되는 건데.') : null)
+    ?? (s.squeezed ? B('squeeze', '…정산이 온다. 낼 돈이 전부 여기 묶여 있다.', '…추심원 발소리가 들리는 것 같다. 돈은 폰 안에 있다.') : null)
+    ?? (s.roe >= 100 ? B('double', '…두 배다. 두 배면… 조금만 더.', '…두 배. 엄마도 여기서 안 닫았을까.') : null)
+    ?? (s.pnl >= claim ? B('claim', `…이자 한 번 치다. 지금 닫으면 ${n(s.pnl)}.`, `…+${n(s.pnl)}. 이자 한 번이 폰에 떠 있다. 아직 도토리는 아니다.`, `…지금 닫으면 이번 정산은 넘긴다. ${n(s.pnl)}.`) : null)
+    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `…아까는 +${n(s.peakPnl)}이었다. 아까 닫을 걸.`, `…+${n(s.peakPnl)}까지 갔었다. 그때 손가락이 안 움직였다.`) : null)
+    ?? (s.roe <= -50 ? B('half', '…넣은 돈의 절반이 녹았다.', '…절반 남았다. 절반이면 아직… 아니다.') : null)
+    ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '…본전이다. 본전이면 나가야 하는데.', '…돌아왔다. 여기서 나가면 아무 일도 없던 거다.') : null)
+    ?? (s.settles >= 1 ? B('settled', '…정산이 한 번 지나갔다. 아직 들고 있다.', '…추심원이 다녀갔다. 포지션은 그대로다.') : null)
+    ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakPnl < claim * 0.1
+      ? (free ? B('flat', '…안 움직인다. 수수료가 공짜라 잃은 것도 없다. 번 것도 없다.', '…차트가 누워 있다. 공짜로 구경 중이다.', '…아무 일도 없다. 다른 코인은 움직이나.')
+        : B('flat', '…안 움직인다. 수수료만 냈다.', '…차트가 누워 있다. 수수료는 이미 나갔다.', '…아무 일도 없다. 아무 일도 없는데 돈은 줄었다.')) : null);
 }
 
 // ── 정산 때 낼 돈이 포지션에 묶여 있는가 ───────────────────────────────

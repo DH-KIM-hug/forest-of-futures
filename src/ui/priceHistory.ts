@@ -3,15 +3,18 @@ import { useGame } from '../store/gameStore';
 
 export const HIST_LEN = 600;
 const hist: Record<string, number[]> = {};
+/** 종목마다 실시간으로 쌓인 값의 수(뒤에서부터). 시작할 때 봉으로 복원한 값은 세지 않는다 — "지난 1분 폭"은 초 단위 실시간 값으로만 잰다(U-40). */
+const live: Record<string, number> = {};
 let lastTick = -1;
 let started = false;
 
-export function pushPrices(prices: Record<string, number>, tick: number): void {
+export function pushPrices(prices: Record<string, number>, tick: number, seed = false): void {
   if (tick === lastTick) return;
   lastTick = tick;
   for (const [k, v] of Object.entries(prices)) {
     const a = (hist[k] ??= []);
     a.push(v);
+    if (!seed) live[k] = Math.min(HIST_LEN, (live[k] ?? 0) + 1); // 시작할 때의 값(저장된 값 · 장면 건너뛰기의 값)은 시세가 아니라 씨앗이다
     if (a.length > HIST_LEN) a.splice(0, a.length - HIST_LEN);
   }
 }
@@ -19,15 +22,26 @@ export function pushPrices(prices: Record<string, number>, tick: number): void {
 export function prependHistory(past: Record<string, number[]>): void {
   for (const [k, v] of Object.entries(past)) {
     const a = (hist[k] ??= []);
-    hist[k] = [...v, ...a].slice(-HIST_LEN);
+    // 뒤에 남기는 것은 실시간으로 쌓인 값만(씨앗 값은 버린다 — 차트 왼쪽에 절벽이 생기지 않게)
+    const n = Math.min(a.length, live[k] ?? 0);
+    hist[k] = [...v, ...(n > 0 ? a.slice(-n) : [])].slice(-HIST_LEN);
   }
 }
 /** 튜토리얼의 짜 둔 시세를 차트에 그렸다가(pushOne) 끝나면 지운다(dropLast). 진짜 시세 기록과 섞이지 않게. */
-export function pushOne(market: string, v: number): void { (hist[market] ??= []).push(v); }
-export function dropLast(market: string, n: number): void { const a = hist[market]; if (a) a.splice(Math.max(0, a.length - n), n); }
+export function pushOne(market: string, v: number): void { (hist[market] ??= []).push(v); live[market] = (live[market] ?? 0) + 1; }
+export function dropLast(market: string, n: number): void { const a = hist[market]; if (a) a.splice(Math.max(0, a.length - n), n); live[market] = Math.max(0, (live[market] ?? 0) - n); }
 export const historyOf = (market: string): number[] => hist[market] ?? [];
+/** 실시간으로 쌓인 값만(봉으로 복원한 앞부분은 뺀다). 긴장 · 출렁임을 잴 때 쓴다. */
+export function liveHistoryOf(market: string): number[] {
+  const a = hist[market] ?? [];
+  const n = Math.min(a.length, live[market] ?? 0);
+  return n > 0 ? a.slice(-n) : [];
+}
+/** 화면 확인용: 채워 넣은 기록을 실시간 값으로 친다 */
+export function markLive(market: string): void { live[market] = (hist[market] ?? []).length; }
 export function resetHistory(): void {
   for (const k of Object.keys(hist)) delete hist[k];
+  for (const k of Object.keys(live)) delete live[k];
   lastTick = -1;
 }
 
@@ -36,7 +50,7 @@ export function startHistory(): void {
   if (started) return;
   started = true;
   const g0 = useGame.getState().g;
-  pushPrices(g0.run.prices, g0.run.tick);
+  pushPrices(g0.run.prices, g0.run.tick, true);
   useGame.subscribe((s, prev) => {
     if (s.g.run.tick !== prev.g.run.tick) pushPrices(s.g.run.prices, s.g.run.tick);
   });

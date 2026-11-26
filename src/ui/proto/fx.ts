@@ -1,4 +1,5 @@
 // 시제품 반응(juice) 한 곳: 사건 → 등급별 묶음. 시뮬레이션은 건드리지 않는다(game-feel).
+import { coinImgHtml } from './coins';
 //   소: 줍기 탭(눌림 + +n + 도토리 2~3알이 HUD 로 날아감), 숫자 굴러 오름
 //   중: 구입(새 물건 팝), 정산(막대 번쩍), 추심원 도착
 //   대: 강제 청산(장면 흔들림 + '청산' 도장), 파산
@@ -59,7 +60,8 @@ export function flyAcorns(from: DOMRect | null, n = 3): void {
   }
 }
 
-export const coinSvg = (size = 16): string =>
+/** 날아가는 코인 · 지갑의 코인 그림: 로고 그림이 있으면 그것(U-40), 없으면 예전 SVG 동전 */
+export const coinSvg = (size = 16, id = 'DTC'): string => coinImgHtml(id, size) ??
   `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="${C.dtc}" stroke="${O}" stroke-width="2.2"/><circle cx="12" cy="12" r="5" fill="none" stroke="${O}" stroke-width="1.6" opacity=".55"/></svg>`;
 
 /** 작은 그림(코인 등)이 from 에서 to 로 날아간다. 동시에 16개까지. */

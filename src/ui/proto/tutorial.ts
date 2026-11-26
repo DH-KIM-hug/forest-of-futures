@@ -77,7 +77,7 @@ function finish(real: number, steps: number, margin: number): void {
 /** "지금부터 실제 시세" 알림을 닫는다: 튜토리얼 끝. 시계가 다시 돈다. */
 export function tutorialEnd(): void {
   useProto.getState().patch({ tutorial: 'done' });
-  useGame.getState().setSpeed(1);
-  // 튜토리얼이 끝난 자리에서 목표를 말해 준다: 빚을 다 갚는 것, 못 갚으면 파산(평생 한 번)
+  // 튜토리얼이 끝난 자리에서 목표를 말해 준다: 빚을 다 갚는 것, 못 갚으면 파산(평생 한 번). 시계를 돌리기 전에 줄 세운다 — 오픈 기념 문자(U-40)는 그 뒤에 온다
   if (tipsLeft('goal')) useProto.getState().pushScene({ id: 'guide_goal', again: true, lines: tips('goal', tipArgs(useGame.getState().g)) });
+  useGame.getState().setSpeed(1);
 }

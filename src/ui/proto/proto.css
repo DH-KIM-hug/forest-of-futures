@@ -176,7 +176,7 @@
 /* ── 엔딩·환생 ─────────────────────────────────────── */
 .pr-end { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 18px); overflow-y: auto; background: #2E2B27; color: var(--o); }
 .pr-end .polaroid { position: relative; flex: 0 0 auto; width: min(300px, 82%); margin: 8px 0 0; padding: 12px 12px 0; background: #FFFDF8; border-radius: 4px; box-shadow: 0 12px 28px rgba(0, 0, 0, .45); transform: rotate(-3deg); animation: polaroid .7s cubic-bezier(.22, 1, .36, 1) both; }
-.pr-end .photo { display: block; width: 100%; aspect-ratio: 300 / 220; border: 2px solid var(--o); filter: grayscale(1) sepia(.18) contrast(1.05); }
+.pr-end .photo { display: block; width: 100%; aspect-ratio: 300 / 220; object-fit: cover; object-position: 50% 62%; border: 2px solid var(--o); }
 .pr-end figcaption { padding: 10px 4px 14px; text-align: center; font-family: var(--dsp); font-size: 19px; line-height: 1.25; }
 .pr-end .polaroid .stamp { position: absolute; right: -16px; top: 32%; padding: 0 16px; font-family: var(--dsp); font-size: 46px; color: var(--red); border: 6px solid var(--red); border-radius: 10px; background: rgba(255, 253, 248, .86); transform: rotate(-16deg); animation: stampIn2 .32s .75s cubic-bezier(.5, 0, .75, 0) both; }
 .pr-end .card { width: 100%; flex: 0 0 auto; background: var(--paper); border: 2.5px solid var(--o); border-radius: 16px; overflow: hidden; animation: slideUp .4s .9s cubic-bezier(.22, 1, .36, 1) both; }
@@ -612,7 +612,7 @@
 /* 내 포지션 한 줄(판 맨 위 고정, §3.7.9): 접혀 있어도 보인다 */
 .pr .pr-pin { position: relative; width: 100%; min-height: 40px; display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 8px; padding: 4px 10px; background: #FFFDF6; border: 2.5px solid var(--o); border-radius: 12px; box-shadow: var(--drop); text-align: left; color: var(--o); }
 .pr-pin .who { display: flex; align-items: center; gap: 5px; font-family: var(--dsp); font-size: 14.5px; white-space: nowrap; }
-.pr-pin .coin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--o); }
+.pr-pin .coin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--o); } .pr-pin img.coin.logo { width: 18px; height: 18px; border: 0; }
 .pr-pin .dir { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 .pr-pin .dir .long { color: var(--up); } .pr-pin .dir .short { color: var(--down); }
 .pr-pin .liq { justify-self: start; padding: 1px 7px; border-radius: 8px; background: #FBE3DC; font-size: 12px; font-weight: 800; color: var(--red-ink); white-space: nowrap; }
@@ -749,7 +749,7 @@
 .pr-away .sum b { font-family: var(--dsp); font-weight: 400; font-size: 18px; } .pr-away .sum .up { color: #2E6E4C; } .pr-away .sum .dn { color: var(--red-ink); }
 /* 은퇴 엔딩(U-39 ⑧): 사진에 색이 남아 있고 도장은 금빛이다 */
 .pr-end.retired { background: #4A3F2C; }
-.pr-end.retired .photo { filter: sepia(.35) saturate(.85); }
+.pr-end.retired .photo { object-position: 50% 70%; }
 .pr-end .polaroid .stamp.gold { color: #A9801A; border-color: #C59A2A; background: rgba(255, 248, 220, .9); }
 /* 나무: 이 길의 엔딩(U-39 ⑪) */
 .pr-tree .tr-ends { margin-top: 5px; padding: 5px 8px 6px; border-radius: 11px; background: color-mix(in srgb, var(--pc) 30%, #fff); border: 2px solid rgba(74, 70, 64, .3); text-align: left; }
@@ -762,3 +762,23 @@
 .pr-profit.gold { border-color: #C59A2A; box-shadow: 0 0 0 3px #F3D774, 0 8px 16px rgba(40, 40, 20, .3); }
 @media (prefers-reduced-motion: reduce) { .pa-hero.pace, .pa-hero.hopjoy, .pa-hero.phone { animation: none !important; } }
 .pr-hud .debt .hike { white-space: nowrap; }
+
+/* ── U-40 그림: 쳇바퀴 안의 햄스터 · 주인공이 달린다(살짝 들썩) ── */
+@keyframes paJog { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-1.6px) rotate(-1.2deg); } 75% { transform: translateY(-.6px) rotate(1.2deg); } }
+.pa-jog { transform-box: fill-box; transform-origin: 50% 100%; animation: paJog .38s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .pa-jog { animation: none; } }
+.pr-cutin .bustbox .bust.duo { position: relative; display: block; }
+.pr-cutin .bustbox .bust.duo img { display: block; width: 62%; height: auto; margin-left: 0; }
+.pr-cutin .bustbox .bust.duo img.prop { position: absolute; right: -6%; bottom: 14%; width: 54%; margin: 0; }
+
+/* ── U-40 그림: 지도의 마을 · 가게 안 · 황금 도토코인 ── */
+.pr-village { flex: 0 0 auto; height: 132px; margin: 0 0 8px; border-radius: 14px; border: 2.5px solid var(--o); overflow: hidden; background: #8FA56A; }
+.pr-village img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.plc-art { position: relative; height: 104px; margin: -2px -2px 8px; border-radius: 11px; border: 2px solid var(--o); overflow: hidden; background: #B98552; }
+.plc-art .bg { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 46%; }
+.plc-art .npc { position: absolute; right: 14px; bottom: -6px; height: 84px; width: auto; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .22)); }
+.plc-art.a-shark2 .bg { object-position: 50% 52%; }
+.pr-card.plc.locked .plc-art { filter: grayscale(.7) opacity(.8); }
+.pr-end .award img.coin.art { width: 38px; height: auto; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.pr-tree img.coin.art { width: 20px; height: auto; border: 0; border-radius: 0; background: none; vertical-align: -4px; }
+@media (max-height: 720px) { .pr-village { height: 84px; } .plc-art { height: 76px; } .plc-art .npc { height: 64px; } }

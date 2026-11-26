@@ -32,6 +32,12 @@
       "line": "빚은 거래소가 아니라 쳇바퀴가 갚았습니다. 햄스터 여섯 마리는 내일도 일당을 받으러 옵니다. 칩멍크는 이제 주는 쪽입니다.",
       "causes": ["RETIRE"], "conditions": [["assetsOwned", ">=", 5]], "rarity": 3, "base": false,
       "clue": "쳇바퀴 여섯 대를 다 놓은 생에서 모든 빚을 갚고 그 생을 닫는다", "hiddenCondIndex": null, "foreshadow": "바닥 자리 여섯이 다 찬 방", "trace": ""
+    },
+    {
+      "id": "END-R04", "no": 204, "title": "백만 도토리의 아침",
+      "line": "빚을 다 갚고도 폰을 끄지 않았습니다. 도토리 100만을 쥐고서야 그 생을 닫았습니다. 추심원은 걷을 것도 없는데 그 집 앞을 지나다녔습니다. 오소리 대부는 장부의 빈 장을 한참 들여다봤습니다.",
+      "causes": ["RETIRE"], "conditions": [["cashNow", ">=", 1000000]], "rarity": 4, "base": false,
+      "clue": "빚을 다 갚고도 계속 살아 도토리 100만을 모은 뒤 그 생을 닫는다", "hiddenCondIndex": null, "foreshadow": "빚 없는 아침의 목표 막대", "trace": ""
     }
   ]
 }

@@ -51,7 +51,7 @@ export function WalletSheet() {
           return (
             <div key={c} className="wcoin">
               <div className="hd">
-                <i className="ic" dangerouslySetInnerHTML={{ __html: coinSvg(30) }} />
+                <i className="ic" dangerouslySetInnerHTML={{ __html: coinSvg(30, c) }} />
                 <div className="nm"><b>{wheelByCoin[c].name.replace(' 쳇바퀴', '')}</b><span>{qtyTxt(qty)} 개</span></div>
                 <div className="vl"><b>{comma(Math.round(val))}<Acorn size={16} /></b><span className={ch >= 0 ? 'up' : 'dn'}>시작가 대비 {pct(ch)}</span></div>
               </div>

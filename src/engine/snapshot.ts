@@ -46,6 +46,7 @@ export function buildSnapshot(g: GameState, ctx: SnapCtx): Record<string, any> {
   const s: Record<string, any> = {
     // 사는 곳·때
     house: run.house, houseInherited: st.houseInherited === true, netWorthAtMove: st.netWorthAtMove ?? null,
+    cashNow: Math.floor(run.cash),
     time: TIME[run.settleNo % TIME.length], settleNo: run.settleNo, event: st.event ?? null, econ: econOf(g),
     nightTaps: n(st.nightTaps),
     minSinceFamilyRecord: st.familyRecordTick != null ? (run.tick - st.familyRecordTick) / 60 : null,

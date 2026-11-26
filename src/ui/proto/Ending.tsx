@@ -4,9 +4,7 @@ import { endingCardModel } from '../vm/records';
 import { comma } from '../../engine/util';
 import { lifeNo } from './model';
 import { rebirthOverride } from './dev';
-import { Room, Wheel, C } from './art';
-import heroSit from './img/hero_sit.png';
-import heroFront from './img/hero_front.png';
+import { sprite } from './sprites';
 import { treeView, type NodeView } from '../../engine/skilltree';
 import { endingById, skillById, skillPathEndings } from '../../engine/data';
 import { act1Text } from '../../engine/act1';
@@ -15,16 +13,10 @@ import { play } from './audio';
 /** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
 
-/** 폴라로이드 속 마지막 사진: 색을 뺀 빈 오두막(§10.3 엔딩은 색을 뺀다). 주인공은 앉아서 폰을 본다. */
-function Photo() {
-  return (
-    <svg className="photo" viewBox="0 0 300 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <rect width="300" height="220" fill="#8D8A84" />
-      <Room cx={150} cy={236} hw={170} h={120} wall="#D9B98A" floor="#E3C9A0" />
-      <g opacity={0.55}><Wheel cx={206} cy={176} w={56} col={C.dtc} /></g>
-      <image href={heroSit} x={98} y={128} width={74} height={67} />
-    </svg>
-  );
+/** 폴라로이드 속 마지막 사진(U-40 그림): 파산 = 색이 빠진 빈 집에 폰을 든 주인공, 은퇴 = 색이 남은 해 질 녘의 집. */
+function Photo({ retired }: { retired: boolean }) {
+  const art = sprite(retired ? 'endRetire' : 'endBankrupt')!;
+  return <img className="photo" data-art={retired ? 'endRetire' : 'endBankrupt'} src={art.src} alt="" draggable={false} />;
 }
 
 /** 엔딩 카드 → 환생(상속포기 갈래 자동) → 다음 생. 가훈 값은 엔진 값(황금 실물 도토코인으로 표기). */
@@ -44,7 +36,7 @@ export function EndingFlow() {
     return (
       <div className={'pr-end' + (retired ? ' retired' : '')} data-ending={m.id} data-cause={m.cause} role="dialog" aria-label="엔딩">
         <figure className="polaroid">
-          <Photo />
+          <Photo retired={retired} />
           <figcaption>{m.title}</figcaption>
           <div className={'stamp' + (retired ? ' gold' : '')} aria-label={retired ? '은퇴' : '파산'}>{retired ? '은퇴' : '파산'}</div>
         </figure>
@@ -68,14 +60,14 @@ export function EndingFlow() {
   return (
     <div className="pr-end re tree" role="dialog" aria-label="환생">
       <div className="re-top">
-        <img src={heroFront} alt="" width={54} height={52} />
+        <img src={sprite('hero')!.src} alt="" width={42} height={56} />
         <div>
           <h2>다시 눈을 뜬다</h2>
           <p>{retired ? '빚 없는 아침이 며칠 지났다. 폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.' : '폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.'}</p>
         </div>
       </div>
       <div className="award" data-award={e.gold ?? 0}>
-        <i className="coin" aria-hidden="true" />
+        <img className="coin art" data-art="goldcoin" src={sprite('goldcoin')!.src} alt="" />
         <span>지난 생에 갚은 원금 <b className="sm">{comma(repaid)}</b><br /><small>장부의 금박 도장 5만마다 하나{run.debts.shark1.principal <= 0 && repaid > 0 ? ' · 완납 +2' : ''}</small></span>
         <b>+{comma(e.gold ?? 0)}</b>
       </div>
@@ -132,7 +124,7 @@ function SkillTree() {
   const pick = () => { const r = act({ type: 'treePick', id: cur.id }); if (r.ok) play('ui_tap'); };
   return (
     <section className="pr-tree" data-tree aria-label="스킬트리">
-      <div className="tr-h"><b>거래의 나무</b><span className="gold" data-gold={gold}><i className="coin" />{comma(gold)}개</span></div>
+      <div className="tr-h"><b>거래의 나무</b><span className="gold" data-gold={gold}><img className="coin art" src={sprite('goldcoin')!.src} alt="" />{comma(gold)}개</span></div>
       <div className="tr-paths">{PATHS.map((p) => <span key={p.id} className={'p-' + p.id}><b>{p.name}</b><small>{p.sub}</small></span>)}</div>
       <div className="tr-box">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

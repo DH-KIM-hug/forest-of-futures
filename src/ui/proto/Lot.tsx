@@ -8,7 +8,7 @@ import { useProto } from './protoStore';
 import { tiles, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, rateTxt, perSec, claim, type Tile } from './model';
 import { heroMood, tensionOf, type HeroMood } from './tension';
 import { tradeNet } from './watch';
-import { historyOf } from '../priceHistory';
+import { liveHistoryOf } from '../priceHistory';
 import { TILE_GRID, afterDrag, DRAG_PX } from './home';
 import { say, sendAway } from './watch';
 import { comma } from '../../engine/util';
@@ -18,6 +18,7 @@ import { tapValue } from '../../engine/equipment';
 import { positionView, type PositionView } from '../vm/trade';
 import { World } from './World';
 import { C } from './art';
+import { coinLogo } from './coins';
 import { sprite } from './sprites';
 import { fx } from './fx';
 import { play, playTap } from './audio';
@@ -48,10 +49,10 @@ function PinRow({ p }: { p: OpenPos }) {
   const call = isNearLiq(p);
   const m = marketById[p.market];
   const net = p.net;
-  const tn = tensionOf(p.liqDistPct, historyOf(p.market));
+  const tn = tensionOf(p.liqDistPct, liveHistoryOf(p.market));
   return (
     <button className={'pr-pin' + (call ? ' call' : '') + (net >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
-      <span className="who"><i className="coin" style={{ background: C.dtc }} />{m.name}</span>
+      <span className="who">{coinLogo(p.market) ? <img className="coin logo" src={coinLogo(p.market)!} alt="" draggable={false} /> : <i className="coin" style={{ background: C.dtc }} />}{m.name}</span>
       <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
       <span className={'liq r-' + tn.reach} data-reach={tn.reach}>{call ? '▼ 청산 임박 ' : '청산까지 '}{p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < tn.dots ? 'on' : ''} />)}</i></span>
       <span className="roe"><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(net)))}</b><small>{roeTxt(p.netRoe)}</small></span>
@@ -94,7 +95,7 @@ export function Lot() {
   const cl = claim(g).total;
   const RANK: HeroMood[] = ['idle', 'phone', 'hop', 'pace', 'frozen'];
   const mood = pos.reduce<HeroMood>((best, p) => {
-    const m = heroMood({ hasPos: true, roe: p.netRoe, pnl: p.net, claim: cl, reach: tensionOf(p.liqDistPct, historyOf(p.market)).reach, nearLiq: isNearLiq(p) });
+    const m = heroMood({ hasPos: true, roe: p.netRoe, pnl: p.net, claim: cl, reach: tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach, nearLiq: isNearLiq(p) });
     return RANK.indexOf(m) > RANK.indexOf(best) ? m : best;
   }, 'idle');
   const tapTimer = useRef<number | undefined>(undefined);

@@ -216,6 +216,24 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       retireAct1(g);
       return clone(g);
     }
+    // ── U-40 화면 확인용 ──
+    case 'feeend': {
+      // 오픈 기념이 끝나는 정산 직전(스무 번째 정산이 3초 뒤)
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true, feeEventSms: true } });
+      const g = midgame(base);
+      g.run.settleNo = 19; g.run.settleIn = 3;
+      g.run.stats.eventNotional = 31_000_000; g.run.stats.trades = 14;
+      return clone(g);
+    }
+    case 'cont': {
+      // 빚을 다 갚고 [계속한다]를 고른 생: 모은 돈의 고비가 목표다
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true, feeEventSms: true, continued: true, clear: true, act2Hook: true } });
+      const g = midgame(base, { cash: q.get('pcash') ? +q.get('pcash')! : 96_400, wheels: 3 });
+      const d = g.run.debts.shark1;
+      d.principal = 0; d.inherited = 0; d.tranches = [];
+      g.run.stats['repaid.shark1'] = 500_000;
+      return clone(g);
+    }
     case 'rate': {
       // 금리 인상 속보: 엄마 빚은 그대로
       P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true } });

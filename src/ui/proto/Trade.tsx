@@ -20,7 +20,7 @@ import { sellFeeRate } from '../../engine/mining';
 import { balance } from '../../engine/data';
 import { useProto } from './protoStore';
 import { useUI } from '../uiStore';
-import { comma } from '../../engine/util';
+import { comma, josa } from '../../engine/util';
 import { clone } from '../../engine/game';
 import { marketById } from '../../engine/data';
 import { marginFromPct, shortInsurance } from '../../engine/futures';
@@ -29,7 +29,10 @@ import { has, feeRate, nodeEffect, activeLevels, longChartSec, tailRun } from '.
 import { skillById } from '../../engine/data';
 import { price } from '../../engine/selectors';
 import type { Position } from '../../engine/types';
-import { historyOf } from '../priceHistory';
+import { historyOf, liveHistoryOf, markLive } from '../priceHistory';
+import { coinLogo } from './coins';
+import { swingOf, swingText, sessionOf, liveliest, allQuiet, feeEventChip, SESSIONS } from './market';
+import { feeEventLeft, openingEvent } from '../../engine/skilltree';
 import {
   chartModel, fmtPrice, levRuler, marketMood, marketTabs, MARGIN_PCTS, orderPreview, positionView, SL_OPTIONS, TP_OPTIONS, tradeMode, tutorialLine,
   type PositionView,
@@ -37,7 +40,8 @@ import {
 import { Acorn } from './art';
 import { flyAcorns, reduced } from './fx';
 import { play } from './audio';
-import heroFront from './img/hero_front.png';
+import { sprite } from './sprites';
+const heroFront = sprite('hero')!.src; // 포지션 카드의 주인공: 폰을 보는 새 그림(U-33)
 import './trade.css';
 
 export const EXCHANGE_NAME = 'FRX 숲거래소';
@@ -52,6 +56,9 @@ const COIN: Record<string, { col: string; glyph: ReactNode }> = {
 };
 export function Coin({ id, size = 22 }: { id: string; size?: number }) {
   const c = COIN[id] ?? COIN.DTC;
+  const logo = coinLogo(id);
+  // 코인 로고(U-40): 실제 로고의 실루엣을 숲 재료로 바꾼 패러디 그림. 그림이 없는 종목만 예전 SVG 동전으로
+  if (logo) return <img className="pt-coin logo" data-coin={id} src={logo} width={size} height={size} alt="" draggable={false} />;
   return (
     <svg className="pt-coin" width={size} height={size} viewBox="0 0 20 20" aria-hidden="true">
       <circle cx="10" cy="10" r="8.6" fill={c.col} stroke="#4A4640" strokeWidth="2" />
@@ -186,7 +193,15 @@ export function PChart({ market, hist, pos, win = 120, band = null }: { market: 
 /** 시트는 손절·익절 하나뿐이다. 진입은 시트 없이 한 번에 한다. */
 type Sheet = null | 'stops';
 /** pnl = 이 거래로 늘거나 준 돈(들어갈 때·나올 때 수수료 포함). move = 시세로 번 돈, fees = 낸 수수료, worth = 쳇바퀴로 치면 얼마(react.ts) */
-interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number; move: number; fees: number; worth: string | null }
+interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number; move: number; fees: number; worth: string | null; /** 정가로 냈다면 더 냈을 수수료(오픈 기념 · 나무의 할인)와 그 까닭 */ saved: number; savedBy: 'event' | 'tree' | null }
+/** 이 거래에서 아낀 수수료: 정가(오픈 기념이 있는 판은 끝난 뒤의 수수료율, 없는 판은 기본 수수료율)로 들어가고 나왔다면 냈을 돈 − 실제로 낸 돈 */
+export function savedFees(p: { notional: number; feeRate?: number }, paid: number, liq: boolean): { saved: number; by: 'event' | 'tree' | null } {
+  const ev = openingEvent();
+  const list = ev ? ev.afterFeeRate : (balance.trading.feeRate as number);
+  const full = Math.ceil(p.notional * list) * (liq ? 1 : 2);
+  const saved = Math.max(0, full - paid);
+  return { saved, by: saved <= 0 ? null : ev && (p.feeRate ?? list) < list * 0.01 ? 'event' : 'tree' };
+}
 
 const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
 /** 화면 확인용(?pshot=…): up=수익 중, win/loss=방금 정리, stops=손절·익절 시트, arm=정리 확인. 시세 기록도 2분어치 채운다. */
@@ -206,6 +221,7 @@ function devPrepare(market: string): void {
     const fill = walk.map((w) => px * (1 + (w - end) * k * 0.9));
     hst.splice(0, hst.length, ...fill, px);
   }
+  markLive(market);
   const p = st.g.run.positions[market];
   if (p && PSHOT !== 'edit') {
     const g = clone(st.g);
@@ -287,8 +303,15 @@ export function ProtoTrade() {
   const pos = positionView(g, market);
   const tabs = marketTabs(g);
   // 지금 가장 출렁이는 종목(지난 1분 폭이 가장 큰 것)에 표시 — 잔잔한 장에서 어디가 움직이는지 보이게(U-39 ①)
-  const ranges = tabs.map((t) => ({ id: t.id, r: recentRange(historyOf(t.id)) ?? 0 }));
-  const wild = ranges.reduce((a, b) => (b.r > a.r ? b : a), { id: '', r: 0 });
+  // 출렁임은 초 단위 실시간 값으로만 잰다(시작할 때 받아 온 분 봉은 섞지 않는다, U-40). 종목마다 꼬리표에 적는다 — 어느 종목에 걸지가 고를 거리가 되게
+  const ranges = tabs.map((t) => ({ id: t.id, r: recentRange(liveHistoryOf(t.id)) }));
+  const rangeOf = (id: string): number | null => ranges.find((x) => x.id === id)?.r ?? null;
+  const wild = liveliest(ranges);
+  const now = new Date();
+  const sess = sessionOf(market, now, rangeOf(market));
+  const quietAll = allQuiet(ranges.map((x) => x.r));
+  const liveHist = liveHistoryOf(market);
+  const evLeft = feeEventLeft(run);
   const tab = tabs.find((t) => t.id === market)!;
   const lev = pos ? pos.lev : tr.lev ?? run.futures.defaultLev;
   const pct = tr.pct;
@@ -307,7 +330,7 @@ export function ProtoTrade() {
   /** 지금 정리하면 넣은 돈(증거금)에 더해지거나 빠지는 돈. 넣은 돈 + 이 값 = 돌려받는 돈(closeBack). 결과 카드도 같은 셈이다. */
   const netNow = pos && rawPos ? tradeNet(rawPos, pos.back) : 0;
   // 들고 있는 동안의 긴장(U-39 ①): 청산까지의 거리를 지난 1분 폭에 견주고, 정산 때 낼 돈이 묶여 있는지 본다
-  const tn = pos ? tensionOf(pos.liqDistPct, hist) : null;
+  const tn = pos ? tensionOf(pos.liqDistPct, liveHist) : null;
   const cl = claim(g);
   const fc = forecast(g);
   const dueAll = fc.interest + fc.living + fc.wages;
@@ -330,7 +353,8 @@ export function ProtoTrade() {
       manual.current = false;
       setArm(false);
       setSheet(null);
-      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net) }));
+      const sv = savedFees(was.p, fees, liq);
+      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net), saved: sv.saved, savedBy: sv.by }));
       window.clearTimeout(resT.current);
       resT.current = window.setTimeout(() => setResult(null), 5200);
       if (!liq) play(pnl > 0 ? 'close_profit' : 'close_loss'); // 청산 소리는 watch.ts 가 낸다
@@ -422,6 +446,7 @@ export function ProtoTrade() {
   const slTxt = curSl === null ? '없음' : `−${Math.abs(curSl)}%`;
   const tpTxt = curTp === null ? '없음' : `+${curTp}%`;
 
+  const feeChipH = openingEvent() && useProto.getState().tutorial === 'done' && run.futures.open ? { ...feeEventChip(feeEventLeft(run), feeRate(g, tr.lev ?? run.futures.defaultLev) * 100), left: feeEventLeft(run) } : null;
   const frame = (body: ReactNode, cls = '') => (
     <div className="pt-wrap">
       <div className={'pt' + cls} data-pc={g.settings.priceColors} data-mode={mode.mode}>
@@ -430,6 +455,8 @@ export function ProtoTrade() {
           <span className="logo"><Acorn size={17} /></span>
           <b>{EXCHANGE_NAME}</b>
           <em>선물</em>
+          {/* 오픈 기념 수수료 무료(U-40): 거래소 머리에 늘 걸려 있다. 끝난 뒤에는 지금 수수료율 */}
+          {feeChipH && <span className={'pt-fee' + (feeChipH.on ? ' on' : '') + (feeChipH.on && feeChipH.left <= 3 ? ' last' : '')} data-fee-event={feeChipH.left} role="status" aria-label={feeChipH.text}>{feeChipH.on ? '오픈 기념 무료' : feeChipH.text.replace('거래 ', '')}</span>}
           {Object.keys(activeLevels(g)).length > 0 && <button className="pt-perk" data-perks onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 켜진 나무 노드">나무 {Object.keys(activeLevels(g)).length}</button>}
         </header>
         {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' ? '(+' : '(−') : skillById[id]?.tail ? ` Lv${lv} (${id === 'A3a' ? `+${Math.round(tailRun(run, id))}초` : id === 'B2' ? `−${(tailRun(run, id) * 100).toFixed(2)}%p` : `${id === 'B3b' || id === 'C4' ? '+' : '−'}${(tailRun(run, id) * 100).toFixed(1)}%`})` : ''}</span>)}</div>}
@@ -450,21 +477,30 @@ export function ProtoTrade() {
   ) : null;
   const coins = (
     <>{tutBanner}<div className="pt-coins" data-hl="coins" role="tablist" aria-label="종목">
-      {tabs.map((t) => (
-        <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct' + (t.id === market ? ' on' : '')} onClick={() => setTrade({ market: t.id })}>
-          <Coin id={t.id} size={20} />
+      {tabs.map((t) => {
+        const r = rangeOf(t.id), sw = swingOf(r);
+        const ss = SESSIONS[t.id] ? sessionOf(t.id, now, r) : null;
+        return (
+        <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct sw-' + sw + (t.id === market ? ' on' : '') + (ss?.badge ? ' shut' : '')} data-swing={sw} data-session={ss?.state} onClick={() => setTrade({ market: t.id })}>
+          <Coin id={t.id} size={22} />
           <span className="nm">{marketById[t.id].name}</span>
-          <small className={t.pct >= 0 ? 'up' : 'down'}><Tri up={t.pct >= 0} size={7} />{Math.abs(t.pct).toFixed(1)}%</small>
-          {wild.r > 0 && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
+          {/* 종목마다 지난 1분의 출렁임(실시간 값). 주식을 따라가는 종목이 본장 밖에서 자고 있으면 "장 마감" */}
+          <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '재는 중' : r.toFixed(3) + '%'}`}>
+            <i className="bars" aria-hidden="true"><u /><u /><u /></i>{ss?.badge ?? swingText(r)}
+          </small>
+          {wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
           {t.hasPos && <i className={'pd ' + ((t.posRoe ?? 0) >= 0 ? 'up' : 'down')} aria-label="포지션 있음" />}
         </button>
-      ))}
+        );
+      })}
     </div></>
   );
   const quote = (
     <div className="pt-quote">
       <div className="px"><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
-      {status ? <div className="st-bad" role="status">{status}</div> : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')}><span>지금 장</span>{mood}</div>}
+      {status ? <div className="st-bad" role="status">{status}</div>
+        : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status"><b>{sess.state === 'closed' ? '장 마감 · 조용함' : sess.state === 'after' ? '장 마감 · 그래도 움직인다' : '장중인데 조용함 · 휴장인 듯'}</b><small>본장 {sess.hours}</small></div>
+        : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined}><span>{sess ? `본장 ${sess.hours}` : '지금 장'}</span>{mood}</div>}
     </div>
   );
   const chart = (
@@ -521,9 +557,10 @@ export function ProtoTrade() {
     </div>
   );
   // 들어가기 전의 셈(U-39 ①): 이 증거금 · 이 배율로 이자 한 번 치까지 시세가 얼마나 가야 하는가, 넣고 나면 정산 때 낼 돈이 남는가
-  const odds = !pos ? orderOdds({ margin: prev.margin, lev, claim: cl.total, feeRate: feeRate(g, lev, { allIn: pct >= 100 }), maintenanceRate: balance.trading.maintenanceRate as number, hist }) : null;
+  const odds = !pos ? orderOdds({ margin: prev.margin, lev, claim: cl.total, feeRate: feeRate(g, lev, { allIn: pct >= 100 }), maintenanceRate: balance.trading.maintenanceRate as number, hist: liveHist }) : null;
   const sqOrder = !pos ? squeezeOf({ cash: run.cash - prev.margin - prev.fee, income, due: dueAll, settleIn: run.settleIn, holding: false }) : null;
   const sqHold = pos ? squeezeOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, holding: true }) : null;
+  const stillNow = swingOf(rangeOf(market)) === 'still';
   const noteLine = note && <div key={note.k} className={'pt-note' + (note.bad ? ' bad' : '')} role="status">{note.text}</div>;
 
   // 주문 조건은 늘 펼쳐져 있다: 배율 눈금자(포지션이 없을 때) + 증거금 칩 + 위험 한 줄. 롱·숏을 누르면 바로 들어간다.
@@ -547,12 +584,16 @@ export function ProtoTrade() {
       <div className={'pt-risk' + (prev.reason ? ' bad' : '') + (pos ? ' add' : '')} data-hl="risk" role="status">
         {prev.reason ? <span>{prev.reason}</span> : (
           <>
-            <span>{pos ? '추가 ' : ''}증거금 {comma(prev.margin)} · 수수료 {comma(prev.fee)}</span>
+            <span>{pos ? '추가 ' : ''}증거금 {comma(prev.margin)} · 수수료 {prev.fee > 0 ? comma(prev.fee) : evLeft > 0 ? <b className="free" data-fee-free aria-label={`오픈 기념 수수료 무료 · 정산 ${evLeft}번 남음`}>무료 · 정산 {evLeft}번 남음</b> : '0'}</span>
             {pos ? <span>배율 {pos.lev}배 그대로</span> : <b>청산 약 −{liqAbs}%</b>}
           </>
         )}
       </div>
-      {!pos && !prev.reason && tutSt === 'done' && odds && <div className={'pt-odds' + (odds.liqFirst ? ' no' : '')} data-odds>{odds.text}</div>}
+      {!pos && !prev.reason && tutSt === 'done' && odds && !stillNow && !result && <div className={'pt-odds' + (odds.liqFirst ? ' no' : '')} data-odds>{odds.text}</div>}
+      {/* 지금 고른 종목이 자고 있다: 이자까지의 셈 대신, 다른 종목이 깨어 있으면 어디가 움직이는지, 전부 조용하면 그렇다고 말한다(가짜 출렁임은 없다) */}
+      {!pos && !prev.reason && tutSt === 'done' && stillNow && !result && (
+        <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 다섯 종목이 다 조용하다. 걸어도 한동안 아무 일도 없다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? '장 마감이라' : '지금'} 거의 안 움직인다 · 깨어 있는 곳: ${marketById[wild.id].name} (1분 ${wild.r.toFixed(2)}%)` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
+      )}
       {!pos && !prev.reason && tutSt === 'done' && sqOrder && <div className="pt-squeeze" data-squeeze="order">{sqOrder.text}</div>}
     </div>
   );
@@ -580,11 +621,17 @@ export function ProtoTrade() {
       <>
         {result ? (
           <div key={'r' + result.k} ref={plRef} className={'pt-pl res ' + (result.pnl >= 0 ? 'win' : 'lose') + ' k-' + result.kind + (sk.legend ? ' legend' : '')} role="status" onClick={() => setResult(null)}>
-            <img className="me" src={heroFront} alt="" />
+            <img className="me" data-art={result.kind === 'liq' ? 'heroSad' : result.pnl > 0 ? 'heroHappy' : 'hero'} src={(result.kind === 'liq' ? sprite('heroSad') : result.pnl > 0 ? sprite('heroHappy') : sprite('hero'))!.src} alt="" />
             <div className="big">
               <div className="roe">{money(result.pnl)}</div>
-              <div className="sub" data-why>시세 <b className={result.move >= 0 ? 'up' : 'down'}>{money(result.move)}</b> · 수수료 <b className="down">−{comma(result.fees)}</b><span className="xtra">넣은 돈 {comma(Math.round(result.margin))} · {result.dirText} {result.lev}배</span></div>
-              {result.worth && <div className="worth" data-worth>{result.pnl >= 0 ? '' : '잃은 돈 = '}{result.worth}</div>}
+              <div className="sub" data-why>시세 <b className={result.move >= 0 ? 'up' : 'down'}>{money(result.move)}</b> · 수수료 {result.fees > 0 ? <b className="down">−{comma(result.fees)}</b> : <b>0</b>}<span className="xtra">넣은 돈 {comma(Math.round(result.margin))} · {result.dirText} {result.lev}배</span></div>
+              {/* 쳇바퀴 단위와 아낀 수수료(U-40: 오픈 기념 덕인지 나무 덕인지, 정가였다면 얼마를 더 냈을지)를 한 줄에 — 카드가 길어지지 않게 */}
+              {(result.worth || (result.savedBy && result.saved >= 10)) && (
+                <div className="tags">
+                  {result.worth && <span className="worth" data-worth>{result.pnl >= 0 ? '' : '잃은 돈 = '}{result.worth}</span>}
+                  {result.savedBy && result.saved >= 10 && <span className="saved" data-saved={result.savedBy}>{result.savedBy === 'event' ? '오픈 기념' : '나무'} −{comma(result.saved)}</span>}
+                </div>
+              )}
             </div>
             <div className="stamp">{result.kind === 'liq' ? (sk.legend ? '전설의 청산' : '강제 청산') : result.kind === 'tp' ? '익절' : result.kind === 'sl' ? '손절' : '정리 완료'}</div>
           </div>
@@ -595,7 +642,7 @@ export function ProtoTrade() {
               <div className="big" data-hl="posNet">
                 <div className="roe" data-netroe>{Math.abs(netRoe) >= 100 ? `${sign(netRoe)}${Math.abs(netRoe).toFixed(0)}%` : roeTxt(netRoe)}</div>
                 <div className="sub" data-net><b>{money(netNow)}</b>{share ? <i className="shr"> · {share}</i> : ' 도토리'}</div>
-                <div className="why" data-poswhy>시세 <b className={pos.pnl >= 0 ? 'up' : 'down'}>{money(pos.pnl)}</b> · 수수료 <b className="down">−{comma(feesNow)}</b></div>
+                <div className="why" data-poswhy>시세 <b className={pos.pnl >= 0 ? 'up' : 'down'}>{money(pos.pnl)}</b> · 수수료 {feesNow > 0 ? <b className="down">−{comma(feesNow)}</b> : <b>0{evLeft > 0 ? ' (오픈 기념)' : ''}</b>}</div>
               </div>
               <div className={'liq' + (call ? ' hot' : '')} data-hl="posLiq"><small>청산까지</small><b>{pos.dir === 1 ? '−' : '+'}{pos.liqDistPct.toFixed(1)}%</b></div>
             </div>

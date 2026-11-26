@@ -2,14 +2,14 @@
 // P1 엄마의 오두막 앞(문에 딱지) → P2 빈 방, 쳇바퀴 하나와 붉은 리본 → P3 추심원: 빚 30만 · 가진 돈 0 → P4 쳇바퀴를 굴린다(여기서부터 조작).
 // 엄마의 죽음은 보여 주지 않는다. 새 그림은 만들지 않고 시제품 부품(art.tsx)으로 그린다. 숫자는 엔진 값.
 import { useEffect, useRef, useState } from 'react';
-import { C, O, Cube, Room, Wheel, Badger, Acorn, dk } from './art';
+import { O, Acorn } from './art';
+import { sprite } from './sprites';
+import { HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT } from './home';
 import { play, playTap } from './audio';
 import { balance, lenderById } from '../../engine/data';
 import { comma } from '../../engine/util';
 import { prologueTalk, LEDGER_NOTE } from './text';
 import { Typed, useSpeech } from './speech';
-import heroSide from './img/hero_side.png';
-import heroFront from './img/hero_front.png';
 
 export const PROLOGUE_KEY = 'fof.proto.prologue.v3';
 export const prologueSeen = (): boolean => { try { return localStorage.getItem(PROLOGUE_KEY) === '1'; } catch { return false; } };
@@ -21,7 +21,8 @@ const CAPS = ((balance.start as unknown as { inheritedRateCap?: Record<string, n
 /** 엄마 빚의 정산당 이자(엔진과 같은 식: 원금 × 물려받은 몫의 금리 상한) */
 const INTEREST = Math.ceil(Object.entries(DEBTS).reduce((a, [id, p]) => a + p * Math.min(lenderById[id].rate, CAPS[id] ?? lenderById[id].rate), 0) - 1e-9);
 const TAP: number = balance.mining.tapBase;
-const WALK: [number, number][] = [[70, 560], [150, 500], [226, 452]];
+/** 걸어가는 길(무대 단위)과 그 자리의 크기: 길 아래에서 문 앞 계단까지 */
+const WALK: [number, number, number][] = [[172, 648, 1], [178, 548, 0.86], [184, 462, 0.74]];
 const TALK = prologueTalk({ debt: DEBT_TOTAL, interest: INTEREST });
 
 const Finger = ({ x, y }: { x: number; y: number }) => (
@@ -37,18 +38,20 @@ const Ribbon = ({ x, y, k = 1 }: { x: number; y: number; k?: number }) => (
     <circle cx={0} cy={0} r={6.5} fill="#C2413B" stroke={O} strokeWidth={2.4} />
   </g>
 );
-/** 빈 방(집 탭과 같은 방): 바닥 + 벽 둘 + 실려 간 자국 + 창 */
-function EmptyRoom() {
-  const wall = '#D9B98A';
+// ── 그림(U-40): P1 = 해 질 녘의 나무 밑동 집 바깥(s_prologue), P2~P4 = 집 안(집 탭과 같은 그림). 좌표는 집 그림 픽셀을 무대 단위로 옮긴다 ──
+/** 집 그림(992×1586)을 무대(390×800, y −100~700)에 꽉 채웠을 때의 배율과 옮김 */
+const HS = 800 / HOME_IMG.h, HX0 = (390 - HOME_IMG.w * HS) / 2;
+const PX = (x: number) => HX0 + x * HS, PY = (y: number) => -100 + y * HS;
+const WX = PX(WHEEL_SLOTS[0][0]), WY = PY(WHEEL_SLOTS[0][1]);
+const HEROX = PX(HERO_SPOT[0]), HEROY = PY(HERO_SPOT[1]), HEROH = HERO_H * HS * 1.05;
+const COLX = PX(VISITOR_SPOT[0]), COLY = PY(VISITOR_SPOT[1]);
+function HomeRoom() {
+  const home = sprite('home')!, patch = sprite('floorPatch')!;
   return (
     <g>
-      <rect x={-60} y={-120} width={510} height={840} fill="#4E4A52" />
-      <Room cx={195} cy={600} hw={190} h={170} wall={wall} floor="#E3C9A0" />
-      <path d="M52 470 L52 400 L112 370 L112 440z" fill="none" stroke={O} strokeWidth={1.8} strokeDasharray="5 6" />
-      <path d="M250 392 L310 422 L310 362 L250 332z" fill="#33406A" stroke={O} strokeWidth={2.4} strokeLinejoin="round" />
-      <path d="M280 347 v60" stroke={O} strokeWidth={2} />
-      <Cube cx={104} cy={520} hw={26} h={5} fill="#EFE3CC" />
-      <circle cx={340} cy={392} r={2.6} fill={dk(wall, 0.4)} />
+      <image href={home.src} x={HX0} y={-100} width={HOME_IMG.w * HS} height={800} preserveAspectRatio="none" />
+      <image href={patch.src} x={PX(FLOOR_PATCH[0])} y={PY(FLOOR_PATCH[1])} width={FLOOR_PATCH[2] * HS} height={FLOOR_PATCH[3] * HS} />
+      <rect x={-60} y={-120} width={510} height={840} fill="#3A3442" opacity={0.2} />
     </g>
   );
 }
@@ -102,7 +105,8 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
     : step === 'p2' ? (ribbon ? '' : '안은 비었다. 다 실려 갔다. 쳇바퀴 하나만 남았다.')
     : step === 'p3' ? '' : gain ? '' : '가진 돈 0. 쳇바퀴를 눌러 굴린다.';
   const hint = step === 'p1' ? '화면을 누르면 걷는다' : step === 'p2' && !ribbon ? '쳇바퀴를 눌러 본다' : step === 'p3' && !ledger ? '탭하면 계속' : '';
-  const [hx, hy] = WALK[Math.min(walk, 2)];
+  const [hx, hy, hk] = WALK[Math.min(walk, 2)];
+  const emptyImg = sprite('heroEmpty')!, rideImg = sprite('heroWheel')!, wheelImg = sprite('wheel')!, colImg = sprite('cCollector')!, outside = sprite('prologue')!;
 
   return (
     <div className={'pr-pro s-' + step} role="dialog" aria-label="프롤로그" data-step={step} data-talk={talk} data-typing={sp.typing ? '1' : ''} onClick={tapStage}>
@@ -110,47 +114,40 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
       <svg key={step} className="pp-stage" viewBox="0 -100 390 800" preserveAspectRatio="xMidYMid slice">
         {step === 'p1' && (
           <g>
-            <rect x={-60} y={-120} width={510} height={840} fill="#E9A873" /><circle cx={92} cy={150} r={56} fill="#F8D978" opacity={0.9} />
-            {[0, 1, 2, 3, 4, 5].map((i) => <circle key={i} cx={i * 80 - 10} cy={262 + (i % 2) * 14} r={64} fill="#7E9460" stroke={O} strokeWidth={2.5} />)}
-            <rect x={-60} y={296} width={510} height={440} fill="#B5AE6C" />
-            <path d="M-10 720 L40 560 L210 440 L262 430 L290 462 L150 590 L120 720z" fill={C.dirt} stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
-            {/* 엄마의 오두막: 통나무 벽, 맞배지붕, 어두운 창, 문에 딱지 */}
-            <path d="M196 440 V300 L296 240 L396 300 V440z" fill="#B98552" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-            <path d="M180 312 L296 224 L412 312 L396 326 L296 250 L196 326z" fill="#7C5A3C" stroke={O} strokeWidth={3} strokeLinejoin="round" />
-            {[340, 372, 404].map((y) => <path key={y} d={`M196 ${y} H396`} stroke={O} strokeWidth={1.6} opacity={0.3} />)}
-            <rect x={322} y={336} width={46} height={40} rx={3} fill="#4d4a45" stroke={O} strokeWidth={2.6} />
-            <rect x={232} y={350} width={54} height={90} rx={4} fill="#6B4A35" stroke={O} strokeWidth={3} />
-            {walk >= 1 && <g className="pp-stamp" style={{ transformOrigin: '259px 388px' }}><rect x={238} y={374} width={42} height={28} rx={3} fill="#C8553D" stroke={O} strokeWidth={2.4} transform="rotate(-6 259 388)" /><text x={259} y={393} textAnchor="middle" fontSize={14} fontWeight={800} fill="#fff" transform="rotate(-6 259 388)">딱지</text></g>}
-            <g className="pp-walk" style={{ transform: `translate(${hx}px, ${hy}px)` }}>
-              <ellipse cx={0} cy={2} rx={22} ry={6} fill="#000" opacity={0.14} />
-              <circle cx={-16} cy={-38} r={13} fill="#D8B078" stroke={O} strokeWidth={2.4} />
-              <image href={heroSide} x={-30} y={-62} width={64} height={62} />
+            {/* 해 질 녘, 엄마가 살던 나무 밑동 집. 문 옆에 붉은 딱지 */}
+            <image data-art="prologue" href={outside.src} x={-30} y={-100} width={450} height={800} preserveAspectRatio="xMidYMid slice" />
+            {walk >= 1 && <circle className="pp-stamp" cx={318} cy={318} r={30} fill="none" stroke="#fff" strokeWidth={3} strokeDasharray="5 7" strokeLinecap="round" style={{ transformOrigin: '318px 318px' }} />}
+            <g className="pp-walk" style={{ transform: `translate(${hx}px, ${hy}px) scale(${hk})` }}>
+              <ellipse cx={0} cy={2} rx={24} ry={6} fill="#000" opacity={0.18} />
+              {/* 폰은 아직 없다(걷는 그림에는 폰이 들려 있어서 빈손 그림을 쓴다) */}
+              <image data-art="heroEmpty" href={emptyImg.src} x={-36 * (emptyImg.w / emptyImg.h)} y={-72} width={72 * (emptyImg.w / emptyImg.h)} height={72} />
             </g>
           </g>
         )}
         {step !== 'p1' && (
           <g>
-            <EmptyRoom />
-            <g data-hit="wheel" onClick={(e) => { e.stopPropagation(); tapWheel(); }} className={gain ? 'pa-jiggle' : ''} style={{ transformOrigin: '214px 560px' }}>
-              <Wheel cx={214} cy={560} w={104} col={C.dtc} spin={gain} />
-              {!ribbon && <g className="pp-glowwrap"><circle className="pp-glow" cx={254} cy={476} r={22} fill="#F8D978" /><Ribbon x={254} y={476} k={0.8} /></g>}
-              <rect x={150} y={440} width={130} height={130} fill="transparent" />
-              {step === 'p2' && !ribbon && !card && <Finger x={214} y={500} />}
-              {step === 'p4' && !gain && <Finger x={214} y={500} />}
-              {gain && <text x={214} y={430} textAnchor="middle" className="pa-float">+{TAP}</text>}
+            <HomeRoom />
+            <g data-hit="wheel" onClick={(e) => { e.stopPropagation(); tapWheel(); }} className={gain ? 'pa-jiggle' : ''} style={{ transformOrigin: `${WX}px ${WY}px` }}>
+              {gain
+                ? <image data-art="heroWheel" className="pa-jog" href={rideImg.src} x={WX - 54 * (rideImg.w / rideImg.h)} y={WY + 3 - 108} width={108 * (rideImg.w / rideImg.h)} height={108} />
+                : <image href={wheelImg.src} x={WX + WHEEL_BOX.dx * HS} y={WY + WHEEL_BOX.dy * HS} width={WHEEL_BOX.w * HS} height={WHEEL_BOX.h * HS} />}
+              {!ribbon && <g className="pp-glowwrap"><circle className="pp-glow" cx={WX + 34} cy={WY - 88} r={22} fill="#F8D978" /><Ribbon x={WX + 34} y={WY - 88} k={0.7} /></g>}
+              <rect x={WX - 66} y={WY - 112} width={132} height={130} fill="transparent" />
+              {step === 'p2' && !ribbon && !card && <Finger x={WX} y={WY - 46} />}
+              {step === 'p4' && !gain && <Finger x={WX} y={WY - 46} />}
+              {gain && <text x={WX} y={WY - 122} textAnchor="middle" className="pa-float">+{TAP}</text>}
             </g>
-            {step === 'p4' && gain
-              ? <image href={heroSide} x={186} y={470} width={58} height={56} />
-              : <image href={heroFront} x={96} y={540} width={66} height={64} />}
+            {/* 폰은 아직 없다: 빈손으로 서 있다. 굴리는 동안에는 쳇바퀴 안에 있다 */}
+            {!(step === 'p4' && gain) && <image data-art="heroEmpty" href={emptyImg.src} x={HEROX - (HEROH * (emptyImg.w / emptyImg.h)) / 2} y={HEROY - HEROH} width={HEROH * (emptyImg.w / emptyImg.h)} height={HEROH} />}
             {step === 'p3' && (
               <g className="pa-walkin">
-                <Badger cx={300} cy={600} h={96} />
+                <image data-art="cCollector" href={colImg.src} x={COLX - 37 * (colImg.w / colImg.h)} y={COLY - 74} width={74 * (colImg.w / colImg.h)} height={74} />
                 <g className={'pa-bubble' + (talk > 0 ? ' now' : '')} key={talk}>
-                  <rect x={22} y={250} width={346} height={64} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
-                  <path d="M286 312 l14 22 l8 -22z" fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={284} y={306} width={26} height={6} fill="#fff" />
-                  <foreignObject x={32} y={254} width={326} height={58}><div className="pp-say"><span><Typed text={TALK[talk]} shown={sp.shown} /></span></div></foreignObject>
+                  <rect x={22} y={COLY - 172} width={346} height={64} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
+                  <path d={`M${COLX - 14} ${COLY - 110} l14 22 l8 -22z`} fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={COLX - 16} y={COLY - 116} width={26} height={6} fill="#fff" />
+                  <foreignObject x={32} y={COLY - 168} width={326} height={58}><div className="pp-say"><span><Typed text={TALK[talk]} shown={sp.shown} /></span></div></foreignObject>
                 </g>
-                <rect x={236} y={206} width={130} height={24} rx={12} fill={O} /><text x={301} y={223} textAnchor="middle" fontSize={14} fontWeight={700} fill="#fff">오소리 추심원</text>
+                <rect x={COLX - 65} y={COLY + 6} width={130} height={24} rx={12} fill={O} /><text x={COLX} y={COLY + 23} textAnchor="middle" fontSize={14} fontWeight={700} fill="#fff">오소리 추심원</text>
               </g>
             )}
           </g>

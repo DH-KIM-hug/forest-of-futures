@@ -6,8 +6,8 @@ import { useProto, type Tab } from './protoStore';
 import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo } from './model';
 import { tensionOf } from './tension';
 import { awayMoney } from './away';
-import { historyOf } from '../priceHistory';
-import { startWatch } from './watch';
+import { liveHistoryOf } from '../priceHistory';
+import { startWatch, SAVINGS_STEPS, savingsStep } from './watch';
 import { startHistory } from '../priceHistory';
 import { Lot, useOpenPositions } from './Lot';
 import { MapTab, PhoneTab } from './Tabs';
@@ -61,9 +61,13 @@ function Hud() {
   const goal0 = gi < GOAL_COUNT && lenderDebtTotal(run) > 0 ? goalAt(g, gi, flags) : null;
   // 튜토리얼 목표가 끝나면 오소리 장부가 목표다(U-38): 5만을 갚을 때마다 금박 도장 하나, 이자가 얼마 주는지도 같이
   const lg = goal0 ? null : ledgerGoal(g);
+  const seenP = useProto((st) => st.seen);
+  // 빚 없는 생을 이어 가는 동안([계속한다], U-40): 모은 돈의 다음 고비가 목표다. 다 넘으면 언제든 닫을 수 있다고만 적는다
+  const sv = seenP.continued && lenderDebtTotal(run) === 0 ? savingsStep(seenP) : -1;
+  const goalSave = sv >= 0 && sv < SAVINGS_STEPS.length ? { label: '빚 없는 아침 · 모은 돈', cur: Math.min(Math.floor(run.cash), SAVINGS_STEPS[sv]), need: SAVINGS_STEPS[sv] } : null;
   const otherDebt = lenderDebtTotal(run) - run.debts.shark1.principal;
-  const goal: { label: string; cur: number; need: number; sub?: string } | null = goal0 ?? (lg ? { label: lg.label, cur: lg.cur, need: lg.need, sub: `이자 −${comma(lg.cut)}` } : null);
-  const goalEnd = otherDebt > 0 ? `오소리 장부는 깨끗하다 · 다른 빚 ${comma(otherDebt)} (지도)` : '빚 0 · 장부가 깨끗하다';
+  const goal: { label: string; cur: number; need: number; sub?: string } | null = goal0 ?? (lg ? { label: lg.label, cur: lg.cur, need: lg.need, sub: `이자 −${comma(lg.cut)}` } : goalSave);
+  const goalEnd = sv >= SAVINGS_STEPS.length ? '도토리 100만 · 사무소에서 언제든 이 생을 닫을 수 있다' : otherDebt > 0 ? `오소리 장부는 깨끗하다 · 다른 빚 ${comma(otherDebt)} (지도)` : '빚 0 · 장부가 깨끗하다';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
   const cash = useCountUp(run.cash);
   // 숫자가 오르면 통, 내리면 움찔
@@ -128,7 +132,7 @@ function TabBar() {
     if (id === 'lot' && tab !== 'lot') return { t: mmss(Math.max(0, g.run.settleIn)), hot: g.run.settleIn <= 10 };
     if (id === 'phone' && near) return { t: `▼청산 ${near.liqDistPct.toFixed(1)}%`, hot: true };
     // 청산이 지난 1분 폭의 세 배 안으로 들어오면 탭 꼬리표가 붉어진다(U-39 ①)
-    if (id === 'phone' && pos.length && ['tight', 'edge'].includes(tensionOf(pos[0].liqDistPct, historyOf(pos[0].market)).reach)) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}% !`, hot: true };
+    if (id === 'phone' && pos.length && ['tight', 'edge'].includes(tensionOf(pos[0].liqDistPct, liveHistoryOf(pos[0].market)).reach)) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}% !`, hot: true };
     if (id === 'phone' && pos.length) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}%`, hot: false };
     if (id === 'map' && waiting) return { t: '사무소', hot: true };
     if (id === 'map' && overdue) return { t: '연체', hot: true };
@@ -243,7 +247,7 @@ export function ProtoApp() {
   const openPos = useOpenPositions();
   const dark = openPos.some((p) => isNearLiq(p));
   // 심장 소리: 청산 임박, 또는 청산이 지난 1분 폭의 세 배 안으로 들어왔을 때(U-39 ①)
-  const tense = openPos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, historyOf(p.market)).reach));
+  const tense = openPos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach));
   useAudioDirector(dark || tense);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); }, []);
