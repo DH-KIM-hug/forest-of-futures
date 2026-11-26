@@ -1,5 +1,5 @@
 {
-  "_doc": "시세 출처와 가상 종목의 대응. 이 파일은 서버 밖으로 나가지 않는다(GDD_v2 4.2, 6장). 키 IDX_* 는 지수 전용 구성원(거래 종목 아님). 삼솔전자(SMS)는 삼성전자 패러디라 Hyperliquid HIP-3 xyz:SMSN(2026-11-27 사용자).",
+  "_doc": "시세 출처와 가상 종목의 대응. 이 파일은 서버 밖으로 나가지 않는다(GDD_v2 4.2, 6장). 키 IDX_* 는 지수 전용 구성원(거래 종목 아님). 삼솔전자(SMS) = 삼성전자 xyz:SMSN, 잣스닥(JQQ) = 나스닥 100 xyz:XYZ100 한 구성원 지수(2026-11-27 사용자).",
   "primary": {
     "kind": "hyperliquid",
     "url": "wss://api.hyperliquid.xyz/ws",
@@ -8,8 +8,7 @@
       "BTH": "ETH",
       "SMS": "xyz:SMSN",
       "MDT": "DOGE",
-      "IDX_SOL": "SOL",
-      "IDX_XRP": "XRP"
+      "IDX_NDX": "xyz:XYZ100"
     }
   },
   "secondary": {
@@ -22,23 +21,15 @@
   "index": {
     "id": "JQQ",
     "primaryMembers": [
-      "DTC",
-      "BTH",
-      "IDX_SOL",
-      "MDT",
-      "IDX_XRP"
+      "IDX_NDX"
     ],
-    "secondaryMembers": [
-      "DTC",
-      "BTH"
-    ]
+    "secondaryMembers": []
   },
   "volumeKeys": [
     "DTC",
     "BTH",
     "SMS",
     "MDT",
-    "IDX_SOL",
-    "IDX_XRP"
+    "IDX_NDX"
   ]
 }

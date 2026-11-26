@@ -33,7 +33,7 @@ const start = (px: Record<string, number>) => {
   const adv = async (ms: number) => { now += ms; await (feed as any).run(now); };
   return { feed, s, ticks, bbo, trade, all, adv, posts, get now() { return now; } };
 };
-const PX = { DTC: 60000, BTH: 3000, SMS: 127, MDT: 0.2, IDX_SOL: 150, IDX_XRP: 2 };
+const PX = { DTC: 60000, BTH: 3000, SMS: 127, MDT: 0.2, IDX_NDX: 26000 };
 
 describe('HlDirectFeed', () => {
   it('구독: 코인마다 bbo·trades 를 요청한다(서버 어댑터와 같음)', () => {
@@ -57,7 +57,11 @@ describe('HlDirectFeed', () => {
     expect(nx.n).toBe(first.n + 1);
     expect(nx.p.DTC[0] / first.p.DTC[0]).toBeCloseTo(1.01, 6);
     expect(nx.p.BTH[0]).toBeCloseTo(first.p.BTH[0], 9); // 안 움직인 종목은 그대로
-    expect(nx.p.JQQ[0]).toBeGreaterThan(first.p.JQQ[0]); // 지수는 구성원 평균 수익률
+    expect(nx.p.JQQ[0]).toBeCloseTo(first.p.JQQ[0], 9); // 잣스닥 = 나스닥 100 한 구성원: 도토코인이 움직여도 그대로
+    t.bbo('IDX_NDX', PX.IDX_NDX * 1.02);
+    await t.adv(1000);
+    const nd = t.ticks[t.ticks.length - 1];
+    expect(nd.p.JQQ[0] / first.p.JQQ[0]).toBeCloseTo(1.02, 6); // 나스닥이 2% 오르면 잣스닥도 2%
   });
 
   it('한 초 안의 마지막 mid 가 그 초의 가격, 체결은 매수 비율로 나온다', async () => {
