@@ -33,7 +33,7 @@ const start = (px: Record<string, number>) => {
   const adv = async (ms: number) => { now += ms; await (feed as any).run(now); };
   return { feed, s, ticks, bbo, trade, all, adv, posts, get now() { return now; } };
 };
-const PX = { DTC: 60000, BTH: 3000, SMS: 150, MDT: 0.2, IDX_XRP: 2 };
+const PX = { DTC: 60000, BTH: 3000, SMS: 127, MDT: 0.2, IDX_SOL: 150, IDX_XRP: 2 };
 
 describe('HlDirectFeed', () => {
   it('구독: 코인마다 bbo·trades 를 요청한다(서버 어댑터와 같음)', () => {
