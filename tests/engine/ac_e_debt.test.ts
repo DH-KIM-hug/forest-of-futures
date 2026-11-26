@@ -182,49 +182,49 @@ describe('E. 빚·도장·제안', () => {
     expect(g.run.debts.tax.principal).toBe(200000);
   });
 
-  it('U-31 오소리는 같은 생의 두 번째 대출부터 8%: 그 10만은 따로 적혀(tranche) 제 금리로 이자가 붙는다', () => {
+  it('U-31 오소리는 같은 생의 두 번째 대출부터 6%: 그 10만은 따로 적혀(tranche) 제 금리로 이자가 붙는다', () => {
     const g = bare(); // 오소리 15만(4%)
-    expect(lenderById.shark1).toMatchObject({ rate: 0.04, repeatRate: 0.08 });
+    expect(lenderById.shark1).toMatchObject({ rate: 0.04, repeatRate: 0.06 });
     expect(nextBorrowRate(g, 'shark1')).toBe(0.04);
     expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true);
     expect(g.run.stats['borrow.shark1']).toBe(1);
     expect(g.run.debts.shark1.principal).toBe(250000);
     expect(g.run.debts.shark1.tranches ?? []).toEqual([]); // 첫 대출은 보통 금리라 따로 적지 않는다
     expect(interestDue(g, 'shark1')).toBe(10000); // 250,000 × 4%
-    expect(nextBorrowRate(g, 'shark1')).toBe(0.08);
+    expect(nextBorrowRate(g, 'shark1')).toBe(0.06);
     expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true);
     expect(g.run.debts.shark1.principal).toBe(350000);
-    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 100000, rate: 0.08 }]);
-    expect(interestDue(g, 'shark1')).toBe(18000); // 250,000 × 4% + 100,000 × 8%
-    expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true); // 세 번째도 8%
-    expect(interestDue(g, 'shark1')).toBe(26000);
+    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 100000, rate: 0.06 }]);
+    expect(interestDue(g, 'shark1')).toBe(16000); // 250,000 × 4% + 100,000 × 6%
+    expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true); // 세 번째도 6%
+    expect(interestDue(g, 'shark1')).toBe(22000);
     expect(g.run.debts.shark1.tranches!.reduce((a, t) => a + t.amount, 0)).toBe(200000);
   });
 
-  it('U-31 도장은 비싼 몫부터: 두 번째 대출 뒤 10,000 을 갚으면 이자가 800 줄고, 8% 몫이 다 없어진 뒤에야 4% 몫이 준다', () => {
+  it('U-31 도장은 비싼 몫부터: 두 번째 대출 뒤 10,000 을 갚으면 이자가 600 줄고, 6% 몫이 다 없어진 뒤에야 4% 몫이 준다', () => {
     const g = bare();
     g.run.cash = 0;
     A(g, { type: 'borrow', lender: 'shark1' });
     A(g, { type: 'borrow', lender: 'shark1' });
-    expect(interestDue(g, 'shark1')).toBe(18000);
+    expect(interestDue(g, 'shark1')).toBe(16000);
     expect(A(g, { type: 'stamp', lender: 'shark1' })).toMatchObject({ ok: true, paid: 10000 });
-    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 90000, rate: 0.08 }]);
-    expect(interestDue(g, 'shark1')).toBe(17200); // −800
+    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 90000, rate: 0.06 }]);
+    expect(interestDue(g, 'shark1')).toBe(15400); // −600
     expect(A(g, { type: 'stamp', lender: 'shark1', mult: 10 })).toMatchObject({ ok: true, paid: 100000 });
-    expect(g.run.debts.shark1.tranches ?? []).toEqual([]); // 8% 몫 90,000 이 먼저, 나머지 10,000 은 4% 몫에서
+    expect(g.run.debts.shark1.tranches ?? []).toEqual([]); // 6% 몫 90,000 이 먼저, 나머지 10,000 은 4% 몫에서
     expect(g.run.debts.shark1.principal).toBe(240000);
     expect(interestDue(g, 'shark1')).toBe(9600); // 240,000 × 4%
-    // 다 갚아도 이번 생의 다음 대출은 여전히 8%
-    expect(nextBorrowRate(g, 'shark1')).toBe(0.08);
+    // 다 갚아도 이번 생의 다음 대출은 여전히 6%
+    expect(nextBorrowRate(g, 'shark1')).toBe(0.06);
   });
 
-  it('U-31 물려받은 몫(옛 이자)·새로 빌린 몫(4%)·두 번째 몫(8%)이 한 장부에: 갚는 순서는 8% -> 4% -> 물려받은 몫', () => {
+  it('U-31 물려받은 몫(옛 이자)·새로 빌린 몫(4%)·두 번째 몫(6%)이 한 장부에: 갚는 순서는 6% -> 4% -> 물려받은 몫', () => {
     const g = fresh(); // 오소리 30만, 물려받은 몫 1.5%
     A(g, { type: 'borrow', lender: 'shark1' });
     expect(interestDue(g, 'shark1')).toBe(8500); // 4,500 + 4,000
     A(g, { type: 'borrow', lender: 'shark1' });
     expect(g.run.debts.shark1).toMatchObject({ principal: 500000, inherited: 300000 });
-    expect(interestDue(g, 'shark1')).toBe(16500); // 4,500 + 4,000 + 8,000
+    expect(interestDue(g, 'shark1')).toBe(14500); // 4,500 + 4,000 + 6,000
     expect(A(g, { type: 'stamp', lender: 'shark1', mult: 10 })).toMatchObject({ paid: 100000 });
     expect(interestDue(g, 'shark1')).toBe(8500);
     expect(A(g, { type: 'stamp', lender: 'shark1', mult: 10 })).toMatchObject({ paid: 100000 });

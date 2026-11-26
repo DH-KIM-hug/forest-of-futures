@@ -190,10 +190,10 @@ describe('튜토리얼 거래 (U-31): 짜 둔 시세는 고른 쪽의 반대로�
       expect(cash0 - g.run.cash).toBeLessThan(TUT.margin + 500);
       console.log(`튜토리얼 ${dir === 1 ? '롱' : '숏'}: ${k}걸음(${(k * TUT.stepMs) / 1000}초)에 청산, 잃은 돈 ${Math.round(cash0 - g.run.cash)}`);
       // 두 번째 대출은 더 높은 금리
-      expect(nextBorrowRate(g, 'shark1')).toBe(0.08);
+      expect(nextBorrowRate(g, 'shark1')).toBe(0.06);
       A(g, { type: 'borrow', lender: 'shark1' });
       expect(g.run.debts.shark1.principal).toBe(500000);
-      expect(interestDue(g, 'shark1')).toBe(16500);
+      expect(interestDue(g, 'shark1')).toBe(14500);
     });
   }
 });
