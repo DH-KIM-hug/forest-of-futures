@@ -7,6 +7,7 @@ import { WHO_NAME } from './text';
 import { comma } from '../../engine/util';
 import { Badger, O } from './art';
 import { play } from './audio';
+import { Typed, useSpeech } from './speech';
 import { say } from './watch';
 import { hlPanel, hlSel, hlTab, markTip } from './guide';
 
@@ -108,6 +109,8 @@ function CutInScene({ sc }: { sc: Scene }) {
   const n = sc.lines.length;
   const line = sc.lines[Math.min(i, n - 1)];
   const last = i >= n - 1;
+  // 말하는 줄은 한 글자씩 나오며 웅얼거린다(U-36). 지문·문자는 한 번에 뜬다. 첫 줄은 카드가 올라온 뒤에 시작한다.
+  const sp = useSpeech(line.text, line.who, { id: i, delay: i === 0 ? 0.3 : 0.05 });
 
   useEffect(() => {
     play('cutin_whoosh');
@@ -132,7 +135,8 @@ function CutInScene({ sc }: { sc: Scene }) {
   // 가만두면 넘어가는 장면(막지 않는 한두 줄): 줄마다 auto 밀리초
   useEffect(() => {
     if (!sc.auto) return;
-    const t = window.setTimeout(() => { if (last) end(); else setI((k) => k + 1); }, sc.auto);
+    // 다 말하고 1.2초는 읽을 틈을 준다(긴 줄이 말하는 도중에 넘어가지 않게)
+    const t = window.setTimeout(() => { if (last) end(); else setI((k) => k + 1); }, Math.max(sc.auto, (sp.dur + 1.2) * 1000));
     return () => window.clearTimeout(t);
   }, [i]);
   // 설명 줄은 화면에 뜬 순간 '봤다'고 적는다(평생 한 번)
@@ -167,7 +171,8 @@ function CutInScene({ sc }: { sc: Scene }) {
   const smile = line.mood ? line.mood === 'smile' : sc.settle ? sc.settle.win : true;
   const pick = last ? sc.choices : undefined;
   const guarded = () => performance.now() - shownAt.current < 600;
-  const next = () => { if (guarded()) return; if (last && pick) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
+  // 글자가 나오는 중에 누르면 그 줄이 바로 다 보이고 소리가 멎는다. 한 번 더 누르면 전처럼 넘어간다.
+  const next = () => { if (guarded()) return; if (sp.typing) { sp.finish(); return; } if (last && pick) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
   const choose = (run: () => void) => { if (guarded()) return; play('ui_tap'); end(); run(); };
   /** 설명 건너뛰기: 이 장면의 설명 줄을 전부 본 것으로 적고 닫는다. 고를 것이 있는 장면은 고르는 줄로 간다. */
   const skip = () => {
@@ -181,14 +186,14 @@ function CutInScene({ sc }: { sc: Scene }) {
   const top = !!spot && spot.y + spot.h > spot.H - CARD_ZONE;
   return (
     <div ref={root} className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win') + (line.hl ? ' hl' : '') + (spot ? ' spot' : '') + (top ? ' top' : '')} onClick={next} role="dialog" aria-label="컷인 대화"
-      data-scene={sc.id} data-line={i} data-tip={line.tip ?? ''} data-spot={spot ? line.hl : ''}>
+      data-scene={sc.id} data-line={i} data-typing={sp.typing ? '1' : ''} data-tip={line.tip ?? ''} data-spot={spot ? line.hl : ''}>
       {spot && <div className="pr-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} aria-hidden="true"><i className={'arr ' + (top ? 'dn' : 'up')} /></div>}
       <div key={line.who} className="bustbox"><Bust who={line.who} smile={smile} /></div>
       {st && !st.win && <div className="stamp">연체</div>}
       <div className={'say' + (line.who === 'note' ? ' note' : '') + (line.who === 'sms' ? ' sms' : '')}>
         {WHO_NAME[line.who] && <div className="tag">{WHO_NAME[line.who]}</div>}
         {sc.guide && !last && <button className="skip" data-skip onClick={(e) => { e.stopPropagation(); skip(); }}>설명 건너뛰기</button>}
-        <p key={i}>{line.text}</p>
+        <p key={i}><Typed text={line.text} shown={sp.shown} /></p>
         {st && i === 0 && (
           <div className="meta"><span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span><span>채굴 − 전기 − 이자 − 생활비</span></div>
         )}

@@ -6,6 +6,7 @@ import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
 import { comma } from '../../engine/util';
 import { C, O, Hamster, Badger, Spiky, Round, Device, Zap } from './art';
+import { SvgSay } from './speech';
 import { useFx, flyAcorns, flyIcons, coinSvg, tintAt, useClock } from './fx';
 import { sellFeeRate } from '../../engine/mining';
 import { houseDefs } from '../../engine/data';
@@ -214,10 +215,10 @@ export function World({ near, cover, open, onRoll }: { near: boolean; /** 아래
           {items.map((it) => <g key={it.key}>{it.node}</g>)}
           {!waiting && collector && collector.interest > 0 && (
             collector.overdue
-              ? <Spiky key={`sb${collector.at}`} {...bubble(168)} y={cy0 - 126} w={168} h={30} text="이자가 모자라요오. 연체." />
-              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={`이자 ${comma(collector.interest)} 수납 완료요오~`} />
+              ? <Spiky key={`sb${collector.at}`} {...bubble(168)} y={cy0 - 126} w={168} h={30} text={<SvgSay who="collector" text="이자가 모자라요오. 연체." delay={0.9} mute={talking} />} />
+              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={<SvgSay who="collector" text={`이자 ${comma(collector.interest)} 수납 완료요오~`} delay={0.9} mute={talking} />} />
           )}
-          {waiting && <Round {...bubble(150)} y={cy0 - 114} w={150} h={28} text="사무소로 오세요오." />}
+          {waiting && <Round {...bubble(150)} y={cy0 - 114} w={150} h={28} text={<SvgSay who="collector" text="사무소로 오세요오." delay={0.9} mute={talking} />} />}
           {floats.map((f) => <text key={f.id} x={f.x} y={f.y} textAnchor="middle" className={'pa-float ' + f.cls}>{f.t}</text>)}
         </svg>
         {hint && <div className="pr-tok" style={{ left: pct(WHEEL_SLOTS[0][0] + WHEEL_FACE.dx, HOME_IMG.w), top: pct(WHEEL_SLOTS[0][1] + WHEEL_BOX.dy - 14, HOME_IMG.h) }} aria-hidden="true">쳇바퀴를 톡톡</div>}

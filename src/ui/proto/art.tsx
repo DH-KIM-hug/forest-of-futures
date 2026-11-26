@@ -138,7 +138,7 @@ export const Badger = ({ cx, cy, h }: { cx: number; cy: number; h: number }) => 
   </g>
 );
 /** 가시 말풍선(§7.8): 톱니 테두리, 붉은 글씨. 꼬리는 왼쪽 아래 */
-export const Spiky = ({ x, y, w, h, text, tail = 18 }: { x: number; y: number; w: number; h: number; text: string; tail?: number }) => {
+export const Spiky = ({ x, y, w, h, text, tail = 18 }: { x: number; y: number; w: number; h: number; text: ReactNode; tail?: number }) => {
   const p: Pt[] = [];
   const n = 14;
   for (let i = 0; i <= n; i++) p.push([x + (w * i) / n, y + (i % 2 ? -4 : 2)]);
@@ -155,7 +155,7 @@ export const Spiky = ({ x, y, w, h, text, tail = 18 }: { x: number; y: number; w
   );
 };
 /** 둥근 말풍선(평소) */
-export const Round = ({ x, y, w, h, text, tail = 18 }: { x: number; y: number; w: number; h: number; text: string; tail?: number }) => (
+export const Round = ({ x, y, w, h, text, tail = 18 }: { x: number; y: number; w: number; h: number; text: ReactNode; tail?: number }) => (
   <g className="pa-bubble">
     <rect x={x} y={y} width={w} height={h} rx={h / 2} fill={C.cream} stroke={O} strokeWidth={2.2} />
     <Poly p={[[x + tail, y + h - 1], [x + tail + 14, y + h - 1], [x + tail - 4, y + h + 12]]} fill={C.cream} sw={2.2} />

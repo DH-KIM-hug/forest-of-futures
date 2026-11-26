@@ -3,12 +3,17 @@
 // 파일은 scripts/audio/gen_eleven.mjs 가 만든 audio/*.mp3 (Vite 가 주소를 붙인다 → GitHub Pages 하위 경로에서도 동작).
 // 첫 탭 전에는 소리를 내지 않는다(iOS 잠금 해제 + 사용자 약속). 시뮬레이션은 건드리지 않는다.
 import manifestJson from './audio/manifest.json';
+import spriteJson from './audio/babble.json';
+import { planSpeech, voiceOf, type Speech } from './babble';
 
 export type SoundId = string;
 interface Meta { file: string; kind: 'sfx' | 'music'; loop: boolean; dur: number; prompt: string }
 export const manifest = manifestJson as unknown as Record<SoundId, Meta>;
 const urls = import.meta.glob('./audio/*.mp3', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
-const urlOf = (id: SoundId): string | undefined => { const m = manifest[id]; return m ? urls[`./audio/${m.file}`] : undefined; };
+/** 웅얼거림 음절 묶음(U-36): 목록(manifest)에 없는 한 파일 + 구간표 {이름: [시작, 길이]} */
+const BABBLE = 'babble';
+const SPRITE = spriteJson as unknown as Record<string, [number, number]>;
+const urlOf = (id: SoundId): string | undefined => { if (id === BABBLE) return urls['./audio/babble.mp3']; const m = manifest[id]; return m ? urls[`./audio/${m.file}`] : undefined; };
 
 /** 소리마다 기본 크기(등급 소/중/대, game-feel). 파일은 모두 같은 크기로 다듬어져 있어 여기서 맞춘다. */
 const VOL: Record<string, number> = {
@@ -38,6 +43,7 @@ const lastAt = new Map<string, number>();
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((f) => f());
 
+const bytes = (url: string) => new Promise<ArrayBuffer>((res, rej) => { const x = new XMLHttpRequest(); x.open('GET', url); x.responseType = 'arraybuffer'; x.onload = () => (x.status < 400 || x.status === 0 ? res(x.response as ArrayBuffer) : rej(new Error(String(x.status)))); x.onerror = () => rej(new Error('net')); x.send(); });
 function load(id: SoundId): Promise<AudioBuffer | null> {
   const have = buffers.get(id);
   if (have) return Promise.resolve(have);
@@ -47,7 +53,7 @@ function load(id: SoundId): Promise<AudioBuffer | null> {
   if (!url || !ctx) return Promise.resolve(null);
   const c = ctx;
   // 같은 출처의 정적 파일만 읽는다(앱의 네트워크 연결은 서버 하나뿐이라는 점검에 걸리지 않게 XHR).
-  const p = new Promise<ArrayBuffer>((res, rej) => { const x = new XMLHttpRequest(); x.open('GET', url); x.responseType = 'arraybuffer'; x.onload = () => (x.status < 400 || x.status === 0 ? res(x.response as ArrayBuffer) : rej(new Error(String(x.status)))); x.onerror = () => rej(new Error('net')); x.send(); }).then((ab) => new Promise<AudioBuffer>((res, rej) => c.decodeAudioData(ab, res, rej)))
+  const p = bytes(url).then((ab) => new Promise<AudioBuffer>((res, rej) => c.decodeAudioData(ab, res, rej)))
     .then((b) => { buffers.set(id, b); return b; }).catch(() => null);
   loading.set(id, p);
   return p;
@@ -66,7 +72,7 @@ export function unlock(): void {
   musicBus.gain.value = prefs.music ? 1 : 0;
   void ctx.resume();
   unlocked = true;
-  ['tap_gather_a', 'tap_gather_b', 'tap_gather_c', 'acorn_arrive', 'buy', 'ui_tap', 'insufficient'].forEach((i) => void load(i));
+  ['tap_gather_a', 'tap_gather_b', 'tap_gather_c', 'acorn_arrive', 'buy', 'ui_tap', 'insufficient', BABBLE].forEach((i) => void load(i));
   applyMusic();
   applyHeartbeat();
   notify();
@@ -176,6 +182,75 @@ function applyHeartbeat(): void {
 }
 export function setHeartbeat(on: boolean): void { wantBeat = on; applyHeartbeat(); }
 
+// ---- 웅얼거림 대사(U-36) ----
+/** 효과음보다 조금 작게(효과음 버스를 지나므로 효과음 끄기를 그대로 따른다) */
+const BABBLE_VOL = 0.5;
+/** 음절마다 소리 조각 하나: 빠르기 = 높이, 6ms 로 올리고 12ms 로 내린다. from 초보다 앞선 음절은 건너뛴다(늦게 읽힌 경우). */
+function scheduleBabble(c: BaseAudioContext, out: AudioNode, buf: AudioBuffer, sp: Speech, t0: number, from = 0): AudioBufferSourceNode[] {
+  const srcs: AudioBufferSourceNode[] = [];
+  for (const b of sp.blips) {
+    const seg = SPRITE[b.name];
+    if (!seg || b.at < from) continue;
+    const s = c.createBufferSource();
+    s.buffer = buf;
+    s.playbackRate.value = b.rate;
+    const g = c.createGain();
+    const t = t0 + b.at;
+    g.gain.value = 0;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(b.gain, t + 0.006);
+    g.gain.setValueAtTime(b.gain, t + b.dur - 0.012);
+    g.gain.linearRampToValueAtTime(0, t + b.dur);
+    s.connect(g); g.connect(out);
+    s.start(t, seg[0], Math.min(b.dur * b.rate, seg[1]));
+    s.stop(t + b.dur + 0.005);
+    srcs.push(s);
+  }
+  return srcs;
+}
+let speaking: { out: GainNode; srcs: AudioBufferSourceNode[]; until: number } | null = null;
+const hush = () => { /* 낼 소리 없음 */ };
+/** 대사 한 줄을 웅얼거린다(한 번에 한 줄: 새 줄이 오면 앞 줄은 끊긴다). 돌려주는 함수를 부르면 그 줄이 멈춘다. 첫 탭 전·효과음 끔이면 소리 없음. */
+export function speak(sp: Speech, delay = 0): () => void {
+  if (!ctx || !unlocked || !prefs.sfx || !sp.blips.length) return hush;
+  stopSpeaking();
+  const c = ctx;
+  const out = c.createGain();
+  out.gain.value = BABBLE_VOL;
+  out.connect(sfxBus);
+  const t0 = c.currentTime + delay + 0.02;
+  const me = { out, srcs: [] as AudioBufferSourceNode[], until: t0 + sp.total };
+  speaking = me;
+  void load(BABBLE).then((b) => { if (b && speaking === me) me.srcs = scheduleBabble(c, out, b, sp, t0, c.currentTime - t0); });
+  return () => { if (speaking === me) stopSpeaking(); };
+}
+export function stopSpeaking(): void {
+  const me = speaking;
+  if (!me || !ctx) return;
+  speaking = null;
+  const t = ctx.currentTime;
+  me.out.gain.setValueAtTime(me.out.gain.value, t);
+  me.out.gain.linearRampToValueAtTime(0, t + 0.03);
+  me.srcs.forEach((s) => { try { s.stop(t + 0.04); } catch { /* 이미 멈춤 */ } });
+  window.setTimeout(() => me.out.disconnect(), 120);
+}
+/** 검증용(개발 서버): 같은 예약 코드로 한 줄을 소리 없이 그려 본다 → 16비트 표본 */
+async function renderBabble(text: string, who: string): Promise<{ sr: number; sec: number; peak: number; rms: number; blips: number; pcm: number[] } | null> {
+  const v = voiceOf(who);
+  if (!v) return null;
+  const sp = planSpeech(text, v);
+  const sr = 44100;
+  const oc = new OfflineAudioContext(1, Math.ceil(sp.total * sr), sr);
+  const ab = await bytes(urlOf(BABBLE) as string);
+  const buf = await oc.decodeAudioData(ab);
+  const out = oc.createGain(); out.gain.value = BABBLE_VOL; out.connect(oc.destination);
+  scheduleBabble(oc, out, buf, sp, 0);
+  const d = (await oc.startRendering()).getChannelData(0);
+  let peak = 0, sq = 0;
+  for (let i = 0; i < d.length; i++) { const a = Math.abs(d[i]); if (a > peak) peak = a; sq += d[i] * d[i]; }
+  return { sr, sec: d.length / sr, peak, rms: Math.sqrt(sq / d.length), blips: sp.blips.length, pcm: Array.from(d, (x) => Math.round(Math.max(-1, Math.min(1, x)) * 32767)) };
+}
+
 // ---- 켜고 끄기 ----
 export const getPrefs = (): Prefs & { unlocked: boolean } => ({ ...prefs, unlocked });
 export function setPrefs(p: Partial<Prefs>): void {
@@ -186,6 +261,7 @@ export function setPrefs(p: Partial<Prefs>): void {
     sfxBus.gain.setTargetAtTime(prefs.sfx ? 1 : 0, t, 0.05);
     musicBus.gain.setTargetAtTime(prefs.music ? 1 : 0, t, 0.05);
   }
+  if (!prefs.sfx) stopSpeaking();
   applyHeartbeat();
   notify();
 }
@@ -209,4 +285,4 @@ export function preview(id: SoundId): void {
 }
 export function stopPreview(): void { try { prev?.stop(); } catch { /* 이미 멈춤 */ } prev = null; }
 
-if (import.meta.env.DEV) (window as unknown as { __audio?: unknown }).__audio = { buffers, setHeartbeat, state: () => ({ ctx: ctx?.state, music: curMusic?.id, beat: !!beat, unlocked }) };
+if (import.meta.env.DEV && typeof window !== 'undefined') (window as unknown as { __audio?: unknown }).__audio = { buffers, setHeartbeat, renderBabble, speaking: () => !!speaking && !!ctx && speaking.srcs.length > 0 && ctx.currentTime < speaking.until, state: () => ({ ctx: ctx?.state, music: curMusic?.id, beat: !!beat, unlocked }) };

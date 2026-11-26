@@ -635,3 +635,6 @@
   /* 낮은 화면에서 판을 펴면 목표·정산 막대는 접는다(판 머리에 '정산까지'가 있다) — 바닥이 보일 자리를 낸다 */
   .pr:has(.pr-lot.open) .pr-hud .settle, .pr:has(.pr-lot.open) .pr-hud .goal { display: none; }
 }
+
+/* 웅얼거림 대사(U-36): 아직 안 나온 글자는 자리만 차지한다(줄바꿈이 흔들리지 않게) */
+.untyped { opacity: 0; }

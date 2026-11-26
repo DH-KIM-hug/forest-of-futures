@@ -7,6 +7,7 @@ import { play, playTap } from './audio';
 import { balance, lenderById } from '../../engine/data';
 import { comma } from '../../engine/util';
 import { prologueTalk, LEDGER_NOTE } from './text';
+import { Typed, useSpeech } from './speech';
 import heroSide from './img/hero_side.png';
 import heroFront from './img/hero_front.png';
 
@@ -61,6 +62,8 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
   const [ledger, setLedger] = useState(false);
   const [gain, setGain] = useState(false);
   const lock = useRef(false);
+  // 추심원 말풍선도 한 글자씩 + 웅얼거림(U-36). 첫 줄은 말풍선이 뜨는 0.8초를 기다린다.
+  const sp = useSpeech(TALK[talk], 'collector', { id: talk, active: step === 'p3' && !ledger, delay: talk === 0 ? 1 : 0.1 });
   const t = useRef<number[]>([]);
   const after = (ms: number, f: () => void) => { t.current.push(window.setTimeout(f, ms)); };
   useEffect(() => () => { t.current.forEach((x) => window.clearTimeout(x)); }, []);
@@ -76,6 +79,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
       setWalk(n);
       if (n >= 2) go('p2', 900); else hold(600);
     } else if (step === 'p3' && !ledger) {
+      if (sp.typing) { sp.finish(); return; }
       play('ui_tap');
       if (talk < TALK.length - 1) { setTalk(talk + 1); hold(); } else { play('overdue_stamp'); setLedger(true); hold(600); }
     }
@@ -101,7 +105,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
   const [hx, hy] = WALK[Math.min(walk, 2)];
 
   return (
-    <div className={'pr-pro s-' + step} role="dialog" aria-label="프롤로그" data-step={step} data-talk={talk} onClick={tapStage}>
+    <div className={'pr-pro s-' + step} role="dialog" aria-label="프롤로그" data-step={step} data-talk={talk} data-typing={sp.typing ? '1' : ''} onClick={tapStage}>
       {canSkip && <button className="pp-skip" onClick={(e) => { e.stopPropagation(); finish(); }}>건너뛰기</button>}
       <svg key={step} className="pp-stage" viewBox="0 -100 390 800" preserveAspectRatio="xMidYMid slice">
         {step === 'p1' && (
@@ -144,7 +148,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
                 <g className={'pa-bubble' + (talk > 0 ? ' now' : '')} key={talk}>
                   <rect x={22} y={250} width={346} height={64} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
                   <path d="M286 312 l14 22 l8 -22z" fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={284} y={306} width={26} height={6} fill="#fff" />
-                  <foreignObject x={32} y={254} width={326} height={58}><div className="pp-say">{TALK[talk]}</div></foreignObject>
+                  <foreignObject x={32} y={254} width={326} height={58}><div className="pp-say"><span><Typed text={TALK[talk]} shown={sp.shown} /></span></div></foreignObject>
                 </g>
                 <rect x={236} y={206} width={130} height={24} rx={12} fill={O} /><text x={301} y={223} textAnchor="middle" fontSize={14} fontWeight={700} fill="#fff">오소리 추심원</text>
               </g>
