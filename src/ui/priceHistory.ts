@@ -1,5 +1,6 @@
 // 차트용 시세 기록(화면 쪽). 엔진은 정산 봉만 가지므로 최근 틱을 여기서 모은다(저장하지 않는다).
 import { useGame } from '../store/gameStore';
+import { pushDayPrice } from './dayHistory';
 
 export const HIST_LEN = 600;
 const hist: Record<string, number[]> = {};
@@ -52,6 +53,10 @@ export function startHistory(): void {
   const g0 = useGame.getState().g;
   pushPrices(g0.run.prices, g0.run.tick, true);
   useGame.subscribe((s, prev) => {
-    if (s.g.run.tick !== prev.g.run.tick) pushPrices(s.g.run.prices, s.g.run.tick);
+    if (s.g.run.tick !== prev.g.run.tick) {
+      pushPrices(s.g.run.prices, s.g.run.tick);
+      const now = Date.now();
+      for (const [k, v] of Object.entries(s.g.run.prices)) pushDayPrice(k, v, now);
+    }
   });
 }

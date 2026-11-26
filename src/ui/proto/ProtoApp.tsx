@@ -17,6 +17,8 @@ import { Prologue, prologueSeen } from './Prologue';
 import { endPrologue } from './dev';
 import { ProfitPrompt } from './ProfitPrompt';
 import { WalletSheet } from './Wallet';
+import { DayNoteSheet } from './NewsSheet';
+import { dayBars } from './daynote';
 import { tutorialEnd } from './tutorial';
 import { isFast, isCheat } from './config';
 import { clone } from '../../engine/game';
@@ -57,6 +59,7 @@ function Hud() {
   const total = run.settleNo === 0 && lifeNo(g) <= 1 ? Math.max(firstVisitSec(balance.settlement.intervalSec), run.settleIn) : balance.settlement.intervalSec;
   const left = Math.max(0, run.settleIn);
   const gi = currentGoal(g, goalIdx, flags);
+  const fc0 = forecast(g);
   // 빚이 0 이면 남은 튜토리얼 목표(첫 포지션 · 첫 상환)는 뜻이 없다: 장부가 깨끗하다고만 적는다(U-39 ⑧)
   const goal0 = gi < GOAL_COUNT && lenderDebtTotal(run) > 0 ? goalAt(g, gi, flags) : null;
   // 튜토리얼 목표가 끝나면 오소리 장부가 목표다(U-38): 5만을 갚을 때마다 금박 도장 하나, 이자가 얼마 주는지도 같이
@@ -67,9 +70,13 @@ function Hud() {
   const goalSave = sv >= 0 && sv < SAVINGS_STEPS.length ? { label: '빚 없는 아침 · 모은 돈', cur: Math.min(Math.floor(run.cash), SAVINGS_STEPS[sv]), need: SAVINGS_STEPS[sv] } : null;
   const otherDebt = lenderDebtTotal(run) - run.debts.shark1.principal;
   const goal: { label: string; cur: number; need: number; sub?: string } | null = goal0 ?? (lg ? { label: lg.label, cur: lg.cur, need: lg.need, sub: `이자 −${comma(lg.cut)}` } : goalSave);
+  // 손에 든 돈으로 지금 갚으면 금박 도장 막대가 어디까지 차는가(U-41): 다음 정산에 낼 돈은 남겨 두고 센다. 거래로 딴 돈이 장부에 얼마나 가까운지가 집에서 보인다
+  const spare = lg ? Math.max(0, Math.min(lg.need - lg.cur, Math.floor(run.cash - (fc0.interest + fc0.living + fc0.wages)))) : 0;
+  const ghost = lg && spare >= 1000 ? Math.min(1, (lg.cur + spare) / lg.need) : null;
   const goalEnd = sv >= SAVINGS_STEPS.length ? '도토리 100만 · 사무소에서 언제든 이 생을 닫을 수 있다' : otherDebt > 0 ? `오소리 장부는 깨끗하다 · 다른 빚 ${comma(otherDebt)} (지도)` : '빚 0 · 장부가 깨끗하다';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
   const cash = useCountUp(run.cash);
+  void 0;
   // 숫자가 오르면 통, 내리면 움찔
   const prevCash = useRef(run.cash);
   const [bump, setBump] = useState<{ k: number; dir: 'up' | 'down' }>({ k: 0, dir: 'up' });
@@ -104,8 +111,9 @@ function Hud() {
       {lot && (
         <>
           <div key={'g' + gi + (lg ? ':' + Math.floor(lg.cur / lg.need) : '')} className="goal" data-hl="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
+            {ghost !== null && <div className="fill ghost" data-ghost style={{ width: `${ghost * 100}%` }} />}
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
-            <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
+            <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{ghost !== null ? <i className="gsub gh">{ghost >= 1 ? '갚으면 도장' : `손에 +${comma(spare)}`}</i> : goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
           <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
             <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '정산 · 추심원이 기다린다' : '정산 (이자 걷는 시간)'}</span><em>{mmss(left)}</em>
@@ -123,12 +131,15 @@ function TabBar() {
   const visited = useProto((s) => s.visited);
   const g = useGame((s) => s.g);
   const waiting = useProto((s) => s.waiting);
+  const cheer = useProto((s) => !!s.cheer);
   const pos = useOpenPositions();
   const [shake, setShake] = useState<string | null>(null);
   const open = (id: Tab) => id === 'lot' || !!un[id];
   const near = pos.find((p) => isNearLiq(p));
   const overdue = DEBT_IDS.some((id) => g.run.debts[id].overdue > 0);
   const badge = (id: Tab): { t: string; hot: boolean } | null => {
+    // 방금 크게 땄다(U-41): 집이 들썩이는 동안 집 탭에 꼬리표
+    if (id === 'lot' && tab !== 'lot' && cheer) return { t: '잔치 중', hot: false };
     if (id === 'lot' && tab !== 'lot') return { t: mmss(Math.max(0, g.run.settleIn)), hot: g.run.settleIn <= 10 };
     if (id === 'phone' && near) return { t: `▼청산 ${near.liqDistPct.toFixed(1)}%`, hot: true };
     // 청산이 지난 1분 폭의 세 배 안으로 들어오면 탭 꼬리표가 붉어진다(U-39 ①)
@@ -260,7 +271,7 @@ export function ProtoApp() {
         fut: r.futures, pos: Object.values(r.positions).map((p) => ({ m: p.market, dir: p.dir, lev: p.lev, margin: p.margin0 })), debts: Object.fromEntries(Object.entries(r.debts).map(([k, v]) => [k, v.principal])), friend: r.friends.squirrel.debt,
         gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet,
         repaid: r.stats['repaid.shark1'] ?? 0, gold: g.family.gold ?? 0, skill: g.family.skill ?? {}, runSkill: r.skill ?? {}, seen: Object.keys(P.seen), marginCall: r.marginCall ?? null, liqs: r.stats.liqCount ?? 0, cause: r.bankruptcy?.cause ?? null, ending: g.pendingEnding?.title ?? null, endingId: g.pendingEnding?.id ?? null, tradeUi: useUI.getState().trade,
-        think: P.think?.text ?? null, away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick };
+        think: P.think?.text ?? null, cheer: P.cheer, tradeLife: P.tradeLife, claimWins: P.claimWins, paidLife: P.paidLife, dayNote: P.dayNote, day: Object.fromEntries(Object.keys(r.prices).map((k) => { const b = dayBars(k); return [k, [b.length, b[0]?.t ?? 0, b[b.length - 1]?.t ?? 0]]; })), posStops: Object.values(r.positions).map((p) => ({ m: p.market, sl: p.slRoe, tp: p.tpRoe, notional: p.notional, fees: p.feesPaid })), away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick };
     };
   }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)
@@ -285,6 +296,7 @@ export function ProtoApp() {
       <WalletSheet />
       <TutorialNotice />
       <AwayNote />
+      <DayNoteSheet />
       {prologue && <Prologue onDone={endPrologue} canSkip={skip} />}
       {pdev === 'sounds' && <SoundLab />}
     </div>

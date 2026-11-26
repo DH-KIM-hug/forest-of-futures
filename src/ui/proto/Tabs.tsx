@@ -14,7 +14,9 @@ import { ProtoTrade } from './Trade';
 import { PLACE, STORY } from './text';
 import { ledgerRows, goldStamps, repaidOffice, STAMP_STEP } from './ledger';
 import { RowIcon } from './art';
-import { sprite, PLACE_ART } from './sprites';
+import { sprite, PLACE_ART, MAP_SPOTS } from './sprites';
+import { journeyOf } from './stops';
+import { claim } from './model';
 
 /** 가게 안 그림 한 띠(U-40): 그 가게의 방과 거기 서 있는 사람. 지도 카드 맨 위에 붙는다. */
 function PlaceArt({ id }: { id: string }) {
@@ -78,7 +80,9 @@ export function MapTab() {
   return (
     <div className="pr-pane">
       <div className="pr-title"><b>마을 지도</b><span>빚 {comma(total)}</span></div>
-      {sprite('village') && <div className="pr-village" data-art="village" aria-hidden="true"><img src={sprite('village')!.src} alt="" draggable={false} /></div>}
+      {sprite('village2')
+        ? <VillageMap known={ids} onPick={(id) => { if (id === 'home') { play('ui_tap'); useProto.getState().setTab('lot'); } else { play('ui_tap'); useProto.getState().patch({ mapFocus: id }); } }} />
+        : sprite('village') && <div className="pr-village" data-art="village" aria-hidden="true"><img src={sprite('village')!.src} alt="" draggable={false} /></div>}
       <p className="pr-note left">{waiting ? '추심원이 집 문 앞에서 기다린다. 사무소에서 빌리면 오늘 이자는 거기서 떼어 간다.' : '추심원이 꽂고 간 쪽지. 이자는 정산마다 걷어 가고, 원금은 직접 가서 갚는다.'}</p>
       {msg && <div className="pr-msg" role="status">{msg}</div>}
       {ids.map((id) => {
@@ -126,6 +130,36 @@ export function MapTab() {
   );
 }
 
+/** 지도 그림에서 잘라 보여 주는 세로 구간(위 4% · 아래 12%는 숲뿐이다) */
+const MAP_CROP = { top: 0.04, h: 0.84 };
+const manTxt = (x: number) => (x >= 10000 && x % 10000 === 0 ? `${x / 10000}만` : comma(x));
+/** 누를 수 있는 마을 지도(U-41): 빈터 다섯에 이름표. 아는 곳을 누르면 그 가게의 카드로 내려가고, 내 집을 누르면 집 탭으로 간다. 모르는 곳은 물음표다. */
+function VillageMap({ known, onPick }: { known: readonly string[]; onPick: (id: string) => void }) {
+  const g = useGame((s) => s.g);
+  const waiting = useProto((s) => s.waiting);
+  const img = sprite('village2')!;
+  const run = g.run;
+  return (
+    <div className="pr-vmap" data-art="village2" style={{ aspectRatio: `${img.w} / ${Math.round(img.h * MAP_CROP.h)}` }}>
+      <img src={img.src} alt="" draggable={false} style={{ top: `${(-MAP_CROP.top / MAP_CROP.h) * 100}%` }} />
+      {Object.entries(MAP_SPOTS).map(([id, p]) => {
+        const home = id === 'home';
+        const ok = home || known.includes(id);
+        const d = home ? null : run.debts[id as LenderId];
+        const sub = home ? `정산 ${Math.floor(Math.max(0, run.settleIn) / 60)}:${String(Math.max(0, run.settleIn) % 60).padStart(2, '0')}`
+          : !ok ? '' : id === 'shark1' && waiting ? '추심원이 기다린다' : d!.overdue > 0 ? `연체 ${d!.overdue}회` : d!.principal > 0 ? `빚 ${manTxt(d!.principal)}` : id === 'bank' && run.house <= 0 ? '문이 닫혀 있다' : '빚 없음';
+        return (
+          <button key={id} className={'pin' + (ok ? '' : ' fog') + (home ? ' home' : '') + (!home && ok && (d!.overdue > 0 || (id === 'shark1' && waiting)) ? ' hot' : '')} data-pin={id} data-known={ok ? '1' : '0'}
+            style={{ left: `${p.x * 100}%`, top: `${((p.y - MAP_CROP.top) / MAP_CROP.h) * 100}%` }} disabled={!ok}
+            aria-label={ok ? `${home ? '내 집' : PLACE[id as LenderId].name}${sub ? `, ${sub}` : ''}` : '아직 모르는 곳'} onClick={() => onPick(id)}>
+            <b>{ok ? (home ? '내 집' : PLACE[id as LenderId].name) : '?'}</b>{sub && <small>{sub}</small>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** 오소리 사무소의 장부(U-38): 빚을 금리별 줄로 보여 준다. 갚으면 맨 위(비싼) 줄부터 지워지고, 5만을 갚을 때마다 금박 도장이 하나 찍힌다. */
 function Ledger() {
   const g = useGame((s) => s.g);
@@ -133,6 +167,9 @@ function Ledger() {
   const stamps = goldStamps(g);
   const top = rows.find((r) => r.left > 0)?.key;
   const toNext = STAMP_STEP - (repaidOffice(g) % STAMP_STEP);
+  // 이번 생의 길(U-41): 거래가 벌어 온 돈을 "이자 몇 번 치 · 금박 도장의 몇 %"로 읽어 준다
+  const tradeLife = useProto((s) => s.tradeLife), claimWins = useProto((s) => s.claimWins), paidLife = useProto((s) => s.paidLife), closes = useProto((s) => s.closes);
+  const jr = journeyOf({ tradeNet: tradeLife, claim: claim(g).total, settles: g.run.settleNo, paid: paidLife, claimWins });
   return (
     <div className="pr-ledger" data-ledger aria-label="오소리 장부">
       <div className="lg-h"><b>장부</b><span>갚으면 위 줄부터 지워진다</span></div>
@@ -145,6 +182,7 @@ function Ledger() {
           <small className="iv">{r.left <= 0 ? '' : `이자 ${comma(r.interest)}${r.fixed ? ' · 고정' : ''}`}</small>
         </div>
       ))}
+      {closes > 0 && <div className="lg-jr" data-journey="ledger">{jr.text}{tradeLife > 0 && g.run.debts.shark1.principal > 0 ? ` · 금박 도장 하나의 ${Math.min(999, Math.round((tradeLife / STAMP_STEP) * 100))}%` : ''}</div>}
       <div className="lg-st" data-stamps={stamps}>
         <span className="dots">{Array.from({ length: Math.min(10, stamps + 1) }, (_, i) => <i key={i} className={i < stamps ? 'on' : ''} />)}{stamps > 9 && <em>×{stamps}</em>}</span>
         <small>금박 도장 {stamps}개 · {g.run.debts.shark1.principal > 0 ? `${comma(Math.min(toNext, g.run.debts.shark1.principal))} 더 갚으면 하나` : '장부가 깨끗하다'}</small>

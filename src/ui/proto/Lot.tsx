@@ -10,6 +10,7 @@ import { heroMood, tensionOf, type HeroMood } from './tension';
 import { tradeNet } from './watch';
 import { liveHistoryOf } from '../priceHistory';
 import { TILE_GRID, afterDrag, DRAG_PX } from './home';
+import { journeyOf } from './stops';
 import { say, sendAway } from './watch';
 import { comma } from '../../engine/util';
 import { marketById } from '../../engine/data';
@@ -68,7 +69,7 @@ function TileBtn({ t, 'data-hl': hl, onAct }: { t: Tile; 'data-hl'?: 'tileFirst'
     <button className={cls} data-tile={t.slot} data-state={t.state} data-act={t.action ?? 'none'} data-can={t.canAct ? '1' : '0'} data-hl={hl}
       aria-label={`${t.name}: ${t.action ? `${t.btn} ${t.btnSub}` : t.text}`} onClick={() => { if (onAct(t)) setPop((k) => k + 1); }}>
       <span className="cap">
-        <i className="ic">{t.state === 'empty' || t.state === 'lost' ? <b className="q">+</b> : <img src={sprite('wheel')!.src} alt="" />}</i>
+        <i className="ic">{t.state === 'empty' || t.state === 'lost' ? <b className="q">+</b> : <img src={(sprite('wheelEmpty') ?? sprite('wheel'))!.src} alt="" />}</i>
         <em>{t.name}</em>{t.tagged && <u>딱지</u>}
       </span>
       {t.action
@@ -88,6 +89,8 @@ export function Lot() {
   const slotOf = useProto((s) => s.slotOf);
   const pos = useOpenPositions();
   const run = g.run;
+  const tradeLife = useProto((s) => s.tradeLife), claimWins = useProto((s) => s.claimWins), paidLife = useProto((s) => s.paidLife), closes = useProto((s) => s.closes);
+  const jr = journeyOf({ tradeNet: tradeLife, claim: claim(g).total, settles: run.settleNo, paid: paidLife, claimWins });
   const cells = tiles(g, slotOf);
   const sum = homeSummary(g);
   const near = pos.some((p) => isNearLiq(p));
@@ -209,6 +212,8 @@ export function Lot() {
                   <span className="out"><small>나가는 돈</small><b>초당 {rateTxt(claimSec)}</b></span>
                 </span>
                 <span className="nx">정산까지 <b>{left}</b> · 다음 정산 때 <b>{comma(sum.claim)}</b></span>
+                {/* 이번 생의 길(U-41): 낸 돈과 거래가 벌어 온 돈 */}
+                {(run.settleNo > 0 || closes > 0) && <span className="jr" data-journey="home">{jr.text}</span>}
               </>
             ) : (
               <span className="one">

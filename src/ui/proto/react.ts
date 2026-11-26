@@ -21,6 +21,7 @@ export interface TradeCtx {
   /** 이번 생에 낸 거래 수수료 합 */ feesLife: number;
   /** 이번 생에 이미 나온 반응 */ seen: Record<string, boolean>;
   /** 이 거래에 수수료가 한 푼도 안 들었다(오픈 기념, U-40): 수수료를 말하는 줄은 거짓이 된다 */ feeFree?: boolean;
+  /** 이번 생에 한 판에 이자 한 번 치를 번 횟수(이 거래 포함, U-41) */ claimWins?: number;
 }
 export interface Reaction { key: string; who: Who; lines: string[]; /** true = 컷인 장면, false = 한 줄 알림 */ scene: boolean; /** 이번 생에 한 번만 */ once: boolean }
 
@@ -46,7 +47,17 @@ export function tradeReaction(t: TradeEnd, c: TradeCtx): Reaction | null {
       ?? (c.liqs % 2 ? R('liqA', 'collector', ['또 사라졌네요오. 이자는 안 사라져요오.'], false, false) : R('liqB', 'boss', ['다음엔 맞히시겠죠. 다들 그렇게 말해요.'], false, false));
   }
   if (t.pnl >= claim * 3) { const r = R('bigWin', 'boss', ['크게 따셨네요. 축하드립니다.', '갚으러 오실 거죠? 다들 그 돈으로 한 번 더 걸더라고요.'], true); if (r) return r; }
-  if (t.pnl >= claim) { const w = wheelWorth(t.pnl, c.wheelNet); return R('winClaim', 'boss', [`이자 한 번 치를 버셨네요.${w ? ` ${w}입니다.` : ''}`], false, false); }
+  if (t.pnl >= claim) {
+    // 한 판에 이자 한 번 치(U-41): 이번 생 처음은 장면(오소리 대부 · 추심원 · 주인공), 그 뒤로는 번갈아 한 줄
+    const w = wheelWorth(t.pnl, c.wheelNet);
+    const first = R('winClaim1', 'boss', [`이자 한 번 치를 한 판에 버셨네요.${w ? ` ${w}입니다.` : ''}`], true);
+    if (first) return first;
+    const k = c.claimWins ?? 2;
+    const pick = k % 3;
+    return pick === 2 ? R('winClaim', 'boss', [`또 이자 한 번 치네요.${w ? ` ${w}입니다.` : ''} 갚으실 건가요, 한 번 더 거실 건가요.`], false, false)
+      : pick === 0 ? R('winClaimC', 'collector', [`이번 이자 ${n(claim)}은 폰에서 나왔네요오. 쳇바퀴가 서운해해요오.`], false, false)
+      : R('winClaimW', 'weasel', ['소문 났어요~ 한 판에 이자를 버셨다면서요~ 햄스터들이 일당 올려 달래요~ 농담이에요~'], false, false);
+  }
   if (t.pnl <= -claim) return R('lossClaim', 'collector', ['이자 한 번 치를 잃으셨네요오. 저는 그래도 제때 와요오.'], false, false);
   if (c.tinyStreak >= 3 && c.feesLife >= 1) { const r = R('feeBleed', 'collector', [`수수료만 ${n(c.feesLife)} 내셨어요오. 거래소가 좋아해요오.`]); if (r) return r; }
   if (t.pnl > 0 && t.pnl >= claim * 0.1) { const r = R('firstWin', 'boss', ['거 보세요. 쳇바퀴보다 빠르죠?']); if (r) return r; }

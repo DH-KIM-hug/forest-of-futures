@@ -21,6 +21,11 @@ export const TILE_GRID: number[] = [4, 0, 1, 2, 5, 3];
 
 /** 쳇바퀴 그림(img/wheel.webp = 집 그림의 쳇바퀴를 오려 낸 것)이 발밑 좌표에서 차지하는 자리 */
 export const WHEEL_BOX = { dx: -80, dy: -183, w: 160, h: 196 };
+/** 빈 쳇바퀴의 새 그림(img/v5/i_wheel_empty.webp, U-41): 키(집 그림 픽셀)와 발밑에서 내려 그리는 양. 알바가 도는 쳇바퀴(150)보다 조금 크게 — 받침까지 든 그림이다 */
+export const EMPTY_WHEEL_H = 172;
+export const EMPTY_WHEEL_DY = 12;
+/** 새 빈 쳇바퀴 그림의 앞면(도는 바퀴) 가운데와 반지름: 발밑 기준 */
+export const EMPTY_WHEEL_FACE = { dx: -16, dy: -92, rx: 44, ry: 54, tilt: -12 };
 /** 그림 속 엄마의 쳇바퀴를 덮는 바닥 조각(img/floor_patch.webp)의 자리: [x, y, w, h]. 이 위에 쳇바퀴 그림을 얹어야 눌릴 때 들썩이고, 실려 가면 사라진다. */
 export const FLOOR_PATCH: [number, number, number, number] = [350, 825, 270, 270];
 /** 쳇바퀴 앞면(도는 바퀴)의 가운데와 반지름: 발밑 기준. 도는 표시와 햄스터를 여기에 맞춘다. */

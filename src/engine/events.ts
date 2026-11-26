@@ -37,6 +37,10 @@ export function rollEvent(g: GameState): void {
     if (e.cond && e.cond.stat === 'netWorth' && !(netWorth(run) < e.cond.value)) return false;
     // 같은 종류가 진행 중이거나 예고 중이면 겹치지 않는다
     if (run.effects.some((x) => x.id === e.id) || run.pendingEvents.some((x) => x.id === e.id)) return false;
+    // 쉬는 기간(U-41): 금리 인상은 지난번에 뽑힌 뒤 cooldownSettlements 번의 정산이 지나기 전에는 다시 뽑히지 않는다
+    const cd = (e as { cooldownSettlements?: number }).cooldownSettlements ?? 0;
+    const lastAt = run.stats[`eventAt.${e.id}`] as number | undefined;
+    if (cd > 0 && lastAt !== undefined && run.settleNo - lastAt < cd) return false;
     return true;
   });
   if (!pool.length) return;
@@ -51,6 +55,7 @@ export function rollEvent(g: GameState): void {
     }
   }
   notify(run, pick.text, 'wire', `event:${pick.id}`);
+  run.stats[`eventAt.${pick.id}`] = run.settleNo;
   if (pick.effect.type === 'cash') {
     run.cash += pick.effect.value;
     run.subsidyUsed = true;

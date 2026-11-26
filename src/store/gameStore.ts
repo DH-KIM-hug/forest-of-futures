@@ -15,6 +15,7 @@ import { HlDirectFeed } from '../net/hlDirect/feed';
 import { attachHlFeed, type HlSession } from '../net/hlDirect/attach';
 import { openSocket, postJson } from '../net/hlDirect/io';
 import { prependHistory } from '../ui/priceHistory';
+import { setDayHistory } from '../ui/dayHistory';
 
 const adapter = localStorageAdapter();
 let lastSaved = 0;
@@ -152,7 +153,7 @@ function startHl(): void {
       onAway: (away) => useGame.setState((s) => ({ net: { ...s.net, away } })),
       paused: () => useGame.getState().speed === 0,
     },
-    prependHistory,
+    (h, day) => { prependHistory(h); if (day) setDayHistory(day); },
   );
   feed.onStatus((s) =>
     useGame.setState((st) => (st.net.fallback ? st : { net: { ...st.net, conn: s.conn === 'idle' ? 'idle' : s.conn === 'live' ? 'open' : s.conn, market: s.market, stale: s.conn === 'down', everConnected: s.everConnected } })),

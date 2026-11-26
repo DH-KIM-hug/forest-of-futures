@@ -782,3 +782,51 @@
 .pr-end .award img.coin.art { width: 38px; height: auto; border: 0; border-radius: 0; background: none; box-shadow: none; }
 .pr-tree img.coin.art { width: 20px; height: auto; border: 0; border-radius: 0; background: none; vertical-align: -4px; }
 @media (max-height: 720px) { .pr-village { height: 84px; } .plc-art { height: 76px; } .plc-art .npc { height: 64px; } }
+
+/* ── 회차 4(U-41): 도토리일보 시세면 ── */
+.pr-daynote .box { width: min(360px, 100%); max-height: 90%; overflow-y: auto; padding: 12px 12px 12px; background: #FBF4DF; }
+.pr-daynote .mast { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 5px; margin-bottom: 7px; border-bottom: 3px double var(--o); }
+.pr-daynote .mast b { font-family: var(--dsp); font-weight: 400; font-size: 21px; letter-spacing: 1px; }
+.pr-daynote .mast span { font-size: 11px; font-weight: 800; color: var(--sub); white-space: nowrap; }
+.pr-daynote h3 { margin: 0 0 2px; font-size: 19px; line-height: 1.25; text-align: left; }
+.pr-daynote p.sub { margin: 0 0 7px; }
+.pr-daynote p.fine { font-size: 11px; margin: 6px 0 6px; }
+.pr-daynote .tbl { display: flex; flex-direction: column; gap: 3px; }
+.pr-daynote .th, .pr-daynote .tr { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)) minmax(0, 1.25fr); gap: 3px; align-items: center; text-align: right; }
+.pr-daynote .th { padding: 0 7px; font-size: 10.5px; font-weight: 800; color: var(--sub); }
+.pr-daynote .th span:first-child { text-align: left; }
+.pr .pr-daynote .tr { padding: 5px 7px; border-radius: 10px; background: #fff; border: 2px solid rgba(74, 70, 64, .3); font-size: 12.5px; font-weight: 800; font-family: inherit; color: var(--o); cursor: pointer; }
+.pr-daynote .tr .nm { display: flex; align-items: center; gap: 4px; text-align: left; font-family: var(--dsp); font-weight: 400; font-size: 13.5px; white-space: nowrap; min-width: 0; }
+.pr-daynote .tr .loud i { margin-right: 5px; font-style: normal; font-family: -apple-system, 'Apple SD Gothic Neo', sans-serif; font-size: 9.5px; font-weight: 800; padding: 0 4px; border-radius: 6px; background: #E7E2D3; color: var(--sub); }
+.pr-daynote .tr .up { color: var(--up, #C2413B); } .pr-daynote .tr .down { color: var(--down, #2F6FB7); }
+.pr-daynote .tr .now { display: flex; flex-direction: column; line-height: 1.15; }
+.pr-daynote .tr .now small { font-size: 9.5px; font-weight: 800; color: var(--sub); white-space: nowrap; }
+.pr-daynote .tr .now small.hot { color: var(--red-ink); } .pr-daynote .tr .now small.cold { color: #5C7A99; }
+.pr-daynote .tr .loud { grid-column: 1 / -1; text-align: left; font-size: 10.5px; font-weight: 700; color: var(--sub); }
+.pr-daynote p.boss { margin: 8px 0 0; padding: 7px 10px; border-radius: 12px; background: #fff; border: 2px dashed #B9A77E; font-size: 13px; line-height: 1.4; }
+.pr-daynote p.boss b { display: block; font-size: 11px; color: var(--sub); }
+
+/* ── 회차 4(U-41): 누를 수 있는 마을 지도 · 이번 생의 길 · 크게 딴 뒤의 집 ── */
+.pr-vmap { position: relative; flex: 0 0 auto; width: 100%; margin: 0 0 8px; border-radius: 14px; border: 2.5px solid var(--o); overflow: hidden; background: #8FA56A; }
+.pr-vmap img { position: absolute; left: 0; width: 100%; height: auto; display: block; }
+.pr .pr-vmap .pin { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; min-width: 56px; min-height: 40px; justify-content: center; padding: 3px 9px 2px; border-radius: 12px; background: rgba(255, 252, 240, .94); border: 2.5px solid var(--o); box-shadow: 0 3px 0 rgba(74, 70, 64, .3); font-family: inherit; color: var(--o); cursor: pointer; }
+.pr-vmap .pin b { font-family: var(--dsp); font-weight: 400; font-size: 14px; line-height: 1.15; white-space: nowrap; }
+.pr-vmap .pin small { font-size: 10.5px; font-weight: 800; line-height: 1.15; color: var(--sub); white-space: nowrap; }
+.pr .pr-vmap .pin.home { background: #E9C99A; }
+.pr .pr-vmap .pin.hot { background: var(--red); color: #fff; animation: wiggleX 2s ease-in-out infinite; } .pr-vmap .pin.hot small { color: #fff; }
+.pr .pr-vmap .pin.fog { min-width: 34px; min-height: 34px; padding: 0; border-radius: 50%; background: rgba(60, 70, 50, .55); border: 2px dashed rgba(255, 255, 255, .7); color: #fff; box-shadow: none; cursor: default; }
+.pr .pr-vmap .pin:active:not(:disabled) { transform: translate(-50%, -50%) scale(.95); }
+@media (prefers-reduced-motion: reduce) { .pr .pr-vmap .pin.hot { animation: none; } }
+.pr-strip .jr { display: block; text-align: center; font-size: 11.5px; font-weight: 800; color: #7A4E12; line-height: 1.3; }
+.pr-ledger .lg-jr { margin-top: 6px; padding: 5px 8px; border-radius: 9px; background: #FFF3C4; border: 1.5px dashed #C98A2B; font-size: 11.5px; font-weight: 800; line-height: 1.35; color: #7A4E12; }
+.pr-cheerlight circle { fill: #FFE27A; stroke: #C98A2B; stroke-width: 1.4; animation: cheerBlink .8s ease-in-out infinite; }
+.pr-cheerlight .sq { fill: #7A4E12; animation: cheerBlink 1.1s ease-in-out infinite; }
+.pa-cheer { transform-box: fill-box; transform-origin: 50% 100%; animation: cheerHop .55s cubic-bezier(.34, 1.56, .64, 1) infinite; }
+.pr-cheerbn text { fill: #B8432C; } .pr-cheerbn text.s { fill: #7A4E12; }
+.pr-cheerbn { animation: popIn .4s cubic-bezier(.34, 1.56, .64, 1) both; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes cheerBlink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes cheerHop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .pr-cheerlight circle, .pr-cheerlight .sq, .pa-cheer { animation: none; opacity: 1; } }
+.pr-hud .goal .fill.ghost { background: repeating-linear-gradient(135deg, rgba(232, 185, 58, .55) 0 6px, rgba(232, 185, 58, .28) 6px 12px); }
+.pr-hud .goal .gsub.gh { color: #8A5A16; }
+@media (max-width: 372px) { .pr-hud .goal em .gsub { display: none; } }

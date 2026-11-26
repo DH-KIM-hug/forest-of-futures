@@ -4,7 +4,7 @@ import { catchUp, onBackground, onForeground } from '../../engine/offline';
 import type { Tick } from '../../engine/feed/types';
 import type { GameState } from '../../engine/types';
 import { applyHello, type Host } from '../session';
-import type { HlDirectFeed } from './feed';
+import type { HlDirectFeed, Warm } from './feed';
 
 export interface HlSession {
   detach(): void;
@@ -12,7 +12,7 @@ export interface HlSession {
   foreground(): void;
 }
 
-export function attachHlFeed(feed: HlDirectFeed, host: Host, onHistory?: (h: Record<string, number[]>) => void): HlSession {
+export function attachHlFeed(feed: HlDirectFeed, host: Host, onHistory?: (h: Record<string, number[]>, day?: Warm['day']) => void): HlSession {
   let alive = true;
   const patch = (fn: (g: GameState) => void) => {
     const g = clone(host.get());
@@ -45,7 +45,7 @@ export function attachHlFeed(feed: HlDirectFeed, host: Host, onHistory?: (h: Rec
   void feed.loadWarm().then((w) => {
     if (!alive || !w) return;
     patch((g) => { applyHello(g, w.hello); });
-    onHistory?.(w.history);
+    onHistory?.(w.history, w.day);
   }).catch(() => {});
 
   return {

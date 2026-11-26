@@ -374,3 +374,48 @@
 .pt-pl .me, .pt-pl.res .me { width: auto; height: 46px; } .pt-tut img { width: auto; height: 34px; }
 @media (max-height: 720px) { .pt-pl .me, .pt-pl.res .me { height: 38px; } }
 .pt-bar b { white-space: nowrap; } .pt-bar .pt-fee { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; padding: 1px 6px; }
+
+/* ── 회차 4(U-41): 출구를 도토리로 · 정산을 넘겨 들고 있기 · 시세면 ── */
+.pt-condrow { flex: 0 0 auto; display: flex; gap: 6px; align-items: stretch; }
+.pt-condrow .pt-cond { flex: 1 1 0; min-width: 0; }
+.pr .pt .pt-ac { flex: 0 1 auto; min-width: 0; max-width: 68%; display: flex; flex-direction: row; align-items: center; gap: 5px; min-height: 34px; padding: 0 9px; border-radius: 11px; background: #FFF3C4; border: 2px dashed #C98A2B; text-align: left; }
+.pt-ac b { flex: 0 0 auto; font-family: var(--dsp); font-weight: 400; font-size: 14px; line-height: 1.15; color: #7A4E12; white-space: nowrap; }
+.pt-ac small { flex: 0 1 auto; min-width: 0; font-size: 11px; font-weight: 800; line-height: 1.15; color: #8A5A16; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr .pt .pt-ac.on { background: var(--mint); border: 2.5px solid var(--o); --sh: inset 0 -3px 0 var(--mint-lo); }
+.pt-ac.on b, .pt-ac.on small { color: var(--o); }
+.pt-acrow { display: grid; grid-template-columns: 58px repeat(4, 1fr); gap: 5px; align-items: stretch; }
+.pt-acrow.sl { grid-template-columns: 58px repeat(3, 1fr); }
+.pt-acrow .lb { display: flex; flex-direction: column; justify-content: center; font-family: var(--dsp); font-size: 15px; line-height: 1.1; }
+.pt-acrow .lb small { font-family: inherit; font-size: 11px; font-weight: 800; color: var(--sub); white-space: nowrap; }
+.pt-acrow.tp .lb small { color: var(--good); } .pt-acrow.sl .lb small { color: #9A5F14; }
+.pr .pt .pt-acrow .pt-chip { min-height: 40px; padding: 0 2px; }
+.pt-acrow .pt-chip b { font-size: 13.5px; white-space: nowrap; }
+.pt-acrow .pt-chip small { display: block; font-size: 11px; font-weight: 800; }
+.pt-acnote { margin: -3px 2px 0; font-size: 11.5px; font-weight: 700; line-height: 1.3; color: var(--sub); }
+.pt-odds.plan { color: #7A4E12; }
+.pt-carry { padding: 2px 8px; border-radius: 9px; background: #EEF4EA; border: 1.5px solid #B9CDB4; font-size: 11.5px; font-weight: 800; line-height: 1.3; color: #3F5A3A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr .pt .pt-bar .pt-news { padding: 2px 8px; border-radius: 9px; border: 2px solid var(--o); background: #FFF8E4; font-family: var(--dsp); font-size: 12px; line-height: 1.2; color: var(--o); white-space: nowrap; }
+.pr .pt button.mood { cursor: pointer; }
+.pt-quote .mood .nw { margin-left: -1px; font-style: normal; font-family: var(--dsp); font-size: 15px; line-height: 1; color: var(--teal-ink); }
+.pt-quote .mood[data-daynote-mood] { cursor: pointer; }
+@media (max-height: 720px) {
+  .pr .pt .pt-ac { min-height: 30px; }
+  .pt-acnote { display: none; } .pr .pt .pt-acrow .pt-chip { min-height: 32px; } .pt-acrow .pt-chip small { display: none; }
+  .pt-carry { padding: 0 7px; font-size: 11px; }
+}
+
+.pt-acrow .pt-chip small i { font-style: normal; color: var(--teal-ink); }
+.pt-acrow .pt-chip small { white-space: nowrap; font-size: 10.5px; letter-spacing: -.2px; }
+/* 낮은 화면(360×640): 결과 카드가 떠 있는 5초 동안은 차트와 시세 줄을 접어 롱 · 숏이 탭 줄 밑으로 밀리지 않게 한다. 포지션 화면의 단추도 2px 줄인다(U-41 에서 잰 것) */
+@media (max-height: 720px) {
+  .pt:has(.pt-pl.res) .pt-chart, .pt:has(.pt-pl.res) .pt-quote { display: none; }
+  .pt-pl.res .tags { display: none; }
+  .pr .pt .pt-btn { min-height: 43px; }
+}
+@media (max-height: 720px) {
+  .pt-pl:has(.pt-carry) .pt-tense { display: none; }
+  .pr .pt .pt-ct { padding: 3px 0 2px; }
+  .pt-pl:not(.res) { padding-top: 3px; padding-bottom: 3px; }
+}
+@media (max-height: 720px) { .pt-risk.add.bad { display: none; } }
+.pt-stops > .pt-step { min-width: 0; } .pt-step .v b { white-space: nowrap; }

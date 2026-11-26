@@ -188,6 +188,15 @@ export const STORY = {
     L('hero', o.reborn ? '…이번 생에도 새 계좌다. 공짜는 공짜다.' : '…공짜라는 말은 오소리 사무소에서도 들었다.'),
   ],
   /** 이벤트가 끝난 정산: 얼마를 아꼈는지, 이제 얼마를 내는지(숫자는 전부 실제 값) */
+  /** 한 판에 이자 한 번 치를 벌었다(U-41, 이번 생 처음): 오소리 대부 → 추심원 → 주인공. 숫자는 전부 그 거래와 지금 살림의 것 */
+  winClaim: (o: { boss: string; pnl: number; claim: number; spins: number | null; stampLeft: number | null; momLeft: number }): Line[] => [
+    L('boss', o.boss, 'smile'),
+    L('collector', `다음 정산 ${n(o.claim)}은 벌써 손에 있네요오. 저는 그래도 제시간에 와요오.`),
+    L('hero', o.spins !== null && o.spins >= 2 ? `…+${n(o.pnl)}. 알바가 쳇바퀴를 ${o.spins}정산 돌려야 남는 돈이다.` : `…+${n(o.pnl)}. 한 판에 이자 한 번.`),
+    ...(o.momLeft > 0 ? [L('hero', o.stampLeft !== null ? `…오소리 장부의 ${n(o.momLeft)}이 처음으로 작아 보였다. 금박 도장까지 ${n(o.stampLeft)}.` : `…오소리 장부의 ${n(o.momLeft)}이 처음으로 작아 보였다.`)] : []),
+  ],
+  /** 포지션을 든 채 처음 정산을 넘겼다(U-41): 무슨 일이 있었는지 한 줄 */
+  carried: (o: { paid: number; funding: number }): string => `정산을 넘겼다: 손에서 −${n(o.paid)} · 포지션은 그대로${o.funding >= 1 ? ` · 펀딩비 −${n(o.funding)}(증거금에서)` : ''}`,
   feeEventEnd: (o: { ratePct: number; trades: number; saved: number; lev: number }): Line[] => [
     L('sms', `[FRX 숲거래소] 오픈 기념 이벤트가 끝났습니다. 지금부터 거래 수수료 ${o.ratePct}%.`),
     L('sms', o.trades > 0 ? `그동안 수수료 없이 ${o.trades}건. 정가였다면 ${n(o.saved)}을 내셨을 거예요. 감사합니다 ♥` : '그동안 한 건도 안 하셨네요. 저희가 다 아쉬워요 ♥'),

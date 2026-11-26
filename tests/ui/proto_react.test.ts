@@ -32,14 +32,20 @@ describe('거래에 대한 반응 (tradeReaction)', () => {
     expect(w.who).toBe('boss');
     expect(w.lines[0]).toContain('이자 한 번 치');
     expect(w.lines[0]).toContain('쳇바퀴 한 대 4.3정산치');
-    expect(w.once).toBe(false);
+    // U-41: 이번 생 처음은 장면(한 번), 그 뒤로는 오소리 대부 · 추심원 · 족제비가 번갈아 한 줄(되풀이)
+    expect(w).toMatchObject({ key: 'winClaim1', scene: true, once: true });
+    const seen = { winClaim1: true };
+    const again = [2, 3, 4].map((k) => tradeReaction(T({ pnl: 20000 }), C({ seen, claimWins: k }))!);
+    expect(again.map((r) => r.who)).toEqual(['boss', 'collector', 'weasel']);
+    expect(again.every((r) => !r.scene && !r.once)).toBe(true);
+    expect(again[0].lines[0]).toContain('쳇바퀴 한 대 4.3정산치');
     expect(tradeReaction(T({ pnl: -16000 }), C())!).toMatchObject({ who: 'collector', key: 'lossClaim' });
   });
   it('크게 딴 날은 오소리 대부가 장면으로 나온다(한 생에 한 번)', () => {
     const r = tradeReaction(T({ pnl: 50000 }), C())!;
     expect(r).toMatchObject({ key: 'bigWin', who: 'boss', scene: true });
     expect(r.lines).toHaveLength(2);
-    expect(tradeReaction(T({ pnl: 50000 }), C({ seen: { bigWin: true } }))!.key).toBe('winClaim');
+    expect(tradeReaction(T({ pnl: 50000 }), C({ seen: { bigWin: true } }))!.key).toBe('winClaim1');
   });
   it('청산: 전부 걸고 빈털터리 > 빌린 돈으로 > 세 번째 > 첫 청산 > 번갈아 한 줄', () => {
     expect(tradeReaction(T({ liq: true, allIn: true, pnl: -90000 }), C({ cashAfter: 0, liqs: 1 }))!).toMatchObject({ key: 'liqAllIn', scene: true, who: 'boss' });

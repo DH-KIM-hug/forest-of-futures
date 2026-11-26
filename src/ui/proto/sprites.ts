@@ -35,6 +35,15 @@ import mVillage from './img/v5/m_village.webp';
 import sPrologue from './img/v5/s_prologue.webp';
 import eBankrupt from './img/v5/e_bankrupt.webp';
 import eRetire from './img/v5/e_retire.webp';
+// 회차 4 그림(U-41): docs/art/v5/mkweb_art4.py
+import iWheelEmpty from './img/v5/i_wheel_empty.webp';
+import cHeroWalkEmpty from './img/v5/c_hero_walk_empty.webp';
+import cHeroFrozen from './img/v5/c_hero_frozen.webp';
+import eRetire1 from './img/v5/e_retire1.webp';
+import eRetire2 from './img/v5/e_retire2.webp';
+import eRetire3 from './img/v5/e_retire3.webp';
+import eRetire4 from './img/v5/e_retire4.webp';
+import mVillage2 from './img/v5/m_village2.webp';
 
 export type SpriteId =
   | 'home' //      집 그림(바닥 전체). 집 단계별 그림이 생기면 HOME_BY_LEVEL 에
@@ -57,7 +66,12 @@ export type SpriteId =
   | 'pOffice' | 'pCapital' | 'pBank' | 'pAlley' // 가게 안(지도에서 들렀을 때)
   | 'village' //   지도 바탕
   | 'prologue' //  프롤로그: 해 질 녘의 나무 밑동 집
-  | 'endBankrupt' | 'endRetire'; // 엔딩 사진
+  | 'endBankrupt' | 'endRetire' // 엔딩 사진
+  | 'wheelEmpty' //   알바도 주인공도 없는 빈 쳇바퀴(새 그림체, U-41)
+  | 'heroWalkEmpty' // 주인공: 빈손으로 걷는다(프롤로그)
+  | 'heroFrozen' //   주인공: 굳었다(청산이 흔들리는 폭 안 · 청산 임박)
+  | 'endRetire1' | 'endRetire2' | 'endRetire3' | 'endRetire4' // 은퇴 엔딩 넷의 사진(END-R01~R04)
+  | 'village2'; //    지도 바탕: 빈터 다섯(조합 · 사무소 · 캐피탈 · 집 · 뒷골목)이 떨어져 있어 누를 수 있다
 
 /** src = 파일, w·h = 그림 비율(가로/세로를 재는 데만 쓴다) */
 export interface Sprite { src: string; w: number; h: number }
@@ -96,6 +110,14 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   prologue: { src: sPrologue, w: 780, h: 1386 },
   endBankrupt: { src: eBankrupt, w: 640, h: 640 },
   endRetire: { src: eRetire, w: 640, h: 640 },
+  wheelEmpty: { src: iWheelEmpty, w: 238, h: 300 },
+  heroWalkEmpty: { src: cHeroWalkEmpty, w: 243, h: 300 },
+  heroFrozen: { src: cHeroFrozen, w: 216, h: 300 },
+  endRetire1: { src: eRetire1, w: 640, h: 640 },
+  endRetire2: { src: eRetire2, w: 640, h: 640 },
+  endRetire3: { src: eRetire3, w: 640, h: 640 },
+  endRetire4: { src: eRetire4, w: 640, h: 640 },
+  village2: { src: mVillage2, w: 780, h: 1385 },
 };
 /** 컷인에 나오는 사람 → 반신 그림 */
 export const BUST_OF: Partial<Record<string, SpriteId>> = { collector: 'collector', boss: 'boss', weasel: 'weasel', raccoon: 'raccoon', owl: 'owl', viper: 'viper' };
@@ -112,3 +134,10 @@ export const HOME_BY_LEVEL: Sprite[] = [SPRITES.home!];
 export const sprite = (id: SpriteId): Sprite | null => SPRITES[id] ?? null;
 /** 그 이름의 그림이 없으면 대신 쓸 이름들을 차례로 본다(예: 굴리는 자세가 없으면 서 있는 자세) */
 export const spriteOr = (...ids: SpriteId[]): Sprite | null => { for (const id of ids) { const s = SPRITES[id]; if (s) return s; } return null; };
+
+/** 은퇴 엔딩(END-R01~R04)마다 사진 한 장(U-41). 없는 엔딩은 예전 사진(endRetire) */
+export const RETIRE_PHOTO: Record<string, SpriteId> = { 'END-R01': 'endRetire1', 'END-R02': 'endRetire2', 'END-R03': 'endRetire3', 'END-R04': 'endRetire4' };
+/** 지도 그림(village2) 위의 빈터: 그림 너비 · 높이에 대한 비율. home = 내 집(집 탭으로), 나머지는 엔진 채권처 id */
+export const MAP_SPOTS: Record<string, { x: number; y: number }> = {
+  bank: { x: 0.47, y: 0.215 }, shark1: { x: 0.44, y: 0.455 }, capital: { x: 0.82, y: 0.575 }, home: { x: 0.19, y: 0.755 }, shark2: { x: 0.885, y: 0.105 },
+};

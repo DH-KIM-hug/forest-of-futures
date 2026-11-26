@@ -3,8 +3,8 @@
 // 엄마의 죽음은 보여 주지 않는다. 새 그림은 만들지 않고 시제품 부품(art.tsx)으로 그린다. 숫자는 엔진 값.
 import { useEffect, useRef, useState } from 'react';
 import { O, Acorn } from './art';
-import { sprite } from './sprites';
-import { HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT } from './home';
+import { sprite, spriteOr } from './sprites';
+import { HOME_IMG, WHEEL_SLOTS, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, EMPTY_WHEEL_H, EMPTY_WHEEL_DY } from './home';
 import { play, playTap } from './audio';
 import { balance, lenderById } from '../../engine/data';
 import { comma } from '../../engine/util';
@@ -106,7 +106,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
     : step === 'p3' ? '' : gain ? '' : '가진 돈 0. 쳇바퀴를 눌러 굴린다.';
   const hint = step === 'p1' ? '화면을 누르면 걷는다' : step === 'p2' && !ribbon ? '쳇바퀴를 눌러 본다' : step === 'p3' && !ledger ? '탭하면 계속' : '';
   const [hx, hy, hk] = WALK[Math.min(walk, 2)];
-  const emptyImg = sprite('heroEmpty')!, rideImg = sprite('heroWheel')!, wheelImg = sprite('wheel')!, colImg = sprite('cCollector')!, outside = sprite('prologue')!;
+  const emptyImg = sprite('heroEmpty')!, rideImg = sprite('heroWheel')!, wheelImg = spriteOr('wheelEmpty', 'wheel')!, walkImg = spriteOr('heroWalkEmpty', 'heroEmpty')!, colImg = sprite('cCollector')!, outside = sprite('prologue')!;
 
   return (
     <div className={'pr-pro s-' + step} role="dialog" aria-label="프롤로그" data-step={step} data-talk={talk} data-typing={sp.typing ? '1' : ''} onClick={tapStage}>
@@ -119,8 +119,10 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             {walk >= 1 && <circle className="pp-stamp" cx={318} cy={318} r={30} fill="none" stroke="#fff" strokeWidth={3} strokeDasharray="5 7" strokeLinecap="round" style={{ transformOrigin: '318px 318px' }} />}
             <g className="pp-walk" style={{ transform: `translate(${hx}px, ${hy}px) scale(${hk})` }}>
               <ellipse cx={0} cy={2} rx={24} ry={6} fill="#000" opacity={0.18} />
-              {/* 폰은 아직 없다(걷는 그림에는 폰이 들려 있어서 빈손 그림을 쓴다) */}
-              <image data-art="heroEmpty" href={emptyImg.src} x={-36 * (emptyImg.w / emptyImg.h)} y={-72} width={72 * (emptyImg.w / emptyImg.h)} height={72} />
+              {/* 폰은 아직 없다: 빈손으로 걷는 그림(U-41). 멈춰 선 마지막 걸음에는 서 있는 빈손 그림 */}
+              {walk < 2
+                ? <image data-art="heroWalkEmpty" href={walkImg.src} x={-36 * (walkImg.w / walkImg.h)} y={-72} width={72 * (walkImg.w / walkImg.h)} height={72} />
+                : <image data-art="heroEmpty" href={emptyImg.src} x={-36 * (emptyImg.w / emptyImg.h)} y={-72} width={72 * (emptyImg.w / emptyImg.h)} height={72} />}
             </g>
           </g>
         )}
@@ -130,7 +132,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             <g data-hit="wheel" onClick={(e) => { e.stopPropagation(); tapWheel(); }} className={gain ? 'pa-jiggle' : ''} style={{ transformOrigin: `${WX}px ${WY}px` }}>
               {gain
                 ? <image data-art="heroWheel" className="pa-jog" href={rideImg.src} x={WX - 54 * (rideImg.w / rideImg.h)} y={WY + 3 - 108} width={108 * (rideImg.w / rideImg.h)} height={108} />
-                : <image href={wheelImg.src} x={WX + WHEEL_BOX.dx * HS} y={WY + WHEEL_BOX.dy * HS} width={WHEEL_BOX.w * HS} height={WHEEL_BOX.h * HS} />}
+                : <image data-art="wheelEmpty" href={wheelImg.src} x={WX - (EMPTY_WHEEL_H * HS * (wheelImg.w / wheelImg.h)) / 2} y={WY + EMPTY_WHEEL_DY * HS - EMPTY_WHEEL_H * HS} width={EMPTY_WHEEL_H * HS * (wheelImg.w / wheelImg.h)} height={EMPTY_WHEEL_H * HS} />}
               {!ribbon && <g className="pp-glowwrap"><circle className="pp-glow" cx={WX + 34} cy={WY - 88} r={22} fill="#F8D978" /><Ribbon x={WX + 34} y={WY - 88} k={0.7} /></g>}
               <rect x={WX - 66} y={WY - 112} width={132} height={130} fill="transparent" />
               {step === 'p2' && !ribbon && !card && <Finger x={WX} y={WY - 46} />}

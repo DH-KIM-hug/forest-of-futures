@@ -4,7 +4,7 @@ import { endingCardModel } from '../vm/records';
 import { comma } from '../../engine/util';
 import { lifeNo } from './model';
 import { rebirthOverride } from './dev';
-import { sprite } from './sprites';
+import { sprite, RETIRE_PHOTO, type SpriteId } from './sprites';
 import { treeView, type NodeView } from '../../engine/skilltree';
 import { endingById, skillById, skillPathEndings } from '../../engine/data';
 import { act1Text } from '../../engine/act1';
@@ -14,9 +14,9 @@ import { play } from './audio';
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
 
 /** 폴라로이드 속 마지막 사진(U-40 그림): 파산 = 색이 빠진 빈 집에 폰을 든 주인공, 은퇴 = 색이 남은 해 질 녘의 집. */
-function Photo({ retired }: { retired: boolean }) {
-  const art = sprite(retired ? 'endRetire' : 'endBankrupt')!;
-  return <img className="photo" data-art={retired ? 'endRetire' : 'endBankrupt'} src={art.src} alt="" draggable={false} />;
+function Photo({ retired, id }: { retired: boolean; /** 엔딩 id: 은퇴 엔딩 넷은 사진이 따로 있다(U-41) */ id?: string }) {
+  const key: SpriteId = retired ? (id && RETIRE_PHOTO[id] && sprite(RETIRE_PHOTO[id]) ? RETIRE_PHOTO[id] : 'endRetire') : 'endBankrupt';
+  return <img className="photo" data-art={key} src={sprite(key)!.src} alt="" draggable={false} />;
 }
 
 /** 엔딩 카드 → 환생(상속포기 갈래 자동) → 다음 생. 가훈 값은 엔진 값(황금 실물 도토코인으로 표기). */
@@ -36,7 +36,7 @@ export function EndingFlow() {
     return (
       <div className={'pr-end' + (retired ? ' retired' : '')} data-ending={m.id} data-cause={m.cause} role="dialog" aria-label="엔딩">
         <figure className="polaroid">
-          <Photo retired={retired} />
+          <Photo retired={retired} id={m.id} />
           <figcaption>{m.title}</figcaption>
           <div className={'stamp' + (retired ? ' gold' : '')} aria-label={retired ? '은퇴' : '파산'}>{retired ? '은퇴' : '파산'}</div>
         </figure>

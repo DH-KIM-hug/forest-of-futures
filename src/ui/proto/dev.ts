@@ -15,6 +15,11 @@ import { catchUp } from '../../engine/offline';
 import { retireAct1 } from '../../engine/act1Retire';
 import type { Bar } from '../../engine/feed/types';
 import type { GameState } from '../../engine/types';
+import { useUI } from '../uiStore';
+import { forecast } from '../../engine/settlement';
+import { exitFee } from '../../engine/futures';
+import { acornStops } from './stops';
+import { ctxOfPosition, plans } from './exitPlan';
 import type { Action } from '../../engine/actions';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -245,6 +250,53 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
         useGame.getState().setGame(g);
       }, 1500);
       return midgame(base);
+    }
+    // ── U-41 화면 확인용 ──
+    case 'ac': case 'post': {
+      // 출구를 도토리로: 200배가 열린 살림에서 주문 판(ac = 오픈 기념 중, post = 이벤트가 끝난 뒤의 생 — 수수료 0.02%)
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'phone', seen: { ...seen, capitalSms: true, feeEventSms: true, dayNoteHint: true } });
+      const g = midgame(base, { closed: 10, waiver: true, cash: 110_000 });
+      if (name === 'post') g.run.settleNo = 22;
+      useUI.getState().setTrade({ lev: 200, pct: 50, tpK: q.get('pk') === '0' ? null : 1, slK: q.get('pk') === '0' ? null : 1 });
+      return clone(g);
+    }
+    case 'win': case 'winhold': {
+      // 한 판에 이자 한 번 치: 200배 절반에 익절 = 이자 한 번 치를 걸어 둔 포지션. win = 다음 틱에 익절가를 넘어 있다(엔진이 익절로 닫는다 → 장면 · 집의 잔치). winhold = 아직 들고 있다(정산이 가깝다)
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'phone', seen: { ...seen, capitalSms: true, feeEventSms: true, dayNoteHint: true }, tradeLife: 4_200, closes: 6, wins: 4, paidLife: 24_400 });
+      let g = midgame(base, { closed: 10, waiver: true, cash: 120_000, wheels: 2 });
+      stepMut(g, { type: 'action', action: { type: 'stamp', lender: 'shark1', mult: 1 } }); // 한 번 갚아 본 살림: 목표 막대가 금박 도장(5만)이다
+      P.patch({ goalIdx: 5, everOpened: true, seen: { ...useProto.getState().seen, repay: true, momClue_frame: true, momClue_reason: true } });
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 200, marginPct: 50, sl: null, tp: null } });
+      const p = g.run.positions.DTC;
+      const due = Math.round(forecast(g).interest + forecast(g).living);
+      const st = acornStops(ctxOfPosition(g.run, p), due, due);
+      plans.DTC = { tp: due, sl: due };
+      p.tpRoe = st.tp; p.slRoe = st.sl;
+      const px = g.run.prices.DTC;
+      // 진입가를 옮긴다(화면 확인용): win = 이미 익절가를 넉넉히 넘었다(익절 폭의 세 배 — 연습 시세의 첫 틱이 내려도 익절로 닫힌다. 닫히는 값은 익절가라 손익은 같다), winhold = 익절까지 7할
+      p.entry = px / (1 + ((st.tp ?? 0) / 100 / p.lev) * (name === 'win' ? 3 : 0.7));
+      if (name === 'winhold') g.run.settleIn = Math.min(50, balance.settlement.intervalSec - 2);
+      g = clone(g);
+      return g;
+    }
+    case 'frozen': {
+      // 굳은 주인공(화면 확인용): 25배 포지션의 청산가가 0.8% 앞이다. 시계를 멈춰 둔다(연습 시세는 빨라서 몇 초면 청산된다)
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'lot', seen: { ...seen, capitalSms: true, feeEventSms: true } });
+      const g = midgame(base, { closed: 11, waiver: true, cash: 80_000 });
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 25, marginPct: 25, sl: null, tp: null } });
+      const p = g.run.positions.DTC;
+      p.entry = (g.run.prices.DTC * 0.992) / (1 - p.margin / p.notional + (balance.trading.maintenanceRate as number));
+      useGame.getState().setSpeed(0);
+      return clone(g);
+    }
+    case 'cheer': {
+      // 크게 딴 뒤의 집: 알바가 뛰고 쳇바퀴에 불이 켜진다
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'lot', seen: { ...seen, capitalSms: true, feeEventSms: true }, tradeLife: 21_900, claimWins: 1, closes: 7, wins: 5, paidLife: 24_400, cheer: { at: Date.now(), amount: 15_812, worth: 1.02 } });
+      const g = midgame(base, { closed: 11, waiver: true, cash: 136_000, wheels: 3 });
+      stepMut(g, { type: 'action', action: { type: 'stamp', lender: 'shark1', mult: 1 } });
+      P.patch({ goalIdx: 5, everOpened: true, seen: { ...useProto.getState().seen, repay: true } });
+      if (q.get('pidle')) { g.run.equipment[2].staffed = false; }
+      return clone(g);
     }
     default: return base;
   }

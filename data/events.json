@@ -9,6 +9,7 @@
       "weight": 10,
       "text": "숲속중앙은행, 기준금리 인상. 다음 정산부터 이자율이 두 배입니다. 고정금리 빚은 그대로입니다.",
       "announceBefore": 1,
+      "cooldownSettlements": 10,
       "effect": {
         "type": "rateMultiplier",
         "value": 2,

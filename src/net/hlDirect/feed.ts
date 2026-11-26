@@ -21,7 +21,7 @@ export interface HlOpts {
   now?: () => number;
   replayMaxTicks?: number; // 이보다 오래 비우면 틱 대신 봉으로 메운다(서버 판과 같은 60)
 }
-export interface Warm { hello: HelloMsg; history: Record<string, number[]> }
+export interface Warm { hello: HelloMsg; history: Record<string, number[]>; /** 지난 하루의 1분 봉(가상 가격). 시세면이 읽는다 */ day: Record<string, { t: number; o: number; h: number; l: number; c: number }[]> }
 
 const TRADABLE: Record<string, string> = Object.fromEntries(
   marketDefs.filter((m) => m.id !== INDEX_ID).map((m) => [m.id, m.id] as const),
@@ -89,6 +89,9 @@ export class HlDirectFeed implements Feed {
   /** 시작할 때 한 번: 최근 24시간 봉으로 정산 봉(480칸 이하)·평소 값·차트 기록을 만든다. 첫 틱 뒤에 부른다. */
   async loadWarm(): Promise<Warm | null> {
     await this.untilAnchored();
+    // 첫 틱에 값이 아직 안 온 종목(조용한 종목은 첫 값이 몇 초 늦다)이 있으면 조금 기다린다 — 배율을 모르면 그 종목의 지난 봉을 가상 가격으로 못 바꾼다.
+    // 회차 4 에서 본 것: 기다리지 않으면 삼솔전자 · 멍도토의 차트 기록과 지난 하루(시세면)가 비어 있었다. 8초가 지나도 없으면 있는 것만 쓴다.
+    for (let i = 0; i < 32 && Object.values(TRADABLE).some((k) => !(this.core.lastMids[k] > 0)); i++) await new Promise((r) => setTimeout(r, 250));
     const nowMs = this.o.now();
     const cs = await fetchCandles(this.o.post, nowMs - 24 * 3600 * 1000, nowMs);
     this.means = volMeans(cs);
@@ -100,10 +103,13 @@ export class HlDirectFeed implements Feed {
     for (const id of ids) rows[id] = b180.filter((b) => b.market === id).map((b) => [b.n0, b.o, b.h, b.l, b.c, b.vol, b.buy]);
     const history: Record<string, number[]> = {};
     for (const id of ids) history[id] = secondsOf(b60.filter((b) => b.market === id), 600);
+    const day: Warm['day'] = {};
+    for (const id of ids) day[id] = b60.filter((b) => b.market === id).map((b) => ({ t: b.n0 * 1000, o: b.o, h: b.h, l: b.l, c: b.c }));
     const n = this.lastN ?? Math.floor(nowMs / 1000);
     return {
       hello: { t: 'hello', n, ts: n, epoch: 0, st: this.core.status, markets: ids, warm: { res: 180, bars: rows }, avg: avgOf(b60, b180, ids) },
       history,
+      day,
     };
   }
 

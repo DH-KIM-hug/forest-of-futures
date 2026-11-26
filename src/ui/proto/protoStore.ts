@@ -83,6 +83,12 @@ interface P {
   clueAt: number;
   /** 자리를 비운 사이 보고서(돌아왔을 때 한 장, away.ts) */
   away: AwayCard | null;
+  /** 도토리일보 시세면이 펴져 있다(daynote.ts) */
+  dayNote: boolean;
+  /** 이번 생에 거래가 벌어 온 돈(수수료 포함, 튜토리얼 거래는 빼고) · 한 판에 이자 한 번 치를 번 횟수 · 정산 때 낸 돈의 합(U-41: 집 판과 장부의 한 줄) */
+  tradeLife: number; claimWins: number; paidLife: number;
+  /** 방금 크게 땄다: 집이 잠깐 들썩인다(알바가 뛰고 쳇바퀴에 불이 켜진다). at = 그때(ms), amount = 딴 돈, worth = 이자 몇 번 치 */
+  cheer: { at: number; amount: number; worth: number } | null;
   setPanel: (open: boolean) => void;
   setTab: (t: Tab) => void;
   patch: (p: Partial<P>) => void;
@@ -97,6 +103,7 @@ const fresh = () => ({
   waiting: false, loanTaken: false, sentAwayAt: -1, tutorial: 'none' as P['tutorial'],
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
   think: null as P['think'], away: null as P['away'], clueAt: -1,
+  dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
 });
 
 export const useProto = create<P>((set) => ({
