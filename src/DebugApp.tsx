@@ -1,4 +1,4 @@
-// 임시 디버그 화면(M1). 상태를 보여 주고 줍기/채굴/구매/팔기/대출/도장을 눌러 볼 수 있다. 화면 설계는 M7 에서.
+// 임시 디버그 화면(M1). 상태를 보여 주고 채굴/구매/팔기/대출/도장을 눌러 볼 수 있다. 화면 설계는 M7 에서.
 import { useGame } from './store/gameStore';
 import { COINS, coinWheelDefs, tierDefs, lenderDefs, friendDefs, houseDefs, wheelByCoin } from './engine/data';
 import { netWorth, stage, totalDebt, walletValueOf } from './engine/selectors';
@@ -34,12 +34,12 @@ export default function DebugApp() {
         다음 정산: 캔 값 +{comma(f.mined)} / 전기세 −{comma(f.power)} / 이자 −{comma(f.interest)} / 생활비 −{comma(f.living)} = {f.net >= 0 ? '+' : ''}{comma(f.net)}
       </p>
       <div>
-        <button style={btn} onClick={() => act({ type: 'tap' })}>{stage(run) === 0 ? '도토리 줍기 (+27)' : `채굴 탭 (${run.riding})`}</button>
+        <button style={btn} onClick={() => act({ type: 'tap' })}>{stage(run) === 0 ? '쳇바퀴 없음' : `채굴 탭 (${run.riding})`}</button>
         <button style={btn} onClick={() => advance(10)}>10초</button>
         <button style={btn} onClick={() => advance(180)}>정산(3분)</button>
         <button style={btn} onClick={() => setSpeed(speed === 1 ? 20 : 1)}>배속 x{speed}</button>
         <button style={btn} onClick={reset}>새로 시작</button>
-        <span> 줍기 {run.acornTaps}회 · 누적 채굴 {comma(run.minedValue)}어치</span>
+        <span> 누적 채굴 {comma(run.minedValue)}어치</span>
       </div>
       <h3>쳇바퀴·지갑</h3>
       {coinWheelDefs.map((w) => {

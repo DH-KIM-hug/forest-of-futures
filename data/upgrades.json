@@ -3,50 +3,6 @@
   "_doc": "세대 안의 잘게 쪼갠 업그레이드. 비용(n단계->n+1) = ceil(기준 × r^n). baseCostOfWheel/baseCostOfTier 는 그 쳇바퀴 가격/그 설비 첫 대 가격에 곱한다. GDD_v2 3.4a·4.4",
   "tracks": [
     {
-      "id": "glove",
-      "scope": "body",
-      "names": [
-        "목장갑",
-        "코팅 장갑",
-        "산재 처리 안 되는 장갑"
-      ],
-      "effect": {
-        "stat": "acornTap",
-        "addPct": 4
-      },
-      "maxLevel": 10,
-      "baseCost": 4000,
-      "r": 1.15,
-      "lookAt": [
-        1,
-        5,
-        10
-      ]
-    },
-    {
-      "id": "shoes",
-      "scope": "body",
-      "names": [
-        "맨발 달리기",
-        "시장표 운동화",
-        "러닝화",
-        "한정판 러닝화"
-      ],
-      "effect": {
-        "stat": "mineTap",
-        "addValue": 2
-      },
-      "maxLevel": 30,
-      "baseCost": 1500,
-      "r": 1.15,
-      "lookAt": [
-        1,
-        10,
-        20,
-        30
-      ]
-    },
-    {
       "id": "oil",
       "scope": "coinWheel",
       "names": [

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveEquip, giveWheel, noDebts, openFutures, settleOnce, tapN, clone } from './helpers';
+import { A, bare, giveEquip, giveWheel, noDebts, openFutures, settleOnce, tapN, clone } from './helpers';
 import { declareBankruptcy } from '../../src/engine/bankruptcy';
 import { hanCalc, openEstate, previewBranch, statement, treeStatus, hanTotal, canRetire, pawn } from '../../src/engine/generation';
 import { endings, legacy, treeById } from '../../src/engine/data';
@@ -31,7 +31,7 @@ function inherit(g: GameState, branch: 'renounce' | 'limited' | 'simple' | 'gift
 }
 /** 가진 것 없이 빚만 있는 부모. */
 function parentWithDebts(d: Partial<Record<'bank' | 'capital' | 'shark1' | 'shark2', number>>) {
-  const g = fresh();
+  const g = bare();
   g.family.generation = 3;
   g.run.cash = 0;
   noDebts(g);
@@ -42,7 +42,7 @@ const startDebt = (g: GameState) => (['bank', 'capital', 'shark1', 'shark2'] as 
 
 describe('K. 세대·가훈·가문 특성', () => {
   it('AC-v2-100 3세대 파산: 엔딩 카드를 넘기면 재산 명세서에 세 갈래 카드(받는 가훈·남는 것·시작 빚·첫 정산 수지)가 보이고 시간 제한·권유 문구는 없다', () => {
-    const g = fresh();
+    const g = bare();
     g.family.generation = 3;
     bust(g);
     expect(g.estate!.step).toBe('card');
@@ -62,7 +62,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-101 최고 순자산 1,000,000·누적 채굴 400,000·새 엔딩·장부 20쪽·족보 0: 성과 21, 포기 +25, 한정 +12, 단순 0(성과 21 이월)', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     bust(g, { peak: 1_000_000, mined: 400_000 });
     fakeLedger(g, 19);
@@ -83,7 +83,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-102 이미 2번 얻은 엔딩(이번이 3번째): 반복 감쇠 0.49·새 엔딩 점수 5 없음. 8번째여도 0.3 아래로 안 내려간다', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     bust(g, { peak: 1_000_000, mined: 400_000 });
     fakeLedger(g, 20);
@@ -99,7 +99,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-103 단순승인 두 번 뒤 상속포기: 세 세대의 성과(최고 순자산 최댓값, 채굴·엔딩 점수 합)로 한 번에 계산하고 쌓인 성과는 0', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     bust(g, { peak: 400_000, mined: 100_000 });
     const pts = [g.pendingEnding!.isNew ? 5 : 0];
@@ -125,7 +125,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-104 최고 순자산이 음수인 세대: 재산 항은 0', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     bust(g, { peak: -500_000, mined: 0 });
     g.run.peakNetWorth = -500_000;
@@ -134,7 +134,7 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(Number.isFinite(c.award)).toBe(true);
   });
 
-  it('AC-v2-105 부모가 캐피탈 20만·오소리 16만: 상속포기 -> 물려받는 빚 0, 학자금 15만 + 연대보증 8만, 현금 70,000, 텐트, 쳇바퀴·설비·계좌 없음, 단계 0, 떼인 채권처 한도 절반', () => {
+  it('AC-v2-105 부모가 캐피탈 20만·오소리 16만: 상속포기 -> 물려받는 빚 0, 학자금 15만 + 연대보증 8만, 현금 70,000, 빈 오두막, 도토코인 쳇바퀴 한 대(새 판의 기본, U-29)뿐 설비·계좌 없음, 단계 1, 떼인 채권처 한도 절반', () => {
     const g = parentWithDebts({ capital: 200000, shark1: 160000 });
     bust(g);
     inherit(g, 'renounce');
@@ -145,12 +145,12 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(startDebt(g)).toBe(230000);
     expect(r.cash).toBe(70000);
     expect(r.house).toBe(0);
-    expect(Object.keys(r.coinWheels)).toEqual([]);
+    expect(r.coinWheels).toEqual({ DTC: { on: true, autoSell: true, tagBy: null } });
     expect(r.equipment).toEqual([]);
     expect(r.futures.open).toBe(false);
-    expect(stage(r)).toBe(0);
+    expect(stage(r)).toBe(1);
     expect(g.family.lenderRelations.capital).toBe('grudge');
-    expect(lenderLimit(g, 'capital')).toBe(200000 * 0.5);
+    expect(lenderLimit(g, 'capital')).toBe((200000 + 10000 * 0.8 * 0.5) * 0.5); // (빈 오두막 한도 + 쳇바퀴 평가액 8,000 의 50%) × 원한 절반 = 102,000
   });
 
   it('AC-v2-106 부모에게 사채가 없으면 연대보증 5만(시작 빚 20만), 사채 50만이면 15만(30만)', () => {
@@ -246,7 +246,7 @@ describe('K. 세대·가훈·가문 특성', () => {
       inherit(g, b);
       expect(startDebt(g) + g.run.debts.tax.principal).toBeGreaterThanOrEqual(200000);
     }
-    const g = fresh();
+    const g = bare();
     noDebts(g);
     g.run.house = 1;
     g.run.cash = 50000; // 순재산 50,000 + 오두막 450,000 = 500,000 → 세금 60,000
@@ -259,7 +259,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-112 빚 0·오두막 이상 은퇴: 엔딩 없이 전부 그대로, 순재산 100만이면 세금 21만, 한은 받지 않고 성과(+8)가 이월된다', () => {
-    const g = fresh();
+    const g = bare();
     noDebts(g);
     g.run.house = 1;
     g.run.cash = 542000; // + 쳇바퀴 8,000 + 오두막 450,000 = 1,000,000
@@ -286,12 +286,12 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(g.family.traits).toEqual(['silverspoon']);
     expect(g.family.retireStreak).toBe(1);
     // 빚이 있거나 텐트면 은퇴할 수 없다
-    const h = fresh();
+    const h = bare();
     expect(canRetire(h)).toBe(false);
   });
 
-  it('AC-v2-113 가훈 20, grip 0단계: 1단계 5·2단계 8·3단계 12. 두 단계를 사면 가훈 7, 줍기·채굴 1회 +20%', () => {
-    const g = fresh();
+  it('AC-v2-113 가훈 20, grip 0단계: 1단계 5·2단계 8·3단계 12. 두 단계를 사면 가훈 7, 채굴 1회 +20%', () => {
+    const g = bare();
     g.family.han = 20;
     expect([0, 1, 2].map((l) => treeCost('grip', l))).toEqual([5, 8, 12]);
     expect(A(g, { type: 'buyTree', id: 'grip' }).ok).toBe(true);
@@ -300,9 +300,9 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(g.family.hanSpent).toBe(13);
     expect(g.family.tree.grip).toBe(2);
     expect(A(g, { type: 'buyTree', id: 'grip' }).ok).toBe(false); // 12 > 7
-    const cash = g.run.cash;
+    giveWheel(g, 'DTC');
     tapN(g, 10);
-    expect(Math.round(g.run.cash - cash)).toBe(324); // 27 × 1.2 × 10
+    expect(g.run.wallet.DTC.qty * g.run.refPrice.DTC).toBeCloseTo(24, 6); // 2 × 1.2 × 10
     expect(treeStatus(g).find((t) => t.id === 'grip')).toMatchObject({ level: 2, cost: 12, canBuy: false });
   });
 
@@ -326,7 +326,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-115 haggle 3: 오소리 이자율 4% × 0.97³. nerve 2: 계좌를 열 때 상한 200', () => {
-    const g = fresh();
+    const g = bare();
     g.family.tree = { haggle: 3, nerve: 2 };
     noDebts(g);
     g.run.debts.shark1.principal = 100000;
@@ -366,7 +366,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('AC-v2-117 빚 없는 은퇴 2대 연속 뒤 그다음 세대가 세금을 기한 안에 완납하면 「고리 끊기」', () => {
-    const g = fresh();
+    const g = bare();
     noDebts(g);
     g.run.house = 1;
     g.run.cash = 800000;
@@ -418,7 +418,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   // ── M4 보조 규칙 ────────────────────────────────────────────────────
   it('가훈 문구: 원인마다 maxims.byCause 의 한 줄이 {points} 를 채워 estate 에 남는다', () => {
     for (const cause of Object.keys(legacy.maxims.byCause)) {
-      const g = fresh();
+      const g = bare();
       g.run.cash = 0;
       bust(g, { peak: 1_000_000, mined: 400_000 });
       g.estate = { ...g.estate!, cause, step: 'statement' };
@@ -448,7 +448,7 @@ describe('K. 세대·가훈·가문 특성', () => {
     const total = startDebt(g);
     expect(total).toBeGreaterThanOrEqual(200000);
     expect(total).toBeLessThanOrEqual(300000);
-    g = fresh();
+    g = bare();
   });
 
   it('원한: 갚지 못한 채권처만 원한(한도 절반·금리 +1%p), thickskin 이 깎임을 줄인다', () => {
@@ -463,7 +463,7 @@ describe('K. 세대·가훈·가문 특성', () => {
   });
 
   it('유품 전당: 유품 단계별 5만/15만/40만을 오소리·독사에서 빌리고, 다 갚으면 돌아오며, 맡긴 채 파산하면 0단계', () => {
-    const g = fresh();
+    const g = bare();
     noDebts(g);
     g.family.heirlooms = { h_liq: { level: 2, pawnedTo: null } };
     g.run.cash = 0;
@@ -475,7 +475,7 @@ describe('K. 세대·가훈·가문 특성', () => {
     A(g, { type: 'stamp', lender: 'shark1', mult: 'all' });
     expect(g.family.heirlooms.h_liq.pawnedTo).toBeNull();
     // 맡긴 채 파산
-    const h = fresh();
+    const h = bare();
     h.family.heirlooms = { h_liq: { level: 2, pawnedTo: null } };
     A(h, { type: 'pawn', heirloom: 'h_liq', lender: 'shark1' });
     h.run.cash = 0;

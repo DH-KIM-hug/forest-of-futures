@@ -83,6 +83,9 @@ export function migrate(raw: unknown): GameState | null {
   if (!valid(x)) return null;
   const base = createGame({ seed: x.run.seed ?? 1, deviceId: x.deviceId });
   const g = fill(base, x) as GameState;
+  // 가진 것의 목록(쳇바퀴·지갑)은 저장값 그대로: 새 판의 시작 쳇바퀴(U-29)가 압류·판매로 잃은 자리에 되살아나면 안 된다.
+  if (isObj(x.run.coinWheels)) g.run.coinWheels = x.run.coinWheels;
+  if (isObj(x.run.wallet)) g.run.wallet = x.run.wallet;
   g.estate = x.estate ?? null;
   g.pendingEnding = x.pendingEnding ?? null;
   g.version = 2;

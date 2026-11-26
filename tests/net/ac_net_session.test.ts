@@ -4,7 +4,7 @@ import { attachServerFeed, applyHello, type Session } from '../../src/net/sessio
 import { stepMut } from '../../src/engine/game';
 import { liqPrice } from '../../src/engine/futures';
 import type { AwayReport, GameState } from '../../src/engine/types';
-import { A, fresh, openFutures, tickN } from '../engine/helpers';
+import { A, bare, openFutures, tickN } from '../engine/helpers';
 import { cells, flush, hello, kmsg, makeNet } from './netHelpers';
 
 let net: ReturnType<typeof makeNet>;
@@ -15,7 +15,7 @@ let away: AwayReport[];
 let sess: Session;
 
 function setup(prep?: (g: GameState) => void, lastSeen = 1000) {
-  g = fresh();
+  g = bare();
   openFutures(g);
   g.run.cash = 1_000_000;
   prep?.(g);
@@ -133,7 +133,7 @@ describe('M6 ServerFeed ↔ 엔진', () => {
   });
 
   it('새 게임의 세대 시작가는 첫 틱의 서버 가격이다', async () => {
-    g = fresh();
+    g = bare();
     sets = [];
     feed = new ServerFeed({ baseUrl: 'http://srv', wsFactory: net.wsFactory, fetchFn: net.fetchFn });
     sess = attachServerFeed(feed, { get: () => g, set: (x) => { g = x; } });
@@ -146,7 +146,7 @@ describe('M6 ServerFeed ↔ 엔진', () => {
   });
 
   it('hello 의 평소 값과 준비 봉(정산 봉 480칸)이 엔진에 들어가 정보 규칙이 돈다 (AC-v2-139 앱 쪽)', () => {
-    const x = fresh();
+    const x = bare();
     const rows = Array.from({ length: 480 }, (_, i) => [i * 180, 100, 101, 99, 100, 1, 0.5]);
     applyHello(x, hello(1, 'open', {
       warm: { res: 180, bars: { DTC: rows } },

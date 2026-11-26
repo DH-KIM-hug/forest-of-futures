@@ -23,8 +23,6 @@ export function buildScenario(name: string, base: GameState): GameState {
   g.settings.prologueSeen = true;
   const stage1 = () => {
     wheels(g, ['DTC', 'BTH', 'MDT']);
-    run.acornTaps = 240;
-    run.stats.signSeen = true;
     run.cash = 184_500;
     run.minedValue = 31_200;
     run.house = 1;
@@ -34,8 +32,8 @@ export function buildScenario(name: string, base: GameState): GameState {
     run.prices.BTH *= 0.93;
   };
   switch (name) {
-    case 'stage0': run.acornTaps = 120; break;
-    case 'sign': run.acornTaps = 240; run.stats.signSeen = true; run.cash = 52_000; break;
+    case 'stage0': break; // 시작: 엄마의 쳇바퀴 한 대, 현금 0
+    case 'sign': run.coinWheels = {}; run.riding = null; run.cash = 52_000; break; // 쳇바퀴를 잃은 뒤(다시 살 수 있다)
     case 'stage1': stage1(); break;
     case 'rev': stage1(); run.prices.BTH *= 0.5; run.debts.shark1.principal = 200_000; run.debts.shark1.overdue = 1; run.equipment[1].tagBy = 'shark1'; run.coinWheels.BTH.tagBy = 'shark1'; break;
     case 'four': stage1(); wheels(g, ['DTC', 'BTH', 'MDT', 'SMS']); run.house = 2; break;

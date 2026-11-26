@@ -1,6 +1,6 @@
 // M9 화면(엔딩 카드·재산 명세서·기록관·전광판·프롤로그)의 읽기 모델 시험.
 import { describe, expect, it } from 'vitest';
-import { A, fresh, giveWheel, clone } from '../engine/helpers';
+import { A, bare, giveWheel, clone } from '../engine/helpers';
 import { declareBankruptcy } from '../../src/engine/bankruptcy';
 import { endings } from '../../src/engine/data';
 import { archiveEntry } from '../../src/engine/endings';
@@ -10,7 +10,7 @@ import { pctStr } from '../../src/ui/vm/village';
 import { PROLOGUE } from '../../src/ui/overlays/Prologue';
 
 function bankrupt(gen = 3) {
-  const g = fresh();
+  const g = bare();
   g.family.generation = gen;
   giveWheel(g, 'DTC');
   g.run.debts.shark1.principal = 400_000;
@@ -21,7 +21,7 @@ function bankrupt(gen = 3) {
 
 describe('AC-v2-128 엔딩 카드', () => {
   it('번호·원인 띠, 마지막 세 장면(시각), 한 끗 차이(최대 2), 다음 세대에 남는 것, 새 엔딩, 장부 n / 200', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     for (const t of ['tap', 'tap']) A(g, { type: t as 'tap' });
     A(g, { type: 'borrow', lender: 'capital' });
@@ -45,7 +45,7 @@ describe('AC-v2-128 엔딩 카드', () => {
   it('이미 얻은 엔딩은 "이미 수집(n번째)"', () => {
     const g = bankrupt();
     const id = g.pendingEnding!.id;
-    const g2 = fresh();
+    const g2 = bare();
     giveWheel(g2, 'DTC');
     g2.family.ledger[id] = { count: 2, holders: [{ gen: 2, name: 'a' }], firstAt: 2, scenes: [] };
     g2.run.debts.shark1.principal = 400_000;
@@ -73,7 +73,7 @@ describe('AC-v2-100 재산 명세서', () => {
     expect(m.parent[0].label).toBe('현금');
   });
   it('은퇴(증여)는 한 갈래', () => {
-    const g = fresh();
+    const g = bare();
     g.run.house = 1;
     g.run.debts.bank.principal = 0;
     g.run.debts.capital.principal = 0;
@@ -85,7 +85,7 @@ describe('AC-v2-100 재산 명세서', () => {
     expect(BRANCH_LABEL.gift).toBe('증여');
   });
   it('은퇴가 막히면 이유를 말한다', () => {
-    const g = fresh();
+    const g = bare();
     const r = retireInfo(g);
     expect(r.ok).toBe(false);
     expect(r.reason).toContain('오두막');
@@ -114,7 +114,7 @@ describe('AC-v2-148 어디서 꺼도 그 화면에서 이어진다', () => {
     expect(overlayRoute(g, none)).toBeNull();
   });
   it('프롤로그·자리를 비운 사이가 먼저, 기록관·전광판은 그 다음', () => {
-    const g = fresh();
+    const g = bare();
     expect(overlayRoute(g, { prologue: true, away: true, overlay: 'archive' })).toBe('prologue');
     g.run.tick = 100;
     expect(overlayRoute(g, { prologue: true, away: true, overlay: 'archive' })).toBe('away');
@@ -123,14 +123,14 @@ describe('AC-v2-148 어디서 꺼도 그 화면에서 이어진다', () => {
   });
   it('프롤로그는 4장', () => {
     expect(PROLOGUE).toHaveLength(4);
-    expect(PROLOGUE[2]).toContain('텐트 하나, 현금 10만, 빚 30만');
+    expect(PROLOGUE[2]).toContain('쳇바퀴 하나, 현금 0, 빚 30만');
     expect(PROLOGUE[3]).toContain('석 달');
   });
 });
 
 describe('AC-v2-127·130·131 기록관', () => {
   it('등불: 이대로 가면 미수집 엔딩이면 켜지고 번호와 단서가 맨 위 줄에', () => {
-    const g = fresh();
+    const g = bare();
     g.run.debts.shark1.principal = 100_000;
     g.run.debts.shark1.overdue = 1;
     const a = albumModel(g);
@@ -144,7 +144,7 @@ describe('AC-v2-127·130·131 기록관', () => {
     else expect(b.lantern.text).toContain('이미');
   });
   it('미수집 칸은 ???, 원인, 행동 문장 단서. 200칸', () => {
-    const g = fresh();
+    const g = bare();
     const a = albumModel(g);
     expect(a.entries).toHaveLength(200);
     const e = a.entries.find((x) => x.clueVisible)!;
@@ -154,7 +154,7 @@ describe('AC-v2-127·130·131 기록관', () => {
     expect(albumModel(g, 'LIQ').filtered.every((x) => x.causes.includes('LIQ'))).toBe(true);
   });
   it('★3 은 조건 하나가 ? 로, 같은 원인의 이웃 엔딩을 하나 모으면 열린다', () => {
-    const g = fresh();
+    const g = bare();
     const hid = endings.find((e) => e.rarity === 3 && e.hiddenCondIndex !== null)!;
     const before = archiveEntry(g, hid);
     expect(before.clueVisible).toBe(false);
@@ -164,7 +164,7 @@ describe('AC-v2-127·130·131 기록관', () => {
     expect(archiveEntry(g, hid).clueVisible).toBe(true);
   });
   it('같은 엔딩을 다른 세대가 다시 얻으면 두 세대가 모두 적힌다', () => {
-    const g = fresh();
+    const g = bare();
     const id = endings[10].id;
     g.family.ledger[id] = { count: 2, holders: [{ gen: 2, name: '칩멍크' }, { gen: 3, name: '칩멍크' }], firstAt: 2, scenes: [] };
     const e = albumModel(g).entries.find((x) => x.id === id)!;
@@ -172,13 +172,13 @@ describe('AC-v2-127·130·131 기록관', () => {
     expect(e.title).not.toBe('???');
   });
   it('정보 수첩: 출처별 들은 횟수 / 맞은 횟수, 유품함', () => {
-    const g = fresh();
+    const g = bare();
     g.family.tipBook = { fox: { said: 6, hit: 2 } };
     expect(tipBookRows(g)).toEqual([{ id: 'fox', name: '여우 선배', said: 6, hit: 2 }]);
     expect(heirloomRows(g).length).toBeGreaterThan(0);
   });
   it('전광판 사다리: 주민 9명 + 내 집안', () => {
-    const g = fresh();
+    const g = bare();
     g.family.peakNetWorth = 2_000_000;
     const l = ladder(g);
     expect(l).toHaveLength(10);

@@ -3,7 +3,7 @@ import { balance, COINS, coinWheelDefs, tierById, tierDefs, wheelByCoin } from '
 import { ceilS, floorS } from './rng';
 import { treeLevel, traitMul } from './legacy';
 import { ownedCoins, price, refPrice, stage } from './selectors';
-import { bodyLevel, resetTierIfEmpty, resetWheelUpgrades, runLevel, tierLevel, wheelLevel } from './upgrades';
+import { resetTierIfEmpty, resetWheelUpgrades, runLevel, tierLevel, wheelLevel } from './upgrades';
 import { bump } from './stats';
 import { logEvent, notify } from './util';
 import type { CoinId, EquipmentUnit, GameState, Res, RunState } from './types';
@@ -13,7 +13,17 @@ const M = balance.mining;
 
 export const unitsOfTier = (run: RunState, tier: string) => run.equipment.filter((u) => u.tier === tier).length;
 export const nextTierCost = (run: RunState, tier: string): number => ceilS(tierById[tier].cost * Math.pow(A.costGrowth, unitsOfTier(run, tier)));
-export const isActive = (run: RunState, u: EquipmentUnit): boolean => u.on && !!run.coinWheels[u.coin]?.on;
+const LABOR = (balance as unknown as { labor: { wage: number; grossPerSettle: number } }).labor;
+/** 알바가 붙은 종목 쳇바퀴(첫 쳇바퀴 포함)가 정산마다 캐는 값과 일당. 보조 쳇바퀴(wheel2)와 같은 숫자다. */
+export const wheelStaffed = (run: RunState, coin: string): boolean => !!run.coinWheels[coin]?.on && !!run.coinWheels[coin]?.staffed;
+export const staffedWheelGross = (coin: string): number => LABOR.grossPerSettle * wheelByCoin[coin].yieldMul;
+export const laborWage = (): number => LABOR.wage;
+export const tierMaxUnits = (tier: string): number => tierById[tier]?.maxUnits ?? A.maxUnits;
+/** 일당(정산당). 알바가 필요 없는 설비는 0. */
+export const tierWage = (tier: string): number => tierById[tier]?.wage ?? 0;
+export const needsStaff = (tier: string): boolean => tierById[tier]?.wage != null;
+/** 도는 설비: 켜져 있고, 붙은 종목 쳇바퀴가 켜져 있고, 알바가 필요한 설비면 알바가 있어야 한다. */
+export const isActive = (run: RunState, u: EquipmentUnit): boolean => u.on && !!run.coinWheels[u.coin]?.on && (!needsStaff(u.tier) || !!u.staffed);
 
 /** 한 대의 정산당 캐는 값(세대 시작가 기준 도토리어치). */
 export function equipGross(g: GameState, u: EquipmentUnit): number {
@@ -29,6 +39,7 @@ export function equipGross(g: GameState, u: EquipmentUnit): number {
 export function equipPower(g: GameState, u: EquipmentUnit): number {
   const t = tierById[u.tier];
   const w = wheelByCoin[u.coin];
+  if (t.wage != null) return 0; // 알바가 발로 돌린다: 전기세 대신 일당
   return ceilS(t.grossPerSettle * w.powerMul * (1 - 0.01 * wheelLevel(g.run, u.coin, 'power')));
 }
 /** 지금 시세로 본 순수입 = 캐는 값 × (지금 가격 ÷ 세대 시작가) − 전기세. 0 이하면 역마진. */
@@ -44,28 +55,9 @@ export function spokesGross(g: GameState, coin: string): number {
 /** 켜진 설비 전체의 기준 초당 순수입 합(달리기 레벨 연동 몫만큼 탭에 들어간다). */
 export const baseNetPerSecSum = (run: RunState): number => run.equipment.reduce((a, u) => a + (isActive(run, u) ? tierById[u.tier].netPerSec : 0), 0);
 
-type TapMilestone = { lv: number; mul?: number; linkPct?: number };
-const TL = (M as unknown as { tapLevel: { perLevel: number; milestones: TapMilestone[] } }).tapLevel;
-export const TAP_MILESTONES: readonly TapMilestone[] = TL.milestones;
-/** 달리기 레벨(탭타이탄식, body 줄 'shoes'). 레벨 n 의 탭 배수와 설비 연동 몫. */
-export function tapLevelParts(lv: number): { flat: number; mul: number; link: number } {
-  let mul = 1;
-  let link = M.autoShare;
-  for (const m of TL.milestones) {
-    if (lv < m.lv) continue;
-    if (m.mul) mul *= m.mul;
-    if (m.linkPct) link += m.linkPct / 100;
-  }
-  return { flat: M.tapBase + TL.perLevel * lv, mul, link };
-}
-/** 다음 마일스톤(없으면 null). */
-export const nextTapMilestone = (lv: number): TapMilestone | null => TL.milestones.find((m) => m.lv > lv) ?? null;
-
-/** 탭 1회 채굴 어치(세대 시작가 기준). 탭은 설비를 공짜로 따라가지 않는다: 달리기 레벨을 사야 오른다. */
+/** 탭 1회 채굴 어치(세대 시작가 기준). 고정값이다: 레벨도 배수도 없다(U-30). 늘리는 길은 쳇바퀴를 더 놓고 알바를 쓰는 것뿐. */
 export function tapValue(g: GameState, coin: CoinId): number {
-  const run = g.run;
-  const p = tapLevelParts(bodyLevel(run, 'shoes'));
-  const base = p.flat * p.mul + p.link * baseNetPerSecSum(run);
+  const base = M.tapBase + M.autoShare * baseNetPerSecSum(g.run);
   return base * wheelByCoin[coin].tapMul * (1 + 0.1 * treeLevel(g.family, 'grip')) * traitMul(g, 'tapMul');
 }
 
@@ -102,9 +94,11 @@ export function tierBlockReason(g: GameState, tier: string, coin: CoinId): strin
   const t = tierById[tier];
   if (!t) return '없는 설비';
   if (ownedCoins(run).length === 0) return '종목 쳇바퀴가 필요합니다';
-  if (run.house < t.needHouse) return '주소지가 필요합니다(오두막 이상)';
+  if (run.house < t.needHouse) return '내 집이 필요합니다(통나무집 이상)';
   if (!run.coinWheels[coin]) return '그 종목 쳇바퀴가 없습니다';
-  if (unitsOfTier(run, tier) >= A.maxUnits) return '더는 살 수 없습니다';
+  const buyable = (A as unknown as { buyable?: string[] }).buyable;
+  if (buyable && !buyable.includes(tier)) return '집에 들일 수 없는 설비입니다';
+  if (unitsOfTier(run, tier) >= tierMaxUnits(tier)) return '놓을 자리가 없습니다';
   if (run.cash < nextTierCost(run, tier)) return '현금 부족';
   return null;
 }
@@ -117,12 +111,37 @@ export function buyEquip(g: GameState, tier: string, coin: CoinId, boughtWithLoa
   const cost = nextTierCost(run, tier);
   run.cash -= cost;
   run.uidSeq += 1;
-  run.equipment.push({ uid: `e${run.uidSeq}`, tier, coin, on: true, cost, tagBy: null, boughtWithLoan, inheritedSign: false, boughtTick: run.tick });
+  run.equipment.push({ uid: `e${run.uidSeq}`, tier, coin, on: true, cost, tagBy: null, boughtWithLoan, inheritedSign: false, boughtTick: run.tick, ...(needsStaff(tier) ? { staffed: false } : {}) });
   bump(run, 'assetsEver', 1);
   run.stats.maxTierEver = Math.max(run.stats.maxTierEver ?? -1, tierDefs.findIndex((t) => t.id === tier));
   logEvent(run, `buy:${tier}`, `${tierById[tier].name} 구매`, cost);
   notify(run, tierById[tier].seenAs, 'info');
   return { ok: true, amount: cost };
+}
+
+/** 쳇바퀴에 알바를 들인다(폰이 있어야 한다). 들이는 값은 없고, 정산마다 일당을 낸다. 일당을 못 주면 그 정산에 나간다(U-30). */
+export function hire(g: GameState, uid?: string, coin?: CoinId): Res {
+  const run = g.run;
+  if (run.over) return { ok: false };
+  // 알바는 폰으로 부른다. 폰은 오소리 대부가 돈을 빌려주며 쥐여 준 중고폰(= 선물 계좌가 열린 상태)이다. 그래서 빌리기 전에는 혼자 굴릴 수밖에 없다(U-29).
+  if (!run.futures.open) return { ok: false, code: 'nophone', msg: '알바를 부를 폰이 없습니다.' };
+  if (coin) {
+    const w = run.coinWheels[coin];
+    if (!w) return { ok: false, code: 'none', msg: '그 쳇바퀴가 없습니다.' };
+    if (w.staffed) return { ok: false, code: 'staffed', msg: '이미 알바가 돌리고 있습니다.' };
+    w.staffed = true;
+    bump(run, 'hired', 1);
+    logEvent(run, 'hire', `알바 햄스터가 ${wheelByCoin[coin].name}에 들어왔다`, LABOR.wage);
+    return { ok: true, amount: LABOR.wage };
+  }
+  const u = run.equipment.find((x) => x.uid === uid);
+  if (!u) return { ok: false, code: 'none', msg: '그 쳇바퀴가 없습니다.' };
+  if (!needsStaff(u.tier)) return { ok: false, code: 'nostaff', msg: '알바가 필요 없는 설비입니다.' };
+  if (u.staffed) return { ok: false, code: 'staffed', msg: '이미 알바가 돌리고 있습니다.' };
+  u.staffed = true;
+  bump(run, 'hired', 1);
+  logEvent(run, 'hire', `알바 햄스터가 ${tierById[u.tier].name}에 들어왔다`, tierWage(u.tier));
+  return { ok: true, amount: tierWage(u.tier) };
 }
 
 export function moveEquip(g: GameState, uid: string, coin: CoinId): Res {

@@ -31,7 +31,7 @@ export interface CoinWheelDef {
   yieldMul: number;
   powerMul: number;
   tapMul: number;
-  unlock: { acornTaps?: number; minedValue?: number; house?: number };
+  unlock: { minedValue?: number; house?: number };
   sign: string;
   color: string;
 }
@@ -42,6 +42,10 @@ export interface TierDef {
   grossPerSettle: number;
   netPerSec: number;
   needHouse: number;
+  /** 이 설비의 대수 상한(없으면 balance.assets.maxUnits) */
+  maxUnits?: number;
+  /** 알바 일당(정산당). 있으면 알바가 붙어야 돌고, 전기세는 없다(U-30) */
+  wage?: number;
   bankCollateral: boolean;
   seenAs: string;
 }

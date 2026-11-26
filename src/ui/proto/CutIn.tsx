@@ -5,11 +5,11 @@ import { useGame } from '../../store/gameStore';
 import { useProto, type Scene, type Who } from './protoStore';
 import { WHO_NAME } from './text';
 import { comma } from '../../engine/util';
-import { Badger, BearFace, Squirrel, O } from './art';
+import { Badger, O } from './art';
 import { play } from './audio';
 import { say } from './watch';
 
-const TAB_LABEL: Record<string, string> = { map: '지도', people: '인맥', upg: '강화', phone: '폰', lot: '집' };
+const TAB_LABEL: Record<string, string> = { map: '지도', phone: '거래소', lot: '집' };
 import heroFront from './img/hero_front.png';
 
 /** 오소리 대부 반신. win=웃음, 아니면 정색 */
@@ -69,10 +69,7 @@ function Bust({ who, smile }: { who: Who; smile: boolean }) {
   switch (who) {
     case 'boss': return <BossBust win={smile} />;
     case 'collector': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Badger cx={100} cy={196} h={180} /></svg>;
-    case 'squirrel': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Squirrel cx={90} cy={196} h={180} /></svg>;
-    case 'bear': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><path d="M20 200 q10 -70 80 -70 q70 0 80 70z" fill="#A67B55" stroke={O} strokeWidth={3} /><BearFace cx={100} cy={86} r={62} /><rect x={128} y={130} width={34} height={56} rx={7} fill="#9AD0C2" stroke={O} strokeWidth={3} transform="rotate(10 145 158)" /></svg>;
     case 'weasel': return <Face slim fur="#C9B08A" muzzle="#FFF8E4" smile={smile} />;
-    case 'raccoon': return <Face fur="#A9A39A" muzzle="#EFE8DA" mask smile={smile} />;
     case 'hero': return <img className="bust hero" src={heroFront} alt="" />;
     case 'sms': return (
       <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
@@ -89,7 +86,7 @@ export function CutIn() {
   const sc: Scene | undefined = useProto((s) => s.scenes[0]);
   const over = useGame((s) => s.g.run.over);
   const [i, setI] = useState(0);
-  // 줍기를 연타하던 손가락이 대사를 넘겨 버리지 않게, 줄이 뜨고 0.6초는 탭을 받지 않는다
+  // 쳇바퀴를 연타하던 손가락이 대사를 넘겨 버리지 않게, 줄이 뜨고 0.6초는 탭을 받지 않는다
   const shownAt = useRef(0);
   useEffect(() => { setI(0); shownAt.current = performance.now(); if (sc) play('cutin_whoosh'); }, [sc?.id]);
   const end = () => {
@@ -104,6 +101,7 @@ export function CutIn() {
       say(`${TAB_LABEL[cur.unlock]} 탭이 열렸다!`);
     }
     P.patch(patch);
+    cur.onEnd?.();
   };
   useEffect(() => {
     if (!sc?.auto) return;
@@ -114,7 +112,9 @@ export function CutIn() {
   const line = sc.lines[Math.min(i, sc.lines.length - 1)];
   const smile = line.mood ? line.mood === 'smile' : sc.settle ? sc.settle.win : true;
   const last = i >= sc.lines.length - 1;
-  const next = () => { if (performance.now() - shownAt.current < 600) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
+  const pick = last ? sc.choices : undefined;
+  const next = () => { if (performance.now() - shownAt.current < 600) return; if (last && pick) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
+  const choose = (run: () => void) => { if (performance.now() - shownAt.current < 600) return; play('ui_tap'); end(); run(); };
   const st = sc.settle;
   return (
     <div className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win')} onClick={next} role="dialog" aria-label="컷인 대화" data-scene={sc.id}>
@@ -127,8 +127,15 @@ export function CutIn() {
           <div className="meta"><span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span><span>채굴 − 전기 − 이자 − 생활비</span></div>
         )}
         {sc.lines.length > 1 && <div className="dots" aria-label={`${i + 1}/${sc.lines.length}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
-        {last && sc.unlock && <div className="unl">끝나면 새 탭이 열린다</div>}
-        <em>{last ? '탭하면 닫기' : '탭하면 다음'}</em>
+        {last && sc.unlock && !pick && <div className="unl">끝나면 {TAB_LABEL[sc.unlock]} 탭이 열린다</div>}
+        {pick && (
+          <div className="pick">
+            {pick.map((c) => (
+              <button key={c.id} className={'buy' + (c.primary ? ' on' : '')} data-choice={c.id} onClick={(e) => { e.stopPropagation(); choose(c.run); }}><span>{c.label}</span>{c.sub && <small>{c.sub}</small>}</button>
+            ))}
+          </div>
+        )}
+        {!pick && <em>{last ? '탭하면 닫기' : '탭하면 다음'}</em>}
       </div>
     </div>
   );

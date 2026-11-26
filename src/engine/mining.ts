@@ -1,4 +1,4 @@
-// 탭 채굴·지갑·팔기·급매·캐는 즉시 팔기(GDD_v2 3.2·3.3)와 줍기(0단계).
+// 탭 채굴·지갑·팔기·급매·캐는 즉시 팔기(GDD_v2 3.2·3.3). 줍기 단계는 없다(U-29).
 import { balance, COINS, lenderById, wheelByCoin } from './data';
 import { floorS, ceilS } from './rng';
 import { treeLevel, traitMul } from './legacy';
@@ -26,44 +26,25 @@ export function depositMined(g: GameState, coin: CoinId, valueRef: number): void
   run.minedValue += valueRef;
   qty = applyGarnish(g, coin, qty);
   if (run.coinWheels[coin]?.autoSell) {
-    const got = floorS(qty * price(run, coin) * (1 - sellFeeRate(run)));
+    // 1도토리에 못 미친 나머지는 버리지 않고 다음 판매에 얹는다(탭 한 번이 몇 도토리뿐일 때 수수료보다 내림이 더 크지 않게)
+    run.sellFrac += qty * price(run, coin) * (1 - sellFeeRate(run));
+    const got = floorS(run.sellFrac);
+    run.sellFrac -= got;
     run.cash += got;
     return;
   }
   (run.wallet[coin] ??= { qty: 0, locked: 0 }).qty += qty;
 }
 
-function acornValue(g: GameState): number {
-  const run = g.run;
-  return balance.progression.acornPerTap * (1 + 0.04 * bodyLevel(run, 'glove')) * (1 + 0.1 * treeLevel(g.family, 'grip')) * traitMul(g, 'tapMul');
-}
-
-/** 일터를 한 번 누른다. 초당 12회까지만 인정(한 틱 = 1초). */
+/** 쳇바퀴를 한 번 굴린다. 초당 12회까지만 인정(한 틱 = 1초). 쳇바퀴가 없으면(압류·판매) 캘 것이 없다. */
 export function tap(g: GameState): Res {
   const run = g.run;
   if (run.over) return { ok: false };
+  if (stage(run) === 0) return { ok: false, code: 'nowheel', msg: '쳇바퀴가 없습니다.' };
   if (run.tapsThisTick >= balance.progression.maxTapsPerSec) return { ok: false, code: 'rate' };
   run.tapsThisTick += 1;
   bump(run, 'laborTaps', 1);
   if (timeOfDay(run) === 3) bump(run, 'nightTaps', 1);
-  if (stage(run) === 0) {
-    const value = applyGarnish(g, null, acornValue(g));
-    run.acornFrac += value;
-    const whole = floorS(run.acornFrac);
-    run.cash += whole;
-    run.acornFrac -= whole;
-    run.acornTaps += 1;
-    const need = balance.progression.firstWheelUnlockTaps;
-    if (run.acornTaps >= need && !run.stats.signSeen) {
-      run.stats.signSeen = true;
-      notify(run, "길가에 '쳇바퀴 팝니다' 팻말이 섰다.", 'info', 'sign:wheel');
-      if (!run.firstWheelHintShown && run.branch === 'forced') {
-        run.firstWheelHintShown = true;
-        notify(run, '저거 하나만 있어도 다를 텐데.', 'bubble', 'hint:firstWheel');
-      }
-    }
-    return { ok: true, amount: whole };
-  }
   const coin = ensureRiding(run)!;
   depositMined(g, coin, tapValue(g, coin));
   return { ok: true };

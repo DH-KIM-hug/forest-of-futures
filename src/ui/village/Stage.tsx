@@ -10,7 +10,7 @@ import { useUI } from '../uiStore';
 const GLYPH: Record<string, string> = { acorn: '●', night: '☾', paw: '✿', neat: '■' };
 interface Float { id: number; x: number; text: string }
 
-/** 화면 아래 일터 무대. 0단계는 줍기, 1단계부터는 종목 쳇바퀴가 나란히. 누르는 곳은 무대 전체. */
+/** 화면 아래 일터 무대. 0단계(쳇바퀴를 잃음)는 빈 일터, 1단계부터는 종목 쳇바퀴가 나란히. 누르는 곳은 무대 전체. */
 export function Stage() {
   const g = useGame((s) => s.g);
   const act = useGame((s) => s.act);
@@ -65,9 +65,8 @@ export function Stage() {
     <div className={'stage s' + m.stage} data-n={m.wheels.length} aria-label="일터">
       <div className="ground" />
       {m.stage === 0 && (
-        <button className="stage-tap" aria-label="도토리 줍기" onPointerDown={(e) => { e.preventDefault(); doTap(undefined, 50); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doTap(); } }}>
+        <button className="stage-tap" aria-label="쳇바퀴가 없다" onPointerDown={(e) => { e.preventDefault(); doTap(undefined, 50); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doTap(); } }}>
           {[8, 22, 36, 66, 80, 91].map((l, i) => <i key={i} className="ac" style={{ left: l + '%', bottom: 8 + (i % 3) * 10 }} />)}
-          {m.acornTaps < 2 && <><i className="finger" aria-hidden="true" /><span className="finger-note">여기를 눌러 줍기</span></>}
           <Art id={heroArt(pose === 'idle' && !tapping ? 'pick' : pose)} className={'hero' + (tapping ? ' bn' : '')} alt="칩멍크" />
         </button>
       )}
@@ -95,7 +94,7 @@ export function Stage() {
         </div>
       )}
       {floats.map((f) => <span key={f.id} className="float" style={{ left: f.x + '%', bottom: '58%' }}>{f.text}</span>)}
-      {m.stage === 0 && <span className="sign-note">{m.signUp ? "'쳇바퀴 팝니다'" : `줍기 ${m.acornTaps}/${m.acornNeed}`}</span>}
+      {m.stage === 0 && <span className="sign-note">{"'쳇바퀴 팝니다'"}</span>}
       {m.offer && (
         <button className="act offer" disabled={!m.offer.canBuy} onClick={() => act({ type: 'buyWheel', coin: m.offer!.coin })}>
           도토코인 쳇바퀴 {comma(m.offer.cost)}

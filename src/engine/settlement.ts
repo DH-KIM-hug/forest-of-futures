@@ -3,7 +3,7 @@ import { balance, lenderById, tierById, tierDefs } from './data';
 import { ceilS, floorS } from './rng';
 import { declareBankruptcy, type BankruptCtx } from './bankruptcy';
 import { decayEffects, rollEvent } from './events';
-import { equipGross, equipNetNow, equipPower, isActive, removeEquip, spokesGross } from './equipment';
+import { equipGross, equipNetNow, equipPower, isActive, laborWage, removeEquip, spokesGross, staffedWheelGross, tierWage, wheelStaffed } from './equipment';
 import { settleFriends, brokenCount } from './friends';
 import { depositMined, forcedSell, payFromWallet } from './mining';
 import { rollOffer } from './offers';
@@ -32,24 +32,29 @@ export function forecast(g: GameState) {
     mined += equipGross(g, u) * (price(run, u.coin) / refPrice(run, u.coin));
     power += equipPower(g, u);
   }
-  for (const c of ownedCoins(run)) if (run.coinWheels[c].on) mined += spokesGross(g, c) * (price(run, c) / refPrice(run, c));
+  let wages = 0;
+  for (const c of ownedCoins(run)) {
+    if (run.coinWheels[c].on) mined += spokesGross(g, c) * (price(run, c) / refPrice(run, c));
+    if (wheelStaffed(run, c)) { mined += staffedWheelGross(c) * (price(run, c) / refPrice(run, c)); wages += laborWage(); }
+  }
+  for (const u of run.equipment) if (isActive(run, u)) wages += tierWage(u.tier);
   let interest = 0;
   for (const id of LENDERS) interest += interestDue(g, id);
   const living = livingDue(g);
-  return { mined, power, interest, living, net: mined - power - interest - living };
+  return { mined, power, wages, interest, living, net: mined - power - wages - interest - living };
 }
 
 export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void {
   const run = g.run;
   const st = run.stats;
-  const rep = { settleNo: run.settleNo + 1, mined: 0, power: 0, interest: 0, living: 0, tax: 0, paid: 0, unpaid: 0, forcedSold: 0 };
+  const rep = { settleNo: run.settleNo + 1, mined: 0, power: 0, interest: 0, living: 0, tax: 0, paid: 0, unpaid: 0, forcedSold: 0, wages: 0, quit: 0 };
   const garnishedBefore = (st.garnished as number) ?? 0;
   const forcedBefore = (st.forcedSold as number) ?? 0;
 
   // 1. 채굴: 켜진 설비와 관성 바퀴가 종목 지갑에 캔다(가압류 30% 먼저 뗌)
   const perCoin: Partial<Record<CoinId, number>> = {};
   for (const u of run.equipment) if (isActive(run, u)) perCoin[u.coin] = (perCoin[u.coin] ?? 0) + equipGross(g, u);
-  for (const c of ownedCoins(run)) if (run.coinWheels[c].on) perCoin[c] = (perCoin[c] ?? 0) + spokesGross(g, c);
+  for (const c of ownedCoins(run)) if (run.coinWheels[c].on) perCoin[c] = (perCoin[c] ?? 0) + spokesGross(g, c) + (wheelStaffed(run, c) ? staffedWheelGross(c) : 0);
   for (const c of ownedCoins(run)) {
     const v = perCoin[c] ?? 0;
     if (v > 0) {
@@ -119,6 +124,23 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   }
   rep.unpaid = Object.values(unpaid).reduce((a, b) => a + b, 0);
 
+  // 6-1. 알바 일당(U-30): 이자·생활비를 낸 뒤 남은 현금에서 한 마리씩. 못 받은 알바는 그 자리에서 나간다(빚으로 남지 않는다).
+  const payWage = (w: number, leave: () => void) => {
+    if (w <= 0) return;
+    if (run.cash >= w) {
+      run.cash -= w;
+      rep.wages += w;
+    } else {
+      leave();
+      rep.quit += 1;
+      bump(run, 'hamstersQuit', 1);
+      logEvent(run, 'quit:hamster', '알바 햄스터가 일당을 못 받고 나갔다', w);
+    }
+  };
+  for (const c of ownedCoins(run)) if (wheelStaffed(run, c)) payWage(laborWage(), () => { run.coinWheels[c].staffed = false; });
+  for (const u of run.equipment) if (isActive(run, u)) payWage(tierWage(u.tier), () => { u.staffed = false; });
+  if (rep.quit > 0) notify(run, `알바 햄스터 ${rep.quit}마리가 일당을 못 받고 나갔다. 빈 쳇바퀴는 돌지 않는다.`, 'warn');
+
   // 세금: 기한이 지났는데 남았으면 비싼 설비부터 공매(구매가의 50%), 그래도 남으면 캐피탈 빚으로
   if (taxDue > 0 && unpaid.tax > 0) {
     let left = unpaid.tax;
@@ -171,7 +193,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   for (const p of Object.values(run.promos)) void p;
   if (unpaid.upkeep > 0) {
     if (run.house === 0) {
-      run.debts.capital.principal += unpaid.upkeep; // 텐트: 비상금 대출로 자동 전환(한도와 무관)
+      run.debts.capital.principal += unpaid.upkeep; // 빈 오두막(0단계): 비상금 대출로 자동 전환(한도와 무관)
       run.upkeepArrears = 0;
       run.upkeepOverdue = 0;
       logEvent(run, 'overdue:upkeep', '생활비를 못 내 캐피탈 비상금 대출로 넘어감', unpaid.upkeep);

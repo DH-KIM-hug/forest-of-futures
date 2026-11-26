@@ -2,18 +2,18 @@ import { useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useUI } from '../uiStore';
 import { useProto } from './protoStore';
-import { lotRows, WHEEL_COIN, isNearLiq, type Row } from './model';
-import { say } from './watch';
+import { slots, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, secOf, rateTxt, perSec, type Slot } from './model';
+import { say, sendAway } from './watch';
 import { comma } from '../../engine/util';
-import { marketById, balance } from '../../engine/data';
+import { marketById } from '../../engine/data';
 import { ownedCoins, stage } from '../../engine/selectors';
-import { nextTapMilestone, tapValue } from '../../engine/equipment';
-import { bodyLevel, upgradeCost } from '../../engine/upgrades';
-import { wheelByCoin } from '../../engine/data';
+import { tapValue } from '../../engine/equipment';
+import { sellFeeRate } from '../../engine/mining';
 import { positionView, type PositionView } from '../vm/trade';
 import { historyOf } from '../priceHistory';
 import { World } from './World';
 import { RowIcon, C } from './art';
+import { HOME_WHEEL_NAME } from './text';
 import { fx } from './fx';
 import { play, playTap } from './audio';
 
@@ -40,7 +40,7 @@ function PinRow({ p }: { p: PositionView }) {
   const call = isNearLiq(p);
   const m = marketById[p.market];
   return (
-    <button className={'pr-pin' + (call ? ' call' : '') + (p.roe >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 폰에서 보기`}>
+    <button className={'pr-pin' + (call ? ' call' : '') + (p.roe >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
       <div className="l">
         <div className="who"><i className="coin" style={{ background: C.dtc }} />{m.name}</div>
         <div className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</div>
@@ -53,19 +53,19 @@ function PinRow({ p }: { p: PositionView }) {
   );
 }
 
-function ProdRow({ r, onBuy }: { r: Row; onBuy: (r: Row) => boolean }) {
-  const locked = r.kind === 'locked';
+/** 쳇바퀴 자리 한 줄: 빈 자리 → [쳇바퀴 놓기] → 선 쳇바퀴 → [알바 부르기] → 도는 중(초당 수입). 한 번 누르면 한 걸음. */
+function SlotRow({ r, onAct }: { r: Slot; onAct: (r: Slot) => boolean }) {
   const [pop, setPop] = useState(0);
+  const empty = r.kind === 'empty' || r.kind === 'lost';
   return (
-    <div className={'pr-row' + (locked ? ' locked' : '')} data-row={r.key}>
-      <div className="ic">{locked ? <span className="q">?</span> : <RowIcon kind={r.kind === 'wheel' ? 'wheel' : r.tier ?? 'wheel'} />}</div>
+    <div className={'pr-row slot' + (empty ? ' locked' : '') + (r.staffed ? ' run' : '') + (r.tagged ? ' tagged' : '')} data-row={r.kind === 'wheel' ? 'wheel' : r.kind} data-staffed={r.staffed ? '1' : '0'}>
+      <div className="ic">{empty ? <span className="q">+</span> : <RowIcon kind={r.staffed ? 'hamwheel' : 'wheel'} />}</div>
       <div className="mid">
-        <div className="nm">{r.name}</div>
-        <div className="sb">{r.income !== null && !locked ? <b>정산당 +{comma(r.income)}</b> : null}{r.income !== null && !locked ? ' · ' : ''}{r.sub}</div>
-        <div className="bar"><i style={{ width: `${Math.max(r.progress > 0 ? 6 : 0, r.progress * 100)}%` }} /></div>
+        <div className="nm">{r.name}{r.tagged && <em className="tag">딱지</em>}</div>
+        <div className="sb">{r.net !== null && <b>초당 +{secOf(r.net)}</b>}{r.net !== null ? ' · ' : ''}{r.sub}</div>
       </div>
-      <button key={pop} className={'buy' + (r.canBuy ? ' on' : '') + (pop ? ' popped' : '')} disabled={!r.canBuy} onClick={() => { if (onBuy(r)) setPop((n) => n + 1); }}>
-        <span>{r.maxed ? '만렙' : locked ? '잠김' : r.canBuy ? '구입' : '부족'}</span><small>{comma(r.price)}</small>
+      <button key={pop} className={'buy' + (r.canAct ? ' on' : '') + (r.action === null ? ' done' : '') + (pop ? ' popped' : '')} disabled={r.action === null} data-act={r.action ?? 'none'} onClick={() => { if (onAct(r)) setPop((k) => k + 1); }}>
+        <span>{r.btn}</span><small>{r.btnSub}</small>
       </button>
     </div>
   );
@@ -75,105 +75,82 @@ export function Lot() {
   const g = useGame((s) => s.g);
   const act = useGame((s) => s.act);
   const mapOpen = useProto((s) => !!s.everUnlocked.map);
+  const waiting = useProto((s) => s.waiting);
   const pos = useOpenPositions();
   const run = g.run;
-  const rows = lotRows(g);
+  const rows = slots(g);
+  const sum = homeSummary(g);
   const near = pos.some((p) => isNearLiq(p));
   const tapTimer = useRef<number | undefined>(undefined);
-  const upTimer = useRef<number | undefined>(undefined);
-  const tapUp = useProto((s) => s.tapUp);
   const rideCoin = run.riding ?? ownedCoins(run)[0];
   const wheeled = stage(run) > 0 && !!rideCoin;
   const [tapKey, setTapKey] = useState(0);
 
   const doTap = () => {
+    if (useProto.getState().waiting) { say('추심원이 문 앞에서 기다린다. 지도에서 사무소로 가거나, 돌려보낸다.'); return; }
     const g0 = useGame.getState().g;
     const before = g0.run.cash;
     const coin0 = g0.run.riding ?? ownedCoins(g0.run)[0];
-    const wheel = stage(g0.run) > 0 && !!coin0;
-    const worth = wheel ? Math.round(tapValue(g0, coin0)) : 0;
+    if (!(stage(g0.run) > 0 && !!coin0)) { say('쳇바퀴가 없다. 다시 사야 캘 수 있다.'); play('insufficient'); return; }
+    const worth = Math.round(tapValue(g0, coin0));
     const r = act({ type: 'tap' });
     if (!r.ok) return;
     const gain = useGame.getState().g.run.cash - before;
-    const sold = wheel && !!g0.run.coinWheels[coin0]?.autoSell;
+    const sold = !!g0.run.coinWheels[coin0]?.autoSell;
     playTap();
     setTapKey((k) => k + 1);
     useProto.getState().patch({ tapping: true });
-    fx.emit({ kind: 'tap', gain: wheel ? (sold ? `+${comma(gain)}` : `+${comma(worth)} 코인`) : gain > 0 ? `+${comma(gain)}` : '+코인', wheel, sold });
+    fx.emit({ kind: 'tap', gain: sold ? `+${comma(gain)}` : `+${comma(worth)} 코인`, wheel: true, sold });
     window.clearTimeout(tapTimer.current);
     tapTimer.current = window.setTimeout(() => useProto.getState().patch({ tapping: false }), 700);
   };
-  const buy = (r: Row): boolean => {
-    const g0 = useGame.getState().g;
-    const tc = g0.run.riding ?? ownedCoins(g0.run)[0];
-    const tap0 = tc ? tapValue(g0, tc) : 0;
-    const res = r.kind === 'wheel' ? act({ type: 'buyWheel', coin: WHEEL_COIN }) : act({ type: 'buyEquip', tier: r.tier!, coin: ownedCoins(run)[0] ?? WHEEL_COIN });
-    if (!res.ok) { say(res.msg ?? '살 수 없다'); play('insufficient'); return false; }
-    if (r.kind === 'wheel') act({ type: 'autoSell', coin: WHEEL_COIN, on: true }); // 시제품 기본: 캐면 바로 팔기(지갑 시트에서 끌 수 있다)
-    play(bought.has(r.key) ? 'buy' : 'new_equipment');
-    bought.add(r.key);
-    if (r.kind !== 'wheel' && tc) {
-      const g1 = useGame.getState().g;
-      const up = tapValue(g1, tc) - tap0;
-      if (up > 0.04) {
-        useProto.getState().patch({ tapUp: `탭 +${up >= 1 ? comma(Math.round(up)) : up.toFixed(1)}` });
-        window.clearTimeout(upTimer.current);
-        upTimer.current = window.setTimeout(() => useProto.getState().patch({ tapUp: null }), 2400);
-      }
-    }
-    fx.emit({ kind: 'buy', price: r.price, key: r.key });
+  const onAct = (r: Slot): boolean => {
+    const res = r.action === 'hire' ? act(r.uid ? { type: 'hire', uid: r.uid } : { type: 'hire', coin: WHEEL_COIN })
+      : r.action === 'place' ? act({ type: 'buyEquip', tier: EXTRA_WHEEL, coin: WHEEL_COIN })
+      : r.action === 'rebuy' ? act({ type: 'buyWheel', coin: WHEEL_COIN }) : { ok: false };
+    if (!res.ok) { say(res.msg === '현금 부족' ? '도토리가 부족합니다' : res.msg ?? '할 수 없다'); play('insufficient'); return false; }
+    if (r.action === 'rebuy') act({ type: 'autoSell', coin: WHEEL_COIN, on: true }); // 시제품 기본: 캐면 바로 팔기(지갑 시트에서 끌 수 있다)
+    play(bought.has(r.action!) ? 'buy' : 'new_equipment');
+    bought.add(r.action!);
+    if (r.action === 'hire') say('알바 햄스터가 왔다. 일당은 정산 때 나간다.');
+    else fx.emit({ kind: 'buy', price: r.action === 'place' ? run.cash - useGame.getState().g.run.cash : 0, key: r.key });
     return true;
   };
-  // 달리기 레벨(탭타이탄식): 탭은 설비를 공짜로 따라가지 않는다. 돈을 내고 주인공 레벨을 올린다.
-  const runLv = bodyLevel(run, 'shoes');
-  const lvCost = upgradeCost(run, 'shoes');
-  const ms = nextTapMilestone(runLv);
-  const msText = ms ? `Lv ${ms.lv}: ${ms.mul ? `탭 ×${ms.mul}` : `설비 수입 ${ms.linkPct}% 탭에 더함`}` : '';
-  const levelUp = () => {
-    const g0 = useGame.getState().g;
-    const tc = g0.run.riding ?? ownedCoins(g0.run)[0];
-    const tap0 = tc ? tapValue(g0, tc) : 0;
-    const res = act({ type: 'upgrade', track: 'shoes' });
-    if (!res.ok) { say(res.msg === '현금 부족' ? '도토리가 부족합니다' : res.msg ?? '올릴 수 없다'); play('insufficient'); return; }
-    const g1 = useGame.getState().g;
-    const lv1 = bodyLevel(g1.run, 'shoes');
-    const hit = ms && lv1 === ms.lv;
-    play(hit ? 'new_equipment' : 'buy');
-    if (hit) say(`달리기 Lv ${lv1}! ${ms!.mul ? `탭이 ×${ms!.mul}` : `설비 수입의 ${ms!.linkPct}%가 탭에 붙는다`}`);
-    const up = tc ? tapValue(g1, tc) - tap0 : 0;
-    if (up > 0.04) {
-      useProto.getState().patch({ tapUp: `탭 +${up >= 1 ? comma(Math.round(up)) : up.toFixed(1)}` });
-      window.clearTimeout(upTimer.current);
-      upTimer.current = window.setTimeout(() => useProto.getState().patch({ tapUp: null }), 2400);
-    }
-  };
-  const nextPrice = rows.find((r) => r.kind !== 'locked' && !r.canBuy && r.price > run.cash)?.price ?? 0;
-  const short = run.cash < nextPrice;
+  const tapNet = wheeled ? tapValue(g, rideCoin) * (run.coinWheels[rideCoin]?.autoSell ? 1 - sellFeeRate(run) : 1) : 0;
+  const idleSec = perSec(sum.idle), claimSec = perSec(sum.claim);
+  const ahead = idleSec >= claimSec;
 
   return (
     <div className="pr-lot">
       <World near={near} />
-      <section className="pr-panel" aria-label="생산 줄">
-        <div className={'pr-hint' + (short ? ' on' : '')} aria-live="polite">{short ? (mapOpen ? '도토리가 부족합니다 · 지도에서 빌릴 수는 있다' : '도토리가 부족합니다') : ''}</div>
+      <section className="pr-panel" aria-label="집의 쳇바퀴">
+        {waiting ? (
+          <div className="pr-wait" role="status" data-wait>
+            <span>추심원이 문 앞에서 기다린다</span>
+            {mapOpen && <button className="buy on" data-wait-go onClick={() => { useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); }}><span>사무소로</span><small>지도</small></button>}
+            <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>연체</small></button>
+          </div>
+        ) : (
+          <div className={'pr-sum' + (ahead ? ' ok' : ' short')} role="status" data-sum>
+            <span>알바 {sum.hamsters}마리가 버는 돈 <b className="up">초당 {rateTxt(idleSec)}</b></span>
+            <i>{ahead ? '≥' : '<'}</i>
+            <span>이자·생활비 <b className="dn">초당 {rateTxt(claimSec)}</b><small>정산 때 {comma(sum.claim)}</small></span>
+          </div>
+        )}
         <div className="pr-rows">
           {pos.map((p) => <PinRow key={p.market} p={p} />)}
           <div className="pr-row tap">
-            <button className="tapbody" onPointerDown={doTap} data-tap aria-label={wheeled ? '쳇바퀴 달리기 (코인 채굴)' : '도토리 줍기'}>
-              <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind={wheeled ? 'wheel' : 'pile'} /></div>
+            <button className="tapbody" onPointerDown={doTap} data-tap aria-label={wheeled ? '쳇바퀴 굴리기 (코인 채굴)' : '쳇바퀴가 없다'}>
+              <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind="wheel" /></div>
               <div className="mid">
-                <div className="nm">{wheeled ? <>쳇바퀴 달리기 <small>Lv {runLv}</small></> : '도토리 줍기'}{tapUp && <b key={tapUp} className="tapup">{tapUp}</b>}</div>
-                <div className="sb">{wheeled ? `탭마다 ${wheelByCoin[rideCoin].name.replace(' 쳇바퀴', '')} +${comma(Math.round(tapValue(g, rideCoin)))}어치${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔려 도토리로' : ' → 콜드월렛'}` : `탭마다 도토리 +${balance.progression.acornPerTap} · 줍기 ${comma(run.acornTaps)}회`}</div>
-                {wheeled && msText && <div className="sb ms">다음 {msText}</div>}
+                <div className="nm">쳇바퀴 굴리기</div>
+                <div className="sb">{wheeled ? `탭마다 도토코인 +${comma(Math.round(tapValue(g, rideCoin)))}어치${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔려 도토리로' : ' → 콜드월렛'}` : `${HOME_WHEEL_NAME}가 실려 갔다`}</div>
+                {wheeled && <div className="sb ms">1초에 세 번 굴리면 초당 +{rateTxt(tapNet * 3)} · 탭 값은 오르지 않는다</div>}
               </div>
-              {!wheeled && <div className="buy tapbtn"><span>줍기</span><small>탭!</small></div>}
+              <div className="buy tapbtn"><span>굴리기</span><small>탭!</small></div>
             </button>
-            {wheeled && (
-              <button className={'buy lvup' + (lvCost !== null && run.cash >= lvCost ? ' on' : '')} disabled={lvCost === null} data-lvup onClick={levelUp} aria-label="달리기 레벨 올리기">
-                <span>{lvCost === null ? '만렙' : '레벨업'}</span>{lvCost !== null && <small>{comma(lvCost)}</small>}
-              </button>
-            )}
           </div>
-          {rows.map((r) => <ProdRow key={r.key} r={r} onBuy={buy} />)}
+          {rows.map((r) => <SlotRow key={r.key} r={r} onAct={onAct} />)}
         </div>
       </section>
     </div>

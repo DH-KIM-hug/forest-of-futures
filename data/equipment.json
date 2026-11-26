@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "_doc": "종목별 쳇바퀴(coinWheels) + 공용 설비 사다리(tiers). 전기세는 저장하지 않고 grossPerSettle × powerMul(붙은 종목) 으로 계산, 캐는 값은 grossPerSettle × yieldMul. GDD_v2 3.3·3.4·4.3",
+  "_doc": "종목별 쳇바퀴(coinWheels) + 공용 설비 사다리(tiers). 전기세는 저장하지 않고 grossPerSettle × powerMul(붙은 종목) 으로 계산, 캐는 값은 grossPerSettle × yieldMul. GDD_v2 3.3·3.4·4.3 U-30: 보조 쳇바퀴(wheel2)는 자산(고정가, 오두막 바닥 자리 6칸), 알바 햄스터는 노동(구매가 없음, 정산마다 일당 wage). 알바가 붙은 쳇바퀴만 캔다. 일당이 있는 설비는 전기세가 없다.",
   "coinWheels": [
     {
       "id": "wheel:DTC",
@@ -10,9 +10,7 @@
       "yieldMul": 1.0,
       "powerMul": 0.7,
       "tapMul": 1.0,
-      "unlock": {
-        "acornTaps": 30
-      },
+      "unlock": {},
       "sign": "acorn",
       "color": "#8B5E3C"
     },
@@ -63,12 +61,14 @@
     {
       "id": "wheel2",
       "name": "보조 쳇바퀴",
-      "cost": 20000,
-      "grossPerSettle": 5700,
-      "netPerSec": 9.5,
+      "cost": 50000,
+      "grossPerSettle": 6500,
+      "netPerSec": 26.11,
       "needHouse": 0,
       "bankCollateral": false,
-      "seenAs": "쳇바퀴가 한 대 더 돈다"
+      "seenAs": "빈자리에 쳇바퀴가 한 대 놓인다. 알바가 없으면 안 돈다",
+      "maxUnits": 5,
+      "wage": 1800
     },
     {
       "id": "helper",

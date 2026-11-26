@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveCoinValue, giveEquip, giveWheel, noDebts, openFutures, settleOnce, tickN } from './helpers';
+import { A, bare, giveCoinValue, giveEquip, giveWheel, noDebts, openFutures, settleOnce, tickN } from './helpers';
 import { liqPrice, roePct, shortInsurance, pnlOf, stopPrice } from '../../src/engine/futures';
 import { walletValue } from '../../src/engine/selectors';
 import { fundedByAt } from '../../src/engine/loans';
@@ -7,7 +7,7 @@ import { checkLiquidationWipeout } from '../../src/engine/bankruptcy';
 
 const ref = 68000;
 function longDtc(lev = 200, margin = 10000) {
-  const g = fresh();
+  const g = bare();
   openFutures(g);
   g.run.cash = 1_000_000;
   expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev, margin }).ok).toBe(true);
@@ -16,7 +16,7 @@ function longDtc(lev = 200, margin = 10000) {
 
 describe('H. 선물 거래', () => {
   it('AC-v2-80 도토코인 68,000, 200배 롱, 증거금 10,000: 명목 2,000,000, 진입 수수료 800, 청산가 67,728, +0.25% 면 ROE +50%', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     const c0 = g.run.cash;
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
@@ -35,7 +35,7 @@ describe('H. 선물 거래', () => {
     const c0 = g.run.cash;
     A(g, { type: 'close', market: 'DTC' });
     expect(g.run.cash - c0).toBe(Math.floor(10000 + 100000 * 0.05 - 40));
-    const s = fresh();
+    const s = bare();
     openFutures(s);
     A(s, { type: 'open', market: 'DTC', dir: -1, lev: 100, margin: 10000 });
     expect(liqPrice(s.run.positions.DTC)).toBeCloseTo(ref * (1 + 0.01 - 0.001), 6);
@@ -53,7 +53,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('AC-v2-82 손절 −25% 와 청산가를 같은 틱에 넘으면 청산이 우선', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000, sl: -25 });
     expect(stopPrice(g.run.positions.DTC, -25)).toBeCloseTo(ref * (1 - 0.25 / 200), 6);
@@ -63,7 +63,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('손절·익절은 그 값에 정리한다', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 10000, sl: -25, tp: 50 });
     tickN(g, 1, { DTC: ref * 0.99 }); // -10% ROE: 아직
@@ -72,7 +72,7 @@ describe('H. 선물 거래', () => {
     tickN(g, 1, { DTC: ref * 0.9 }); // 한 번에 -100% ROE 를 넘어도 손절가(−25%)에 정리되지만 청산가가 더 가깝다 -> 청산
     expect(g.run.positions.DTC).toBeUndefined();
     expect(g.run.cash).toBe(c0);
-    const h = fresh();
+    const h = bare();
     openFutures(h);
     A(h, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 10000, sl: -5, tp: 50 });
     const c1 = h.run.cash;
@@ -83,7 +83,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('AC-v2-83 100배 포지션(명목 1,000만)을 정산 160회 들면 펀딩비 합계 16,000', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     noDebts(g);
     g.run.cash = 1_000_000;
@@ -97,7 +97,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('펀딩비를 뺀 뒤 증거금 + 손익 ≤ 명목 × 0.1% 면 청산(viaFunding)', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     noDebts(g);
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
@@ -108,7 +108,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('AC-v2-84 명목이 2억을 넘는 입력은 막힌다("포지션 한도 2억")', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     g.run.cash = 1e9;
     const r = A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 20_000_001 });
@@ -132,7 +132,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('포지션은 최대 5개', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     g.run.cash = 1e7;
     for (const m of ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']) expect(A(g, { type: 'open', market: m, dir: 1, lev: 2, margin: 1000 }).ok).toBe(true);
@@ -140,7 +140,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('증거금 비율 선택: 100% 는 floor(현금 / (1 + 배율 × 0.04%))', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 50, marginPct: 100 });
     expect(g.run.positions.DTC.margin).toBe(Math.floor(100000 / (1 + 50 * 0.0004)));
@@ -177,7 +177,7 @@ describe('H. 선물 거래', () => {
   });
 
   it('AC-v2-45 지갑 도토코인 100,000어치와 10배 숏(명목 100,000): −5% 면 지갑 95,000, 숏 평가익 +5,000, 숏으로 지킨 비율 100%', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 100000);
     openFutures(g);
@@ -188,21 +188,21 @@ describe('H. 선물 거래', () => {
     expect(walletValue(g.run)).toBeCloseTo(95000, 4);
     expect(pnlOf(p, g.run.prices.DTC)).toBeCloseTo(5000, 4);
     expect(shortInsurance(g.run, 'DTC').ratioPct).toBe(100);
-    const h = fresh();
+    const h = bare();
     giveWheel(h, 'DTC');
     giveCoinValue(h, 'DTC', 100000);
     expect(shortInsurance(h.run, 'DTC').ratioPct).toBe(0);
   });
 
   it('AC-v2-61 빌리고 59초 뒤 진입한 포지션은 fundedBy=capital, 61초 뒤면 없다', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     A(g, { type: 'borrow', lender: 'capital' });
     tickN(g, 59);
     expect(fundedByAt(g)).toBe('capital');
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 2, margin: 1000 });
     expect(g.run.positions.DTC.fundedBy).toBe('capital');
-    const h = fresh();
+    const h = bare();
     openFutures(h);
     A(h, { type: 'borrow', lender: 'capital' });
     tickN(h, 61);
@@ -212,7 +212,7 @@ describe('H. 선물 거래', () => {
 
   it('AC-v2-72 실제 청산에서 즉시 파산: 빚 30만, 쳇바퀴 1대면 파산하지 않고, 쳇바퀴·설비 0 이고 지갑 0 이면 그 자리에서, 빚 0 이면 아니다', () => {
     const mk = (opt: { wheel?: boolean; debt?: boolean }) => {
-      const g = fresh();
+      const g = bare();
       openFutures(g);
       if (!opt.debt) noDebts(g);
       if (opt.wheel) giveWheel(g, 'DTC');
@@ -229,7 +229,7 @@ describe('H. 선물 거래', () => {
     expect(b.run.bankruptcy).toMatchObject({ cause: 'LIQ', immediate: true });
     const c = mk({});
     expect(c.run.over).toBe(false);
-    const d = fresh();
+    const d = bare();
     giveEquip(d, 'wheel2', 'DTC', 20000);
     d.run.cash = 0;
     expect(checkLiquidationWipeout(d)).toBe(false);

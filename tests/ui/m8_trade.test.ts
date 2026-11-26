@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { A, fresh, giveWheel, openFutures, settleOnce } from '../engine/helpers';
+import { A, bare, giveWheel, openFutures, settleOnce } from '../engine/helpers';
 import { chartModel, awayModel, awayDuration, gateLines, levRuler, orderPreview, positionView, shortLine, tradeMode, tutorialLine, fmtPrice } from '../../src/ui/vm/trade';
 import { tickerNotice } from '../../src/ui/vm/village';
 import { ChartBox } from '../../src/ui/trade/Chart';
@@ -12,14 +12,14 @@ import type { AwayReport } from '../../src/engine/types';
 
 describe('AC-v2-24 거래 탭 잠금 3단계', () => {
   it('단계 0: 자물쇠와 문구, 차트 자리는 비어 있다', () => {
-    const g = fresh();
+    const g = bare();
     const m = tradeMode(g);
     expect(m.mode).toBe('locked');
-    expect(m.text).toBe('쳇바퀴를 사면 시세가 보입니다');
+    expect(m.text).toBe('쳇바퀴가 있어야 시세가 보입니다');
     expect(m.lines).toEqual([]);
   });
   it('단계 1: 읽기 전용 + 조건 3줄과 현재 값', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     g.run.minedValue = 31_200;
     const m = tradeMode(g);
@@ -31,7 +31,7 @@ describe('AC-v2-24 거래 탭 잠금 3단계', () => {
     expect(m.ready).toBe(false);
   });
   it('조건이 다 차면 창구에서 열 수 있다는 안내, 계좌가 열리면 주문 단계', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     g.run.minedValue = 60_000;
     for (let i = 0; i < 3; i++) A(g, { type: 'eduPage' });
@@ -82,7 +82,7 @@ describe('AC-v2-144 차트 사각형은 깨끗하다', () => {
 
 describe('배율 눈금자와 주문 미리보기', () => {
   it('상한 위는 잠기고 조건 한 줄이 나온다', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g, 10);
     g.run.futures.closedTrades = 1;
     const r = levRuler(g);
@@ -94,7 +94,7 @@ describe('배율 눈금자와 주문 미리보기', () => {
     expect(levRuler(g).find((n) => n.lev === 200)!.lockText).toContain('확인서');
   });
   it('안내 한 줄: 증거금 · 수수료 · 청산가(%)', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g, 50);
     g.run.cash = 100_000;
     const p = orderPreview(g, 'DTC', 1, 25, 25);
@@ -105,7 +105,7 @@ describe('배율 눈금자와 주문 미리보기', () => {
     expect(p.reason).toBeNull();
   });
   it('지연·정지·현금 부족이면 이유가 나온다', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g, 50);
     g.run.marketStatus = 'delayed';
     expect(orderPreview(g, 'DTC', 1, 10, 25).reason).toContain('지연');
@@ -119,7 +119,7 @@ describe('배율 눈금자와 주문 미리보기', () => {
 
 describe('포지션 줄·숏 보험 줄·처음 세 번 설명', () => {
   it('ROE·꼬리표(출처·빌린 돈)', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g, 50);
     g.run.cash = 100_000;
     expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 25, marginPct: 25 }).ok).toBe(true);
@@ -134,7 +134,7 @@ describe('포지션 줄·숏 보험 줄·처음 세 번 설명', () => {
     expect(positionView(g, 'BTH')).toBeNull();
   });
   it('지갑 도토코인 N어치 — 숏으로 지킨 비율 N%', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g, 50);
     giveWheel(g, 'DTC');
     g.run.wallet.DTC.qty = 12_400 / g.run.prices.DTC;
@@ -142,7 +142,7 @@ describe('포지션 줄·숏 보험 줄·처음 세 번 설명', () => {
     expect(shortLine(g, 'JQQ')).toBeNull();
   });
   it('끝난 거래가 3건이 되기 전까지만 칩멍크 설명', () => {
-    const g = fresh();
+    const g = bare();
     expect(tutorialLine(g)).toBeNull();
     openFutures(g, 10);
     expect(tutorialLine(g)).toContain('배율');
@@ -153,7 +153,7 @@ describe('포지션 줄·숏 보험 줄·처음 세 번 설명', () => {
 
 describe('AC-v2-98 앱이 가려질 때 속보 띠', () => {
   it('포지션 수와 가장 가까운 청산가까지의 거리가 사실 문장으로 한 번', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g, 50);
     g.run.cash = 100_000;
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, marginPct: 25 });

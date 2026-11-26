@@ -3,12 +3,19 @@
   "_doc": "숫자의 원본. GDD_v2 4.1. [시뮬 필요] 표시 값은 임시값이며 M4 sim_v3 로 조정한다. 엔진은 숫자를 코드에 적지 않는다.",
   "start": {
     "generation": 2,
-    "cash": 100000,
+    "cash": 0,
     "debts": {
-      "capital": 150000,
-      "shark1": 150000
+      "shark1": 300000
     },
-    "house": 0
+    "house": 0,
+    "wheels": [
+      "DTC"
+    ],
+    "autoSell": true,
+    "_doc": "시작(U-29·U-30): 현금 0. 엄마 빚 30만은 전부 오소리 대부 장부이고 옛 이자 1.5%(정산당 4,500)가 그대로 붙는다(inheritedRateCap: 물려받은 몫에만 금리 상한). 새로 빌리는 돈은 그 채권처 금리(오소리 4%). 엄마가 남긴 도토코인 쳇바퀴 한 대(캐면 바로 팔기 켜짐).",
+    "inheritedRateCap": {
+      "shark1": 0.015
+    }
   },
   "settlement": {
     "intervalSec": 180,
@@ -39,9 +46,7 @@
     "upkeepMaxOverdue": 3
   },
   "progression": {
-    "acornPerTap": 27,
     "maxTapsPerSec": 12,
-    "firstWheelUnlockTaps": 30,
     "futures": {
       "minedValueRequired": 50000,
       "depositCheck": 30000,
@@ -65,50 +70,29 @@
     "stage0OfflineSettlements": 0
   },
   "mining": {
-    "tapBase": 27,
+    "tapBase": 2,
     "autoShare": 0,
-    "tapLevel": {
-      "_doc": "달리기 레벨(탭타이탄식): 레벨마다 탭 +perLevel, 정해진 레벨에서 탭 ×mul 또는 설비 초당 순수입의 linkPct% 를 탭에 더한다",
-      "perLevel": 2,
-      "milestones": [
-        {
-          "lv": 10,
-          "mul": 1.5
-        },
-        {
-          "lv": 15,
-          "linkPct": 2
-        },
-        {
-          "lv": 20,
-          "mul": 1.5
-        },
-        {
-          "lv": 25,
-          "linkPct": 3
-        },
-        {
-          "lv": 30,
-          "mul": 1.5
-        }
-      ]
-    },
     "sellFee": 0.005,
     "sellFeeMin": 0.002,
     "forcedSellFee": 0.03,
     "walletLtvCapital": 0.5,
     "walletSeizeRate": 0.9,
     "walletSeizeMin": 1000,
-    "reattachFee": 0.05
+    "reattachFee": 0.05,
+    "_doc": "탭 한 번 = tapBase(고정). 달리기 레벨·배수 없음(U-30). autoShare 는 0."
   },
   "assets": {
     "maxUnits": 3,
-    "costGrowth": 1.25,
+    "costGrowth": 1,
     "appraisalRate": 0.8,
     "sellRate": 0.6,
     "auctionRate": 0.5,
     "collateralLtvCapital": 0.5,
-    "collateralLtvBank": 0.6
+    "collateralLtvBank": 0.6,
+    "buyable": [
+      "wheel2"
+    ],
+    "_doc": "U-30: 집에서 살 수 있는 설비는 buyable 에 든 것뿐(보조 쳇바퀴). 값은 대수와 무관하게 고정(costGrowth 1). 대수 상한은 설비마다 maxUnits(없으면 여기 maxUnits)."
   },
   "seizure": {
     "garnishRate": 0.3
@@ -261,5 +245,10 @@
     "abbreviate": {
       "from": 10000
     }
+  },
+  "labor": {
+    "_doc": "알바 햄스터(U-30): 구매가 없음. 쳇바퀴 한 대에 한 마리, 정산마다 grossPerSettle 어치를 캐고 일당 wage 를 받는다. 대수와 무관하게 고정. 일당을 못 받으면 나간다.",
+    "wage": 1800,
+    "grossPerSettle": 6500
   }
 }

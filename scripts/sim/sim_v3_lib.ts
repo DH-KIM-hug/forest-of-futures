@@ -8,7 +8,7 @@ import type { Bar, Tick } from '../../src/engine/feed/types';
 import { catchUp } from '../../src/engine/offline';
 import { declareBankruptcy } from '../../src/engine/bankruptcy';
 import { forecast } from '../../src/engine/settlement';
-import { netWorth, ownedCoins, totalDebt } from '../../src/engine/selectors';
+import { lenderLimit, netWorth, ownedCoins, totalDebt } from '../../src/engine/selectors';
 import { futuresGate, wheelStatus } from '../../src/engine/progression';
 import { affordableUpgrades } from '../../src/engine/upgrades';
 import { nextTierCost, tierBlockReason } from '../../src/engine/equipment';
@@ -67,7 +67,7 @@ export interface Archetype {
 }
 export const ARCHETYPES: Archetype[] = [
   { id: 'idle', label: '접속만 하고 아무것도 안 함', tps: 0, engine: false, maxGens: 1 },
-  { id: 'labor', label: '줍기만(초당 1.5회), 남는 돈은 도장', tps: 1.5, engine: false, maxGens: 1 },
+  { id: 'labor', label: '쳇바퀴만 굴림(초당 1.5회, 빌리지 않음), 남는 돈은 도장', tps: 1.5, engine: false, maxGens: 1 },
   { id: 'engine_casual', label: '채굴 + 바로 팔기(초당 1회), 흑자 전환 뒤 빚부터', tps: 1, engine: true, futures: true, maxGens: 1 },
   { id: 'engine_normal', label: '채굴 + 바로 팔기(초당 1.5회), 흑자 전환 뒤 빚부터', tps: 1.5, engine: true, futures: true, maxGens: 5 },
   { id: 'trader_mild', label: 'engine_normal + 속보를 따라 10배(손절 -50 / 익절 +100), 포지션 2개까지', tps: 1.5, engine: true, futures: true, trade: { lev: 10, pct: 25, sl: -50, tp: 100, max: 2 }, maxGens: 1 },
@@ -212,6 +212,12 @@ export async function simulate(cache: Cache, o: SimOpts): Promise<GenRec[]> {
     }
     for (const c of ownedCoins(run)) if (!run.coinWheels[c].autoSell) act({ type: 'autoSell', coin: c, on: true });
     if (ownedCoins(run).length === 0) return;
+    // U-29·U-30: 오소리에서 빌리면 중고폰(선물 계좌)이 따라온다. 폰이 있어야 알바를 부른다. 빈 쳇바퀴마다 알바를 들인다(일당 1,800).
+    if (!run.futures.open && (run.stats.sharkBorrowed ?? 0) > 0 && run.debts.shark1.principal > 0) act({ type: 'openAccount', sponsor: true });
+    if (run.futures.open) {
+      for (const c of ownedCoins(run)) if (!run.coinWheels[c].staffed) act({ type: 'hire', coin: c });
+      for (const u of run.equipment) if (u.staffed === false) act({ type: 'hire', uid: u.uid });
+    }
     if (a.futures) {
       const gate = futuresGate(g);
       if (gate.buttonVisible && !run.futures.open) {
@@ -226,6 +232,10 @@ export async function simulate(cache: Cache, o: SimOpts): Promise<GenRec[]> {
     // 흑자 전환(설비 수입 − 전기세 ≥ 이자 + 생활비의 1.6배)을 한 번 넘으면 그 뒤로는 빚부터 갚는다(SIM_v2 정책)
     if (f.mined - f.power >= 1.6 * fixed && fixed > 0) wasBlack = true;
     const debt = totalDebt(run);
+    // U-29: 시작 현금은 0 이고 탭만으로는 이자를 못 낸다. 정산 직전에 모자라면 빌려서 낸다(추심원의 권유를 받는 것과 같다).
+    if (run.settleIn <= 3 && run.cash < due) borrowUpTo(due - run.cash);
+    // 자산은 빚으로 산다: 흑자 전환 전에는 이자율보다 많이 버는 설비를 빌려서 들인다.
+    if (!wasBlack) leverage(due);
     if (!wasBlack || debt <= 0) invest(run.cash - 0.5 * due, f);
     else payDebt(run.cash - 3 * due);
     if (a.trade && run.futures.open) trade(a);
@@ -241,6 +251,41 @@ export async function simulate(cache: Cache, o: SimOpts): Promise<GenRec[]> {
         spend -= r.paid ?? 0;
       }
     }
+  }
+  /** 한도 안에서 need 만큼 빌린다(캐피탈 2%, 오소리 4%). 받은 돈을 돌려준다. */
+  function borrowUpTo(need: number, maxRate = 1): number {
+    let got = 0;
+    // 폰(알바를 부르는 길)은 오소리 돈에 딸려 온다: 아직 폰이 없으면 오소리부터, 그 뒤로는 싼 곳부터
+    const order = g.run.futures.open ? (['capital', 'shark1'] as const) : (['shark1', 'capital'] as const);
+    for (const id of order) {
+      if (lenderById[id].rate > maxRate) continue;
+      for (let k = 0; k < 20 && got < need; k++) {
+        if (lenderLimit(g, id) - g.run.debts[id].principal <= 0) break;
+        const r = act({ type: 'borrow', lender: id });
+        if (!r.ok) break;
+        got += r.amount ?? 0;
+      }
+    }
+    return got;
+  }
+  /** 빌린 돈의 이자보다 많이 버는 설비가 있으면(순수입/값 > 금리 × 1.25) 그 값만큼 빌려 산다. 다음 청구액은 남긴다. */
+  function leverage(due: number) {
+    const run = g.run;
+    let best: { tier: string; cost: number; eff: number } | null = null as { tier: string; cost: number; eff: number } | null;
+    for (const t of tierDefs) {
+      if (run.equipment.filter((u) => u.tier === t.id).length >= 3) continue;
+      const why = tierBlockReason(g, t.id, 'DTC');
+      if (why && why !== '현금 부족') continue;
+      const cost = nextTierCost(run, t.id);
+      const eff = (t.netPerSec * 180) / cost;
+      if (!best || eff > best.eff) best = { tier: t.id, cost, eff };
+    }
+    if (!best) return;
+    const need = best.cost + 0.5 * due - run.cash;
+    if (need <= 0) return; // invest 가 산다
+    const room = (id: 'capital' | 'shark1') => (lenderById[id].rate * 1.25 < best!.eff ? Math.max(0, lenderLimit(g, id) - run.debts[id].principal) : 0);
+    if (room('capital') + room('shark1') < need) return;
+    borrowUpTo(need, best.eff / 1.25);
   }
   function invest(spend: number, f: { interest: number }) {
     const run = g.run;

@@ -1,71 +1,88 @@
 import { describe, it, expect } from 'vitest';
 import { A, fresh, giveEquip, giveWheel, settleOnce, tapN, tickN } from './helpers';
-import { stage } from '../../src/engine/selectors';
+import { ownedCoins, stage } from '../../src/engine/selectors';
 import { wheelOffers, wheelStatus } from '../../src/engine/progression';
 import { economyCatchUp, offlineSettlementBudget } from '../../src/engine/offline';
+import { removeWheel, tapValue } from '../../src/engine/equipment';
 import { stepMut } from '../../src/engine/game';
 
-describe('B. 진행 단계·도토리 줍기', () => {
-  it('AC-v2-09 단계 0: 1번 누르면 현금 +27, 지갑 변화 없음', () => {
+/** 쳇바퀴를 잃은 판(압류·판매 뒤). 줍기 단계는 없다(U-29). */
+function wheelless() {
+  const g = fresh();
+  removeWheel(g.run, 'DTC');
+  return g;
+}
+
+describe('B. 진행 단계·첫 쳇바퀴(U-29: 줍기 없음, 쳇바퀴에서 시작)', () => {
+  it('AC-v2-09 시작부터 쳇바퀴: 1번 굴리면 도토코인 2어치(고정)를 캐 바로 팔린다(수수료 0.5%, 1도토리 못 미친 몫은 다음으로)', () => {
     const g = fresh();
+    expect(tapValue(g, 'DTC')).toBe(2);
     A(g, { type: 'tap' });
-    expect(g.run.cash).toBe(100027);
-    expect(Object.keys(g.run.wallet)).toHaveLength(0);
+    expect(g.run.cash).toBe(1); // 2 × 0.995 = 1.99 -> 1, 나머지 0.99
+    expect(g.run.sellFrac).toBeCloseTo(0.99, 9);
+    expect(g.run.minedValue).toBe(2);
+    expect(g.run.wallet.DTC.qty).toBe(0); // 바로 팔기: 지갑에 안 쌓인다
+    A(g, { type: 'tap' });
+    expect(g.run.cash).toBe(3); // 누적 3.98
   });
 
-  it('AC-v2-10 1초 안에 20번 누르면 12번만 인정', () => {
+  it('AC-v2-10 1초 안에 20번 눌러도 12번만 인정', () => {
     const g = fresh();
     for (let i = 0; i < 20; i++) A(g, { type: 'tap' });
-    expect(g.run.cash).toBe(100000 + 12 * 27);
+    expect(g.run.cash).toBe(Math.floor(12 * 2 * 0.995)); // 23
     expect(g.run.stats.laborTaps).toBe(12);
     tickN(g, 1);
     A(g, { type: 'tap' });
     expect(g.run.stats.laborTaps).toBe(13);
   });
 
-  it('AC-v2-11 줍기 29회엔 구매 버튼이 없고 30회에 팻말 + [도토코인 쳇바퀴 10,000] + 안내 말풍선 한 번', () => {
+  it('AC-v2-11 줍기 조건·팻말은 없다: 처음부터 가졌고, 잃으면 값(10,000)만 내고 다시 산다', () => {
     const g = fresh();
-    tapN(g, 29);
-    expect(g.run.acornTaps).toBe(29);
-    expect(wheelOffers(g)).toHaveLength(0);
-    expect(g.run.notices.some((n) => n.id === 'hint:firstWheel')).toBe(false);
-    tapN(g, 1);
-    const offers = wheelOffers(g);
+    expect(wheelStatus(g, 'DTC')).toMatchObject({ owned: true, unlocked: true, canBuy: false, reason: null, progress: null });
+    expect(g.run.notices.some((n) => n.id === 'sign:wheel' || n.id === 'hint:firstWheel')).toBe(false);
+    const h = wheelless();
+    expect(stage(h.run)).toBe(0);
+    const offers = wheelOffers(h);
     expect(offers.map((o) => o.coin)).toEqual(['DTC']);
-    expect(offers[0].canBuy).toBe(true);
-    expect(g.run.notices.filter((n) => n.id === 'sign:wheel')).toHaveLength(1);
-    expect(g.run.notices.filter((n) => n.id === 'hint:firstWheel')).toHaveLength(1);
-    tapN(g, 30);
-    expect(g.run.notices.filter((n) => n.id === 'hint:firstWheel')).toHaveLength(1);
+    expect(offers[0]).toMatchObject({ unlocked: true, canBuy: false, reason: '현금 부족' });
+    h.run.cash = 10000;
+    expect(wheelOffers(h)[0].canBuy).toBe(true);
   });
 
-  it('AC-v2-12 쳇바퀴를 사면 현금 -10,000, 단계 1, 지갑 알약 생김, 탭은 코인을 캔다', () => {
-    const g = fresh();
-    tapN(g, 30);
-    const before = g.run.cash;
+  it('AC-v2-11 쳇바퀴가 없으면 탭은 거절되고 아무것도 벌지 못한다', () => {
+    const g = wheelless();
+    const r = A(g, { type: 'tap' });
+    expect(r).toMatchObject({ ok: false, code: 'nowheel' });
+    expect(g.run.cash).toBe(0);
+    expect(g.run.minedValue).toBe(0);
+    expect(g.run.stats.laborTaps ?? 0).toBe(0);
+  });
+
+  it('AC-v2-12 잃은 쳇바퀴를 다시 사면 현금 -10,000, 단계 1, 탭은 코인을 캔다(새로 산 것은 지갑에 쌓인다)', () => {
+    const g = wheelless();
+    g.run.cash = 12000;
     expect(A(g, { type: 'buyWheel', coin: 'DTC' }).ok).toBe(true);
-    expect(g.run.cash).toBe(before - 10000);
+    expect(g.run.cash).toBe(2000);
     expect(stage(g.run)).toBe(1);
-    expect(g.run.wallet.DTC).toBeDefined();
-    const cash = g.run.cash;
+    expect(ownedCoins(g.run)).toEqual(['DTC']);
+    expect(g.run.riding).toBe('DTC');
     tickN(g, 1);
     A(g, { type: 'tap' });
-    expect(g.run.cash).toBe(cash);
+    expect(g.run.cash).toBe(2000);
     expect(g.run.wallet.DTC.qty).toBeGreaterThan(0);
+    expect(A(g, { type: 'buyWheel', coin: 'DTC' }).ok).toBe(false); // 이미 있다
   });
 
   it('AC-v2-12 현금이 모자라면 못 산다', () => {
-    const g = fresh();
-    tapN(g, 30);
+    const g = wheelless();
     g.run.cash = 9999;
     const r = A(g, { type: 'buyWheel', coin: 'DTC' });
     expect(r.ok).toBe(false);
     expect(wheelStatus(g, 'DTC').reason).toBe('현금 부족');
   });
 
-  it('AC-v2-13 초당 1.5회로 한 정산 동안 줍으면 7,290', () => {
+  it('AC-v2-13 초당 1.5회로 한 정산 동안 굴리면 270번 × 2 × 0.995 = 537 (이자 4,500 에 한참 못 미친다)', () => {
     const g = fresh();
-    const c0 = g.run.cash;
     for (let s = 0; s < 179; s++) {
       tapN(g, s % 2 === 0 ? 2 : 1);
       tickN(g, 1);
@@ -74,11 +91,12 @@ describe('B. 진행 단계·도토리 줍기', () => {
     // 179 초 * 1.5 = 268.5 -> 마지막 초의 1.5 를 채워 270
     tapN(g, 270 - g.run.stats.laborTaps);
     expect(g.run.stats.laborTaps).toBe(270);
-    expect(g.run.cash - c0).toBe(7290);
+    expect(g.run.cash).toBe(Math.floor(270 * 2 * 0.995)); // 537
+    expect(g.run.minedValue).toBe(540);
   });
 
-  it('AC-v2-14 단계 0 에서 8시간 뒤 돌아와도 정산은 0회(현금·빚 그대로)', () => {
-    const g = fresh();
+  it('AC-v2-14 쳇바퀴가 없는 판(단계 0)은 8시간 뒤 돌아와도 정산 0회(현금·빚 그대로)', () => {
+    const g = wheelless();
     const snap = JSON.stringify([g.run.cash, g.run.debts]);
     expect(offlineSettlementBudget(g)).toBe(0);
     expect(economyCatchUp(g, 8 * 3600)).toBe(0);
@@ -88,35 +106,51 @@ describe('B. 진행 단계·도토리 줍기', () => {
 
   it('AC-v2-92(경제 부분) 단계 1 은 8시간 뒤 정산 2회분만, idle 2단계면 4회분', () => {
     const g = fresh();
-    giveWheel(g, 'DTC');
+    g.run.cash = 100000; // 연체 걱정이 없어야 상한까지 돈다
     expect(offlineSettlementBudget(g)).toBe(2);
     expect(economyCatchUp(g, 8 * 3600)).toBe(2);
     expect(g.run.settleNo).toBe(2);
     const h = fresh();
-    giveWheel(h, 'DTC');
+    h.run.cash = 100000;
     h.family.tree.idle = 2;
     expect(offlineSettlementBudget(h)).toBe(4);
     expect(economyCatchUp(h, 8 * 3600)).toBe(4);
   });
 
-  it('AC-v2-15 2세대 시작, 단계 0, 초당 1.5회, 접속 중 정산만: 30번째 정산까지 연체 없음', () => {
+  it('AC-v2-92(경제 부분) 시작한 그대로(현금 0) 떠나면 연체가 되는 정산 앞에서 멈춘다(0회)', () => {
     const g = fresh();
-    for (let s = 0; s < 30; s++) {
+    expect(offlineSettlementBudget(g)).toBe(2);
+    expect(economyCatchUp(g, 8 * 3600)).toBe(0);
+    expect(g.run.debts.shark1).toMatchObject({ principal: 300000, overdue: 0 });
+  });
+
+  it('AC-v2-15 빌리지 않고 초당 1.5회로 굴리기만 하면: 첫 정산 연체·딱지, 둘째 정산에 쳇바퀴 압류, 셋째 정산에 파산', () => {
+    const g = fresh();
+    const round = () => {
       for (let t = 0; t < 180; t++) {
         for (let k = 0; k < (t % 2 === 0 ? 2 : 1); k++) stepMut(g, { type: 'action', action: { type: 'tap' } });
         tickN(g, 1);
       }
-      expect(Object.values(g.run.debts).every((d) => d.overdue === 0)).toBe(true);
-      expect(g.run.over).toBe(false);
-    }
-    expect(g.run.settleNo).toBe(30);
-    expect(g.run.cash).toBe(100000 - 2710 * 30);
-    expect(g.run.cash).toBeGreaterThan(0);
+    };
+    round();
+    // 번 537 은 전부 이자로. 못 낸 3,963 은 원금에, 생활비 1,000 은 캐피탈로
+    expect(g.run.settleNo).toBe(1);
+    expect(g.run.cash).toBe(0);
+    expect(g.run.debts.shark1).toMatchObject({ principal: 300000 + 4500 - 537, overdue: 1 });
+    expect(g.run.debts.capital.principal).toBe(1000);
+    expect(g.run.coinWheels.DTC.tagBy).toBe('shark1');
+    round();
+    expect(g.run.settleNo).toBe(2);
+    expect(g.run.over).toBe(false);
+    expect(ownedCoins(g.run)).toEqual([]); // 엄마의 쳇바퀴가 실려 갔다
+    expect(g.run.stats.assetsSeized).toBe(1);
+    round();
+    expect(g.run.over).toBe(true);
+    expect(g.run.settleNo).toBe(3);
   });
 
   it('AC-v2-16 누적 채굴 19,999 면 밤더리움 쳇바퀴가 잠겨 있고 조건·현재 값이 보인다. 20,000 이면 30,000 에 산다', () => {
     const g = fresh();
-    giveWheel(g, 'DTC');
     g.run.cash = 50000;
     g.run.minedValue = 19999;
     const s = wheelStatus(g, 'BTH');
@@ -130,18 +164,16 @@ describe('B. 진행 단계·도토리 줍기', () => {
     expect(g.run.cash).toBe(20000);
   });
 
-  it('AC-v2-17 텐트면 삼솔전자 쳇바퀴는 주소지로 잠기고, 누적 채굴 50,000 이면 멍도토(15,000)가 열린다', () => {
+  it('AC-v2-17 빈 오두막이면 삼솔전자 쳇바퀴는 내 집이 없어 잠기고, 누적 채굴 50,000 이면 멍도토(15,000)가 열린다', () => {
     const g = fresh();
-    giveWheel(g, 'DTC');
     g.run.cash = 200000;
     g.run.minedValue = 60000;
     const sms = wheelStatus(g, 'SMS');
     expect(sms.canBuy).toBe(false);
-    expect(sms.reason).toBe('주소지가 필요합니다(오두막 이상)');
+    expect(sms.reason).toBe('내 집이 필요합니다(통나무집 이상)');
     g.run.house = 1;
     expect(wheelStatus(g, 'SMS').canBuy).toBe(true);
     const h = fresh();
-    giveWheel(h, 'DTC');
     h.run.cash = 100000;
     h.run.minedValue = 49999;
     expect(wheelStatus(h, 'MDT').canBuy).toBe(false);
@@ -151,11 +183,11 @@ describe('B. 진행 단계·도토리 줍기', () => {
     expect(h.run.cash).toBe(100000 - 15000);
     void giveEquip;
     void settleOnce;
+    void giveWheel;
   });
 
   it('AC-v2-114(일부) 선행 학습 2단계: 밤더리움 12,000, 멍도토(선물 계좌 조건) 30,000 기준', () => {
     const g = fresh();
-    giveWheel(g, 'DTC');
     g.family.tree.prep = 2;
     expect(wheelStatus(g, 'BTH').progress!.need).toBe(12000);
     expect(wheelStatus(g, 'MDT').progress!.need).toBe(30000);

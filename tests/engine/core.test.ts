@@ -21,8 +21,9 @@ function randomAction(g: GameState, r: { rng: number }): Action | null {
   if (x < 0.4) return { type: 'tap' };
   if (x < 0.46) return { type: 'buyWheel', coin };
   if (x < 0.5) return { type: 'buyEquip', tier: pick(tierDefs).id, coin };
+  if (x < 0.515) return g.run.equipment.length && nextRandom(r) < 0.5 ? { type: 'hire', uid: pick(g.run.equipment).uid } : { type: 'hire', coin };
   if (x < 0.53) return { type: 'sell', coin, part: pick(['all', 'half'] as const) };
-  if (x < 0.58) return { type: 'upgrade', track: pick(['glove', 'shoes', 'oil', 'spokes', 'power', 'tier', 'fee']), target: pick([coin, 'helper', 'row']) };
+  if (x < 0.58) return { type: 'upgrade', track: pick(['oil', 'spokes', 'power', 'tier', 'fee']), target: pick([coin, 'helper', 'row']) };
   if (x < 0.64) return { type: 'borrow', lender: pick(['bank', 'capital', 'shark1', 'shark2'] as const), consent: true };
   if (x < 0.72) return { type: 'stamp', lender: pick(['bank', 'capital', 'shark1', 'shark2', 'tax'] as const), mult: pick([1, 10, 'all'] as const) };
   if (x < 0.75) return { type: 'borrowFriend', friend: pick(friendDefs).id };
@@ -82,7 +83,8 @@ describe('엔진 코어', () => {
     const before = JSON.stringify(s);
     const s2 = step(s, { type: 'action', action: { type: 'tap' } });
     expect(JSON.stringify(s)).toBe(before);
-    expect(s2.run.cash).toBe(100027);
+    expect(s2.run.cash).toBe(1); // 시작 현금 0 + 첫 탭 2 × 0.995 = 1.99
+    expect(s.run.cash).toBe(0);
     const feed = new SimFeed(1);
     const s3 = step(s2, { type: 'tick', tick: feed.next() });
     expect(s3.run.tick).toBe(1);

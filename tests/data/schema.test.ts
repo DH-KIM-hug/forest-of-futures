@@ -23,24 +23,34 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
 
   it('balance.json: 4.1 의 값 그대로', () => {
     const b = D.balance;
-    expect(b.start).toEqual({ generation: 2, cash: 100000, debts: { capital: 150000, shark1: 150000 }, house: 0 });
+    // U-29: 현금 0, 엄마 빚 30만은 전부 오소리 대부(물려받은 몫은 옛 이자 1.5%), 엄마의 도토코인 쳇바퀴 한 대(캐면 바로 팔기)
+    expect(b.start).toMatchObject({ generation: 2, cash: 0, debts: { shark1: 300000 }, house: 0, wheels: ['DTC'], autoSell: true });
+    expect(Object.keys(b.start.debts)).toEqual(['shark1']);
+    expect(b.start.inheritedRateCap).toEqual({ shark1: 0.015 });
     expect(b.settlement.intervalSec).toBe(180);
     expect(b.settlement.dayCycleSettlements).toBe(4);
     expect(b.settlement.payOrder).toEqual(['shark2', 'shark1', 'capital', 'bank', 'tax', 'upkeep']);
     expect(b.living.byHouse).toEqual([1000, 8000, 30000, 140000, 650000]);
-    expect(b.progression.acornPerTap).toBe(27);
+    // 줍기 단계와 첫 쳇바퀴 줍기 조건은 없어졌다(U-29)
+    expect(b.progression.acornPerTap).toBeUndefined();
+    expect(b.progression.firstWheelUnlockTaps).toBeUndefined();
     expect(b.progression.maxTapsPerSec).toBe(12);
-    expect(b.progression.firstWheelUnlockTaps).toBe(30);
     expect(b.progression.stage0OfflineSettlements).toBe(0);
     expect(b.progression.futures.levCaps.map((c: any) => c.cap)).toEqual([10, 50, 200]);
     expect(b.mining.autoShare).toBe(0);
-    expect(b.assets.costGrowth).toBe(1.25);
+    // U-30: 탭은 고정값(레벨·배수 없음), 설비 값은 대수와 무관, 집에서 살 수 있는 것은 보조 쳇바퀴뿐, 알바는 일당제
+    expect(b.mining.tapBase).toBe(2);
+    expect(b.mining.tapLevel).toBeUndefined();
+    expect(b.assets.costGrowth).toBe(1);
+    expect(b.assets.buyable).toEqual(['wheel2']);
+    expect(b.assets.maxUnits).toBe(3);
+    expect(b.labor).toMatchObject({ wage: 1800, grossPerSettle: 6500 });
     expect(b.seizure.garnishRate).toBe(0.3);
     expect(b.trading.leverageOptions).toEqual([1, 2, 5, 10, 25, 50, 100, 200]);
     expect(b.inheritance.minStartDebt).toBe(200000);
     expect(b.ranking.npcs).toHaveLength(9);
     // 폐지된 v2-draft 항목은 옮기지 않았다
-    for (const k of ['economy', 'labor', 'humanPattern', 'policyReserve', 'regularPerGen']) expect(b[k]).toBeUndefined();
+    for (const k of ['economy', 'humanPattern', 'policyReserve', 'regularPerGen']) expect(b[k]).toBeUndefined();
   });
 
   it('markets.json: 5종목, 실제 종목 이름이 없다(서버 설정에만)', () => {
@@ -60,19 +70,28 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
       ['wheel:SMS', 60000, 1.2, 0.86, 1.13],
     ]);
     expect(D.tierDefs.map((t) => [t.id, t.cost, t.grossPerSettle, t.needHouse])).toEqual([
-      ['wheel2', 20000, 5700, 0], ['helper', 60000, 14700, 0], ['row', 150000, 32250, 0], ['generator', 400000, 75000, 0],
+      ['wheel2', 50000, 6500, 0], ['helper', 60000, 14700, 0], ['row', 150000, 32250, 0], ['generator', 400000, 75000, 0],
       ['shed', 1500000, 240000, 1], ['powerroom', 8000000, 1020000, 2], ['farm', 40000000, 3900000, 3],
     ]);
-    // 표의 초당 순수입 = grossPerSettle × (1 − 0.70) ÷ 180
-    for (const t of D.tierDefs) expect(t.netPerSec).toBeCloseTo((t.grossPerSettle * 0.3) / 180, 2);
+    // 보조 쳇바퀴(U-30): 알바 한 마리가 돌린다. 숫자는 balance.labor 와 같고 전기세 대신 일당, 다섯 대까지(첫 쳇바퀴까지 여섯 대)
+    const w2 = D.tierById.wheel2;
+    expect(w2.wage).toBe(D.balance.labor.wage);
+    expect(w2.grossPerSettle).toBe(D.balance.labor.grossPerSettle);
+    expect(w2.maxUnits).toBe(5);
+    expect(w2.netPerSec).toBeCloseTo((6500 - 1800) / 180, 2);
+    expect(D.tierDefs.filter((t) => t.wage != null).map((t) => t.id)).toEqual(['wheel2']);
+    // 그 밖의 표의 초당 순수입 = grossPerSettle × (1 − 0.70) ÷ 180
+    for (const t of D.tierDefs.filter((x) => x.wage == null)) expect(t.netPerSec).toBeCloseTo((t.grossPerSettle * 0.3) / 180, 2);
     expect(D.tierDefs.filter((t) => t.bankCollateral).map((t) => t.id)).toEqual(['shed', 'powerroom', 'farm']);
   });
 
-  it('upgrades.json: 7줄, 비용식 변수가 3.4a 표와 같다', () => {
+  it('upgrades.json: 5줄(목장갑·달리기 레벨 폐지), 비용식 변수가 3.4a 표와 같다', () => {
     expect(D.upgradeTracks.map((t) => [t.id, t.maxLevel, t.r])).toEqual([
-      ['glove', 10, 1.15], ['shoes', 30, 1.15], ['oil', 20, 1.1], ['spokes', 10, 1.15], ['power', 15, 1.12], ['tier', 10, 1.12], ['fee', 10, 1.15],
+      ['oil', 20, 1.1], ['spokes', 10, 1.15], ['power', 15, 1.12], ['tier', 10, 1.12], ['fee', 10, 1.15],
     ]);
-    expect(D.trackById.glove.baseCost).toBe(4000);
+    expect(D.trackById.glove).toBeUndefined();
+    expect(D.trackById.shoes).toBeUndefined();
+    expect(D.upgradeTracks.some((t) => t.scope === 'body')).toBe(false);
     expect(D.trackById.oil.baseCostOfWheel).toBe(0.2);
     expect(D.trackById.power.baseCostOfWheel).toBe(0.3);
     expect(D.trackById.tier.baseCostOfTier).toBe(0.05);

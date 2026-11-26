@@ -102,11 +102,9 @@ export interface WheelView {
 export interface StageModel {
   stage: 0 | 1 | 2;
   wheels: WheelView[];
-  /** 0단계에서 팻말이 섰고 살 수 있는 쳇바퀴(첫 쳇바퀴). */
+  /** 0단계(쳇바퀴를 잃었을 때) 다시 살 수 있는 쳇바퀴. */
   offer: { coin: CoinId; cost: number; canBuy: boolean; reason: string | null } | null;
   signUp: boolean;
-  acornTaps: number;
-  acornNeed: number;
   props: string[]; // 설비 최고 단계 소품
 }
 const PROP: Record<string, string> = { helper: '호루라기', generator: '안전모', shed: '작업복', powerroom: '조끼', farm: '넥타이' };
@@ -125,7 +123,6 @@ export function stageModel(g: GameState): StageModel {
       pct: (price(run, c) / refPrice(run, c) - 1) * 100,
     };
   });
-  const need = balance.progression.firstWheelUnlockTaps as number;
   const ws = wheelStatus(g, 'DTC');
   const signUp = st === 0 && ws.unlocked;
   const props: string[] = [];
@@ -137,7 +134,7 @@ export function stageModel(g: GameState): StageModel {
   }
   return {
     stage: st, wheels, offer: signUp ? { coin: 'DTC', cost: wheelByCoin.DTC.cost, canBuy: ws.canBuy, reason: ws.reason } : null,
-    signUp, acornTaps: run.acornTaps, acornNeed: need, props,
+    signUp, props,
   };
 }
 

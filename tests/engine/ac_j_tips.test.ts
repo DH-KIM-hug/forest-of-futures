@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, openFutures, pushBar, tickN } from './helpers';
+import { A, bare, openFutures, pushBar, tickN } from './helpers';
 import { runTips, tipHitRate, wireDelaySec } from '../../src/engine/tips';
 import { tipsData, eventDefs } from '../../src/engine/data';
 import type { GameState } from '../../src/engine/types';
@@ -14,7 +14,7 @@ const tipsOf = (g: GameState, src: string) => g.run.recentTips.filter((t) => t.s
 
 describe('I. 정보', () => {
   it('AC-v2-87 종가가 그 전 5회 고가를 넘고 거래량이 평소의 2.5배면 wire_break, 같은 출처는 정산 5회 안에 다시 말하지 않는다', () => {
-    const g = fresh();
+    const g = bare();
     breakoutBars(g);
     runTips(g);
     const t = tipsOf(g, 'wire_break');
@@ -33,7 +33,7 @@ describe('I. 정보', () => {
   });
 
   it('AC-v2-87 거래량이 2.5배에 못 미치면 뜨지 않는다', () => {
-    const g = fresh();
+    const g = bare();
     breakoutBars(g, 2.4);
     runTips(g);
     expect(tipsOf(g, 'wire_break')).toHaveLength(0);
@@ -41,7 +41,7 @@ describe('I. 정보', () => {
 
   it('AC-v2-88 속보 20초 안에 같은 종목·같은 방향 진입이면 tipSource=wire_break. 21초 뒤·숏(fadedWire)·다른 종목이면 안 붙는다', () => {
     const mk = () => {
-      const g = fresh();
+      const g = bare();
       openFutures(g);
       breakoutBars(g);
       runTips(g);
@@ -67,7 +67,7 @@ describe('I. 정보', () => {
   });
 
   it('AC-v2-89 곰 형이 "오른다"고 한 뒤 5분 안에 평소 5분 변동 폭만큼 먼저 내리면 말한 횟수 +1, 맞은 횟수 +0', () => {
-    const g = fresh();
+    const g = bare();
     // 직전 5정산 동안 크게 빠짐 -> 곰 형 "바닥이다"
     const avg15 = g.run.mkt.avg.DTC.range180 * Math.sqrt(5);
     let p = P * 1.2;
@@ -87,7 +87,7 @@ describe('I. 정보', () => {
   });
 
   it('적중: 말한 방향으로 평소 5분 폭만큼 먼저 가면 맞은 횟수 +1', () => {
-    const g = fresh();
+    const g = bare();
     breakoutBars(g);
     runTips(g);
     const t = tipsOf(g, 'wire_break')[0];
@@ -104,7 +104,7 @@ describe('I. 정보', () => {
   });
 
   it("AC-v2-91 기질 '의심병': 출처의 가문 적중률이 숫자로 나오고 속보가 3초 늦게 뜬다", () => {
-    const g = fresh();
+    const g = bare();
     expect(wireDelaySec(g)).toBe(0);
     g.family.traits = ['doubting'];
     g.family.tipBook.fox = { said: 4, hit: 1 };
@@ -114,7 +114,7 @@ describe('I. 정보', () => {
   });
 
   it('단짝 다람쥐는 포지션 ROE -50% 아래에서 "그만 정리해"(수첩에 세지 않는다)', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 10000 });
     tickN(g, 1, { DTC: P * 0.994 }); // -6% ROE

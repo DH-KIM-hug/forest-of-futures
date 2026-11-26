@@ -98,7 +98,7 @@ export function play(id: SoundId, o: PlayOpts = {}): void {
     s.start(c.currentTime + (o.delay ?? 0));
   });
 }
-/** 줍기 소리: 3가지 중 하나 + 살짝 다른 음높이(반복 피로 줄이기). */
+/** 탭 소리: 3가지 중 하나 + 살짝 다른 음높이(반복 피로 줄이기). */
 let lastTap = -1;
 export function playTap(): void {
   let i = Math.floor(Math.random() * 3);

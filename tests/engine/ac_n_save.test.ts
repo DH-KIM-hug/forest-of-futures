@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, tickN } from './helpers';
+import { A, bare, tickN } from './helpers';
 import { declareBankruptcy } from '../../src/engine/bankruptcy';
 import { BROKEN_KEY, BROKEN_NOTICE, SAVE_KEY, V1_KEY, loadGame, localStorageAdapter, memoryAdapter, migrate, preferencesAdapter, saveGame, serialize } from '../../src/engine/save';
 import { statement } from '../../src/engine/generation';
@@ -8,7 +8,7 @@ import { endings } from '../../src/engine/data';
 
 describe('N. 저장 v2', () => {
   it('AC-v2-148 엔딩 카드나 재산 명세서 도중에 껐다 켜면 그 화면에서 이어진다', async () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     declareBankruptcy(g, { lastLender: 'shark1', shortfall: 1000 });
     const a = memoryAdapter();
@@ -63,7 +63,7 @@ describe('N. 저장 v2', () => {
   });
 
   it('저장은 버전이 있고 없음(0) -> v2 로 옮겨지며, 모자란 칸은 기본값으로 채워진다', () => {
-    const g = fresh();
+    const g = bare();
     const x = JSON.parse(serialize(g, 123));
     expect(x.version).toBe(2);
     expect(x.savedAt).toBe(123);
@@ -90,6 +90,20 @@ describe('N. 저장 v2', () => {
     const x = JSON.parse(serialize(g, 0));
     const y = JSON.parse(serialize(r.g, 0));
     expect(y).toEqual(x);
+    // 400틱(정산 2회)을 가만히 두면 엄마의 쳇바퀴가 압류된다. 읽어 와도 시작 쳇바퀴가 되살아나지 않는다(U-29).
+    expect(Object.keys(g.run.coinWheels)).toEqual([]);
+    expect(Object.keys(r.g.run.coinWheels)).toEqual([]);
+  });
+
+  it('잃은 쳇바퀴를 뺀 채 저장한 옛 판도 쳇바퀴 없이 읽힌다(없는 칸만 기본값으로)', () => {
+    const g = createGame({ seed: 3 });
+    const raw = JSON.parse(serialize(g, 0));
+    raw.run.coinWheels = {};
+    raw.run.wallet = {};
+    delete raw.run.sellFrac;
+    const m = migrate(raw)!;
+    expect(Object.keys(m.run.coinWheels)).toEqual([]);
+    expect(m.run.sellFrac).toBe(0);
   });
 
   it('어댑터: localStorage 모양과 Capacitor Preferences 모양 둘 다 같은 인터페이스', async () => {
@@ -105,7 +119,7 @@ describe('N. 저장 v2', () => {
       set: async ({ key, value }) => void (pref[key] = value),
       remove: async ({ key }) => void delete pref[key],
     });
-    await saveGame(p, fresh(), 1);
+    await saveGame(p, bare(), 1);
     expect((await loadGame(p)).source).toBe('v2');
   });
 });

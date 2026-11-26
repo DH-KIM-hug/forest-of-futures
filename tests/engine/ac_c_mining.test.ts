@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveCoinValue, giveEquip, giveWheel, noDebts, setRatio, settleOnce, tickN } from './helpers';
+import { A, bare, giveCoinValue, giveEquip, giveWheel, noDebts, setRatio, settleOnce, tickN } from './helpers';
 import { equipGross, equipPower, equipNetNow, isReverseMargin, mineConcentration, tierBlockReason, tapValue, nextTierCost } from '../../src/engine/equipment';
 import { lenderLimit, walletValue, walletValueOf } from '../../src/engine/selectors';
 import { payFromWallet } from '../../src/engine/mining';
@@ -9,35 +9,35 @@ import type { GameState } from '../../src/engine/types';
 const ref = (g: GameState, c: string) => g.run.refPrice[c];
 
 describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
-  it('AC-v2-25 도토코인 쳇바퀴 1번: 지갑에 27 ÷ 68,000 개, 환산값 27', () => {
-    const g = fresh();
+  it('AC-v2-25 도토코인 쳇바퀴 1번: 지갑에 2 ÷ 68,000 개, 환산값 2(tapBase, 고정)', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
     A(g, { type: 'tap' });
-    expect(g.run.wallet.DTC.qty).toBeCloseTo(27 / 68000, 12);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(27, 9);
+    expect(g.run.wallet.DTC.qty).toBeCloseTo(2 / 68000, 12);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(2, 9);
   });
 
-  it('AC-v2-26 가격이 -10% 이면 환산값 24.3, 다음 1회 채굴량(코인 수)은 그대로', () => {
-    const g = fresh();
+  it('AC-v2-26 가격이 -10% 이면 환산값 1.8, 다음 1회 채굴량(코인 수)은 그대로', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
     A(g, { type: 'tap' });
     const q1 = g.run.wallet.DTC.qty;
     setRatio(g, 'DTC', 0.9);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(24.3, 9);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(1.8, 9);
     tickN(g, 1);
     A(g, { type: 'tap' });
     expect(g.run.wallet.DTC.qty - q1).toBeCloseTo(q1, 12);
   });
 
-  it('AC-v2-27 멍도토 쳇바퀴: 세대 시작가 기준 31.59어치', () => {
-    const g = fresh();
+  it('AC-v2-27 멍도토 쳇바퀴: 세대 시작가 기준 2 × 1.17 = 2.34어치', () => {
+    const g = bare();
     giveWheel(g, 'MDT');
     A(g, { type: 'tap' });
-    expect(g.run.wallet.MDT.qty * ref(g, 'MDT')).toBeCloseTo(31.59, 9);
+    expect(g.run.wallet.MDT.qty * ref(g, 'MDT')).toBeCloseTo(2.34, 9);
   });
 
   it('AC-v2-28 쳇바퀴를 옮겨 타도 지갑은 그대로, 그 뒤 탭은 새 종목만', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'BTH');
     A(g, { type: 'tap' });
@@ -46,28 +46,30 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     tickN(g, 1);
     A(g, { type: 'tap' });
     expect(g.run.wallet.DTC.qty).toBe(dtc);
-    expect(g.run.wallet.BTH.qty * ref(g, 'BTH')).toBeCloseTo(27 * 1.07, 9);
+    expect(g.run.wallet.BTH.qty * ref(g, 'BTH')).toBeCloseTo(2 * 1.07, 9);
   });
 
-  it('AC-v2-29 탭은 설비를 공짜로 따라가지 않는다: 설비 초당 100이어도 달리기 Lv0 이면 27, Lv15 면 (27+30)×1.5 + 100×2% = 87.5', () => {
-    const g = fresh();
+  it('AC-v2-29 탭은 고정값이다(U-30): 설비 초당 100이어도, 몸 줄에 무엇이 적혀 있어도 2. 달리기 레벨 줄은 없다', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
-    const old = tierById.wheel2.netPerSec;
-    tierById.wheel2.netPerSec = 100;
+    const old = tierById.helper.netPerSec;
+    tierById.helper.netPerSec = 100;
     try {
-      giveEquip(g, 'wheel2', 'DTC', 20000);
-      expect(tapValue(g, 'DTC')).toBeCloseTo(27, 9);
-      g.run.upgrades.body.shoes = 15;
-      expect(tapValue(g, 'DTC')).toBeCloseTo(87.5, 9);
+      giveEquip(g, 'helper', 'DTC', 60000);
+      expect(tapValue(g, 'DTC')).toBe(2);
+      g.run.upgrades.body.shoes = 15; // 옛 저장에 남은 값이 있어도 효과가 없다
+      expect(tapValue(g, 'DTC')).toBe(2);
+      g.run.cash = 1e9;
+      expect(A(g, { type: 'upgrade', track: 'shoes' })).toMatchObject({ ok: false, code: 'unknown' });
       A(g, { type: 'tap' });
-      expect(g.run.wallet.DTC.qty * ref(g, 'DTC')).toBeCloseTo(87.5, 9);
+      expect(g.run.wallet.DTC.qty * ref(g, 'DTC')).toBeCloseTo(2, 9);
     } finally {
-      tierById.wheel2.netPerSec = old;
+      tierById.helper.netPerSec = old;
     }
   });
 
   it('AC-v2-30 지갑 도토코인 10,000어치를 전부 팔면 현금 +9,950, 그 종목 0', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 10000);
     const c0 = g.run.cash;
@@ -77,7 +79,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-30 절반 팔기', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 10000);
     const c0 = g.run.cash;
@@ -86,54 +88,87 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(5000, 6);
   });
 
-  it('AC-v2-31 캐는 즉시 팔기: 지갑에 안 쌓이고 floor(값 × 0.995) 가 현금으로. 꺼진 종목은 지갑에', () => {
-    const g = fresh();
+  it('AC-v2-31 캐는 즉시 팔기: 지갑에 안 쌓이고 값 × 0.995 가 현금으로(1도토리 못 미친 몫은 다음 판매에 얹는다). 꺼진 종목은 지갑에', () => {
+    const g = bare();
     giveWheel(g, 'DTC', { autoSell: true });
     giveWheel(g, 'BTH');
     const c0 = g.run.cash;
     A(g, { type: 'tap' });
     expect(g.run.wallet.DTC.qty).toBe(0);
-    expect(g.run.cash - c0).toBe(Math.floor(27 * 0.995));
+    expect(g.run.cash - c0).toBe(1); // 2 × 0.995 = 1.99
+    A(g, { type: 'tap' });
+    A(g, { type: 'tap' });
+    expect(g.run.cash - c0).toBe(5); // 3번 = 5.97 (한 번씩 내리면 3)
+    expect(g.run.sellFrac).toBeCloseTo(0.97, 9);
     A(g, { type: 'ride', coin: 'BTH' });
     tickN(g, 1);
     A(g, { type: 'tap' });
     expect(g.run.wallet.BTH.qty).toBeGreaterThan(0);
   });
 
-  it('AC-v2-32 보조 쳇바퀴(도토코인): 5,700어치가 쌓이고 전기세 3,990어치가 빠져 순 1,710', () => {
-    const g = fresh();
+  it('AC-v2-32 보조 쳇바퀴(도토코인, 알바 붙음): 6,500어치가 쌓이고 전기세는 없다. 일당 1,800 은 현금에서', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
-    giveEquip(g, 'wheel2', 'DTC', 20000);
+    const u = giveEquip(g, 'wheel2', 'DTC', 50000);
+    expect(equipPower(g, u)).toBe(0);
+    const c0 = g.run.cash;
     settleOnce(g);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(5700, 6);
-    expect(g.run.lastSettlement!.power).toBe(3990);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(1710, 6);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(6500, 6);
+    expect(g.run.lastSettlement!.power).toBe(0);
+    expect(g.run.lastSettlement!.wages).toBe(1800);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(6500, 6);
+    expect(c0 - g.run.cash).toBe(6000 + 3000 + 1000 + 1800); // 이자(오소리 6,000 + 캐피탈 3,000) + 생활비 + 일당
   });
 
-  it('AC-v2-33 보조 쳇바퀴를 멍도토에 붙이면 캔 값 7,410, 전기세 5,415, 순 1,995', () => {
-    const g = fresh();
+  it('AC-v2-32 알바가 없는 보조 쳇바퀴는 캐지 않고 일당도 없다', () => {
+    const g = bare();
+    giveWheel(g, 'DTC');
+    giveEquip(g, 'wheel2', 'DTC', 50000, true, false);
+    settleOnce(g);
+    expect(g.run.lastSettlement).toMatchObject({ mined: 0, power: 0, wages: 0, quit: 0 });
+    expect(g.run.wallet.DTC.qty).toBe(0);
+  });
+
+  it('AC-v2-33 보조 쳇바퀴를 멍도토에 붙이면 캔 값 6,500 × 1.3 = 8,450, 전기세 0', () => {
+    const g = bare();
     giveWheel(g, 'MDT');
-    const u = giveEquip(g, 'wheel2', 'MDT', 20000);
-    expect(equipGross(g, u)).toBeCloseTo(7410, 9);
-    expect(equipPower(g, u)).toBe(5415);
+    const u = giveEquip(g, 'wheel2', 'MDT', 50000);
+    expect(equipGross(g, u)).toBeCloseTo(8450, 9);
+    expect(equipPower(g, u)).toBe(0);
     settleOnce(g);
-    expect(walletValueOf(g.run, 'MDT')).toBeCloseTo(1995, 6);
+    expect(walletValueOf(g.run, 'MDT')).toBeCloseTo(8450, 6);
   });
 
-  it('AC-v2-34 도토코인 -30%: 캔 값 3,990 = 전기세 3,990, 순 0 -> 역마진. 멍도토 -27% 도 역마진', () => {
-    const g = fresh();
+  it('AC-v2-33 전기를 쓰는 설비(알바 햄스터 단계, 물려받은 것): 14,700어치가 쌓이고 전기세 10,290어치가 빠져 순 4,410. 멍도토면 19,110 − 13,965', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
-    const u = giveEquip(g, 'wheel2', 'DTC', 20000);
+    giveEquip(g, 'helper', 'DTC', 60000);
+    settleOnce(g);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(14700, 6);
+    expect(g.run.lastSettlement!.power).toBe(10290);
+    expect(g.run.lastSettlement!.wages).toBe(0);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(4410, 6);
+    const h = bare();
+    giveWheel(h, 'MDT');
+    const u = giveEquip(h, 'helper', 'MDT', 60000);
+    expect(equipGross(h, u)).toBeCloseTo(19110, 9);
+    expect(equipPower(h, u)).toBe(13965);
+  });
+
+  it('AC-v2-34 도토코인 -30%: 캔 값 10,290 = 전기세 10,290, 순 0 -> 역마진. 멍도토 -27% 도 역마진', () => {
+    const g = bare();
+    giveWheel(g, 'DTC');
+    const u = giveEquip(g, 'helper', 'DTC', 60000);
     setRatio(g, 'DTC', 0.7);
     expect(equipNetNow(g, u)).toBeCloseTo(0, 6);
     expect(isReverseMargin(g, u)).toBe(true);
     settleOnce(g);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(3990, 6);
-    expect(g.run.lastSettlement!.power).toBe(3990);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(10290, 6);
+    expect(g.run.lastSettlement!.power).toBe(10290);
     expect(walletValue(g.run)).toBeCloseTo(0, 6);
-    const h = fresh();
+    const h = bare();
     giveWheel(h, 'MDT');
-    const v = giveEquip(h, 'wheel2', 'MDT', 20000);
+    const v = giveEquip(h, 'helper', 'MDT', 60000);
     setRatio(h, 'MDT', 0.73);
     expect(equipNetNow(h, v)).toBeLessThan(0);
     expect(isReverseMargin(h, v)).toBe(true);
@@ -142,7 +177,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-35 역마진인 설비를 끄면 캐지 않고 전기세도 0', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'wheel2', 'DTC', 20000);
     setRatio(g, 'DTC', 0.7);
@@ -154,7 +189,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-35 종목 쳇바퀴를 끄면 그 위 설비도 멈춘다', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveEquip(g, 'wheel2', 'DTC', 20000);
     A(g, { type: 'toggleWheel', coin: 'DTC', on: false });
@@ -164,7 +199,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-36 전기세는 그 종목 지갑이 먼저, 나머지는 평가액 큰 종목에서', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'MDT');
     giveCoinValue(g, 'MDT', 2000);
@@ -175,35 +210,35 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(10000 - 3415, 6);
   });
 
-  it('AC-v2-37 지갑 0·현금 0·전기세만 있고 텐트면 전기세 잔여가 생활비와 함께 캐피탈 원금으로', () => {
-    const g = fresh();
+  it('AC-v2-37 지갑 0·현금 0·전기세만 있고 빈 오두막이면 전기세 잔여가 생활비와 함께 캐피탈 원금으로', () => {
+    const g = bare();
     g.run.cash = 0;
     noDebts(g);
     giveWheel(g, 'DTC');
-    giveEquip(g, 'wheel2', 'DTC', 20000);
-    setRatio(g, 'DTC', 0.5); // 캔 값은 시가 2,850 이라 전기세 3,990 에서 1,140 이 모자란다
+    giveEquip(g, 'helper', 'DTC', 60000);
+    setRatio(g, 'DTC', 0.5); // 캔 값은 시가 7,350 이라 전기세 10,290 에서 2,940 이 모자란다
     settleOnce(g);
-    expect(g.run.debts.capital.principal).toBeCloseTo(1140 + 1000, 6);
+    expect(g.run.debts.capital.principal).toBeCloseTo(2940 + 1000, 6);
     expect(g.run.debts.capital.overdue).toBe(0);
     expect(g.run.upkeepOverdue).toBe(0);
   });
 
-  it('AC-v2-37 오두막이면 유지비 미납으로 잡힌다', () => {
-    const g = fresh();
+  it('AC-v2-37 통나무집이면 유지비 미납으로 잡힌다', () => {
+    const g = bare();
     g.run.cash = 0;
     g.run.house = 1;
     noDebts(g);
     giveWheel(g, 'DTC');
-    giveEquip(g, 'wheel2', 'DTC', 20000);
+    giveEquip(g, 'helper', 'DTC', 60000);
     setRatio(g, 'DTC', 0.5);
     settleOnce(g);
     expect(g.run.upkeepOverdue).toBe(1);
-    expect(g.run.upkeepArrears).toBeCloseTo(1140 + 8000, 6);
+    expect(g.run.upkeepArrears).toBeCloseTo(2940 + 8000, 6);
     expect(g.run.debts.capital.principal).toBe(0);
   });
 
   it('AC-v2-38 현금 2,000, 청구 10,000, 지갑 50,000어치: 8,248어치가 급매되어 다 내고 연체 없음', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 50000);
     g.run.cash = 2000;
@@ -215,7 +250,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-39 캐피탈 한도 = 200,000 + 4,000 + 50,000, 지갑이 20% 내리면 지갑 몫 40,000', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 100000);
     expect(lenderLimit(g, 'capital')).toBe(200000 + 4000 + 50000);
@@ -223,47 +258,50 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(lenderLimit(g, 'capital')).toBe(200000 + 4000 + 40000);
   });
 
-  it('AC-v2-40 설비는 단계마다 3대까지(전 종목 합), 둘째 25,000 · 셋째 31,250', () => {
-    const g = fresh();
+  it('AC-v2-40 살 수 있는 것은 보조 쳇바퀴뿐(U-30): 값은 몇 대째든 50,000, 다섯 대까지(전 종목 합), 알바 없이 온다', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'MDT');
-    giveWheel(g, 'BTH');
     g.run.cash = 1_000_000;
-    expect(nextTierCost(g.run, 'wheel2')).toBe(20000);
-    expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' }).ok).toBe(true);
-    expect(nextTierCost(g.run, 'wheel2')).toBe(25000);
-    expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'MDT' }).ok).toBe(true);
-    expect(nextTierCost(g.run, 'wheel2')).toBe(31250);
-    expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' }).ok).toBe(true);
-    expect(g.run.cash).toBe(1_000_000 - 20000 - 25000 - 31250);
-    const r = A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'BTH' });
-    expect(r.ok).toBe(false);
-    expect(g.run.equipment).toHaveLength(3);
+    for (let i = 0; i < 5; i++) {
+      expect(nextTierCost(g.run, 'wheel2')).toBe(50000);
+      expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: i % 2 ? 'MDT' : 'DTC' })).toMatchObject({ ok: true, amount: 50000 });
+    }
+    expect(g.run.cash).toBe(1_000_000 - 5 * 50000);
+    expect(g.run.equipment.every((u) => u.staffed === false)).toBe(true);
+    expect(tierBlockReason(g, 'wheel2', 'DTC')).toBe('놓을 자리가 없습니다');
+    expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'MDT' }).ok).toBe(false);
+    expect(g.run.equipment).toHaveLength(5);
+    for (const t of ['helper', 'row', 'generator']) {
+      expect(tierBlockReason(g, t, 'DTC')).toBe('집에 들일 수 없는 설비입니다');
+      expect(A(g, { type: 'buyEquip', tier: t, coin: 'DTC' }).ok).toBe(false);
+    }
   });
 
-  it('AC-v2-41 텐트면 채굴 헛간 구매가 막히고 "주소지가 필요합니다(오두막 이상)"', () => {
-    const g = fresh();
+  it('AC-v2-41 빈 오두막이면 채굴 헛간은 "내 집이 필요합니다(통나무집 이상)", 집이 있어도 집에 들일 수 없다(물려받는 것만)', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
     g.run.cash = 5_000_000;
-    expect(tierBlockReason(g, 'shed', 'DTC')).toBe('주소지가 필요합니다(오두막 이상)');
+    expect(tierBlockReason(g, 'shed', 'DTC')).toBe('내 집이 필요합니다(통나무집 이상)');
     expect(A(g, { type: 'buyEquip', tier: 'shed', coin: 'DTC' }).ok).toBe(false);
     g.run.house = 1;
-    expect(tierBlockReason(g, 'shed', 'DTC')).toBeNull();
+    expect(tierBlockReason(g, 'shed', 'DTC')).toBe('집에 들일 수 없는 설비입니다');
+    expect(A(g, { type: 'buyEquip', tier: 'shed', coin: 'DTC' }).ok).toBe(false);
   });
 
   it('AC-v2-41 쳇바퀴가 하나도 없으면 설비를 못 산다', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 5_000_000;
     expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' }).ok).toBe(false);
   });
 
   it('AC-v2-42 소형 발전기는 캐피탈 한도 +160,000, 채굴 헛간은 조합 한도 +720,000', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     const base = lenderLimit(g, 'capital');
     giveEquip(g, 'generator', 'DTC', 400000);
     expect(lenderLimit(g, 'capital') - base).toBe(160000);
-    const h = fresh();
+    const h = bare();
     giveWheel(h, 'DTC');
     h.run.house = 1;
     const b0 = lenderLimit(h, 'bank');
@@ -273,7 +311,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-43 설비를 다른 종목 쳇바퀴로 옮기면 구매가의 5%(3,000)를 내고 다음 정산부터 그 종목을 캔다', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'helper', 'DTC', 60000);
     expect(A(g, { type: 'moveEquip', uid: u.uid, coin: 'MDT' }).ok).toBe(false); // 멍도토 쳇바퀴 없음
@@ -286,17 +324,17 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(g.run.wallet.DTC.qty).toBe(0);
   });
 
-  it('AC-v2-44 도토코인 5,700 + 멍도토 14,700 × 1.3 = 19,110 이면 mineTopCoin MDT, mineConcentration 77', () => {
-    const g = fresh();
+  it('AC-v2-44 도토코인 6,500 + 멍도토 14,700 × 1.3 = 19,110 이면 mineTopCoin MDT, mineConcentration 74', () => {
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'MDT');
-    giveEquip(g, 'wheel2', 'DTC', 20000);
+    giveEquip(g, 'wheel2', 'DTC', 50000);
     giveEquip(g, 'helper', 'MDT', 60000);
-    expect(mineConcentration(g)).toEqual({ pct: 77, coin: 'MDT' });
+    expect(mineConcentration(g)).toEqual({ pct: 74, coin: 'MDT' }); // 19,110 ÷ 25,610 = 74.6%
   });
 
   it('AC-v2-45(지갑 부분) 지갑 도토코인 100,000어치가 -5% 면 95,000 (숏 보험 쪽은 M2)', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 100000);
     setRatio(g, 'DTC', 0.95);
@@ -304,7 +342,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
   });
 
   it('AC-v2-46 다음 정산 수지가 0 이상이 되면 속보 띠에 "흑자 전환"이 한 번', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     tickN(g, 1);
     expect(g.run.notices.some((n) => n.id === 'wire:surplus')).toBe(false);

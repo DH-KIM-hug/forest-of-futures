@@ -77,7 +77,7 @@ export function canRetire(g: GameState): boolean {
   return !run.over && run.house >= INH.retireMinHouse && totalDebt(run) === 0 && run.debts.tax.principal === 0;
 }
 export function retire(g: GameState): Res {
-  if (!canRetire(g)) return refuse('retire', '빚이 없고 오두막 이상일 때만 은퇴할 수 있습니다.');
+  if (!canRetire(g)) return refuse('retire', '빚이 없고 통나무집 이상일 때만 은퇴할 수 있습니다.');
   g.run.over = true;
   g.pendingEnding = null;
   g.estate = openEstate('retire', 'GIFT');
@@ -265,8 +265,6 @@ export function buildNextRun(g: GameState, branch: Branch): { run: RunState; inf
   run.stats.pawned = 0;
   run.stats.maxTierEver = Math.max(-1, ...run.equipment.map((u) => tierDefs.findIndex((t) => t.id === u.tier)));
   run.peakNetWorth = 0;
-  // 이어받은 설비가 있어도 줍기·팻말 조건은 다시 세지 않는다
-  if (ownedCoins(run).length > 0) run.stats.signSeen = true;
   return { run, info };
 }
 
@@ -382,7 +380,7 @@ function describeKeeps(run: RunState): string[] {
   for (const u of run.equipment) by[u.tier] = (by[u.tier] ?? 0) + 1;
   for (const [t, n] of Object.entries(by)) out.push(`${tierById[t].name} ${n}대`);
   if (run.equipment.some((u) => u.inheritedSign)) out.push('가업 간판');
-  if (run.house > 0) out.push(['', '통나무 오두막', '도토리 창고', '호숫가 별장', '황금 저택'][run.house]);
+  if (run.house > 0) out.push(['', '통나무집', '도토리 창고', '호숫가 별장', '황금 저택'][run.house]);
   if (run.futures.open) out.push(`선물 계좌(상한 ${run.futures.levCap}배)`);
   return out;
 }

@@ -29,6 +29,8 @@ function startEffect(g: GameState, id: string): void {
 /** 새 사건 추첨. 35% 로 하나. */
 export function rollEvent(g: GameState): void {
   const run = g.run;
+  // 세대의 첫 몇 번 정산은 조용하다(첫 이자·첫 대출의 숫자가 지원금·금리 인상에 흔들리지 않게)
+  if (run.settleNo < ((eventsMeta as unknown as { quietSettlements?: number }).quietSettlements ?? 0)) return;
   if (nextRandom(run) >= eventsMeta.rollProbPerSettlement) return;
   const pool = eventDefs.filter((e) => {
     if (e.oncePerRun && run.subsidyUsed) return false;

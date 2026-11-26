@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveEquip, giveWheel, noDebts, openFutures, pushBar, settleOnce, tickN } from './helpers';
+import { A, bare, giveEquip, giveWheel, noDebts, openFutures, pushBar, settleOnce, tickN } from './helpers';
 import { archiveEntry, candidatesFor, chooseEnding, fillLine, neighborsOf, previewEnding, finalizeEnding, evalCond } from '../../src/engine/endings';
 import { buildSnapshot, missingKeys } from '../../src/engine/snapshot';
 import { runTips } from '../../src/engine/tips';
@@ -19,7 +19,7 @@ function bustOnShark(g: GameState) {
 
 describe('L. 엔딩', () => {
   it('AC-v2-120 절교 3명과 오소리 연체 한도가 같은 정산에 겹치면 FRIEND', () => {
-    const g = fresh();
+    const g = bare();
     bustOnShark(g);
     for (const id of ['squirrel', 'raccoon', 'rabbit']) g.run.friends[id].broken = true;
     settleOnce(g);
@@ -29,7 +29,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-121 족제비 추천을 보고 8초 뒤 진입한 포지션이 청산돼 미납액 이상 손실, 오소리 한도, 가져갈 것 없음: TIP, tipSource=weasel, 미수집이면 END-181', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     noDebts(g);
     g.run.debts.shark1.principal = 150000;
@@ -60,7 +60,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-121 꼬리표가 없으면 LIQ', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     noDebts(g);
     g.run.debts.shark1.principal = 150000;
@@ -73,7 +73,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-122 남은 빚 40만 중 승계 빚 25만이면 캐피탈 연체로 파산해도 LEGACY', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     g.run.debts.shark1.principal = 150000;
     g.run.debts.capital.principal = 250000;
@@ -86,19 +86,19 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-123 최근 정산 3회 안에 압류가 있었고 그로 준 정산 수입이 미납액 이상이면 SEIZE', () => {
-    const g = fresh();
+    const g = bare();
     bustOnShark(g);
     g.run.stats.lastSeizeSettleNo = g.run.settleNo - 1;
     g.run.stats.garnishBySettle = [0, 7000, 0];
     settleOnce(g);
     expect(g.run.bankruptcy!.cause).toBe('SEIZE');
-    const h = fresh();
+    const h = bare();
     bustOnShark(h);
     h.run.stats.lastSeizeSettleNo = h.run.settleNo - 1;
     h.run.stats.garnishBySettle = [0, 100, 0];
     settleOnce(h);
     expect(h.run.bankruptcy!.cause).toBe('SHARK');
-    const k = fresh();
+    const k = bare();
     k.run.cash = 0;
     k.run.house = 1;
     noDebts(k);
@@ -113,7 +113,7 @@ describe('L. 엔딩', () => {
     expect(chooseEnding(c, new Set(['END-157', 'END-155']))).toMatchObject({ ending: { id: 'END-158' } });
     expect(chooseEnding(c, new Set(c.map((e) => e.id)))).toMatchObject({ ending: { id: 'END-157' }, via: 'repeat' });
     // 조건이 거짓인 엔딩은 후보에 들지 않는다
-    const g = fresh();
+    const g = bare();
     const snap = snapOf(g, 'LIQ');
     const ids = candidatesFor(snap, 'LIQ').map((e) => e.id);
     expect(ids).toContain('END-158');
@@ -123,7 +123,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-125 조건에 쓰인 모든 키와 meta.stats 의 모든 키를 엔진 스냅샷이 만든다', () => {
-    const g = fresh();
+    const g = bare();
     const snap = snapOf(g, 'LIQ');
     expect(missingKeys(snap)).toEqual([]);
     for (const e of endings) for (const [k] of e.conditions) expect(k in snap, `${e.id} ${k}`).toBe(true);
@@ -132,7 +132,7 @@ describe('L. 엔딩', () => {
 
   it('AC-v2-126 설비의 80% 이상(캐는 값 기준)을 멍도토에 붙였고 멍도토 -12%, SEIZE 면 END-131 후보. 비중 60% 면 아니다', () => {
     const mk = (mdt: [string, number][], dtc: [string, number][]) => {
-      const g = fresh();
+      const g = bare();
       giveWheel(g, 'DTC');
       giveWheel(g, 'MDT');
       for (const [t, c] of mdt) giveEquip(g, t, 'MDT', c);
@@ -153,7 +153,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-127 지금 파산하면 미수집 엔딩이 선택될 때 등불이 켜지고 번호와 단서가 보인다', () => {
-    const g = fresh();
+    const g = bare();
     const pv = previewEnding(g);
     expect(pv.lantern).toBe(true);
     expect(pv.ending.id).toMatch(/^END-\d{3}$/);
@@ -170,7 +170,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-128 파산하면 엔딩 카드에 마지막 3개 사건(시각 포함), 한 끗 차이 최대 2개, 다음 세대에 남는 것이 있다', () => {
-    const g = fresh();
+    const g = bare();
     openFutures(g);
     noDebts(g);
     g.run.debts.shark1.principal = 150000;
@@ -197,7 +197,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-128 조건 하나만 달랐던 엔딩이 있으면 "한 끗 차이"에 오른다', () => {
-    const g = fresh();
+    const g = bare();
     const snap = snapOf(g, 'LIQ');
     snap.sl = 'set'; // END-191: sl=set & viaJump=true — viaJump 만 모자란다
     snap.viaJump = false;
@@ -216,7 +216,7 @@ describe('L. 엔딩', () => {
     const e = endingById['END-054'];
     expect(fillLine(e.line, { laborTaps: 1234 })).toContain('1234번');
     expect(fillLine(e.line, { laborTaps: 1234 })).not.toContain('{');
-    const g = fresh();
+    const g = bare();
     g.run.stats.laborTaps = 321;
     g.run.stats.garnished = 60000;
     g.run.cash = 0;
@@ -231,7 +231,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-130 미수집 칸은 ???, 원인 아이콘, 행동 문장 단서. ★3 은 조건 하나가 ? 이고 같은 원인의 이웃 엔딩을 하나 모으면 열린다', () => {
-    const g = fresh();
+    const g = bare();
     const star2 = archiveEntry(g, endingById['END-155']);
     expect(star2).toMatchObject({ collected: false, title: '???', causes: ['LIQ'], clueVisible: true });
     expect(star2.clue).toContain('추가 진입');
@@ -249,7 +249,7 @@ describe('L. 엔딩', () => {
   });
 
   it('AC-v2-131 같은 엔딩을 다른 세대가 다시 얻으면 그 쪽에 두 세대가 모두 적힌다', () => {
-    const g = fresh();
+    const g = bare();
     const a = finalizeEnding(g, { cause: 'FRIEND', lastLender: null, shortfall: 0 });
     expect(a.isNew).toBe(true);
     g.family.generation = 3;
@@ -264,7 +264,7 @@ describe('L. 엔딩', () => {
     }
     // 같은 조건의 기본 엔딩만 남기면 반드시 겹친다
     // 그 원인의 엔딩을 다 모은 뒤에는 같은 엔딩이 반복해 나온다
-    const h = fresh();
+    const h = bare();
     for (const e of endings) if (e.causes.includes('UPKEEP')) h.family.ledger[e.id] = { count: 1, holders: [], firstAt: 1, scenes: [] };
     const r1 = finalizeEnding(h, { cause: 'UPKEEP', lastLender: null, shortfall: 0 });
     h.family.generation = 5;
@@ -276,7 +276,7 @@ describe('L. 엔딩', () => {
   });
 
   it('원인 순서 4: 같은 정산에 겹치면 위의 원인이 이긴다(FRIEND > LIQ > LEGACY > SEIZE > UPKEEP > BANK/SHARK)', () => {
-    const g = fresh();
+    const g = bare();
     g.run.debts.capital.inherited = 150000;
     g.run.debts.shark1.inherited = 150000;
     expect(determineCause(g, { lastLender: 'capital', shortfall: 100 })).toBe('LEGACY');

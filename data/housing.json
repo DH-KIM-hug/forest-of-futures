@@ -1,26 +1,26 @@
 {
   "version": 2,
-  "_doc": "집은 화면이 따로 없고 마을 속 외형으로 존재한다. 생활비는 balance.json living.byHouse. price 가 곧 평가액. GDD_v2 3.8·4.6",
+  "_doc": "집은 화면이 따로 없고 마을 속 외형으로 존재한다. 생활비는 balance.json living.byHouse. price 가 곧 평가액. GDD_v2 3.8·4.6 0단계(빈 오두막)는 엄마 빚의 딱지가 붙은 집이라 내 주소지·담보가 못 된다(U-29).",
   "stages": [
     {
       "stage": 0,
       "id": "tent",
-      "name": "공터 텐트",
-      "altNameRealistic": "공터 텐트",
+      "name": "빈 오두막",
+      "altNameRealistic": "압류 딱지 붙은 빈집",
       "price": 0,
       "collateralValue": 0,
-      "exterior": "큰 나무 밑의 낡은 텐트. 옆에 독촉장이 꽂힌 우편함.",
+      "exterior": "엄마가 살던 단칸 오두막. 문에 오소리 대부의 딱지가 붙어 있다. 안은 비었고 쳇바퀴 하나만 남았다.",
       "villageMood": "탁하고 차가운 회청색",
       "placeholderColor": "#9AA7A8"
     },
     {
       "stage": 1,
       "id": "cabin",
-      "name": "통나무 오두막",
+      "name": "통나무집",
       "altNameRealistic": "반지하 원룸",
       "price": 500000,
       "collateralValue": 500000,
-      "exterior": "방 한 칸짜리 작은 통나무집. 굴뚝과 창문 하나.",
+      "exterior": "내 이름으로 된 첫 집. 방 한 칸짜리 작은 통나무집. 굴뚝과 창문 하나.",
       "villageMood": "회녹색, 조금 밝아짐",
       "placeholderColor": "#B9A27C"
     },

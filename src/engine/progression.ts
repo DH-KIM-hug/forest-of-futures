@@ -35,12 +35,8 @@ export function wheelStatus(g: GameState, coin: CoinId): WheelStatus {
   let unlocked = true;
   let reason: string | null = null;
   let progress: WheelStatus['progress'] = null;
-  if (u.acornTaps !== undefined) {
-    progress = { current: run.acornTaps, need: u.acornTaps };
-    // 세대 중 한 번 팻말이 선 뒤에는(쳇바퀴를 가졌던 적이 있으면) 줍기 수를 다시 요구하지 않는다.
-    unlocked = run.acornTaps >= u.acornTaps || run.stats.signSeen === true;
-    if (!unlocked) reason = `줍기 ${u.acornTaps}회가 필요합니다`;
-  } else if (u.minedValue !== undefined) {
+  // 조건이 없는 쳇바퀴(도토코인: 시작할 때 가진 것)는 잃어도 값만 내면 다시 산다(U-29).
+  if (u.minedValue !== undefined) {
     const need = minedValueNeeded(g, u.minedValue);
     progress = { current: floorS(run.minedValue), need };
     unlocked = run.minedValue >= need;
@@ -48,9 +44,9 @@ export function wheelStatus(g: GameState, coin: CoinId): WheelStatus {
   } else if (u.house !== undefined) {
     progress = { current: run.house, need: u.house };
     unlocked = run.house >= u.house;
-    if (!unlocked) reason = '주소지가 필요합니다(오두막 이상)';
+    if (!unlocked) reason = '내 집이 필요합니다(통나무집 이상)';
   }
-  const visible = owned || stage(run) >= 1 || (u.acornTaps !== undefined && unlocked);
+  const visible = owned || stage(run) >= 1 || (u.minedValue === undefined && u.house === undefined);
   let canBuy = !owned && unlocked;
   if (canBuy && run.cash < def.cost) {
     canBuy = false;
@@ -101,7 +97,7 @@ export function futuresGate(g: GameState): FuturesGate {
 /** 거래 탭의 잠금 상태: 단계 0 은 자물쇠, 단계 1 은 읽기 전용 차트 + 조건 줄, 단계 2 는 주문. */
 export function tradeGate(g: GameState): { mode: 'locked' | 'readonly' | 'orders'; text: string | null; conditions: GateCondition[] } {
   const run = g.run;
-  if (stage(run) === 0) return { mode: 'locked', text: '쳇바퀴를 사면 시세가 보입니다', conditions: [] };
+  if (stage(run) === 0) return { mode: 'locked', text: '쳇바퀴가 있어야 시세가 보입니다', conditions: [] };
   if (!run.futures.open) return { mode: 'readonly', text: null, conditions: futuresGate(g).conditions };
   return { mode: 'orders', text: null, conditions: [] };
 }
@@ -119,14 +115,20 @@ export function mockTrade(g: GameState): Res {
   return { ok: true };
 }
 
-export function openAccount(g: GameState): Res {
+/** 선물 계좌 개설. sponsor = 오소리 대부가 돈을 빌려주며 쥐여 준 중고폰으로 여는 길(U-29):
+ *  오소리 대부에 빚이 있으면 채굴 실적·교육·모의·예탁금 조건 없이 바로 열린다. 그 밖에는 캐피탈 창구의 조건을 다 채워야 한다. */
+export function openAccount(g: GameState, sponsor = false): Res {
   const run = g.run;
   const f = run.futures;
   if (f.open) return refuse('open', '이미 개설되었습니다.');
-  const gate = futuresGate(g);
-  if (!gate.buttonVisible) return refuse('locked', '개설 조건이 아직 아닙니다.');
-  if (!gate.conditions[1].met) return refuse('deposit', '예탁금이 확인되지 않습니다.');
-  if (!gate.conditions[2].met) return refuse('edu', '사전교육과 모의거래를 마쳐야 합니다.');
+  if (sponsor) {
+    if (run.debts.shark1.principal <= 0 || !((run.stats.sharkBorrowed ?? 0) > 0)) return refuse('sponsor', '오소리 대부에서 빌린 적이 없습니다.');
+  } else {
+    const gate = futuresGate(g);
+    if (!gate.buttonVisible) return refuse('locked', '개설 조건이 아직 아닙니다.');
+    if (!gate.conditions[1].met) return refuse('deposit', '예탁금이 확인되지 않습니다.');
+    if (!gate.conditions[2].met) return refuse('edu', '사전교육과 모의거래를 마쳐야 합니다.');
+  }
   f.open = true;
   f.openedAtSettle = run.settleNo;
   let cap = balance.progression.futures.levCaps[0].cap as number;
@@ -139,7 +141,7 @@ export function openAccount(g: GameState): Res {
     f.defaultLev = onehit;
   }
   f.levCap = cap;
-  logEvent(run, 'open_account', '선물 계좌 개설');
+  logEvent(run, 'open_account', sponsor ? '오소리 대부가 준 중고폰으로 선물 계좌 개설' : '선물 계좌 개설');
   notify(run, '축하드립니다, 고객님. 이제 내려도 벌 수 있습니다.', 'bubble', 'bubble:open_account');
   return { ok: true };
 }

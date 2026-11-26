@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveCoinValue, giveEquip, giveWheel, noDebts, setRatio, settleOnce } from './helpers';
+import { A, bare, giveCoinValue, giveEquip, giveWheel, noDebts, setRatio, settleOnce } from './helpers';
 import { depositMined } from '../../src/engine/mining';
 import { ensureTag, garnishRate, seizeFor } from '../../src/engine/seizure';
 import { checkLiquidationWipeout } from '../../src/engine/bankruptcy';
@@ -8,7 +8,7 @@ import { tierById } from '../../src/engine/data';
 
 /** 오소리만 연체가 되게 만든 판: 캐피탈 빚 0, 현금 0, 설비는 꺼 둔다(지갑이 비어 급매가 없다). */
 function sharkOverdue() {
-  const g = fresh();
+  const g = bare();
   g.run.cash = 0;
   g.run.debts.capital.principal = 0;
   giveWheel(g, 'DTC');
@@ -38,12 +38,12 @@ describe('F. 연체·가압류·압류·파산', () => {
     settleOnce(g);
     const p0 = g.run.debts.shark1.principal;
     for (let i = 0; i < 100; i++) A(g, { type: 'tap' }); // 12 만 인정
-    expect(g.run.wallet.DTC.qty * g.run.refPrice.DTC).toBeCloseTo(12 * 27 * 0.7, 6);
-    expect(p0 - g.run.debts.shark1.principal).toBe(Math.floor(12 * 27 * 0.3));
+    expect(g.run.wallet.DTC.qty * g.run.refPrice.DTC).toBeCloseTo(12 * 2 * 0.7, 6);
+    expect(p0 - g.run.debts.shark1.principal).toBe(Math.floor(12 * 2 * 0.3));
   });
 
   it('AC-v2-67 캐피탈 연체 1, 같은 단계 설비가 두 종목에: 지금 순수입이 큰 종목의 것에 딱지', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'MDT');
     const a = giveEquip(g, 'helper', 'DTC', 60000);
@@ -57,7 +57,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-68 딱지 붙은 설비는 못 판다(sell_blocked)', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'wheel2', 'DTC', 20000);
     u.tagBy = 'capital';
@@ -67,7 +67,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-69 연체가 한도(2)에 닿으면 지갑이 먼저(시가의 90%): 27,000 깎이고 쳇바퀴는 남는다. 다음엔 보조 쳇바퀴가 실려 가 -10,000', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 30000);
     const u = giveEquip(g, 'wheel2', 'DTC', 20000);
@@ -99,7 +99,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-70 설비가 없고 쳇바퀴가 도토코인·밤더리움이면 싼 도토코인 쳇바퀴가 먼저 -5,000', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'BTH');
     const p0 = g.run.debts.shark1.principal;
@@ -110,7 +110,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-70 도토코인 쳇바퀴에 설비가 붙어 있으면 그 쳇바퀴보다 설비가 먼저', () => {
-    const g = fresh();
+    const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'BTH');
     giveEquip(g, 'wheel2', 'DTC', 20000);
@@ -120,7 +120,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-71 연체 한도, 지갑 1,000 미만, 설비·종목 쳇바퀴 0 이면 파산(SHARK)', () => {
-    const g = fresh();
+    const g = bare();
     g.run.cash = 0;
     g.run.debts.shark1.overdue = 1;
     g.run.debts.capital.principal = 0;
@@ -133,28 +133,28 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-72 청산 즉시 파산: 쳇바퀴 1대면 아니다 / 쳇바퀴·설비 0 이고 지갑 0 이면 그 자리에서 / 빚 0 이면 아니다', () => {
-    const a = fresh();
+    const a = bare();
     giveWheel(a, 'DTC');
     a.run.cash = 0;
     expect(checkLiquidationWipeout(a)).toBe(false);
     expect(a.run.over).toBe(false);
-    const b = fresh();
+    const b = bare();
     b.run.cash = 500;
     expect(checkLiquidationWipeout(b)).toBe(true);
     expect(b.run.over).toBe(true);
     expect(b.run.bankruptcy).toMatchObject({ cause: 'LIQ', immediate: true });
-    const c = fresh();
+    const c = bare();
     noDebts(c);
     c.run.cash = 0;
     expect(checkLiquidationWipeout(c)).toBe(false);
-    const d = fresh();
+    const d = bare();
     d.run.cash = 500;
     giveEquip(d, 'wheel2', 'DTC', 20000);
     expect(checkLiquidationWipeout(d)).toBe(false);
   });
 
   it('AC-v2-73 압류 금지 물품 2단계: 가압류 비율 24%', () => {
-    const g = fresh();
+    const g = bare();
     expect(garnishRate(g)).toBeCloseTo(0.3, 9);
     g.family.tree.exempt = 2;
     expect(garnishRate(g)).toBeCloseTo(0.24, 9);
@@ -167,7 +167,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-73 생계 수단 보호 1단계: 마지막 쳇바퀴 1대는 압류되지 않고, 다음 연체 한도에서 파산', () => {
-    const g = fresh();
+    const g = bare();
     g.family.tree.lastwheel = 1;
     giveWheel(g, 'DTC');
     expect(seizeFor(g, 'shark1')).toBeNull();
@@ -178,7 +178,7 @@ describe('F. 연체·가압류·압류·파산', () => {
     settleOnce(g);
     expect(g.run.over).toBe(true);
     // 둘이 있으면 싼 쪽부터 가져가고 하나가 남으면 거기서 멈춘다
-    const h = fresh();
+    const h = bare();
     h.family.tree.lastwheel = 1;
     giveWheel(h, 'DTC');
     giveWheel(h, 'BTH');
@@ -187,7 +187,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('AC-v2-73 생계 수단 보호 2단계: 거기 붙은 가장 낮은 설비 1대도 지킨다', () => {
-    const g = fresh();
+    const g = bare();
     g.family.tree.lastwheel = 2;
     giveWheel(g, 'DTC');
     giveEquip(g, 'wheel2', 'DTC', 20000);
@@ -198,7 +198,7 @@ describe('F. 연체·가압류·압류·파산', () => {
   });
 
   it('조합은 헛간 이상 설비에만 딱지를 붙인다', () => {
-    const g = fresh();
+    const g = bare();
     g.run.house = 1;
     giveWheel(g, 'DTC');
     const w2 = giveEquip(g, 'wheel2', 'DTC', 20000);

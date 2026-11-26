@@ -21,6 +21,7 @@ export function attachHlFeed(feed: HlDirectFeed, host: Host, onHistory?: (h: Rec
   };
 
   const off = feed.subscribe((t: Tick) => {
+    if (host.paused?.()) return;
     patch((g) => {
       if (g.run.tick === 0 && Object.keys(g.run.positions).length === 0) {
         // 세대 시작가 = 그 세대가 시작한 틱의 가격

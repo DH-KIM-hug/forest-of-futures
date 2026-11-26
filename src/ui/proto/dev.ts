@@ -34,7 +34,7 @@ export function bootProto(): void {
   if (t) useProto.getState().setTab(t as Tab);
 }
 
-/** 프롤로그가 끝났다: 판을 새로 깔고(프롤로그 동안 흐른 시세·시계를 버린다) 시계를 돌린다. 첫 줍기 한 번은 프롤로그의 낙엽 더미 탭이다. */
+/** 프롤로그가 끝났다: 판을 새로 깔고(프롤로그 동안 흐른 시세·시계를 버린다) 시계를 돌린다. 첫 탭 한 번은 프롤로그에서 쳇바퀴를 굴린 그 탭이다. */
 export function endPrologue(): void {
   const st = useGame.getState();
   st.setGame(freshGame());
@@ -43,7 +43,7 @@ export function endPrologue(): void {
   st.act({ type: 'tap' });
 }
 
-/** 환생(T-1·T-3): 엔진은 아직 상속(상속포기 갈래)으로 다음 판을 만든다. 시제품은 그 판을 '엄마 빚 30만 고정 · 봉투 10만'의 새 판으로 덮는다.
+/** 환생(T-1·T-3): 엔진은 아직 상속(상속포기 갈래)으로 다음 판을 만든다. 시제품은 그 판을 첫 생과 같은 새 판(엄마 빚 30만 · 현금 0 · 엄마의 쳇바퀴 한 대, balance.start)으로 덮는다.
  *  남기는 것: 가문 기록(황금 도토코인, 엔딩 장부, 세대 번호)과 시세·시계. 지우는 것: 상속의 흔적(학자금·연대보증 빚, 원한, 기질, 사전교육 1장). */
 export function rebirthOverride(): void {
   const st = useGame.getState();
@@ -62,10 +62,9 @@ export function rebirthOverride(): void {
 
 function scene(name: string, base: ReturnType<typeof createGame>) {
   const P = useProto.getState();
-  const tab = (t: Tab) => P.patch({ tab: t, visited: { lot: true, [t]: true } });
-  const un = { lot: true, upg: true, phone: true, map: true, people: true } as const;
-  const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'account'].map((k) => [k, true]));
-  P.patch({ seen, cutCount: 1, bearMet: true });
+  const un = { lot: true, phone: true, map: true } as const;
+  const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'office'].map((k) => [k, true]));
+  P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done' });
   const ready = () => {
     const g = buildScenario('trade', base);
     g.run.settleIn = balance.settlement.intervalSec;
@@ -111,17 +110,19 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       if (name === 'rebirth') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
       return g;
     }
-    case 'friends': case 'friendsup': case 'friendsbor': {
-      // 인맥: friendsup = 강화 탭(카드 사기 전), friends = 인맥 탭, friendsbor = 빌린 뒤 + 곰 형 영입
-      const g = ready();
-      g.run.cash = name === 'friendsbor' ? 40_000 : 60_000;
-      if (name === 'friendsup') { P.patch({ tab: 'upg' }); return g; }
-      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'people' });
-      if (name === 'friendsbor') {
-        stepMut(g, { type: 'action', action: { type: 'borrowFriend', friend: 'squirrel' } });
-        g.run.cash = 40_000;
-        P.patch({ tip: { coin: 'DTC', dir: 1, price: g.run.prices.DTC * 0.998, no: 2 } });
-      }
+    case 'cabin1': case 'cabin2': case 'cabin3': {
+      // 오두막 그림 확인용: 쳇바퀴와 알바가 늘어난 방(1 = 첫 쳇바퀴에 알바 + 빈 쳇바퀴 하나, 2 = 세 대, 3 = 꽉 참)
+      const g = clone(base);
+      const n = name === 'cabin1' ? 1 : name === 'cabin2' ? 2 : 5;
+      P.patch({ everUnlocked: { ...un }, visited: { ...un } });
+      g.run.cash = 500_000;
+      stepMut(g, { type: 'action', action: { type: 'borrow', lender: 'shark1' } });
+      stepMut(g, { type: 'action', action: { type: 'openAccount', sponsor: true } });
+      stepMut(g, { type: 'action', action: { type: 'hire', coin: 'DTC' } });
+      for (let i = 0; i < n; i++) stepMut(g, { type: 'action', action: { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' } });
+      g.run.equipment.forEach((u, i) => { if (name !== 'cabin1' && (name === 'cabin3' || i < 1)) stepMut(g, { type: 'action', action: { type: 'hire', uid: u.uid } }); });
+      g.run.cash = 31_240;
+      g.run.settleIn = balance.settlement.intervalSec;
       return clone(g);
     }
     default: return base;

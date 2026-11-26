@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveCoinValue, giveWheel, noDebts, openFutures, tapN, tickN } from './helpers';
+import { A, bare, giveCoinValue, giveWheel, noDebts, openFutures, tapN, tickN } from './helpers';
 import { futuresGate, tradeGate } from '../../src/engine/progression';
 import { levCapNow, waiverAvailable } from '../../src/engine/futures';
 import { stage } from '../../src/engine/selectors';
 
 function ready() {
-  const g = fresh();
+  const g = bare();
   giveWheel(g, 'DTC');
   g.run.minedValue = 50000;
   g.run.cash = 100000;
   return g;
 }
-function learn(g: ReturnType<typeof fresh>) {
+function learn(g: ReturnType<typeof bare>) {
   for (let i = 0; i < 3; i++) A(g, { type: 'eduPage' });
   A(g, { type: 'mockTrade' });
 }
@@ -101,7 +101,7 @@ describe('B. 선물 계좌 개설과 배율 상한 (M2)', () => {
     expect(levCapNow(g.run)).toBe(200);
   });
 
-  it('AC-v2-23 단계 2 에서 종목 쳇바퀴가 전부 압류되면 탭은 다시 현금 27, 선물 계좌는 그대로', () => {
+  it('AC-v2-23 단계 2 에서 종목 쳇바퀴가 전부 압류되면 탭은 거절되고(줍기 없음) 선물 계좌는 그대로', () => {
     const g = ready();
     learn(g);
     A(g, { type: 'openAccount' });
@@ -109,14 +109,14 @@ describe('B. 선물 계좌 개설과 배율 상한 (M2)', () => {
     delete g.run.coinWheels.DTC;
     expect(stage(g.run)).toBe(0);
     const c0 = g.run.cash;
-    A(g, { type: 'tap' });
-    expect(g.run.cash - c0).toBe(27);
+    expect(A(g, { type: 'tap' })).toMatchObject({ ok: false, code: 'nowheel' });
+    expect(g.run.cash - c0).toBe(0);
     expect(g.run.futures.open).toBe(true);
   });
 
   it('AC-v2-24 거래 탭: 단계 0 은 자물쇠, 단계 1 은 읽기 전용 + 조건 3줄, 단계 2 는 주문', () => {
-    const g = fresh();
-    expect(tradeGate(g)).toMatchObject({ mode: 'locked', text: '쳇바퀴를 사면 시세가 보입니다' });
+    const g = bare();
+    expect(tradeGate(g)).toMatchObject({ mode: 'locked', text: '쳇바퀴가 있어야 시세가 보입니다' });
     giveWheel(g, 'DTC');
     const t1 = tradeGate(g);
     expect(t1.mode).toBe('readonly');

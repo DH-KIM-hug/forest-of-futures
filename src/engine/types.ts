@@ -29,6 +29,8 @@ export interface DebtState {
   overdue: number;
   graceLeft: number; // 남은 이자 유예 정산 수
   rateCap?: number | null; // 승계 몫(inherited)에만 적용되는 금리 상한(단순승인 4%)
+  /** 원금 가운데 따로 정한 금리가 붙는 몫(U-31: 오소리 대부의 두 번째 대출부터). 갚을 때는 이 몫부터 줄어든다 */
+  tranches?: { amount: number; rate: number }[];
 }
 
 export interface FriendState {
@@ -44,6 +46,8 @@ export interface CoinWheelState {
   on: boolean;
   autoSell: boolean;
   tagBy: LenderId | 'tax' | null;
+  /** 알바 햄스터가 이 쳇바퀴를 돌린다(U-30). 없으면 주인공이 탭할 때만 돈다 */
+  staffed?: boolean;
 }
 
 export interface EquipmentUnit {
@@ -56,6 +60,8 @@ export interface EquipmentUnit {
   boughtWithLoan: boolean;
   inheritedSign: boolean;
   boughtTick: number;
+  /** 알바가 붙어 있다(일당이 있는 설비만 뜻이 있다, U-30) */
+  staffed?: boolean;
 }
 
 export interface UpgradeState {
@@ -262,6 +268,9 @@ export interface SettlementReport {
   paid: number;
   unpaid: number;
   forcedSold: number;
+  /** 낸 알바 일당 합과 일당을 못 받아 나간 알바 수(U-30) */
+  wages: number;
+  quit: number;
 }
 
 export interface RunState {
@@ -284,8 +293,8 @@ export interface RunState {
   equipment: EquipmentUnit[];
   upgrades: UpgradeState;
   riding: CoinId | null;
-  acornTaps: number;
-  acornFrac: number;
+  /** 캐는 즉시 팔 때 1도토리에 못 미친 나머지(다음 판매에 얹는다) */
+  sellFrac: number;
   minedValue: number; // 이번 세대 누적 채굴(세대 시작가 기준 도토리어치)
   futures: FuturesState;
   debts: Record<DebtId, DebtState>;

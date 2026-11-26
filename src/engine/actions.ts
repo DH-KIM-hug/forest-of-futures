@@ -1,5 +1,5 @@
 // 플레이어 행동(액션). 모두 제자리 수정이고 Res 를 돌려준다. 순수 래퍼는 game.ts 의 step.
-import { buyEquip, moveEquip, ride, sellEquip, sellWheel, setAutoSell, toggleEquip, toggleWheel } from './equipment';
+import { buyEquip, hire, moveEquip, ride, sellEquip, sellWheel, setAutoSell, toggleEquip, toggleWheel } from './equipment';
 import { moveTo } from './housing';
 import { borrow, rollover, stamp, type Mult } from './loans';
 import { sell, tap } from './mining';
@@ -16,7 +16,7 @@ import { onBackground, onForeground, visit } from './offline';
 export type Action =
   | { type: 'eduPage' }
   | { type: 'mockTrade' }
-  | { type: 'openAccount' }
+  | { type: 'openAccount'; sponsor?: boolean }
   | { type: 'signWaiver' }
   | { type: 'open'; market: string; dir: Dir; lev: number; margin?: number; marginPct?: number; sl?: number | null; tp?: number | null }
   | { type: 'add'; market: string; margin?: number; marginPct?: number }
@@ -31,6 +31,7 @@ export type Action =
   | { type: 'buyWheel'; coin: CoinId }
   | { type: 'sellWheel'; coin: CoinId }
   | { type: 'buyEquip'; tier: string; coin: CoinId }
+  | { type: 'hire'; uid?: string; coin?: CoinId }
   | { type: 'moveEquip'; uid: string; coin: CoinId }
   | { type: 'toggleEquip'; uid: string; on?: boolean }
   | { type: 'toggleWheel'; coin: CoinId; on?: boolean }
@@ -57,7 +58,7 @@ export function act(g: GameState, a: Action): Res {
   switch (a.type) {
     case 'eduPage': return eduPage(g);
     case 'mockTrade': return mockTrade(g);
-    case 'openAccount': return openAccount(g);
+    case 'openAccount': return openAccount(g, a.sponsor ?? false);
     case 'signWaiver': return signWaiver(g);
     case 'open': return openPosition(g, a);
     case 'add': return addToPosition(g, a);
@@ -72,6 +73,7 @@ export function act(g: GameState, a: Action): Res {
     case 'buyWheel': return purchaseWheel(g, a.coin);
     case 'sellWheel': return sellWheel(g, a.coin);
     case 'buyEquip': return buyEquip(g, a.tier, a.coin);
+    case 'hire': return hire(g, a.uid, a.coin);
     case 'moveEquip': return moveEquip(g, a.uid, a.coin);
     case 'toggleEquip': return toggleEquip(g, a.uid, a.on);
     case 'toggleWheel': return toggleWheel(g, a.coin, a.on);

@@ -1,6 +1,6 @@
 import { createGame, stepMut, clone } from '../../src/engine/game';
 import type { Action } from '../../src/engine/actions';
-import { eventsMeta, lendersMeta } from '../../src/engine/data';
+import { eventsMeta, lendersMeta, tierById } from '../../src/engine/data';
 import type { Tick } from '../../src/engine/feed/types';
 import type { CoinId, EquipmentUnit, GameState } from '../../src/engine/types';
 
@@ -10,6 +10,19 @@ lendersMeta.offers.rollProbPerSettlement = 0;
 
 export function fresh(seed = 1): GameState {
   return createGame({ seed });
+}
+/** 기능 시험용 기준판: 시작 상태(현금 0 · 엄마의 쳇바퀴 1대 · 오소리 30만, U-29)에 기대지 않는 시험이 쓴다.
+ *  현금 10만, 캐피탈 15만 + 오소리 15만, 쳇바퀴 없음. 시작 상태 자체는 ac_a_start·ac_b_progress 가 본다. */
+export function bare(seed = 1): GameState {
+  const g = createGame({ seed });
+  g.run.cash = 100000;
+  g.run.coinWheels = {};
+  g.run.wallet = {};
+  g.run.riding = null;
+  g.run.debts.shark1 = { principal: 150000, inherited: 0, overdue: 0, graceLeft: 0 };
+  g.run.debts.capital.principal = 150000;
+  g.run.peakNetWorth = -200000;
+  return g;
 }
 export const tickOf = (g: GameState, over: Record<string, number> = {}, st: Tick['st'] = 'open'): Tick => ({
   n: g.run.tick + 1,
@@ -40,9 +53,10 @@ export function giveWheel(g: GameState, coin: CoinId, o: { on?: boolean; autoSel
   g.run.wallet[coin] ??= { qty: 0, locked: 0 };
   if (!g.run.riding) g.run.riding = coin;
 }
-export function giveEquip(g: GameState, tier: string, coin: CoinId, cost: number, on = true): EquipmentUnit {
+/** 설비 한 대를 쥐여 준다. 알바가 필요한 설비(보조 쳇바퀴, U-30)는 알바가 붙은 채로(staffed=false 로 빈 쳇바퀴). */
+export function giveEquip(g: GameState, tier: string, coin: CoinId, cost: number, on = true, staffed = true): EquipmentUnit {
   g.run.uidSeq += 1;
-  const u: EquipmentUnit = { uid: `e${g.run.uidSeq}`, tier, coin, on, cost, tagBy: null, boughtWithLoan: false, inheritedSign: false, boughtTick: g.run.tick };
+  const u: EquipmentUnit = { uid: `e${g.run.uidSeq}`, tier, coin, on, cost, tagBy: null, boughtWithLoan: false, inheritedSign: false, boughtTick: g.run.tick, ...(tierById[tier]?.wage != null ? { staffed } : {}) };
   g.run.equipment.push(u);
   return u;
 }

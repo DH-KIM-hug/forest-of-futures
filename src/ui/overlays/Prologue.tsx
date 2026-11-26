@@ -4,7 +4,7 @@ import { useUI } from '../uiStore';
 export const PROLOGUE = [
   '숲의 금융이 무너진 해였다.',
   '아버지가 사고로 세상을 떠났다.\n장례를 치르고 나니 우편함에 통지서가 쌓여 있었다.',
-  '남은 건 텐트 하나, 현금 10만, 빚 30만.',
+  '남은 건 빈 오두막의 쳇바퀴 하나, 현금 0, 빚 30만.',
   '상속을 포기할 수 있는 기간은 석 달이었다.\n아무도 알려 주지 않았다.',
 ];
 export const PROLOGUE_KEY = 'fof.prologue.v2';

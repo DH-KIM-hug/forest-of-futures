@@ -3,7 +3,7 @@ import { balance, lenderById, lendersMeta } from './data';
 import { ceilS, floorS } from './rng';
 import { traitVal } from './legacy';
 import { onTaxPaid, returnPawn } from './generation';
-import { lenderLimit, sharkDebt, totalDebt, interestDue } from './selectors';
+import { lenderLimit, sharkDebt, totalDebt, interestDue, nextBorrowRate } from './selectors';
 import { addToSet, bump, stat } from './stats';
 import { isNight, logEvent, notify } from './util';
 import type { DebtId, GameState, LenderId, Res } from './types';
@@ -53,12 +53,16 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
   }
   const upfront = id === 'shark2' ? (traitVal(g, 'shark2Upfront') ?? l.upfront) : l.upfront;
   const received = floorS(unit * (1 - upfront));
+  // 오소리 대부: 같은 생에 두 번째로 빌리는 돈부터는 더 높은 금리(그 몫에만)
+  const rateNow = nextBorrowRate(g, id);
+  if (rateNow !== l.rate) (run.debts[id].tranches ??= []).push({ amount: unit, rate: rateNow });
   run.cash += received;
   run.debts[id].principal += unit;
   bump(run, 'upfrontPaid', unit - received);
   if (id === 'shark1' || id === 'shark2') bump(run, 'sharkBorrowed', unit);
   if (id === 'shark2' && run.stats.flyerOpen) bump(run, 'flyerLoans', 1);
   if (id === 'shark2') bump(run, 'borrow.shark2', 1);
+  else bump(run, `borrow.${id}`, 1);
   if (id === 'bank' && run.stats['visitsSinceOverdue.bank'] != null) run.stats['visitsSinceOverdue.bank'] += 1;
   run.recentBorrows = run.recentBorrows.filter((b) => run.tick - b.tick <= balance.trading.fundedByWindowSec * 2);
   run.recentBorrows.push({ src: id, kind: 'lender', tick: run.tick, counted: false });
@@ -108,6 +112,12 @@ export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {
   if (amt <= 0) return refuse('cash', '현금 부족');
   run.cash -= amt;
   d.principal -= amt;
+  // 비싼 몫부터 갚는다: 따로 정한 금리 몫(높은 금리 먼저) → 보통 몫 → 물려받은 몫
+  if (d.tranches?.length) {
+    let left = amt;
+    for (const t of [...d.tranches].sort((a, b) => b.rate - a.rate)) { const cut = Math.min(t.amount, left); t.amount -= cut; left -= cut; }
+    d.tranches = d.tranches.filter((t) => t.amount > 0);
+  }
   if (d.inherited > 0) {
     bump(run, 'inheritedPaid', amt);
     d.inherited = Math.min(d.inherited, d.principal);

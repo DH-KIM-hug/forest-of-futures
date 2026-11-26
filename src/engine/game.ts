@@ -40,12 +40,23 @@ export function newRun(seed: number, prices?: Record<string, number>): RunState 
   const debts: any = {};
   for (const id of ['bank', 'capital', 'shark1', 'shark2', 'tax'])
     debts[id] = { principal: balance.start.debts[id] ?? 0, inherited: 0, overdue: 0, graceLeft: 0 };
+  // 엄마 빚: 물려받은 몫에는 옛 이자(금리 상한)가 그대로 붙는다. 새로 빌린 돈은 그 채권처 금리.
+  const caps = (balance.start as unknown as { inheritedRateCap?: Record<string, number> }).inheritedRateCap ?? {};
+  for (const [id, cap] of Object.entries(caps)) if (debts[id]?.principal > 0) { debts[id].inherited = debts[id].principal; debts[id].rateCap = cap; }
+  // 시작 쳇바퀴(U-29): 엄마가 남긴 한 대. 줍기 단계는 없다.
+  const start = balance.start as unknown as { wheels?: string[]; autoSell?: boolean };
+  const coinWheels: RunState['coinWheels'] = {};
+  const wallet: RunState['wallet'] = {};
+  for (const c of start.wheels ?? []) {
+    coinWheels[c] = { on: true, autoSell: !!start.autoSell, tagBy: null };
+    wallet[c] = { qty: 0, locked: 0 };
+  }
   return {
     seed, rng: seed | 0, startTick: 0, refPrice: ref, prices: { ...ref }, marketStatus: 'open', branch: 'forced',
     tick: 0, settleIn: balance.settlement.intervalSec, settleNo: 0,
-    cash: balance.start.cash, cashLocked: 0, wallet: {}, walletTagBy: null, walletPeakValue: 0,
-    coinWheels: {}, equipment: [], upgrades: { body: {}, run: {}, coinWheel: {}, tier: {} }, riding: null,
-    acornTaps: 0, acornFrac: 0, minedValue: 0,
+    cash: balance.start.cash, cashLocked: 0, wallet, walletTagBy: null, walletPeakValue: 0,
+    coinWheels, equipment: [], upgrades: { body: {}, run: {}, coinWheel: {}, tier: {} }, riding: (start.wheels?.[0] as RunState['riding']) ?? null,
+    sellFrac: 0, minedValue: 0,
     futures: { open: false, edu: 0, mock: false, defaultLev: balance.trading.defaultLeverage, openedAtSettle: null, levCap: 10, closedTrades: 0, waiver: false },
     debts, taxDueIn: null, upkeepArrears: 0, upkeepOverdue: 0,
     friends: createFriends(), house: balance.start.house, positions: {},

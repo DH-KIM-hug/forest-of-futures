@@ -13,6 +13,8 @@ export interface Host {
   get(): GameState;
   set(g: GameState): void;
   onAway?(r: AwayReport): void;
+  /** 화면이 게임 시계를 멈춰 두었는가(프롤로그, 추심원이 기다리는 동안). 멈춘 동안 온 틱은 버린다. */
+  paused?(): boolean;
 }
 
 const NINETY_DAYS = 90 * 86400;

@@ -22,6 +22,9 @@ export function prependHistory(past: Record<string, number[]>): void {
     hist[k] = [...v, ...a].slice(-HIST_LEN);
   }
 }
+/** 튜토리얼의 짜 둔 시세를 차트에 그렸다가(pushOne) 끝나면 지운다(dropLast). 진짜 시세 기록과 섞이지 않게. */
+export function pushOne(market: string, v: number): void { (hist[market] ??= []).push(v); }
+export function dropLast(market: string, n: number): void { const a = hist[market]; if (a) a.splice(Math.max(0, a.length - n), n); }
 export const historyOf = (market: string): number[] => hist[market] ?? [];
 export function resetHistory(): void {
   for (const k of Object.keys(hist)) delete hist[k];

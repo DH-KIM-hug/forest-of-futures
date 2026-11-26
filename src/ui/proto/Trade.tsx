@@ -7,6 +7,9 @@ import { isNearLiq } from './model';
 //   - 손실을 확정하는 정리만 한 번 더 묻는다(2초). 창은 뜨지 않는다.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useGame } from '../../store/gameStore';
+import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
+import { TUT } from './model';
+import { useProto } from './protoStore';
 import { useUI } from '../uiStore';
 import { comma } from '../../engine/util';
 import { clone } from '../../engine/game';
@@ -254,6 +257,8 @@ export function ProtoTrade() {
     if (d.step === 2 && dt >= 4 && (PSHOT === 'win' || PSHOT === 'loss')) { d.step = 3; manual.current = true; act({ type: 'close', market }); }
   }, [run.tick, market, act]);
 
+  const tutSt = useProto((s) => s.tutorial);
+  useEffect(() => { if (tutSt === 'await') { if (market !== TUT.market) setTrade({ market: TUT.market }); tutorialIntro(); } }, [tutSt]);
   const hist = historyOf(market);
   const px = price(run, market);
   const pos = positionView(g, market);
@@ -300,6 +305,9 @@ export function ProtoTrade() {
   useEffect(() => { setArm(false); setResult(null); setSheet(null); }, [market]);
 
   const doOpen = (dir: 1 | -1) => {
+    // 튜토리얼 거래(U-31): 첫 한 번은 정해 둔 돈·배율로, 짜 둔 시세 위에서
+    if (useProto.getState().tutorial === 'await') { if (tutorialOpen(dir)) { setSheet(null); setResult(null); setEntered((k) => k + 1); swing(true); } return; }
+    if (useProto.getState().tutorial === 'run') return;
     const r = act({ type: 'open', market, dir, lev, marginPct: pct, sl: tr.sl, tp: tr.tp });
     if (!r.ok) { say(r.msg ?? '들어갈 수 없습니다'); play('insufficient'); return; }
     play(dir === 1 ? 'order_long' : 'order_short');
@@ -364,8 +372,11 @@ export function ProtoTrade() {
     );
   }
 
+  const tutBanner = tutSt === 'await' || tutSt === 'run' ? (
+    <div className="pt-tutb" role="status" data-tut={tutSt}>{tutSt === 'await' ? <>오소리 대부 「롱이든 숏이든 한번 걸어 보세요.」 <b>{comma(tutorialMargin())} · {TUT.lev}배</b></> : <>…시세가 움직인다</>}</div>
+  ) : null;
   const coins = (
-    <div className="pt-coins" role="tablist" aria-label="종목">
+    <>{tutBanner}<div className="pt-coins" role="tablist" aria-label="종목">
       {tabs.map((t) => (
         <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct' + (t.id === market ? ' on' : '')} onClick={() => setTrade({ market: t.id })}>
           <Coin id={t.id} size={20} />
@@ -374,7 +385,7 @@ export function ProtoTrade() {
           {t.hasPos && <i className={'pd ' + ((t.posRoe ?? 0) >= 0 ? 'up' : 'down')} aria-label="포지션 있음" />}
         </button>
       ))}
-    </div>
+    </div></>
   );
   const quote = (
     <div className="pt-quote">

@@ -219,7 +219,9 @@ export function RowIcon({ kind, size = 44 }: { kind: string; size?: number }) {
     case 'upg':
       return <Ico size={size}><path d="M25 6 C38 14 40 28 30 40 h-10 C10 28 12 14 25 6z" fill="#9CC77F" stroke={O} strokeWidth={2.2} strokeLinejoin="round" /><path d="M25 36 V16 M18 22 l7 -7 l7 7" fill="none" stroke={O} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" /></Ico>;
     case 'lot':
-      return <Ico size={size}><Dia cx={25} cy={44} hw={22} fill={C.lot} sw={2} /><Poly p={[[10, 33], [20, 38], [20, 16]]} fill="#D8A46A" sw={2} /><Poly p={[[20, 38], [30, 33], [20, 16]]} fill="#B98552" sw={2} /><circle cx={36} cy={22} r={8} fill={C.leaf} stroke={O} strokeWidth={2} /><rect x={34.5} y={29} width={3} height={6} fill={C.darkWood} stroke={O} strokeWidth={1.4} /></Ico>;
+      return <Ico size={size}><Room cx={25} cy={46} hw={21} h={17} wall="#D9B98A" floor="#E3C9A0" /><Wheel cx={25} cy={41} w={17} col={C.dtc} /></Ico>;
+    case 'hamwheel':
+      return <Ico size={size}><Wheel cx={25} cy={47} w={42} col={C.dtc} /><Hamster cx={25} cy={36} h={20} /></Ico>;
     case 'bank': case 'capital': case 'shark1': case 'shark2': {
       const col = kind === 'bank' ? '#8FB8B0' : kind === 'capital' ? C.mdt : kind === 'shark1' ? '#A9A39A' : '#8E79B8';
       return <Ico size={size}><Room cx={25} cy={46} hw={21} h={16} wall={col} floor={C.floor} /><Cube cx={25} cy={40} hw={7} h={8} fill={C.wall} /></Ico>;

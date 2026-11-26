@@ -150,6 +150,7 @@ function startHl(): void {
         if (g.run.settleNo !== lastSaved) persist(g);
       },
       onAway: (away) => useGame.setState((s) => ({ net: { ...s.net, away } })),
+      paused: () => useGame.getState().speed === 0,
     },
     prependHistory,
   );

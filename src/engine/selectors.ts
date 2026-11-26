@@ -80,9 +80,15 @@ export function interestDue(g: GameState, id: DebtId): number {
   const rate = lenderById[id].rate + (g.family.lenderRelations[id] === 'grudge' ? balance.inheritance.grudge.ratePlus : 0);
   let base = d.principal;
   let extra = 0;
+  // 따로 정한 금리가 붙는 몫(오소리의 두 번째 대출부터): 그 몫은 그 금리로
+  for (const t of d.tranches ?? []) {
+    const amt = Math.min(t.amount, base);
+    base -= amt;
+    extra += amt * (t.rate + (rate - lenderById[id].rate));
+  }
   // 승계 몫에만 금리 상한(단순승인 4%)
   const capRate = d.rateCap != null && d.inherited > 0 ? Math.min(rate, d.rateCap) : rate;
-  const inh = capRate < rate ? Math.min(d.inherited, d.principal) : 0;
+  const inh = capRate < rate ? Math.min(d.inherited, base) : 0;
   const inhSave = inh * (rate - capRate);
   const promo = run.promos[id] ?? [];
   const cfg = promoCfg();
@@ -97,6 +103,12 @@ export function interestDue(g: GameState, id: DebtId): number {
 import { offerById } from './data';
 function promoCfg() {
   return offerById.promo.effect as { halfSettlements: number; doubleSettlements: number; halfMul: number; doubleMul: number };
+}
+
+/** 이 채권처에서 지금 새로 빌리면 붙는 금리(정산당). 오소리는 같은 생의 두 번째 대출부터 repeatRate. */
+export function nextBorrowRate(g: GameState, id: LenderId): number {
+  const l = lenderById[id] as { rate: number; repeatRate?: number };
+  return l.repeatRate != null && ((g.run.stats[`borrow.${id}`] as number | undefined) ?? 0) >= 1 ? l.repeatRate : l.rate;
 }
 
 export function livingDue(g: GameState): number {
