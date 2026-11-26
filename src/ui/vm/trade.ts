@@ -4,6 +4,7 @@ import {
   closeBack, entryFee, levCapNow, liqPrice, marginFromPct, pnlOf, roePct, shortInsurance, stopPrice, waiverAvailable,
 } from '../../engine/futures';
 import { futuresGate, tradeGate } from '../../engine/progression';
+import { effectiveLevCaps, feeRate } from '../../engine/skilltree';
 import { price, refPrice } from '../../engine/selectors';
 import { comma } from '../../engine/util';
 import type { AwayReport, GameState, Position } from '../../engine/types';
@@ -83,8 +84,9 @@ export interface OrderPreview {
 export function orderPreview(g: GameState, market: string, dir: 1 | -1, lev: number, pct: number): OrderPreview {
   const run = g.run;
   const p = price(run, market);
-  const margin = marginFromPct(run.cash, lev, pct);
-  const fee = entryFee(margin * lev);
+  const rate = feeRate(g, lev); // 스킬트리 할인·보험료가 든 수수료율
+  const margin = marginFromPct(run.cash, lev, pct, rate);
+  const fee = entryFee(margin * lev, rate);
   const liq = dir === 1 ? p * (1 - 1 / lev + T.maintenanceRate) : p * (1 + 1 / lev - T.maintenanceRate);
   const liqPct = (liq / p - 1) * 100;
   let reason: string | null = null;
@@ -101,7 +103,7 @@ export function orderPreview(g: GameState, market: string, dir: 1 | -1, lev: num
 // ── 배율 눈금자 ─────────────────────────────────────────────────────────
 export function levLockText(g: GameState, lev: number): string {
   const f = g.run.futures;
-  const caps = balance.progression.futures.levCaps as { cap: number; closedTrades?: number; waiver?: boolean }[];
+  const caps = effectiveLevCaps(g);
   const step = caps.find((c) => c.cap >= lev && c.cap > f.levCap) ?? caps[caps.length - 1];
   const need = step.closedTrades ?? 0;
   if (step.waiver) {

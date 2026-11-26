@@ -638,3 +638,77 @@
 
 /* 웅얼거림 대사(U-36): 아직 안 나온 글자는 자리만 차지한다(줄바꿈이 흔들리지 않게) */
 .untyped { opacity: 0; }
+
+/* ── U-38 오소리 장부(지도의 사무소 카드 안) ── */
+.pr-ledger { margin: 8px 0 2px; padding: 8px 10px 9px; background: #FBF4DF; border: 2px dashed #B9A77E; border-radius: 12px; }
+.pr-ledger .lg-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 5px; }
+.pr-ledger .lg-h b { font-family: var(--dsp); font-weight: 400; font-size: 15px; color: var(--o); }
+.pr-ledger .lg-h span { font-size: 11.5px; font-weight: 700; color: var(--sub); }
+.pr-ledger .lg-row { display: grid; grid-template-columns: 40px 78px 1fr auto; grid-template-areas: "rt nm bar amt" "rt iv iv iv"; align-items: center; column-gap: 7px; padding: 4px 0; border-top: 1.5px solid #E6D9B5; }
+.pr-ledger .lg-row .rt { grid-area: rt; font-style: normal; font-family: var(--dsp); font-size: 14px; text-align: center; padding: 3px 0; border-radius: 8px; background: #F0D9C9; color: var(--red-ink); border: 2px solid var(--o); }
+.pr-ledger .lg-row[data-row="mom"] .rt { background: #DDE9D2; color: #4D6B3C; }
+.pr-ledger .lg-row .nm { grid-area: nm; font-size: 13px; font-weight: 800; color: var(--o); white-space: nowrap; }
+.pr-ledger .lg-row .bar { grid-area: bar; height: 9px; border-radius: 6px; background: #EADFC2; border: 2px solid var(--o); overflow: hidden; }
+.pr-ledger .lg-row .bar u { display: block; height: 100%; background: #D98A6A; }
+.pr-ledger .lg-row[data-row="mom"] .bar u { background: #C2413B; }
+.pr-ledger .lg-row .amt { grid-area: amt; font-family: var(--dsp); font-weight: 400; font-size: 15px; font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
+.pr-ledger .lg-row .iv { grid-area: iv; font-size: 11.5px; font-weight: 700; color: var(--sub); }
+.pr-ledger .lg-row.top .iv::after { content: ' · 지금 갚는 줄'; color: var(--red-ink); }
+.pr-ledger .lg-row.top { background: rgba(255, 255, 255, .55); border-radius: 8px; }
+.pr-ledger .lg-row.done { opacity: .5; } .pr-ledger .lg-row.done .nm { text-decoration: line-through; }
+.pr-ledger .lg-st { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1.5px solid #E6D9B5; }
+.pr-ledger .lg-st .dots { display: flex; align-items: center; gap: 3px; }
+.pr-ledger .lg-st .dots i { width: 13px; height: 13px; border-radius: 50%; border: 2px dashed #B9A77E; }
+.pr-ledger .lg-st .dots i.on { border: 2px solid var(--o); background: radial-gradient(circle at 35% 30%, #FFF2B0, #E8B93A 70%); }
+.pr-ledger .lg-st .dots em { font-style: normal; font-family: var(--dsp); font-size: 13px; }
+.pr-ledger .lg-st small { font-size: 11.5px; font-weight: 700; color: var(--sub); }
+/* 집 포지션 줄: 손익은 도토리로, ROE 는 작게 */
+.pr-pin .roe { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.pr-pin .roe b { font-weight: 400; font-size: 18px; } .pr-pin .roe small { font-family: var(--body, inherit); font-size: 11px; font-weight: 800; opacity: .8; }
+.pr-pin.plus .roe b { color: var(--up); } .pr-pin.minus .roe b { color: var(--down); }
+
+.pr-hud .goal em .gsub { font-style: normal; margin-right: 7px; padding: 1px 6px; border-radius: 7px; background: #DDE9D2; color: #3F6A35; font-size: 11px; font-weight: 800; }
+
+/* ── U-38 환생 화면: 거래의 나무(SKILLTREE_TRADE.md) ── */
+.pr-end.re.tree { gap: 9px; padding: calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px); justify-content: flex-start; }
+.pr-end.re.tree > :first-child { margin-top: 0; } .pr-end.re.tree > :last-child { margin-bottom: 0; }
+.pr-end .re-top { display: flex; align-items: center; gap: 10px; width: 100%; }
+.pr-end .re-top img { flex: 0 0 auto; animation: breathe 2.4s ease-in-out infinite; }
+.pr-end .re-top h2 { margin: 0; font-family: var(--dsp); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.pr-end .re-top p { margin: 2px 0 0; font-size: 12.5px; line-height: 1.35; color: #6B4A35; }
+.pr-end.tree .award { width: 100%; justify-content: space-between; padding: 6px 12px; text-align: left; line-height: 1.25; }
+.pr-end.tree .award span { flex: 1; font-size: 13px; } .pr-end.tree .award small { font-size: 11px; color: var(--sub); }
+.pr-end.tree .award b { font-size: 26px; } .pr-end.tree .award b.sm { font-size: 15px; color: var(--o); }
+.pr-end .re-stat { margin: 0; font-size: 12px; font-weight: 700; color: #6B4A35; }
+.pr-tree { width: 100%; flex: 0 0 auto; background: var(--card); border: 2.5px solid var(--o); border-radius: 16px; padding: 8px 10px 10px; }
+.pr-tree .tr-h { display: flex; align-items: center; justify-content: space-between; }
+.pr-tree .tr-h b { font-family: var(--dsp); font-weight: 400; font-size: 17px; }
+.pr-tree .gold { display: flex; align-items: center; gap: 5px; font-family: var(--dsp); font-size: 16px; color: #8A6410; }
+.pr-tree .coin { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF2B0, #E8B93A 70%); border: 2px solid var(--o); }
+.pr-tree .tr-paths { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 4px; text-align: center; }
+.pr-tree .tr-paths span { display: flex; flex-direction: column; padding: 3px 2px; border-radius: 9px; }
+.pr-tree .tr-paths b { font-family: var(--dsp); font-weight: 400; font-size: 14px; } .pr-tree .tr-paths small { font-size: 9.5px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+.pr-tree .p-A { --pc: #9AD0C2; } .pr-tree .p-B { --pc: #EFA79A; } .pr-tree .p-C { --pc: #B9C98E; } .pr-tree .p-R { --pc: #E9C99A; }
+.pr-tree .tr-paths span { background: color-mix(in srgb, var(--pc) 45%, transparent); }
+.pr-tree .tr-box { position: relative; height: 318px; margin-top: 2px; }
+.pr-tree .tr-box svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pr-tree .tr-box line { stroke: #B9A77E; stroke-width: 3; stroke-dasharray: 5 5; }
+.pr-tree .tr-box line.on { stroke: #C59A2A; stroke-dasharray: none; stroke-width: 4; }
+.pr-tree .nd { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 0; background: none; border: 0; color: var(--o); width: 62px; }
+.pr-tree .nd i { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; border: 2.5px dashed #9C927E; background: #EFE7D2; font-style: normal; font-family: var(--dsp); font-size: 15px; color: #8C8372; }
+.pr-tree .nd em { font-style: normal; font-size: 10.5px; font-weight: 800; line-height: 1.1; white-space: nowrap; background: rgba(255, 253, 246, .85); border-radius: 5px; padding: 0 2px; }
+.pr-tree .nd.can i { border: 2.5px solid var(--o); background: var(--pc); color: var(--o); animation: breathe 1.6s ease-in-out infinite; }
+.pr-tree .nd.own i { border: 2.5px solid var(--o); background: radial-gradient(circle at 35% 30%, #FFF2B0, #E8B93A 72%); color: #6B4A10; box-shadow: 0 2px 0 rgba(74, 70, 64, .35); animation: none; }
+.pr-tree .nd.own.off i { background: #D9CFAF; color: #7d7462; }
+.pr-tree .nd.sel i { outline: 3px solid var(--teal, #2F8F83); outline-offset: 2px; }
+.pr-tree .tr-info { display: flex; align-items: center; gap: 8px; min-height: 76px; margin-top: 2px; padding: 7px 9px; border-radius: 12px; background: #fff; border: 2px solid rgba(74, 70, 64, .3); text-align: left; }
+.pr-tree .tr-info .l { flex: 1; min-width: 0; }
+.pr-tree .tr-info b { font-family: var(--dsp); font-weight: 400; font-size: 15px; }
+.pr-tree .tr-info p { margin: 1px 0 0; font-size: 12.5px; line-height: 1.35; }
+.pr-tree .tr-info small { display: block; margin-top: 2px; font-size: 11px; font-weight: 700; color: var(--sub); } .pr-tree .tr-info small.bad { color: var(--red-ink); }
+.pr-tree .tr-info .buy { flex: 0 0 auto; min-width: 84px; max-width: 112px; } .pr-tree .tr-info .buy small { white-space: normal; font-size: 10.5px; line-height: 1.15; }
+.pr-tree .tr-info .have { font-family: var(--dsp); font-size: 14px; color: #8A6410; padding: 0 8px; }
+
+.pr-pinwrap { display: flex; gap: 6px; align-items: stretch; } .pr-pinwrap .pr-pin { flex: 1; min-width: 0; } .pr-pinwrap .pinclose { flex: 0 0 auto; min-width: 54px; padding: 0 8px; }
+.pr-liq .stamp.legend { color: #8A6410; border-color: #C59A2A; box-shadow: 0 0 0 5px #F3D774; }
+.pr-pinwrap .pr-pin { gap: 5px; padding: 4px 7px; } .pr-pinwrap .pr-pin .who { font-size: 0; gap: 0; } .pr-pinwrap .pr-pin .roe b { font-size: 16px; }

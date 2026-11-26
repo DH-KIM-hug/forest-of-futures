@@ -65,6 +65,7 @@ export { ownedCoins };
 
 // ── 선물 계좌 개설과 배율 상한 (GDD_v2 2.4) ─────────────────────────────
 import { levCapNow } from './futures';
+import { effectiveLevCapsRun } from './skilltree';
 import { traitVal } from './legacy';
 import { logEvent, notify } from './util';
 import { refuse } from './loans';
@@ -150,7 +151,7 @@ export function signWaiver(g: GameState): Res {
   const run = g.run;
   const f = run.futures;
   if (!f.open || f.waiver) return refuse('none', '받을 확인서가 없습니다.');
-  if (f.closedTrades < (balance.progression.futures.levCaps[2].closedTrades as number)) return refuse('trades', '끝난 거래가 모자랍니다.');
+  if (f.closedTrades < (effectiveLevCapsRun(run)[2].closedTrades as number)) return refuse('trades', '끝난 거래가 모자랍니다.');
   f.waiver = true;
   logEvent(run, 'waiver', '고위험 거래 확인서에 도장');
   notify(run, '확인서가 접수되었습니다.', 'info', 'wire:waiver');

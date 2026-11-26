@@ -5,7 +5,8 @@ import { treeLevel } from './legacy';
 import { equipGross, equipNetNow, removeEquip, removeWheel } from './equipment';
 import { ownedCoins, price, walletValue } from './selectors';
 import { addToSet, bump } from './stats';
-import { logEvent, notify } from './util';
+import { josa, logEvent, notify } from './util';
+import { exemptWheel } from './skilltree';
 import type { CoinId, DebtId, EquipmentUnit, GameState, LenderId, RunState } from './types';
 
 type Tagger = LenderId | 'tax';
@@ -98,7 +99,7 @@ export function ensureTag(g: GameState, id: Tagger): void {
   if (where) {
     addToSet(run, 'tagBy', id);
     logEvent(run, `tag:${id}`, `${lenderById[id].name}: ${where}에 가압류 딱지`);
-    notify(run, `${lenderById[id].name}이(가) ${where}에 가압류 딱지를 붙였습니다. 수입의 ${Math.round(garnishRate(g) * 100)}%가 원금에서 깎입니다.`, 'warn');
+    notify(run, `${josa(lenderById[id].name, '이', '가')} ${where}에 가압류 딱지를 붙였습니다. 수입의 ${Math.round(garnishRate(g) * 100)}%가 원금에서 깎입니다.`, 'warn');
   }
 }
 
@@ -153,11 +154,12 @@ export function seizeFor(g: GameState, lender: DebtId): SeizeResult | null {
     addToSet(run, 'seized', pick.inheritedSign ? 'inheritedSign' : pick.tier);
     if (pick.inheritedSign) addToSet(run, 'seized', pick.tier);
     if (pick.boughtWithLoan && run.tick - pick.boughtTick <= balance.trading.fundedByWindowSec) run.stats.seizedBoughtWithLoan = true;
-    logEvent(run, `seize:${pick.tier}`, `${tierById[pick.tier].name}이(가) 압류됐다`, off);
+    logEvent(run, `seize:${pick.tier}`, `${josa(tierById[pick.tier].name, '이', '가')} 압류됐다`, off);
     return finish('equipment', pick.uid, off);
   }
   // 3. 설비가 다 떠난 종목 쳇바퀴(싼 것부터)
-  const wheels = ownedCoins(run).filter((c) => c !== prot.wheel).sort((a, b) => wheelByCoin[a].cost - wheelByCoin[b].cost);
+  // 장부 정리(C4): 엄마의 쳇바퀴는 실려 가지 않는다
+  const wheels = ownedCoins(run).filter((c) => c !== prot.wheel && c !== exemptWheel(run)).sort((a, b) => wheelByCoin[a].cost - wheelByCoin[b].cost);
   if (wheels.length) {
     const coin = wheels[0];
     const off = cut(wheelByCoin[coin].cost * balance.assets.auctionRate);
@@ -165,14 +167,14 @@ export function seizeFor(g: GameState, lender: DebtId): SeizeResult | null {
     d.principal -= off;
     bump(run, 'assetsSeized', 1);
     addToSet(run, 'seized', wheelByCoin[coin].id);
-    logEvent(run, `seize:wheel:${coin}`, `${wheelByCoin[coin].name}이(가) 압류됐다`, off);
+    logEvent(run, `seize:wheel:${coin}`, `${josa(wheelByCoin[coin].name, '이', '가')} 압류됐다`, off);
     return finish('wheel', coin, off);
   }
   return null;
 
   function finish(what: SeizeResult['what'], id: string, value: number): SeizeResult {
     run.stats.lastSeizeSettleNo = run.settleNo;
-    notify(run, `${lenderById[lender].name}이(가) 압류했습니다. 평가에 업그레이드 값은 포함되지 않습니다.`, 'warn');
+    notify(run, `${josa(lenderById[lender].name, '이', '가')} 압류했습니다. 평가에 업그레이드 값은 포함되지 않습니다.`, 'warn');
     return { what, id, value };
   }
 }

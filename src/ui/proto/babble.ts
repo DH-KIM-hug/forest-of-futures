@@ -14,11 +14,17 @@ export const VOICES = {
   weasel: { rate: 1.9, blip: 0.07, gap: 0.012, pause: 0.18, detune: 0.10 },
   /** 주인공 속마음: 아주 짧고 작게, 두 음절에 하나만 */
   hero: { rate: 1.6, blip: 0.05, gap: 0.02, pause: 0.14, detune: 0.05, gain: 0.4, every: 2 },
+  /** 창구 너구리(숲속 캐피탈, U-37): 밝고 빠른 영업 말투. 족제비보다 낮고 또박또박 */
+  raccoon: { rate: 1.7, blip: 0.075, gap: 0.014, pause: 0.16, detune: 0.07 },
+  /** 독사 대부(뒷골목, U-37): 가장 낮고 느리다. 음절 사이가 길고 흔들림이 거의 없다 */
+  viper: { rate: 0.85, blip: 0.13, gap: 0.045, pause: 0.36, detune: 0.02 },
+  /** 부엉이 지점장(숲속중앙조합, U-37): 느리고 고른 공문 말투 */
+  owl: { rate: 1.0, blip: 0.11, gap: 0.03, pause: 0.3, detune: 0.03 },
   /** 그 밖에 말하는 사람(새 인물이 생기면 여기로 떨어진다) */
   other: { rate: 1.3, blip: 0.09, gap: 0.02, pause: 0.22, detune: 0.05 },
 } satisfies Record<string, Voice>;
 /** 소리 없이 글이 한 번에 뜨는 것: 지문, 문자, 알림 카드 */
-const SILENT = new Set(['note', 'sms', 'system', 'hint']);
+const SILENT = new Set(['note', 'sms', 'system', 'hint', 'news']);
 export function voiceOf(who: string): Voice | null {
   if (SILENT.has(who)) return null;
   return (VOICES as Record<string, Voice>)[who] ?? VOICES.other;

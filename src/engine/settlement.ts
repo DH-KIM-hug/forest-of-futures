@@ -255,6 +255,8 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
 
   // 11. 통계·최고 순자산·알림
   run.settleNo += 1;
+  // 새 날 아침: 하루 손실 한도(C3b)의 셈을 비운다
+  if (run.settleNo % balance.settlement.dayCycleSettlements === 0) st.dayLoss = 0;
   const nw = netWorth(run);
   if (nw > run.peakNetWorth) run.peakNetWorth = nw;
   if (run.peakNetWorth > g.family.peakNetWorth && nw >= run.peakNetWorth) st.familyRecordTick = run.tick;

@@ -5,6 +5,7 @@ import { traitVal } from './legacy';
 import { onTaxPaid, returnPawn } from './generation';
 import { lenderLimit, sharkDebt, totalDebt, interestDue, nextBorrowRate } from './selectors';
 import { addToSet, bump, stat } from './stats';
+import { friendsOn } from './friends';
 import { isNight, logEvent, notify } from './util';
 import type { DebtId, GameState, LenderId, Res } from './types';
 
@@ -47,7 +48,7 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
     logEvent(run, `refused:${id}`, `${l.name}: 한도 초과`);
     return refuse('limit', l.lines.refuseLimit ?? l.lines.refuseCollateral);
   }
-  if (id === 'shark2' && stat(run, 'borrow.shark2') >= (l.contactsFromNth ?? 2) - 1) {
+  if (id === 'shark2' && friendsOn() && stat(run, 'borrow.shark2') >= (l.contactsFromNth ?? 2) - 1) {
     if (!consent) return refuse('consent', '지인 연락처 제출에 동의해야 합니다.');
     run.stats.contacts = true;
   }
@@ -112,6 +113,7 @@ export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {
   if (amt <= 0) return refuse('cash', '현금 부족');
   run.cash -= amt;
   d.principal -= amt;
+  bump(run, `repaid.${id}`, amt); // 이번 생에 갚은 원금(장부의 금박 도장 · 환생 때 황금 도토코인의 기준)
   // 비싼 몫부터 갚는다: 따로 정한 금리 몫(높은 금리 먼저) → 보통 몫 → 물려받은 몫
   if (d.tranches?.length) {
     let left = amt;

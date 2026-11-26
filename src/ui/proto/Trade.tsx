@@ -8,13 +8,16 @@ import { isNearLiq } from './model';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
-import { TUT } from './model';
+import { TUT, hamsterMath } from './model';
 import { useProto } from './protoStore';
 import { useUI } from '../uiStore';
 import { comma } from '../../engine/util';
 import { clone } from '../../engine/game';
 import { marketById } from '../../engine/data';
-import { closeBack, marginFromPct, shortInsurance } from '../../engine/futures';
+import { closeBack, entryFee, marginFromPct, shortInsurance } from '../../engine/futures';
+import { wheelWorth } from './react';
+import { has, feeRate, nodeEffect, activeLevels } from '../../engine/skilltree';
+import { skillById } from '../../engine/data';
 import { price } from '../../engine/selectors';
 import type { Position } from '../../engine/types';
 import { historyOf } from '../priceHistory';
@@ -87,7 +90,7 @@ const money = (x: number) => `${sign(x)}${comma(Math.abs(Math.round(x)))}`;
 // ── 차트 ────────────────────────────────────────────────────────────────
 interface Tag { key: string; cls: string; label: string; price: number; edge?: 'up' | 'down' }
 /** 깨끗한 사각형 안에는 시세 선과 가로선뿐이다. 가격 꼬리표는 오른쪽 축 띠(차트 밖)에 둔다. */
-export function PChart({ market, hist, pos }: { market: string; hist: number[]; pos: PositionView | null }) {
+export function PChart({ market, hist, pos, win = 120 }: { market: string; hist: number[]; pos: PositionView | null; win?: number }) {
   const box = useRef<HTMLDivElement>(null);
   const [h, setH] = useState(0);
   useLayoutEffect(() => {
@@ -98,7 +101,7 @@ export function PChart({ market, hist, pos }: { market: string; hist: number[]; 
     setH(el.clientHeight);
     return () => ro.disconnect();
   }, []);
-  const data = hist.slice(-120);
+  const data = hist.slice(-win);
   const n = data.length;
   const cm = chartModel(data);
   let lo = cm.dataLo, hi = cm.dataHi;
@@ -111,7 +114,7 @@ export function PChart({ market, hist, pos }: { market: string; hist: number[]; 
   const pad = (hi - lo) * 0.1;
   lo -= pad; hi += pad;
   const Y = (p: number) => ((hi - p) / (hi - lo)) * 100;
-  const slots = Math.max(n, 40);
+  const slots = Math.max(n, Math.min(40, win));
   const X = (i: number) => (i / (slots - 1)) * 95;
   const last = n ? data[n - 1] : 0;
   const line = data.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(2)} ${Y(p).toFixed(2)}`).join('');
@@ -140,7 +143,7 @@ export function PChart({ market, hist, pos }: { market: string; hist: number[]; 
 
   return (
     <div className="pt-chart" data-chart={market} data-hl="chart">
-      <div className="plot" ref={box} role="img" aria-label={`${marketById[market].name} 최근 2분 시세`}>
+      <div className="plot" ref={box} role="img" aria-label={`${marketById[market].name} 최근 ${win >= 120 ? '2분' : '30초'} 시세`}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[25, 50, 75].map((y) => <line key={y} className="grid" x1="0" x2="100" y1={y} y2={y} />)}
           {dz && <rect className="dz" x="0" width="100" y={dz.y} height={dz.hgt} />}
@@ -170,7 +173,8 @@ export function PChart({ market, hist, pos }: { market: string; hist: number[]; 
 // ── 화면 ────────────────────────────────────────────────────────────────
 /** 시트는 손절·익절 하나뿐이다. 진입은 시트 없이 한 번에 한다. */
 type Sheet = null | 'stops';
-interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number }
+/** pnl = 이 거래로 늘거나 준 돈(들어갈 때·나올 때 수수료 포함). move = 시세로 번 돈, fees = 낸 수수료, worth = 쳇바퀴로 치면 얼마(react.ts) */
+interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number; move: number; fees: number; worth: string | null }
 
 const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
 /** 화면 확인용(?pshot=…): up=수익 중, win/loss=방금 정리, stops=손절·익절 시트, arm=정리 확인. 시세 기록도 2분어치 채운다. */
@@ -216,6 +220,12 @@ export function ProtoTrade() {
   const [arm, setArm] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [entered, setEntered] = useState(0);
+  // 스킬트리(거래의 나무)가 이번 생에 켜 준 도구들. 시세·청산 공식은 건드리지 않는다.
+  const sk = { oneTap: has(g, 'A2'), zoom: has(g, 'A3a'), flip: has(g, 'A3b'), water: has(g, 'B3b'), legend: has(g, 'B4'), split: has(g, 'C3a'), dayLimit: has(g, 'C3b') };
+  const [zoom, setZoom] = useState(false);
+  const [split, setSplit] = useState(false);
+  const [perks, setPerks] = useState(false);
+  const splitT = useRef<number[]>([]);
   const noteT = useRef<number | undefined>(undefined);
   const armT = useRef<number | undefined>(undefined);
   const resT = useRef<number | undefined>(undefined);
@@ -228,7 +238,7 @@ export function ProtoTrade() {
     window.clearTimeout(noteT.current);
     noteT.current = window.setTimeout(() => setNote(null), 3200);
   };
-  useEffect(() => () => { window.clearTimeout(noteT.current); window.clearTimeout(armT.current); window.clearTimeout(resT.current); }, []);
+  useEffect(() => () => { window.clearTimeout(noteT.current); window.clearTimeout(armT.current); window.clearTimeout(resT.current); splitT.current.forEach((t) => window.clearTimeout(t)); }, []);
 
   const swing = (big = false) => {
     if (reduced()) return;
@@ -288,12 +298,16 @@ export function ProtoTrade() {
     if (!raw && was && was.market === market) {
       const lc = run.lastClose;
       const liq = !!lc && lc.liq && lc.market === market && lc.tick >= was.tick;
-      const pnl = liq ? -was.p.margin0 : closeBack(was.p, px) - was.p.margin0; // 넣은 돈 + pnl = 돌려받은 돈
+      // 이 거래로 늘거나 준 돈: 돌려받은 돈 − 넣은 돈 − 들어갈 때 낸 수수료. 왜 그 숫자인지(시세 · 수수료)를 같이 보여 준다(U-38)
+      const exitFee = liq ? 0 : entryFee(was.p.notional);
+      const fees = Math.round(was.p.feesPaid + exitFee);
+      const pnl = liq ? -was.p.margin0 - was.p.feesPaid : closeBack(was.p, px) - was.p.margin0 - was.p.feesPaid;
+      const move = pnl + fees;
       const kind: Result['kind'] = liq ? 'liq' : manual.current ? 'close' : pnl >= 0 ? 'tp' : 'sl';
       manual.current = false;
       setArm(false);
       setSheet(null);
-      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev }));
+      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net) }));
       window.clearTimeout(resT.current);
       resT.current = window.setTimeout(() => setResult(null), 5200);
       if (!liq) play(pnl > 0 ? 'close_profit' : 'close_loss'); // 청산 소리는 watch.ts 가 낸다
@@ -308,8 +322,20 @@ export function ProtoTrade() {
     // 튜토리얼 거래(U-31): 첫 한 번은 정해 둔 돈·배율로, 짜 둔 시세 위에서
     if (useProto.getState().tutorial === 'await') { if (tutorialOpen(dir)) { setSheet(null); setResult(null); setEntered((k) => k + 1); swing(true); } return; }
     if (useProto.getState().tutorial === 'run') return;
-    const r = act({ type: 'open', market, dir, lev, marginPct: pct, sl: tr.sl, tp: tr.tp });
+    // 쪼개 넣기(C3a): 고른 증거금을 셋으로 나눠, 지금 한 번 + 2초 간격으로 두 번 더 넣는다. 평균 단가는 엔진이 낸다.
+    const part = sk.split && split ? Math.floor(marginFromPct(run.cash, lev, pct, feeRate(g, lev)) / 3) : 0;
+    const r = part > 0 ? act({ type: 'open', market, dir, lev, margin: part, sl: tr.sl, tp: tr.tp }) : act({ type: 'open', market, dir, lev, marginPct: pct, sl: tr.sl, tp: tr.tp });
     if (!r.ok) { say(r.msg ?? '들어갈 수 없습니다'); play('insufficient'); return; }
+    if (part > 0) {
+      splitT.current.forEach((t) => window.clearTimeout(t));
+      splitT.current = [1, 2].map((k) => window.setTimeout(() => {
+        const cur = useGame.getState().g.run.positions[market];
+        if (!cur || cur.dir !== dir) return; // 그 사이 정리·청산됐으면 더 넣지 않는다
+        const a = useGame.getState().act({ type: 'add', market, margin: part });
+        if (a.ok) { play(dir === 1 ? 'order_long' : 'order_short'); say(`쪼개 넣기 ${k + 1}/3`, false); }
+      }, 2000 * k));
+      say('쪼개 넣기 1/3', false);
+    }
     play(dir === 1 ? 'order_long' : 'order_short');
     setSheet(null);
     setResult(null);
@@ -327,7 +353,7 @@ export function ProtoTrade() {
   const doClose = () => {
     if (!pos) return;
     // 손실을 확정하는 정리만 한 번 더 묻는다(되돌릴 수 없는 손실에만 확인).
-    if (netNow < 0 && !arm) {
+    if (netNow < 0 && !arm && !sk.oneTap) {
       setArm(true);
       window.clearTimeout(armT.current);
       armT.current = window.setTimeout(() => setArm(false), 2000);
@@ -338,6 +364,28 @@ export function ProtoTrade() {
     if (!r.ok) { manual.current = false; say(r.msg ?? '정리할 수 없습니다'); }
     else if (r.code === 'reserved') { manual.current = false; say('시세 지연 중이라 예약되었습니다. 열리면 정리됩니다.', false); }
   };
+  /** 반대 단추(A3b): 정리하고 같은 배율·같은 증거금 비율로 반대쪽에 들어간다(수수료는 두 번 낸다) */
+  const doFlip = () => {
+    if (!pos) return;
+    const dir = (pos.dir === 1 ? -1 : 1) as 1 | -1, lv = pos.lev;
+    manual.current = true;
+    const c = act({ type: 'close', market });
+    if (!c.ok || c.code === 'reserved') { manual.current = false; say(c.msg ?? '뒤집을 수 없습니다'); return; }
+    const r = act({ type: 'open', market, dir, lev: lv, marginPct: pct, sl: tr.sl, tp: tr.tp });
+    if (!r.ok) { say(r.msg ?? '반대쪽에 들어갈 수 없습니다'); return; }
+    play(dir === 1 ? 'order_long' : 'order_short');
+    setEntered((k) => k + 1);
+    swing(true);
+  };
+  /** 물타기(B3b): 포지션은 그대로 두고 증거금만 더 넣는다. 청산가가 멀어지고, 걸린 돈이 커진다. */
+  const waterAmt = Math.floor((run.cash * pct) / 100);
+  const doWater = () => {
+    const r = act({ type: 'addMargin', market, amount: waterAmt });
+    if (!r.ok) { say(r.msg ?? '더 넣을 수 없습니다'); play('insufficient'); return; }
+    play('buy'); say(`증거금 +${comma(waterAmt)}. 청산가가 멀어졌다. 걸린 돈도 커졌다.`, false);
+  };
+  const dayLim = run.dayLossLimit ?? null;
+  const DAY_OPTS: (number | null)[] = [null, 10000, 30000, 50000, 100000];
   const stepOf = (opts: (number | null)[], cur: number | null, d: 1 | -1) => opts[(opts.indexOf(cur) + d + opts.length) % opts.length];
   const curSl = pos ? pos.slRoe : tr.sl;
   const curTp = pos ? pos.tpRoe : tr.tp;
@@ -359,7 +407,9 @@ export function ProtoTrade() {
           <span className="logo"><Acorn size={17} /></span>
           <b>{EXCHANGE_NAME}</b>
           <em>선물</em>
+          {Object.keys(activeLevels(g)).length > 0 && <button className="pt-perk" data-perks onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 켜진 나무 노드">나무 {Object.keys(activeLevels(g)).length}</button>}
         </header>
+        {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' ? '(+' : '(−') : ''}</span>)}</div>}
         {body}
       </div>
     </div>
@@ -395,9 +445,10 @@ export function ProtoTrade() {
   );
   const chart = (
     <>
-      <PChart market={market} hist={hist} pos={pos} />
+      <PChart market={market} hist={hist} pos={pos} win={sk.zoom && zoom ? 30 : 120} />
       <div className="pt-meta">
         <span>{cm.label}</span>
+        {sk.zoom && <button className="pt-zoom" data-zoom onClick={() => setZoom((z) => !z)}>{zoom ? '초봉 30초' : '2분'} ⇄</button>}
         {ins && (ins.walletValue > 0 || ins.shortNotional > 0) && <span>지갑 {comma(Math.floor(ins.walletValue))}어치 중 숏으로 지킨 {ins.ratioPct}%</span>}
       </div>
     </>
@@ -440,7 +491,7 @@ export function ProtoTrade() {
     <div className="pt-mg" data-hl="mg" role="radiogroup" aria-label="증거금">
       {MARGIN_PCTS.map((p) => (
         <button key={p} role="radio" aria-checked={pct === p} className={'pt-chip' + (pct === p ? ' on' : '')} onClick={() => setTrade({ pct: p })}>
-          <b>{p === 100 ? '전부' : `${p}%`}</b><small>{comma(marginFromPct(run.cash, lev, p))}</small>
+          <b>{p === 100 ? '전부' : `${p}%`}</b><small>{comma(marginFromPct(run.cash, lev, p, feeRate(g, lev)))}</small>
         </button>
       ))}
     </div>
@@ -463,6 +514,8 @@ export function ProtoTrade() {
         </div>
       )}
       {marginChips}
+      {pos && sk.water && <button className="pt-water" data-water disabled={waterAmt < 1} onClick={doWater}><b>물타기</b><span>증거금만 +{comma(waterAmt)} · 청산가가 멀어진다</span></button>}
+      {!pos && sk.split && <button className={'pt-water split' + (split ? ' on' : '')} data-split aria-pressed={split} onClick={() => setSplit((v) => !v)}><b>쪼개 넣기</b><span>{split ? '켜짐 · 세 번에 나눠 들어간다(2초 간격)' : '꺼짐'}</span></button>}
       <div className={'pt-risk' + (prev.reason ? ' bad' : '') + (pos ? ' add' : '')} data-hl="risk" role="status">
         {prev.reason ? <span>{prev.reason}</span> : (
           <>
@@ -483,6 +536,12 @@ export function ProtoTrade() {
           <button className="pt-x" aria-label="손절·익절 닫기" onClick={() => setSheet(null)}><Cross /></button>
         </div>
         {stops}
+        {sk.dayLimit && (
+          <div className="pt-stops day" data-daylimit>
+            {stepper('하루 한도', 'sl', dayLim === null ? '없음' : `−${comma(dayLim)}`, dayLim !== null, () => act({ type: 'setDayLimit', value: stepOf(DAY_OPTS, dayLim, -1) }), () => act({ type: 'setDayLimit', value: stepOf(DAY_OPTS, dayLim, 1) }))}
+            <p>오늘 잃은 돈 {comma(Math.round((run.stats.dayLoss as number | undefined) ?? 0))}. 한도를 넘으면 다음 아침까지 새 진입이 잠긴다.</p>
+          </div>
+        )}
         {noteLine}
       </section>
     );
@@ -490,13 +549,14 @@ export function ProtoTrade() {
     lower = (
       <>
         {result ? (
-          <div key={'r' + result.k} ref={plRef} className={'pt-pl res ' + (result.pnl >= 0 ? 'win' : 'lose') + ' k-' + result.kind} role="status" onClick={() => setResult(null)}>
+          <div key={'r' + result.k} ref={plRef} className={'pt-pl res ' + (result.pnl >= 0 ? 'win' : 'lose') + ' k-' + result.kind + (sk.legend ? ' legend' : '')} role="status" onClick={() => setResult(null)}>
             <img className="me" src={heroFront} alt="" />
             <div className="big">
               <div className="roe">{money(result.pnl)}</div>
-              <div className="sub">넣은 돈 {comma(Math.round(result.margin))} <b className={result.pnl >= 0 ? 'up' : 'down'}>{money(result.pnl)}</b><span className="xtra">ROE {roeTxt(result.roe)} · {result.dirText} {result.lev}배</span></div>
+              <div className="sub" data-why>시세 <b className={result.move >= 0 ? 'up' : 'down'}>{money(result.move)}</b> · 수수료 <b className="down">−{comma(result.fees)}</b><span className="xtra">넣은 돈 {comma(Math.round(result.margin))} · {result.dirText} {result.lev}배</span></div>
+              {result.worth && <div className="worth" data-worth>{result.pnl >= 0 ? '' : '잃은 돈 = '}{result.worth}</div>}
             </div>
-            <div className="stamp">{result.kind === 'liq' ? '강제 청산' : result.kind === 'tp' ? '익절' : result.kind === 'sl' ? '손절' : '정리 완료'}</div>
+            <div className="stamp">{result.kind === 'liq' ? (sk.legend ? '전설의 청산' : '강제 청산') : result.kind === 'tp' ? '익절' : result.kind === 'sl' ? '손절' : '정리 완료'}</div>
           </div>
         ) : pos ? (
           <div key={'p' + entered} ref={plRef} className={'pt-pl ' + (plus ? 'plus' : 'minus') + (call ? ' call' : '') + (entered ? ' in' : '')} aria-label="내 포지션">
@@ -529,7 +589,7 @@ export function ProtoTrade() {
         {order}
         {/* 확인서를 찍을 수 있을 때는 손절·익절 줄 자리에 확인서가 온다(화면 높이를 늘리지 않는다) */}
         {!pos && mode.waiver ? (
-        <button className="pt-waiver" data-waiver onClick={() => { const r = act({ type: 'signWaiver' }); if (r.ok) { play('overdue_stamp'); say('고위험 거래 확인서에 도장을 찍었다. 200배까지 열렸다.', false); } else say(r.msg ?? '아직 안 됩니다'); }}>
+        <button className="pt-waiver" data-waiver onClick={() => { const r = act({ type: 'signWaiver' }); if (r.ok) play('overdue_stamp'); else say(r.msg ?? '아직 안 됩니다'); }}>
           <span><b>고위험 거래 확인서</b><small>「손실은 전부 본인 책임입니다」 · 도장을 찍으면 200배</small></span><i>도장</i>
         </button>
         ) : (
@@ -547,6 +607,7 @@ export function ProtoTrade() {
               <button className={'pt-btn ' + (pos.dir === 1 ? 'long' : 'short')} disabled={!!prev.reason} onClick={doAdd}>
                 <span><Tri up={pos.dir === 1} size={13} />추가 진입</span><small>+{comma(prev.margin)}</small>
               </button>
+              {sk.flip && <button className="pt-btn flip" data-flip onClick={doFlip}><span>⇅</span><small>뒤집기</small></button>}
               <button className={'pt-btn close' + (arm ? ' arm' : '') + (netNow >= 0 ? ' gain' : '')} data-hl="closeBtn" onClick={doClose}>
                 <span>{arm ? '한 번 더 누르면 정리' : '정리하기'}</span>
                 <small>{rawPos ? comma(Math.round(rawPos.margin0)) : ''} <b className={arm ? '' : netNow >= 0 ? 'up' : 'down'}>{money(netNow)}</b>{arm ? ' 확정' : ''}</small>

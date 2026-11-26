@@ -1,5 +1,5 @@
 // 친구 5명(GDD_v2 3.7). v1 규칙 유지.
-import { friendById, friendDefs, friendRules, traitById } from './data';
+import { balance, friendById, friendDefs, friendRules, traitById } from './data';
 import { hasTrait } from './legacy';
 import { noteRepay, stampAmount, refuse } from './loans';
 import type { Mult } from './loans';
@@ -96,8 +96,12 @@ export function processBreaks(g: GameState): void {
   }
 }
 
+/** 친구 규칙이 켜져 있는가. 1막 시제품은 인맥을 뺐다(U-29) — 연락처 추심·절교가 화면에 없는 사람들에게 일어나지 않게 끈다(balance.act1.friends = false, U-38). */
+export const friendsOn = (): boolean => (balance as { act1?: { friends?: boolean } }).act1?.friends !== false;
+
 /** 정산 8단계. 갚기로 한 날이 지난 빚 -> 신뢰 -20, 연락처 추심 -> 전원 -30. */
 export function settleFriends(g: GameState): void {
+  if (!friendsOn()) return;
   const run = g.run;
   const collecting = run.stats.contacts === true && run.debts.shark2.overdue >= 1;
   for (const f of friendDefs) {

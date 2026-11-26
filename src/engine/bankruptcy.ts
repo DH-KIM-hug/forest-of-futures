@@ -5,6 +5,7 @@ import { ownedCoins, totalDebt, walletValue } from './selectors';
 import { logEvent, notify } from './util';
 import { finalizeEnding } from './endings';
 import { openEstate } from './generation';
+import { grantAward } from './skilltree';
 import type { GameState, PayId } from './types';
 
 export interface BankruptCtx {
@@ -25,7 +26,8 @@ export function determineCause(g: GameState, ctx: BankruptCtx): string {
   // 3. 마지막 연체처가 세무서이거나 남은 빚의 절반 이상이 승계 빚·세금
   const inherited = DEBT_IDS.reduce((a, id) => a + run.debts[id].inherited, 0) + run.debts.tax.principal;
   const total = totalDebt(run);
-  if (ctx.lastLender === 'tax' || (total > 0 && inherited >= total / 2)) return 'LEGACY';
+  // 1막 시제품(balance.act1): 엄마 빚은 늘 '물려받은 빚'이라 이 갈래가 다른 원인을 다 덮는다. 세대 이야기는 2막 것이므로 건너뛴다(U-38).
+  if (!(balance as { act1?: unknown }).act1 && (ctx.lastLender === 'tax' || (total > 0 && inherited >= total / 2))) return 'LEGACY';
   // 4. 최근 정산 3회 안에 압류가 있었고 압류로 준 정산 수입 >= 마지막 미납액
   const gar = (st.garnishBySettle as number[]).reduce((a, b) => a + b, 0);
   if (run.settleNo - st.lastSeizeSettleNo <= 2 && gar >= ctx.shortfall) return 'SEIZE';
@@ -46,6 +48,7 @@ export function declareBankruptcy(g: GameState, ctx: BankruptCtx): void {
   run.bankruptcy.offline = run.report !== null;
   finalizeEnding(g, { cause, lastLender: ctx.lastLender, shortfall: ctx.shortfall });
   g.estate = openEstate('bankrupt', cause);
+  grantAward(g); // 파산해도 그 생에 갚은 만큼의 황금 도토코인은 남는다
   logEvent(run, 'bankrupt', `파산(${cause})`);
   notify(run, '파산', 'warn', 'bankrupt');
 }

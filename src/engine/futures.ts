@@ -5,8 +5,9 @@ import { fundedByAt, refuse } from './loans';
 import { inJump } from './market';
 import { checkLiquidationWipeout } from './bankruptcy';
 import { bump } from './stats';
-import { logEvent, notify } from './util';
+import { logEvent, notify, josa } from './util';
 import { totalDebt } from './selectors';
+import { dayLimitHit, effectiveLevCapsRun, feeRateRun, hasRun, liqRefund } from './skilltree';
 import type { Bar } from './feed/types';
 import type { Dir, GameState, LastPos, Position, Res, RunState } from './types';
 
@@ -15,7 +16,8 @@ const T = balance.trading;
 // ── 순수 공식 ───────────────────────────────────────────────────────────
 export const pnlOf = (p: Position, price: number): number => (p.dir * (price - p.entry)) / p.entry * p.notional;
 export const roePct = (p: Position, price: number): number => (pnlOf(p, price) / p.margin0) * 100;
-export const entryFee = (notional: number): number => ceilS(notional * T.feeRate);
+/** 수수료. rate 를 안 주면 기본 수수료율(스킬트리 없는 값). */
+export const entryFee = (notional: number, rate: number = T.feeRate): number => ceilS(notional * rate);
 /** 청산가: 롱 진입가 × (1 − 증거금/N + 0.1%), 숏 진입가 × (1 + 증거금/N − 0.1%). 증거금은 펀딩비 차감 뒤 값. */
 export function liqPrice(p: Position): number {
   return p.dir === 1 ? p.entry * (1 - p.margin / p.notional + T.maintenanceRate) : p.entry * (1 + p.margin / p.notional - T.maintenanceRate);
@@ -23,17 +25,17 @@ export function liqPrice(p: Position): number {
 /** 손절·익절가 = 진입가 × (1 + 방향 × ROE / 배율). ROE 는 %. */
 export const stopPrice = (p: Position, roe: number): number => p.entry * (1 + (p.dir * roe) / 100 / p.lev);
 /** 100% 선택 시 증거금 = floor(현금 / (1 + 배율 × 0.04%)). */
-export function marginFromPct(cash: number, lev: number, pct: number): number {
-  if (pct >= 100) return floorS(cash / (1 + lev * T.feeRate));
+export function marginFromPct(cash: number, lev: number, pct: number, rate: number = T.feeRate): number {
+  if (pct >= 100) return floorS(cash / (1 + lev * rate));
   return floorS((cash * pct) / 100);
 }
-export const closeBack = (p: Position, price: number): number => floorS(Math.max(0, p.margin + pnlOf(p, price) - entryFee(p.notional)));
+export const closeBack = (p: Position, price: number): number => floorS(Math.max(0, p.margin + pnlOf(p, price) - entryFee(p.notional, p.feeRate ?? T.feeRate)));
 
 /** 지금 쓸 수 있는 배율 상한: 계좌 개설 직후 10 -> 끝난 거래 3건 50 -> 10건 + 확인서 200. */
 export function levCapNow(run: RunState): number {
   const f = run.futures;
   let cap = f.levCap;
-  for (const c of balance.progression.futures.levCaps as { cap: number; closedTrades?: number; waiver?: boolean }[]) {
+  for (const c of effectiveLevCapsRun(run)) {
     if (c.closedTrades !== undefined && f.closedTrades < c.closedTrades) continue;
     if (c.waiver && !f.waiver) continue;
     cap = Math.max(cap, c.cap);
@@ -41,7 +43,7 @@ export function levCapNow(run: RunState): number {
   return cap;
 }
 export const waiverAvailable = (run: RunState): boolean =>
-  run.futures.open && !run.futures.waiver && run.futures.closedTrades >= (balance.progression.futures.levCaps[2].closedTrades as number);
+  run.futures.open && !run.futures.waiver && run.futures.closedTrades >= (effectiveLevCapsRun(run)[2].closedTrades as number);
 
 export const positionList = (run: RunState): Position[] => Object.values(run.positions);
 /** 숏 보험: 가진 종목의 숏 명목 / 그 종목 지갑 평가액(%, 내림, 100 상한). */
@@ -104,6 +106,7 @@ export function openPosition(g: GameState, o: OpenParams): Res {
   const bad = blockReason(g, o.market);
   if (bad) return bad;
   const ex = run.positions[o.market];
+  if (dayLimitHit(run)) return refuse('daylimit', DAY_LIMIT_MSG);
   if (ex) {
     if (ex.dir !== o.dir) return refuse('dir', '같은 종목에서는 한 방향만 잡을 수 있습니다.');
     if (ex.lev !== o.lev) return refuse('lev', '추가 진입은 같은 배율만 됩니다.');
@@ -112,11 +115,12 @@ export function openPosition(g: GameState, o: OpenParams): Res {
   if (Object.keys(run.positions).length >= 5) return refuse('count', '포지션은 최대 5개입니다.');
   if (!T.leverageOptions.includes(o.lev)) return refuse('lev', '없는 배율입니다.');
   if (o.lev > levCapNow(run)) return refuse('cap', `배율 상한 ${levCapNow(run)}배`);
-  const margin = o.margin ?? marginFromPct(run.cash, o.lev, o.marginPct ?? T.defaultMarginPct);
+  const rate = feeRateRun(run, o.lev);
+  const margin = o.margin ?? marginFromPct(run.cash, o.lev, o.marginPct ?? T.defaultMarginPct, rate);
   if (margin < T.minMargin) return refuse('min', '증거금이 모자랍니다.');
   const notional = margin * o.lev;
   if (notional > T.maxNotional) return refuse('max', '포지션 한도 2억');
-  const fee = entryFee(notional);
+  const fee = entryFee(notional, rate);
   if (margin + fee > run.cash) return refuse('cash', '현금 부족');
   const price = run.prices[o.market];
   const ext = recent5Extreme(run, o.market, price);
@@ -130,6 +134,7 @@ export function openPosition(g: GameState, o: OpenParams): Res {
     entryAtHigh: ext.high && o.dir === 1, entryAtLow: ext.low && o.dir === -1, fadedWire: false, newsAfterEntry: null,
     closeReserved: false, reservedStops: null, revenge: null,
   };
+  if (rate !== T.feeRate) p.feeRate = rate;
   tagsFor(g, p);
   if (lastC && lastC.market === o.market) {
     if (lastC.liq) p.revenge = { dir: lastC.dir === o.dir ? 'same' : 'opposite', within: run.settleNo - lastC.settleNo };
@@ -150,11 +155,13 @@ export function addToPosition(g: GameState, o: { market: string; margin?: number
   if (bad) return bad;
   const p = run.positions[o.market];
   if (!p) return refuse('none', '열린 포지션이 없습니다.');
-  const m2 = o.margin ?? marginFromPct(run.cash, p.lev, o.marginPct ?? T.defaultMarginPct);
+  if (dayLimitHit(run)) return refuse('daylimit', DAY_LIMIT_MSG);
+  const rate = p.feeRate ?? T.feeRate;
+  const m2 = o.margin ?? marginFromPct(run.cash, p.lev, o.marginPct ?? T.defaultMarginPct, rate);
   if (m2 < T.minMargin) return refuse('min', '증거금이 모자랍니다.');
   const n2 = m2 * p.lev;
   if (p.notional + n2 > T.maxNotional) return refuse('max', '포지션 한도 2억');
-  const fee = entryFee(n2);
+  const fee = entryFee(n2, rate);
   if (m2 + fee > run.cash) return refuse('cash', '현금 부족');
   const price = run.prices[o.market];
   run.cash -= m2 + fee;
@@ -182,16 +189,46 @@ export function setStops(g: GameState, market: string, sl: number | null, tp: nu
   return { ok: true };
 }
 
+const DAY_LIMIT_MSG = '하루 한도에 닿았습니다. 다음 아침에 풀립니다.';
+
+/** 증거금만 더 넣는다(물타기 B3b, 또는 마진콜 전화 B2 를 받은 포지션). 크기(명목)는 그대로, 청산가가 멀어지고 걸린 돈이 커진다. 수수료 없음. */
+export function addMargin(g: GameState, market: string, amount: number): Res {
+  const run = g.run;
+  if (run.over) return { ok: false };
+  const p = run.positions[market];
+  if (!p) return refuse('none', '열린 포지션이 없습니다.');
+  if (!(hasRun(run, 'B3b') || (hasRun(run, 'B2') && run.marginCall?.market === market))) return refuse('tree', '증거금을 더 넣을 수 없습니다.');
+  const amt = floorS(amount);
+  if (!(amt >= 1)) return refuse('min', '넣을 돈이 없습니다.');
+  if (amt > run.cash) return refuse('cash', '현금 부족');
+  run.cash -= amt;
+  p.margin += amt;
+  p.margin0 += amt;
+  bump(run, 'marginAdded', amt);
+  logEvent(run, 'addMargin', `${marketById[market].name} 증거금 추가`, amt);
+  if (run.marginCall?.market === market) run.marginCall = null;
+  return { ok: true, amount: amt };
+}
+/** 마진콜 전화를 끊는다(넣지 않는다). */
+export function marginCallDone(g: GameState): Res {
+  g.run.marginCall = null;
+  return { ok: true };
+}
+
 // ── 정리·청산 ───────────────────────────────────────────────────────────
 type EndKind = 'liq' | 'sl' | 'tp' | 'close';
 
 function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: { viaFunding?: boolean } = {}): void {
   const run = g.run;
-  const back = kind === 'liq' ? 0 : closeBack(p, price);
+  // 강제 청산이면 돌아오는 돈이 없다. 비상금 주머니(C2)가 켜져 있으면 넣은 증거금의 일부만 돌아온다.
+  const refund = kind === 'liq' ? liqRefund(run, p.margin0) : 0;
+  const back = kind === 'liq' ? refund : closeBack(p, price);
   run.cash += back;
   const pnl = back - p.margin0 - p.feesPaid + (kind === 'liq' ? 0 : 0);
   const loss = Math.max(0, -pnl);
+  if (loss > 0) bump(run, 'dayLoss', loss);
   delete run.positions[p.market];
+  if (run.marginCall?.market === p.market) run.marginCall = null;
   run.futures.closedTrades += 1;
   bump(run, 'trades', 1);
   bump(run, p.lev === 200 ? 'lev200Trades' : 'nonLev200Trades', 1);
@@ -232,8 +269,9 @@ function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: {
   else if (kind === 'tp') logEvent(run, 'tp', `${name} ${side} 익절`, pnl);
   else if (kind === 'sl') logEvent(run, 'sl', `${name} ${side} 손절`, pnl);
   else logEvent(run, 'close', `${name} ${side} 정리`, pnl);
+  if (refund > 0) logEvent(run, 'liq:refund', `비상금 주머니: 증거금 일부가 돌아왔다`, refund);
   if (kind === 'liq') {
-    notify(run, `${name} ${side} 강제 청산. 증거금 ${p.margin0.toLocaleString('ko-KR')}이(가) 사라졌습니다.`, 'warn');
+    notify(run, `${name} ${side} 강제 청산. 증거금 ${josa(p.margin0.toLocaleString('ko-KR'), '이', '가')} 사라졌습니다.`, 'warn');
     checkLiquidationWipeout(g);
   }
 }
@@ -286,6 +324,12 @@ export function processPrice(g: GameState, market: string, price: number): void 
   if (roe <= T.marginCallRoe && !p.marginCalled) {
     p.marginCalled = true;
     bump(run, 'marginCalls', 1);
+  }
+  // 마진콜 전화(B2): 포지션마다 한 번. 받을지 말지는 화면이 묻는다(addMargin · marginCallDone).
+  // 전화가 오는 때 = 청산까지 가는 길의 60%를 지났을 때(ROE 기준). 고정 −70% 로는 200배에서 청산(약 −80%)까지 틈이 0.05% 뿐이라 전화보다 청산이 먼저 온다(U-38).
+  if (!p.called && hasRun(run, 'B2') && roe <= roePct(p, liqPrice(p)) * 0.6) {
+    p.called = true;
+    run.marginCall = { market, tick: run.tick };
   }
   if (roe <= -80) p.roeLowSec += 1;
   const hit = touched(p, price);

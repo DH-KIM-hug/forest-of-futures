@@ -27,6 +27,7 @@ export function newFamily(): FamilyState {
     pending: { peakNetWorth: 0, minedValue: 0, endingPoints: 0, simpleStreak: 0 },
     ledger: {}, peakNetWorth: 0, barehandPeak: 0, tipBook: {}, heirlooms: {}, traits: [], deepBlood: false,
     lenderRelations: {}, traces: [], lineage: [], stats: {}, retireStreak: 0, chainBroken: false,
+    gold: 0, goldEarned: 0, skill: {}, skillPick: {},
   };
 }
 
@@ -67,6 +68,7 @@ export function newRun(seed: number, prices?: Record<string, number>): RunState 
     peakNetWorth: 0, lastSeenTick: 0, over: false,
     uidSeq: 0, tapsThisTick: 0, garnishAcc: {}, rolloverPending: {}, waivePending: {}, promos: {},
     subsidyUsed: false, surplusAnnounced: false, firstWheelHintShown: false, notices: [], bankruptcy: null, lastSettlement: null,
+    skill: {}, marginCall: null, dayLossLimit: null,
   };
 }
 

@@ -18,6 +18,7 @@ import { C } from './art';
 import { sprite } from './sprites';
 import { fx } from './fx';
 import { play, playTap } from './audio';
+import { has } from '../../engine/skilltree';
 
 const roeTxt = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}%`;
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -39,7 +40,7 @@ function PinRow({ p }: { p: PositionView }) {
       <span className="who"><i className="coin" style={{ background: C.dtc }} />{m.name}</span>
       <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
       <span className="liq">{call ? '▼ 청산 임박 ' : '청산까지 '}{p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%</span>
-      <span className="roe">{roeTxt(p.roe)}</span>
+      <span className="roe"><b>{p.pnl >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(p.pnl)))}</b><small>{roeTxt(p.roe)}</small></span>
     </button>
   );
 }
@@ -165,7 +166,9 @@ export function Lot() {
       {open && <div className="pr-scrim" data-scrim onPointerDown={() => setPanel(false)} aria-hidden="true" />}
       <section className={'pr-panel' + (open ? ' open' : '')} data-panel={open ? 'open' : 'closed'} aria-label="집의 쳇바퀴">
         <div ref={headRef} className="hd">
-          {pos.map((p) => <PinRow key={p.market} p={p} />)}
+          {pos.map((p) => has(g, 'A2')
+            ? <div key={p.market} className="pr-pinwrap"><PinRow p={p} /><button className="buy on pinclose" data-pinclose onClick={() => { const r = act({ type: 'close', market: p.market }); play(r.ok ? 'ui_tap' : 'insufficient'); }}><span>정리</span></button></div>
+            : <PinRow key={p.market} p={p} />)}
           {waiting && (
             <div className="pr-wait" role="status" data-wait>
               <span>추심원이 문 앞에서 기다린다</span>

@@ -9,7 +9,8 @@ import { borrowFriend, stampFriend } from './friends';
 import { buyUpgrade } from './upgrades';
 import type { CoinId, GameState, LenderId, DebtId, Res, Dir } from './types';
 import { eduPage, mockTrade, openAccount, signWaiver } from './progression';
-import { addToPosition, closePosition, openPosition, setStops } from './futures';
+import { addMargin, addToPosition, closePosition, marginCallDone, openPosition, setStops } from './futures';
+import { buyNode, pickNode, setDayLimit } from './skilltree';
 import { buyTree, chooseBranch, estateNext, pawn, retire, startNextGeneration, type ChoiceBranch } from './generation';
 import { onBackground, onForeground, visit } from './offline';
 
@@ -52,7 +53,13 @@ export type Action =
   | { type: 'inherit'; branch: ChoiceBranch }
   | { type: 'buyTree'; id: string }
   | { type: 'nextGeneration' }
-  | { type: 'pawn'; heirloom: string; lender: 'shark1' | 'shark2' };
+  | { type: 'pawn'; heirloom: string; lender: 'shark1' | 'shark2' }
+  // 영구 스킬트리(거래 한 갈래): 사고 고르는 것은 환생 화면에서만
+  | { type: 'treeBuy'; id: string }
+  | { type: 'treePick'; id: string }
+  | { type: 'addMargin'; market: string; amount: number }
+  | { type: 'marginCallDone' }
+  | { type: 'setDayLimit'; value: number | null };
 
 export function act(g: GameState, a: Action): Res {
   switch (a.type) {
@@ -95,5 +102,10 @@ export function act(g: GameState, a: Action): Res {
     case 'buyTree': return buyTree(g, a.id);
     case 'nextGeneration': return startNextGeneration(g);
     case 'pawn': return pawn(g, a.heirloom, a.lender);
+    case 'treeBuy': return g.estate ? buyNode(g, a.id) : { ok: false, code: 'step', msg: '나무는 환생할 때만 키울 수 있습니다.' };
+    case 'treePick': return g.estate ? pickNode(g, a.id) : { ok: false, code: 'step', msg: '나무는 환생할 때만 고를 수 있습니다.' };
+    case 'addMargin': return addMargin(g, a.market, a.amount);
+    case 'marginCallDone': return marginCallDone(g);
+    case 'setDayLimit': return setDayLimit(g, a.value);
   }
 }

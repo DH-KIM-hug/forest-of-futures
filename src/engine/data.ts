@@ -12,6 +12,7 @@ import eventsJson from '../../data/events.json';
 import traitsJson from '../../data/traits.json';
 import heirloomsJson from '../../data/heirlooms.json';
 import endingsJson from '../../data/endings.json';
+import skilltreeJson from '../../data/skilltree.json';
 
 export interface MarketDef {
   id: string;
@@ -158,6 +159,23 @@ export interface EndingDef {
   v1Category: string;
 }
 
+/** 영구 스킬트리 노드(거래 한 갈래, data/skilltree.json) */
+export interface SkillNodeDef {
+  id: string;
+  path: 'R' | 'A' | 'B' | 'C';
+  tier: number;
+  name: string;
+  desc: string;
+  openCost: number;
+  kind: 'binary' | 'scaled';
+  cap?: number;
+  maxLevel?: number;
+  /** 이 중 하나만 있으면 된다 */
+  requires: string[];
+  /** 3단계의 짝(한 생에 하나만 켜진다) */
+  pair?: string;
+}
+
 export const balance = balanceJson as any;
 export const marketDefs = marketsJson.markets as MarketDef[];
 export const simFeedCfg = marketsJson.simFeed as any;
@@ -184,6 +202,8 @@ export const traitsMeta = traitsJson as any;
 export const heirloomDefs = heirloomsJson.heirlooms as any[];
 export const endings = endingsJson.endings as unknown as EndingDef[];
 export const endingsMeta = endingsJson.meta as any;
+export const skillMeta = skilltreeJson as any;
+export const skillNodes = skilltreeJson.nodes as unknown as SkillNodeDef[];
 
 export const marketById = Object.fromEntries(marketDefs.map((m) => [m.id, m])) as Record<string, MarketDef>;
 export const wheelByCoin = Object.fromEntries(coinWheelDefs.map((w) => [w.coin, w])) as Record<string, CoinWheelDef>;
@@ -196,6 +216,7 @@ export const friendById = Object.fromEntries(friendDefs.map((f) => [f.id, f])) a
 export const eventById = Object.fromEntries(eventDefs.map((e) => [e.id, e])) as Record<string, EventDef>;
 export const offerById = Object.fromEntries(offerDefs.map((o) => [o.id, o])) as Record<string, OfferDef>;
 export const traitById = Object.fromEntries(traitDefs.map((t) => [t.id, t])) as Record<string, TraitDef>;
+export const skillById = Object.fromEntries(skillNodes.map((n) => [n.id, n])) as Record<string, SkillNodeDef>;
 export const endingById = Object.fromEntries(endings.map((e) => [e.id, e])) as Record<string, EndingDef>;
 
 export const COINS = coinWheelDefs.map((w) => w.coin) as import('./types').CoinId[]; // 채굴 가능 종목

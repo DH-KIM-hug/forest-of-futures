@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "_doc": "영구 스킬트리: 거래 한 갈래(docs/gdd/SKILLTREE_TRADE.md, DECISIONS_LOG U-35 ④). 재화는 황금 실물 도토코인(family.gold): 그 생에 오소리에게 갚은 원금 award.per 마다 1개, 오소리 빚을 다 갚은 생은 +award.clearBonus. 값: 열기(Lv0→1) = openCost, Lv n→n+1 = ceil(openCost × levelMul^n). scaled 노드의 효과 = cap × (1 − decay^레벨), 레벨 상한 없음. binary 노드는 Lv1 이 끝. requires 는 그중 하나만 있으면 된다. pair 는 3단계의 짝(둘 다 살 수 있지만 한 생에 하나만 켜진다). 어떤 노드도 시세나 이길 확률을 바꾸지 않는다.",
+  "levelMul": 1.6,
+  "decay": 0.85,
+  "award": { "per": 50000, "clearBonus": 2 },
+  "premium": { "C2": 0.0001 },
+  "highLev": 50,
+  "defaultSlRoe": -50,
+  "momWheel": "DTC",
+  "nodes": [
+    { "id": "R", "path": "R", "tier": 0, "name": "손에 익은 앱", "desc": "새 생에서 FRX 앱이 처음부터 깔려 있다.", "openCost": 1, "kind": "binary", "maxLevel": 1, "requires": [] },
+
+    { "id": "A1", "path": "A", "tier": 1, "name": "단골 수수료", "desc": "거래 수수료가 준다(상한 −50%).", "openCost": 1, "kind": "scaled", "cap": 0.5, "requires": ["R"] },
+    { "id": "A2", "path": "A", "tier": 2, "name": "한 손 정리", "desc": "포지션 정리가 한 번 누르기로 바뀐다. 집 화면의 포지션 줄에서도 바로 정리한다.", "openCost": 2, "kind": "binary", "maxLevel": 1, "requires": ["A1"] },
+    { "id": "A3a", "path": "A", "tier": 3, "name": "초봉 차트", "desc": "차트를 30초 창으로 당겨 본다. 보이는 게 많아질 뿐, 맞히는 건 아니다.", "openCost": 3, "kind": "binary", "maxLevel": 1, "requires": ["A2"], "pair": "A3b" },
+    { "id": "A3b", "path": "A", "tier": 3, "name": "반대 단추", "desc": "롱↔숏 뒤집기를 한 번에(정리 + 반대 진입).", "openCost": 3, "kind": "binary", "maxLevel": 1, "requires": ["A2"], "pair": "A3a" },
+    { "id": "A4", "path": "A", "tier": 4, "name": "VIP 창구", "desc": "거래 수수료가 더 준다(상한 −30% 추가).", "openCost": 4, "kind": "scaled", "cap": 0.3, "requires": ["A3a", "A3b"] },
+
+    { "id": "B1", "path": "B", "tier": 1, "name": "확인서 단골", "desc": "50배가 처음부터 열린다. 50배 이상 거래의 수수료가 준다(상한 −30%).", "openCost": 1, "kind": "scaled", "cap": 0.3, "requires": ["R"] },
+    { "id": "B2", "path": "B", "tier": 2, "name": "마진콜 전화", "desc": "청산이 가까워지면 한 번, 오소리 대부가 전화한다. 증거금을 더 넣으면 버틴다.", "openCost": 2, "kind": "binary", "maxLevel": 1, "requires": ["B1"] },
+    { "id": "B3a", "path": "B", "tier": 3, "name": "200배 각서", "desc": "200배가 거래 10건 없이 확인서 도장만으로 열린다.", "openCost": 3, "kind": "binary", "maxLevel": 1, "requires": ["B2"], "pair": "B3b" },
+    { "id": "B3b", "path": "B", "tier": 3, "name": "물타기", "desc": "열린 포지션에 증거금만 더 넣는 단추. 청산가가 멀어지고, 걸린 돈이 커진다.", "openCost": 3, "kind": "binary", "maxLevel": 1, "requires": ["B2"], "pair": "B3a" },
+    { "id": "B4", "path": "B", "tier": 4, "name": "전설의 몰빵", "desc": "수익 인증서에 금테가 둘리고, 청산 도장이 특별판으로 바뀐다(꾸미기).", "openCost": 4, "kind": "binary", "maxLevel": 1, "requires": ["B3a", "B3b"] },
+
+    { "id": "C1", "path": "C", "tier": 1, "name": "손절 습관", "desc": "새 포지션에 손절 −50%가 기본으로 붙는다(끌 수 있다).", "openCost": 1, "kind": "binary", "maxLevel": 1, "requires": ["R"] },
+    { "id": "C2", "path": "C", "tier": 2, "name": "비상금 주머니", "desc": "강제 청산 때 넣은 증거금의 일부가 돌아온다(상한 30%). 보험료로 수수료율 +0.01%p.", "openCost": 2, "kind": "scaled", "cap": 0.3, "requires": ["C1"] },
+    { "id": "C3a", "path": "C", "tier": 3, "name": "쪼개 넣기", "desc": "진입을 세 번으로 나눠 넣는 단추.", "openCost": 3, "kind": "binary", "maxLevel": 1, "requires": ["C2"], "pair": "C3b" },
+    { "id": "C3b", "path": "C", "tier": 3, "name": "하루 한도", "desc": "하루 손실 한도를 정하면, 넘는 순간 거래소가 잠긴다. 다음 아침에 풀린다.", "openCost": 3, "kind": "binary", "maxLevel": 1, "requires": ["C2"], "pair": "C3a" },
+    { "id": "C4", "path": "C", "tier": 4, "name": "장부 정리", "desc": "압류가 시작돼도 엄마의 쳇바퀴는 실려 가지 않는다.", "openCost": 4, "kind": "binary", "maxLevel": 1, "requires": ["C3a", "C3b"] }
+  ]
+}

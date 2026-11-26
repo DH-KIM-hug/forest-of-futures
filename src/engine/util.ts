@@ -38,3 +38,12 @@ export function abbrev(n: number): string {
   };
   return x < 100000000 ? fmt(x / 10000, '만') : fmt(x / 100000000, '억');
 }
+
+/** 받침에 맞는 조사를 붙인다: josa('쳇바퀴', '이', '가') → '쳇바퀴가', josa('지갑', '이', '가') → '지갑이'. 한글로 끝나지 않으면(숫자 등) 읽는 소리로 가린다. */
+export function josa(word: string, withBatchim: string, without: string): string {
+  const ch = word.trim().slice(-1);
+  let has: boolean;
+  if (ch >= '가' && ch <= '힣') has = (ch.charCodeAt(0) - 0xac00) % 28 !== 0;
+  else has = '013678'.includes(ch); // 영·일·삼·육·칠·팔 은 받침이 있다
+  return word + (has ? withBatchim : without);
+}

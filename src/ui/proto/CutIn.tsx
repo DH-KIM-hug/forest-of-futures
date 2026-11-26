@@ -77,6 +77,42 @@ function Bust({ who, smile }: { who: Who; smile: boolean }) {
     case 'collector': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Badger cx={100} cy={196} h={180} /></svg>;
     case 'weasel': return <Face slim fur="#C9B08A" muzzle="#FFF8E4" smile={smile} />;
     case 'hero': return <img className="bust hero" src={heroFront} alt="" />;
+    case 'raccoon': return <Face mask fur="#9A968C" muzzle="#F4EFE2" smile={smile} />;
+    case 'owl': return (
+      <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
+        <path d="M34 200 q6 -70 66 -70 q60 0 66 70z" fill="#8A6F52" stroke={O} strokeWidth={3} strokeLinejoin="round" />
+        <path d="M44 62 l-8 -34 l30 16 M156 62 l8 -34 l-30 16" fill="#8A6F52" stroke={O} strokeWidth={3} strokeLinejoin="round" />
+        <ellipse cx={100} cy={96} rx={66} ry={64} fill="#8A6F52" stroke={O} strokeWidth={3} />
+        <circle cx={74} cy={88} r={24} fill="#F1E6CC" stroke={O} strokeWidth={3} /><circle cx={126} cy={88} r={24} fill="#F1E6CC" stroke={O} strokeWidth={3} />
+        <circle cx={74} cy={88} r={7} fill={O} /><circle cx={126} cy={88} r={7} fill={O} />
+        <path d="M52 70 h44 M104 70 h44" stroke={O} strokeWidth={4} strokeLinecap="round" />
+        <path d="M100 100 l-9 16 h18z" fill="#E0A63C" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
+        <path d="M100 150 l-14 -10 v20z M100 150 l14 -10 v20z" fill="#3F5E78" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
+      </svg>
+    );
+    case 'viper': return (
+      <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
+        <path d="M58 200 q-4 -64 42 -70 q46 6 42 70z" fill="#5E7A56" stroke={O} strokeWidth={3} strokeLinejoin="round" />
+        <path d="M100 138 l-18 -8 v22z M100 138 l18 -8 v22z" fill="#2E2B28" stroke={O} strokeWidth={2.5} strokeLinejoin="round" />
+        <path d="M100 26 q62 6 60 62 q-4 46 -60 52 q-56 -6 -60 -52 q-2 -56 60 -62z" fill="#6E8C62" stroke={O} strokeWidth={3} strokeLinejoin="round" />
+        <path d="M70 52 q30 -14 60 0" fill="none" stroke="#4E6A47" strokeWidth={6} strokeLinecap="round" />
+        <path d="M62 84 l28 8 M138 84 l-28 8" stroke={O} strokeWidth={4} strokeLinecap="round" />
+        <ellipse cx={78} cy={96} rx={7} ry={4} fill="#E8C24A" stroke={O} strokeWidth={2} /><ellipse cx={122} cy={96} rx={7} ry={4} fill="#E8C24A" stroke={O} strokeWidth={2} />
+        <path d="M78 93 v6 M122 93 v6" stroke={O} strokeWidth={2.2} strokeLinecap="round" />
+        <path d="M80 120 q20 10 40 0" fill="none" stroke={O} strokeWidth={3} strokeLinecap="round" />
+        <path d="M100 124 v12 l-5 7 M100 136 l5 7" fill="none" stroke="#C2413B" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+    case 'news': return (
+      <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
+        <g transform="rotate(-5 100 110)">
+          <rect x={30} y={40} width={140} height={150} rx={6} fill="#F3EBD6" stroke={O} strokeWidth={4} />
+          <rect x={42} y={52} width={116} height={24} fill={O} /><text x={100} y={70} textAnchor="middle" fontSize={15} fontWeight={800} fill="#F3EBD6">도토리일보</text>
+          <path d="M44 92 h112 M44 106 h112 M44 120 h70 M44 142 h50 M44 156 h50 M44 170 h50" stroke={O} strokeWidth={4} strokeLinecap="round" />
+          <rect x={106} y={134} width={50} height={42} fill="#C9BFA4" stroke={O} strokeWidth={2.5} />
+        </g>
+      </svg>
+    );
     case 'sms': return (
       <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
         <rect x={56} y={14} width={88} height={176} rx={18} fill="#9AD0C2" stroke={O} strokeWidth={4} /><rect x={66} y={32} width={68} height={130} rx={6} fill="#E6F4EF" stroke={O} strokeWidth={2.5} />

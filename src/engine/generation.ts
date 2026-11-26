@@ -13,6 +13,7 @@ import { treeCost, treeLevel, traitVal } from './legacy';
 import { equipAppraisalSum, houseValue, netWorth, ownedCoins, stage, totalDebt, wheelAppraisalSum, walletValue } from './selectors';
 import { logEvent, notify } from './util';
 import { bump } from './stats';
+import { applyBirth, grantAward } from './skilltree';
 import type { Branch, CoinId, DebtId, Estate, GameState, HanCalc, Res, RunState } from './types';
 
 const INH = balance.inheritance;
@@ -81,6 +82,7 @@ export function retire(g: GameState): Res {
   g.run.over = true;
   g.pendingEnding = null;
   g.estate = openEstate('retire', 'GIFT');
+  grantAward(g);
   logEvent(g.run, 'retire', '은퇴하고 물려줌');
   return { ok: true };
 }
@@ -352,6 +354,7 @@ export function startNextGeneration(g: GameState): Res {
   g.family.generation += 1;
   g.pendingEnding = null;
   g.estate = null;
+  applyBirth(g); // 가문의 스킬트리 노드를 새 생에 켠다
   refreshShark2Open(g);
   run.peakNetWorth = netWorth(run);
   notify(run, '세월이 흘렀다. 우편함에 나뭇잎 통지서 한 장 — 상속 개시.', 'info', 'wire:inherit');

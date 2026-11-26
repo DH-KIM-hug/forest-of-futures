@@ -10,6 +10,7 @@ import { balance, marketById } from '../../engine/data';
 import { pdev } from './config';
 import { resetGuide, setGuideOff, tips, MOMENT, type Moment } from './guide';
 import { tipArgs } from './model';
+import { applyBirth } from '../../engine/skilltree';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
@@ -64,6 +65,7 @@ export function rebirthOverride(): void {
   run.settleIn = balance.settlement.intervalSec;
   g.run = run;
   g.family.traits = []; g.family.deepBlood = false; g.family.lenderRelations = {};
+  applyBirth(g); // 스킬트리: 지난 생까지 산 노드가 이번 생에 켜진다(뿌리 = 폰을 쥔 채 눈을 뜬다)
   run.peakNetWorth = netWorth(run);
   st.setGame(g);
 }
@@ -112,10 +114,12 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       return clone(g);
     }
     case 'debt': { const g = ready(); g.run.settleIn = 2; return g; }
-    case 'broke': case 'rebirth': {
+    case 'broke': case 'rebirth': case 'tree': {
       const g = buildScenario('ending', base);
       P.patch({ everUnlocked: { ...un } });
-      if (name === 'rebirth') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
+      // 화면 확인용: 황금 도토코인 12개에 뿌리·단골 수수료 Lv2·한 손 정리·확인서 단골을 가진 가문
+      if (name === 'tree') { g.family.gold = 12; g.family.skill = { R: 1, A1: 2, A2: 1, B1: 1 }; if (g.estate) g.estate.gold = 3; g.run.stats['repaid.shark1'] = 150_000; }
+      if (name !== 'broke') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
       return g;
     }
     case 'cabin0': case 'cabin1': case 'cabin2': case 'cabin3': {

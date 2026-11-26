@@ -9,7 +9,8 @@ export type Tab = 'lot' | 'phone' | 'map';
 export interface Collector { interest: number; fill: number; overdue: boolean; at: number }
 
 /** 컷인에 나오는 사람(§7.7). hero = 주인공 속마음, sms = 폰 문자, note = 지문 */
-export type Who = 'collector' | 'boss' | 'weasel' | 'hero' | 'sms' | 'note';
+/** raccoon = 숲속 캐피탈 창구 너구리, viper = 뒷골목 독사 대부, owl = 숲속중앙조합 부엉이 지점장, news = 도토리일보 속보(소리 없음) */
+export type Who = 'collector' | 'boss' | 'weasel' | 'hero' | 'sms' | 'note' | 'raccoon' | 'viper' | 'owl' | 'news';
 /** tip = 튜토리얼 설명 줄의 이름(guide.ts, 평생 한 번만 나온다). hl = 그 줄이 비추는 화면 조각 */
 export interface Line { who: Who; text: string; mood?: 'smile' | 'flat'; tip?: string; hl?: HlKey }
 export interface Choice { id: string; label: string; sub?: string; primary?: boolean; run: () => void }
@@ -33,7 +34,7 @@ export interface Scene {
 }
 
 /** 이번 생에서 이미 지나간 이야기 사건(다음 생에서는 다시 나오지 않는 것들) */
-export const KNOWN_AFTER_FIRST_LIFE = ['firstWin', 'firstLoss', 'sms', 'repay', 'hamsterHint'];
+export const KNOWN_AFTER_FIRST_LIFE = ['firstWin', 'firstLoss', 'sms', 'repay', 'hamsterHint', 'capitalSms'];
 
 interface P {
   tab: Tab;
@@ -53,6 +54,10 @@ interface P {
   profit: CardData | null;
   wins: number;
   closes: number;
+  /** 잇따라 딴·잃은·본전치기한 거래 수, 이번 생에 낸 수수료, 잇따른 적자 정산 수(react.ts 가 읽는다) */
+  winStreak: number; lossStreak: number; tinyStreak: number; feesLife: number; negRun: number;
+  /** 이번 생에 빌린 뒤 이자를 못 낸 정산 수 */
+  odSeen: number;
   /** 프롤로그가 떠 있는 동안에는 게임 시계와 이야기 사건을 멈춘다 */
   prologue: boolean;
   /** 추심원이 이자를 걷으러 왔는데 낼 돈이 없다: 그가 문 앞에서 기다리는 동안 시계가 멈춘다(사무소에서 빌리거나, 돌려보내 연체로 적히거나) */
@@ -81,6 +86,7 @@ interface P {
 const fresh = () => ({
   tab: 'lot' as Tab, goalIdx: 0, everOpened: false, scenes: [] as Scene[], cutCount: 0, negSettles: 0,
   toast: null, collector: null, tapping: false, wallet: false, profit: null, wins: 0, closes: 0, mapFocus: null,
+  winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, negRun: 0, odSeen: 0,
   waiting: false, loanTaken: false, sentAwayAt: -1, tutorial: 'none' as P['tutorial'],
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
 });

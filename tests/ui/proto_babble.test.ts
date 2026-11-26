@@ -53,7 +53,7 @@ describe('목소리', () => {
   });
   it('지문·문자·알림은 소리가 없고, 모르는 사람은 기본 목소리로 말한다', () => {
     expect(voiceOf('note')).toBeNull(); expect(voiceOf('sms')).toBeNull(); expect(voiceOf('system')).toBeNull();
-    expect(voiceOf('hero')).toBe(VOICES.hero); expect(voiceOf('owl')).toBe(VOICES.other);
+    expect(voiceOf('hero')).toBe(VOICES.hero); expect(voiceOf('owl')).toBe(VOICES.owl); expect(voiceOf('raccoon')).toBe(VOICES.raccoon); expect(voiceOf('viper')).toBe(VOICES.viper); expect(voiceOf('someone')).toBe(VOICES.other); expect(voiceOf('news')).toBeNull();
   });
 });
 

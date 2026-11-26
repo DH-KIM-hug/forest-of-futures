@@ -15,5 +15,7 @@ export const FAST_INTERVAL = 20;
 /** 불러온 balance 값을 덮어쓴다(data/*.json 파일은 그대로). 게임을 만들기 전에 불러야 한다. */
 export function applyFastOverride(): void {
   if (isProto && isFast) (balance as any).settlement.intervalSec = FAST_INTERVAL;
+  // 1막 시제품에는 인맥이 없다(U-29): 친구 규칙(연락처 추심·절교·친구 파산)을 끈다(U-38)
+  if (isProto) (balance as any).act1 = { friends: false };
 }
 export const pdev = q.get('pdev');

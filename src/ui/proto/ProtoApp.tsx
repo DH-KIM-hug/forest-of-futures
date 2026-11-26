@@ -18,7 +18,10 @@ import { tutorialEnd } from './tutorial';
 import { isFast, isCheat } from './config';
 import { clone } from '../../engine/game';
 import { comma } from '../../engine/util';
-import { interestDue, ownedCoins, walletValue } from '../../engine/selectors';
+import { interestDue, lenderDebtTotal, ownedCoins, walletValue } from '../../engine/selectors';
+import { ledgerGoal } from './ledger';
+import { has } from '../../engine/skilltree';
+import { useUI } from '../uiStore';
 import { forecast } from '../../engine/settlement';
 import { balance, DEBT_IDS } from '../../engine/data';
 import { Acorn, RowIcon } from './art';
@@ -50,7 +53,12 @@ function Hud() {
   const total = balance.settlement.intervalSec;
   const left = Math.max(0, run.settleIn);
   const gi = currentGoal(g, goalIdx, flags);
-  const goal = gi < GOAL_COUNT ? goalAt(g, gi, flags) : null;
+  const goal0 = gi < GOAL_COUNT ? goalAt(g, gi, flags) : null;
+  // 튜토리얼 목표가 끝나면 오소리 장부가 목표다(U-38): 5만을 갚을 때마다 금박 도장 하나, 이자가 얼마 주는지도 같이
+  const lg = goal0 ? null : ledgerGoal(g);
+  const otherDebt = lenderDebtTotal(run) - run.debts.shark1.principal;
+  const goal: { label: string; cur: number; need: number; sub?: string } | null = goal0 ?? (lg ? { label: lg.label, cur: lg.cur, need: lg.need, sub: `이자 −${comma(lg.cut)}` } : null);
+  const goalEnd = otherDebt > 0 ? `오소리 장부는 깨끗하다 · 다른 빚 ${comma(otherDebt)} (지도)` : '빚 0 · 장부가 깨끗하다';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
   const cash = useCountUp(run.cash);
   // 숫자가 오르면 통, 내리면 움찔
@@ -86,9 +94,9 @@ function Hud() {
       )}
       {lot && (
         <>
-          <div key={'g' + gi} className="goal" data-hl="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
+          <div key={'g' + gi + (lg ? ':' + Math.floor(lg.cur / lg.need) : '')} className="goal" data-hl="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
-            <span><small>목표</small> {goal ? goal.label : '1막 끝. 이제 빚과 거래뿐'}</span>{goal && <em>{comma(goal.cur)}/{comma(goal.need)}</em>}
+            <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
           <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
             <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '정산 · 추심원이 기다린다' : '정산 (이자 걷는 시간)'}</span><em>{mmss(left)}</em>
@@ -143,6 +151,7 @@ function TabBar() {
 /** 강제 청산: 장면 흔들림 + 붉은 '청산' 도장(대 등급) */
 function LiqStamp({ onShake }: { onShake: () => void }) {
   const [hit, setHit] = useState<{ k: number; name: string } | null>(null);
+  const legend = useGame((s) => has(s.g, 'B4'));
   useFx((e) => {
     if (e.kind !== 'liq') return;
     setHit((h) => ({ k: (h?.k ?? 0) + 1, name: e.market }));
@@ -152,8 +161,8 @@ function LiqStamp({ onShake }: { onShake: () => void }) {
   if (!hit) return null;
   return (
     <div key={hit.k} className="pr-liq" aria-live="assertive">
-      <div className="stamp">청산</div>
-      <p>{hit.name} 포지션이 강제로 정리됐다</p>
+      <div className={'stamp' + (legend ? ' legend' : '')}>청산</div>
+      <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name} 포지션이 강제로 정리됐다`}</p>
     </div>
   );
 }
@@ -209,7 +218,8 @@ export function ProtoApp() {
       const g = useGame.getState().g, r = g.run, P = useProto.getState();
       return { cash: r.cash, settleNo: r.settleNo, settleIn: r.settleIn, mined: r.minedValue, taps: r.stats.laborTaps ?? 0, wheels: Object.keys(r.coinWheels), equip: r.equipment.map((u) => u.tier), staffed: (r.coinWheels.DTC?.staffed ? 1 : 0) + r.equipment.filter((u) => u.staffed).length, speed: useGame.getState().speed, waiting: P.waiting, loanTaken: P.loanTaken, tutorial: P.tutorial, interest: (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0), overdue: r.debts.shark1.overdue, wheelTag: r.coinWheels.DTC?.tagBy ?? null, last: r.lastSettlement, over: r.over,
         fut: r.futures, pos: Object.values(r.positions).map((p) => ({ m: p.market, dir: p.dir, lev: p.lev, margin: p.margin0 })), debts: Object.fromEntries(Object.entries(r.debts).map(([k, v]) => [k, v.principal])), friend: r.friends.squirrel.debt,
-        gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet };
+        gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet,
+        repaid: r.stats['repaid.shark1'] ?? 0, gold: g.family.gold ?? 0, skill: g.family.skill ?? {}, runSkill: r.skill ?? {}, seen: Object.keys(P.seen), marginCall: r.marginCall ?? null, liqs: r.stats.liqCount ?? 0, cause: r.bankruptcy?.cause ?? null, ending: g.pendingEnding?.title ?? null, tradeUi: useUI.getState().trade };
     };
   }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)

@@ -101,6 +101,10 @@ export interface Position {
   closeReserved: boolean; // 시장 지연 중 예약된 정리
   reservedStops: { sl: number | null; tp: number | null } | null;
   revenge: { dir: 'same' | 'opposite'; within: number } | null; // 청산 뒤 다시 들어간 포지션
+  /** 들어갈 때의 수수료율(스킬트리 할인·보험료 포함). 없으면 기본 수수료율 */
+  feeRate?: number;
+  /** 마진콜 전화(B2)를 이미 받았다 */
+  called?: boolean;
 }
 
 /** 끝난 마지막 포지션(손실이면 우선)의 기록. 엔딩 조건 `lev`·`dir`... 이 읽는다. */
@@ -245,6 +249,14 @@ export interface FamilyState {
   stats: Record<string, number>;
   retireStreak: number;
   chainBroken: boolean;
+  /** 황금 실물 도토코인: 영구 스킬트리(거래 한 갈래)의 재화. han 과 따로 센다 */
+  gold: number;
+  /** 지금까지 받은 황금 도토코인 합 */
+  goldEarned: number;
+  /** 스킬트리 노드 레벨(가진 것). 그 생에 켜진 것은 run.skill */
+  skill: Record<string, number>;
+  /** 길마다 3단계 둘 중 이번에 켤 것 */
+  skillPick: Partial<Record<'A' | 'B' | 'C', string>>;
 }
 
 export interface FuturesState {
@@ -337,6 +349,12 @@ export interface RunState {
   notices: Notice[];
   bankruptcy: Bankruptcy | null;
   lastSettlement: SettlementReport | null;
+  /** 이번 생에 켜진 스킬트리 노드 레벨(생이 시작될 때 가문 값에서 뜬다. 그 생에 산 노드는 다음 생부터) */
+  skill: Record<string, number>;
+  /** 마진콜 전화(B2)가 걸려 온 포지션. 받거나 포지션이 닫히면 null */
+  marginCall: { market: string; tick: number } | null;
+  /** 하루 손실 한도(C3b). null = 없음 */
+  dayLossLimit: number | null;
 }
 
 export interface PendingEnding {
@@ -380,6 +398,8 @@ export interface Estate {
   simpleStreakBefore: number;
   cause: string;
   surplus: number; // 상속 개시 때 경매 잉여금(한정승인 현금)
+  /** 이 생이 받은 황금 실물 도토코인(스킬트리 재화). 한 번만 준다 */
+  gold?: number;
 }
 
 export interface GameState {
