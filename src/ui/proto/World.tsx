@@ -1,68 +1,99 @@
-// 집 탭 위 세상(U-29): 지붕을 걷은 단칸 오두막 안. 아이소 마름모 바닥 + 뒤쪽 벽 둘. 처음엔 엄마의 쳇바퀴 하나뿐이고,
-// 쳇바퀴를 놓고 알바를 부를수록 방이 찬다. 좌표는 390×432 캔버스(아래 맞춤). HUD 가 위를 덮으므로 중요한 것은 y 200 아래.
-// 바닥 칸 좌표: 뒤 모서리 (195,212) 에서 오른쪽 앞으로 i, 왼쪽 앞으로 j (한 칸 = 20×10). 바닥은 10×10 칸.
-import { useRef, useState, type ReactNode } from 'react';
+// 집 탭의 세상(U-33·U-34): 나무 밑동 집 그림(sprites.ts 'home') 한 장을 화면 너비에 맞춰 깔고, 그 위에 쳇바퀴·알바·주인공·손님을 그림 좌표로 얹는다.
+// 자리와 구도는 home.ts(WHEEL_SLOTS·homeCam). 좌표는 그림 픽셀(992×1586)로 적고, SVG 는 390 너비 단위로 그린다(선 굵기·글자 크기가 예전 그대로).
+// 접힌 판일 때 쳇바퀴(와 주인공)를 누르면 굴린다. 새 그림이 없는 것(알바·추심원·콜드월렛)은 예전 SVG 로 그린다.
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
 import { comma } from '../../engine/util';
-import { C, O, Dia, Cube, Poly, Wheel, Hamster, Badger, Spiky, Round, Device, dk } from './art';
+import { C, O, Hamster, Badger, Spiky, Round, Device, Zap } from './art';
 import { useFx, flyAcorns, flyIcons, coinSvg, tintAt, useClock } from './fx';
 import { sellFeeRate } from '../../engine/mining';
 import { houseDefs } from '../../engine/data';
-import heroFront from './img/hero_front.png';
-import heroSide from './img/hero_side.png';
 import { COLLECTOR_NAME } from './text';
 import { EXTRA_WHEEL } from './model';
+import { HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, WHEEL_FACE, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, WALLET_SPOT, TAP_AREA, assignSlots, homeCam, type Pt } from './home';
+import { HOME_BY_LEVEL, sprite, spriteOr } from './sprites';
+
+/** 그림 픽셀 → SVG 단위(390 너비) */
+const K = 390 / HOME_IMG.w;
+const VB_H = HOME_IMG.h * K;
+const at = (p: Pt): Pt => [p[0] * K, p[1] * K];
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
+/** 굴려 본 횟수가 이만큼 되기 전에는 쳇바퀴 위에 "쳇바퀴를 톡톡"을 띄운다 */
+export const TAP_HINT_TAPS = 8;
 
 type Item = { y: number; key: string; node: ReactNode };
-type Pt = [number, number];
-const F = (i: number, j: number): Pt => [195 + 20 * (i - j), 212 + 10 * (i + j)];
-/** 오른쪽 벽 위의 점: t = 뒤 모서리에서 오른쪽 모서리까지 0..1, u = 바닥에서 높이 */
-const RW = (t: number, u: number): Pt => [195 + 200 * t, 212 + 100 * t - u];
-const LW = (t: number, u: number): Pt => [195 - 200 * t, 212 + 100 * t - u];
-/** 더 놓는 쳇바퀴 다섯 자리(뒤에서 앞으로). 첫 쳇바퀴는 가운데 앞. */
-const EXTRA_SLOTS: Pt[] = [F(7.4, 2.6), F(2.6, 7.4), F(4.6, 4.2), F(9.2, 5.2), F(5.2, 9.2)];
-const WALLS = ['#D9B98A', '#C9955C', '#C08A55', '#B98552', '#A9785A'];
-const FLOORS = ['#E3C9A0', '#E3C08D', '#DDB67F', '#E6C795', '#EBD2A2'];
 
-/** 벽 판자 줄과 바닥 널 줄(얇은 선). 빈 방이 덜 밋밋하게 */
-function Planks({ wall }: { wall: string }) {
-  const lines: ReactNode[] = [];
-  for (const u of [50, 100]) {
-    lines.push(<path key={'l' + u} d={`M${LW(1, u)} L${LW(0, u)}`} stroke={dk(wall, 0.8)} strokeWidth={1.6} opacity={0.5} />);
-    lines.push(<path key={'r' + u} d={`M${RW(0, u)} L${RW(1, u)}`} stroke={dk(wall, 0.7)} strokeWidth={1.6} opacity={0.5} />);
-  }
-  for (const k of [2, 4, 6, 8]) lines.push(<path key={'f' + k} d={`M${F(k, 0)} L${F(k, 10)}`} stroke={O} strokeWidth={1.4} opacity={0.14} />);
-  return <g>{lines}</g>;
+/** 쳇바퀴 한 대: 그림 + (돌면) 앞면을 도는 줄과 번개 + (알바가 있으면) 햄스터. foot = 발밑(SVG 단위) */
+function WheelAt({ foot, spin, staffed, tagged, label, bump, id, pop }: { foot: Pt; spin: boolean; staffed: boolean; tagged: boolean; label?: string; bump?: number; id?: string; pop?: boolean }) {
+  const [x, y] = foot;
+  const img = sprite('wheel')!;
+  const ham = sprite('hamster');
+  const cx = x + WHEEL_FACE.dx * K, cy = y + WHEEL_FACE.dy * K;
+  return (
+    <g className={pop ? 'pa-pop' : undefined} data-wheel={staffed ? 'run' : 'idle'}>
+      <ellipse cx={x + 6} cy={y - 3} rx={WHEEL_BOX.w * K * 0.5} ry={8} fill="#5A3A1E" opacity={0.16} />
+      <g key={bump ?? 0} className={bump ? 'pa-thump' : undefined} style={{ transformOrigin: `${x}px ${y}px` }}>
+        <g id={id} className={'pr-whfx' + (staffed ? ' on' : '')}>
+          <image href={img.src} x={x + WHEEL_BOX.dx * K} y={y + WHEEL_BOX.dy * K} width={WHEEL_BOX.w * K} height={WHEEL_BOX.h * K} />
+        </g>
+        {/* 도는 표시: 앞면 타원 안에서 밝은 호 셋이 돈다 */}
+        <g transform={`translate(${cx} ${cy}) rotate(${WHEEL_FACE.tilt}) scale(${WHEEL_FACE.rx * K} ${WHEEL_FACE.ry * K})`} className={'pr-turn' + (spin ? ' on' : '')} aria-hidden="true">
+          <g className="arcs">
+            {[0, 120, 240].map((a) => <path key={a} transform={`rotate(${a})`} d="M0.78 0 A0.78 0.78 0 0 1 0.39 0.675" fill="none" stroke="#FFF6DC" strokeWidth={2.6} strokeLinecap="round" vectorEffect="non-scaling-stroke" />)}
+          </g>
+        </g>
+        {staffed && (ham ? <image className={spin ? 'pa-hop' : undefined} href={ham.src} x={cx + 2 - 12 * (ham.w / ham.h)} y={cy - 7} width={24 * (ham.w / ham.h)} height={24} /> : <Hamster cx={cx + 2} cy={cy + 17} h={24} run={spin} />)}
+      </g>
+      {spin && <Zap cx={cx + 22} cy={cy - 26} s={1.1} />}
+      {spin && <Zap cx={cx - 24} cy={cy - 12} s={0.85} delay={0.45} />}
+      {tagged && <g transform={`rotate(-8 ${x + 22} ${y - 58})`}><rect x={x + 6} y={y - 68} width={34} height={19} rx={3} fill={C.red} stroke={O} strokeWidth={2} /><text x={x + 23} y={y - 54} textAnchor="middle" fontSize={11} fontWeight={800} fill="#fff">딱지</text></g>}
+      {label && <text x={cx} y={y + WHEEL_BOX.dy * K - 4} textAnchor="middle" fontSize={11} fontWeight={800} fill="#6B4A35" className="pa-t pa-lbl">{label}</text>}
+    </g>
+  );
 }
 
-export function World({ near }: { near: boolean }) {
+export function World({ near, cover, open, onRoll }: { near: boolean; /** 아래 판이 덮는 높이(px) */ cover: number; /** 판이 펴져 있다(빈 자리 표시를 보여 준다) */ open: boolean; onRoll: () => void }) {
   const g = useGame((s) => s.g);
   const tapping = useProto((s) => s.tapping);
   const collector = useProto((s) => s.collector);
   const waiting = useProto((s) => s.waiting);
+  const slotOf = useProto((s) => s.slotOf);
+  const slotHi = useProto((s) => s.slotHi);
+  const talking = useProto((s) => s.scenes.length > 0);
   const run = g.run;
   const now = useClock();
   const tint = tintAt(now);
-  const heroRef = useRef<SVGGElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: 390, h: 690, hud: 180 });
   const [floats, setFloats] = useState<{ id: number; t: string; x: number; y: number; cls: string }[]>([]);
   const [tapKey, setTapKey] = useState(0);
   const idRef = useRef(0);
 
+  // 세상 칸과 HUD 의 크기를 잰다(구도 계산에 쓴다)
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const hud = document.querySelector<HTMLElement>('.pr-hud');
+    const measure = () => setBox((o) => { const n = { w: el.clientWidth, h: el.clientHeight, hud: hud?.offsetHeight ?? 0 }; return o.w === n.w && o.h === n.h && o.hud === n.hud ? o : n; });
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    if (hud) ro.observe(hud);
+    return () => ro.disconnect();
+  }, []);
+  const cam = homeCam({ ...box, cover });
+
   const first = run.coinWheels.DTC;
   const extras = run.equipment.filter((u) => u.tier === EXTRA_WHEEL);
-  const phone = run.futures.open;
-  // 카메라: 방이 비었을 때는 쳇바퀴 가까이, 찰수록 물러난다. 아래(발밑 줄)는 고정하고 위로 키운다.
-  const cam = extras.length === 0 ? { z: 1.08, fx: 197 } : { z: 1, fx: 195 };
-
-  // 주인공: 첫 쳇바퀴를 알바가 돌리면 옆에 서서 민다. 아니면 쳇바퀴 안. 청산이 가까우면 폰만 본다.
-  const [wx, wy] = F(8.6, 8.0);
-  const inWheel = !!first && !first.staffed && !near;
-  const hx = inWheel ? wx : wx - 46;
-  const hy = inWheel ? wy - 20 : wy + 8;
-  const hh = inWheel ? 40 : 54;
-  const pose = near ? heroSide : inWheel ? heroSide : heroFront;
-  const heroCls = near ? ' stare' : tapping ? (inWheel ? ' run' : ' squash') : ' idle';
+  const seat = assignSlots(extras.map((u) => u.uid), slotOf);
+  const [wx, wy] = at(WHEEL_SLOTS[0]);
+  const [hx, hy] = at(HERO_SPOT);
+  const hh = HERO_H * K;
+  const heroImg = (near ? spriteOr('heroNear', 'hero') : tapping ? spriteOr('heroRun', 'hero') : sprite('hero'))!;
+  const hw = hh * (heroImg.w / heroImg.h);
+  const heroCls = near ? ' stare' : tapping ? ' squash' : ' idle';
 
   const addFloat = (t: string, x: number, y: number, cls = '') => {
     const id = ++idRef.current;
@@ -75,91 +106,72 @@ export function World({ near }: { near: boolean }) {
       // 쳇바퀴 → 콜드월렛으로 코인이 날아가고, 바로 팔기면 지갑 → 도토리 숫자로 도토리가 날아간다
       const wal = document.getElementById('pr-wallet-dev')?.getBoundingClientRect() ?? null;
       flyIcons(coinSvg(16), document.getElementById('pr-wheel1')?.getBoundingClientRect() ?? null, wal, 1, { onEnd: () => { if (e.sold) flyAcorns(wal, 1); } });
-      addFloat(e.gain, wx + (Math.random() - 0.5) * 16, wy - 86, e.sold ? '' : 'coin');
+      addFloat(e.gain, wx + 30 + (Math.random() - 0.5) * 14, wy - 62, e.sold ? '' : 'coin');
     } else if (e.kind === 'settle') {
-      // 정산: 알바가 돌린 모든 쳇바퀴에서 코인이 전선을 타고 지갑으로
+      // 정산: 알바가 돌린 모든 쳇바퀴에서 코인이 지갑으로
       const wal = document.getElementById('pr-wallet-dev')?.getBoundingClientRect() ?? null;
       const whs = Array.from(document.querySelectorAll('.pr-whfx.on'));
       whs.forEach((el, i) => flyIcons(coinSvg(16), el.getBoundingClientRect(), wal, 2, { delay: i * 90 }));
       if (e.sold) {
         window.setTimeout(() => {
-          addFloat(`+${comma(Math.round(e.mined * (1 - sellFeeRate(useGame.getState().g.run))))}`, wx - 60, wy - 40);
+          addFloat(`+${comma(Math.round(e.mined * (1 - sellFeeRate(useGame.getState().g.run))))}`, hx, hy - hh - 10);
           flyAcorns(document.getElementById('pr-wallet-dev')?.getBoundingClientRect() ?? null, 4);
         }, 650 + whs.length * 90);
       }
     } else if (e.kind === 'buy') {
-      if (e.price > 0) addFloat(`−${comma(e.price)}`, 230, 250, 'neg');
+      if (e.price > 0) addFloat(`−${comma(e.price)}`, 195, at([0, 990])[1], 'neg');
     }
   });
 
-  const lv = Math.min(run.house, 4);
-  const wall = WALLS[lv], floor = FLOORS[lv];
   const items: Item[] = [];
-  // 엄마가 쓰던 이불 한 채(방에 남은 것은 이것과 쳇바퀴뿐)
-  { const [x, y] = F(1.4, 4.6); items.push({ y, key: 'bed', node: <g><Cube cx={x} cy={y} hw={26} h={5} fill="#EFE3CC" /><Cube cx={x - 12} cy={y - 11} hw={9} h={5} fill="#F6EEDD" /></g> }); }
-  // 환생한 만큼 창턱에 돌이 쌓인다
-  const stones = Math.max(1, Math.min(4, g.family.generation - 1));
-  // 첫 쳇바퀴(엄마의 쳇바퀴)
+  // 엄마의 쳇바퀴(자리 0): 그림 속 쳇바퀴는 바닥 조각으로 덮고, 같은 그림을 그 자리에 얹는다(눌리면 들썩이고, 실려 가면 없다)
   if (first) {
-    const spin = !near && (first.staffed || tapping);
-    items.push({ y: wy, key: 'w1', node: (
-      <g className="pa-pop">
-        <Dia cx={wx} cy={wy + 18} hw={44} fill={dk(floor, 0.9)} sw={2} />
-        <g id="pr-wheel1" className={'pr-whfx' + (first.staffed ? ' on' : '')}><Wheel cx={wx} cy={wy} w={72} col={C.dtc} spin={spin} /></g>
-        {first.staffed && <Hamster cx={wx} cy={wy - 20} h={24} run={!near} />}
-        {first.tagBy && <g transform={`rotate(-8 ${wx + 26} ${wy - 62})`}><rect x={wx + 8} y={wy - 74} width={38} height={22} rx={3} fill={C.red} stroke={O} strokeWidth={2} /><text x={wx + 27} y={wy - 58} textAnchor="middle" fontSize={12} fontWeight={800} fill="#fff">딱지</text></g>}
-      </g>
-    ) });
+    const spin = !near && (!!first.staffed || tapping);
+    items.push({ y: wy, key: 'w0', node: <WheelAt foot={[wx, wy]} id="pr-wheel1" spin={spin} staffed={!!first.staffed} tagged={!!first.tagBy} bump={first.staffed ? 0 : tapKey} /> });
   }
-  // 콜드월렛(작은 받침 위) + 전선
+  // 더 놓은 쳇바퀴(자리 1~5): 알바가 있으면 돌고, 없으면 서 있다
+  for (let s = 1; s < WHEEL_SLOTS.length; s++) {
+    const u = extras.find((x) => x.uid === seat[s]);
+    const foot = at(WHEEL_SLOTS[s]);
+    if (u) items.push({ y: foot[1], key: u.uid, node: <WheelAt foot={foot} pop spin={!!u.staffed && !near} staffed={!!u.staffed} tagged={!!u.tagBy} label={u.staffed ? undefined : '알바 없음'} /> });
+  }
+  // 콜드월렛(작은 상자 위) + 쳇바퀴에서 오는 전선
   if (first) {
-    const [dx, dy] = F(7.2, 9.4);
-    items.push({ y: dy + 6, key: 'dev', node: (
+    const [dx, dy] = at(WALLET_SPOT);
+    const live = !near && (!!first.staffed || tapping || extras.some((u) => u.staffed));
+    // 전선: 쳇바퀴 받침 → 바닥 → 상자 모서리를 타고 올라 → 기기
+    const w1 = at([WHEEL_SLOTS[0][0] + 62, WHEEL_SLOTS[0][1] - 10]), w2 = at([690, 1046]), w3 = at([690, 994]);
+    items.push({ y: wy - 1, key: 'wire', node: <path d={`M${w1} Q${(w1[0] + w2[0]) / 2} ${w2[1] + 9} ${w2} L${w3} L${dx - 9} ${dy - 3}`} fill="none" stroke={live ? '#E8B830' : '#7A6A58'} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className={live ? 'pa-flow' : undefined} strokeDasharray={live ? '6 7' : undefined} /> });
+    items.push({ y: dy + 30, key: 'dev', node: (
       <g className="pr-wal-hit" role="button" tabIndex={0} aria-label="콜드월렛 열기" onClick={() => useProto.getState().patch({ wallet: true })} onKeyDown={(e) => { if (e.key === 'Enter') useProto.getState().patch({ wallet: true }); }}>
-        <circle cx={dx} cy={dy - 12} r={24} fill="transparent" />
-        <Cube cx={dx} cy={dy + 4} hw={10} h={9} fill={C.wall} /><g id="pr-wallet-dev"><Device x={dx} y={dy - 18} k={0.75} /></g>
+        <circle cx={dx} cy={dy - 10} r={24} fill="transparent" />
+        <ellipse cx={dx} cy={dy + 2} rx={10} ry={4} fill="#5A3A1E" opacity={0.18} />
+        <g id="pr-wallet-dev">{sprite('wallet') ? <image href={sprite('wallet')!.src} x={dx - 11} y={dy - 28} width={22} height={30} /> : <Device x={dx} y={dy - 14} k={0.8} />}</g>
       </g>
     ) });
-    const live = !near && (first.staffed || tapping || extras.some((u) => u.staffed));
-    items.push({ y: wy - 30, key: 'wire', node: <path d={`M${wx - 26} ${wy + 6} Q${wx - 44} ${wy + 22} ${dx + 8} ${dy - 2}`} fill="none" stroke={live ? '#E8B830' : '#8A8378'} strokeWidth={3} strokeLinecap="round" className={live ? 'pa-flow' : undefined} strokeDasharray={live ? '6 7' : undefined} /> });
   }
-  // 더 놓은 쳇바퀴: 알바가 있으면 돌고, 없으면 서 있다
-  extras.slice(0, EXTRA_SLOTS.length).forEach((u, i) => {
-    const [x, y] = EXTRA_SLOTS[i];
-    const col = [C.mdt, C.bth, C.sms, C.cream, C.mint][i];
-    items.push({ y, key: u.uid, node: (
-      <g className="pa-pop" data-wheel={u.staffed ? 'run' : 'idle'}>
-        <Dia cx={x} cy={y + 14} hw={30} fill={dk(floor, 0.9)} sw={2} />
-        <g className={'pr-whfx' + (u.staffed ? ' on' : '')} opacity={u.staffed ? 1 : 0.72}><Wheel cx={x} cy={y} w={52} col={col} spin={!!u.staffed && !near} /></g>
-        {u.staffed ? <Hamster cx={x} cy={y - 14} h={20} run={!near} /> : <text x={x} y={y - 60} textAnchor="middle" fontSize={11} fontWeight={800} fill="#6B4A35" className="pa-t pa-lbl">알바 없음</text>}
-        {u.tagBy && <rect x={x + 6} y={y - 52} width={16} height={12} rx={2} fill={C.red} stroke={O} strokeWidth={1.6} />}
-      </g>
-    ) });
-  });
-  // 주인공
-  if (first || near) items.push({ y: inWheel ? wy + 0.5 : wy + 12, key: 'hero', node: (
-    <g ref={heroRef} id="pr-hero">
-      {!inWheel && <ellipse cx={hx} cy={hy + 1} rx={19} ry={5} fill="#000" opacity={0.13} />}
+  // 주인공: 엄마의 쳇바퀴 옆에 서 있다. 굴리면 움찔, 청산이 가까우면 폰만 본다.
+  items.push({ y: hy, key: 'hero', node: (
+    <g id="pr-hero">
+      <ellipse cx={hx + 1} cy={hy - 1} rx={hw * 0.42} ry={4.5} fill="#5A3A1E" opacity={0.2} />
       <g key={`t${tapping ? tapKey : 0}`} className={'pa-hero' + heroCls} style={{ transformOrigin: `${hx}px ${hy}px` }}>
-        <image href={pose} x={hx - hh * 0.52} y={hy - hh} width={hh * 1.04} height={hh} />
+        <image href={heroImg.src} x={hx - hw / 2} y={hy - hh} width={hw} height={hh} />
       </g>
-      {phone && !inWheel && <g transform={`translate(${hx + 20} ${hy - 22})`}><rect x={-5} y={-9} width={10} height={17} rx={2.5} fill={C.mint} stroke={O} strokeWidth={1.8} /><path d="M3 8 l4 5" stroke={O} strokeWidth={1.2} /><circle cx={8} cy={14} r={2.6} fill="#C2413B" stroke={O} strokeWidth={1} /></g>}
-      {near && <path className="pa-sweat" d={`M${hx - 20} ${hy - hh + 8} q-5 8 0 11 q5 -3 0 -11z`} fill="#BFE3F2" stroke={O} strokeWidth={1.6} />}
+      {near && <path className="pa-sweat" d={`M${hx - 16} ${hy - hh + 6} q-5 8 0 11 q5 -3 0 -11z`} fill="#BFE3F2" stroke={O} strokeWidth={1.6} />}
     </g>
   ) });
-  else items.push({ y: wy + 12, key: 'hero', node: <g id="pr-hero"><ellipse cx={wx} cy={wy + 1} rx={19} ry={5} fill="#000" opacity={0.13} /><image href={heroFront} x={wx - 28} y={wy - 54} width={56} height={54} /></g> });
-  // 추심원: 문으로 들어와 문 앞에 선다. 기다리는 동안에도 서 있다. 이자 막대가 정산 상환액만큼 깎인다.
-  const [cx0, cy0] = F(4.2, 9.6);
+  // 추심원: 뒷벽 둥근 문으로 들어와 문 앞에 선다. 기다리는 동안에도 서 있다. 이자 막대가 정산 상환액만큼 깎인다.
+  const [cx0, cy0] = at(VISITOR_SPOT);
+  const colImg = sprite('collector');
+  const col = colImg ? <image href={colImg.src} x={cx0 - 26 * (colImg.w / colImg.h)} y={cy0 - 52} width={52 * (colImg.w / colImg.h)} height={52} /> : <Badger cx={cx0} cy={cy0} h={52} />;
   if (waiting) {
-    items.push({ y: cy0, key: 'colwait', node: <g className="pa-walkin"><Badger cx={cx0} cy={cy0} h={50} /><g transform={`translate(${cx0 - 34} ${cy0 - 64})`}><rect x={-6} y={-18} width={80} height={18} rx={9} fill={O} /><text x={34} y={-5} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{COLLECTOR_NAME}</text></g></g> });
+    items.push({ y: cy0, key: 'colwait', node: <g className="pa-walkin door">{col}<g transform={`translate(${cx0 - 40} ${cy0 - 60})`}><rect x={0} y={-18} width={80} height={18} rx={9} fill={O} /><text x={40} y={-5} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{COLLECTOR_NAME}</text></g></g> });
   } else if (collector && collector.interest > 0) {
     const left = collector.overdue ? 1 - collector.fill : 0;
     items.push({ y: cy0, key: `col${collector.at}`, node: (
-      <g key={`col${collector.at}`} className="pa-walkin">
-        <Badger cx={cx0} cy={cy0} h={50} />
-        <g transform={`translate(${cx0 - 34} ${cy0 - 68})`}>
-          <rect x={-6} y={-40} width={80} height={18} rx={9} fill={O} />
-          <text x={34} y={-27} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{COLLECTOR_NAME}</text>
+      <g key={`col${collector.at}`} className="pa-walkin door">
+        {col}
+        <g transform={`translate(${cx0 - 34} ${cy0 - 70})`}>
           <text x={34} y={-6} textAnchor="middle" fontSize={12} fill="#B8432C" className="pa-t pa-lbl">이자 {comma(collector.interest)}</text>
           <rect x={0} y={0} width={68} height={11} rx={5.5} fill="#fff" stroke={O} strokeWidth={2} />
           <rect className="pa-cut" x={2} y={2} width={64} height={7} rx={3.5} fill={C.red} style={{ ['--left' as string]: left }} />
@@ -168,44 +180,49 @@ export function World({ near }: { near: boolean }) {
     ) });
   }
   items.sort((a, b) => a.y - b.y);
+
   const houseName = houseDefs[run.house]?.name ?? '빈 오두막';
-  const H = 150;
+  const home = HOME_BY_LEVEL[Math.min(run.house, HOME_BY_LEVEL.length - 1)] ?? sprite('home')!;
+  const patch = sprite('floorPatch')!;
+  const taps = run.stats.laborTaps ?? 0;
+  const hint = !!first && !first.staffed && !waiting && !open && !near && !talking && taps < TAP_HINT_TAPS;
+  /** 말풍선: 손님 머리 위, 화면 오른쪽을 넘지 않게 */
+  const bubble = (w: number): { x: number; tail: number } => { const x = Math.max(6, Math.min(cx0 - 20, 384 - w)); return { x, tail: Math.max(8, Math.min(w - 26, cx0 - x - 4)) }; };
+  /** 바닥의 자리 표시(타원): 판이 펴져 있으면 빈 자리, 방금 누른 칸이면 밝게 */
+  const spots = WHEEL_SLOTS.map((p, s) => {
+    const filled = s === 0 ? !!first : !!seat[s];
+    const hi = slotHi === s;
+    if (!hi && (filled || !open)) return null;
+    const [x, y] = at(p);
+    return (
+      <g key={s} className={'pr-spotmark' + (hi ? ' hi' : '')} data-slotmark={s}>
+        <ellipse cx={x} cy={y - 7} rx={30} ry={13} />
+        {!filled && <text x={x} y={y - 2} textAnchor="middle" fontSize={15} className="pa-t">+</text>}
+      </g>
+    );
+  });
 
   return (
-    <div className={'pr-world room' + (near ? ' near' : '') + (tint.night ? ' night' : '')} aria-label={houseName} role="img">
-      <div className="pr-place" aria-hidden="true">{houseName}</div>
-      <svg viewBox="0 0 390 432" preserveAspectRatio="xMidYMax slice" className="pr-world-svg">
-        <g className="pr-cam" style={{ transform: `translate(195px, 432px) scale(${cam.z}) translate(${-cam.fx}px, -432px)` }}>
-          <rect x={-100} y={-300} width={590} height={800} className="pr-out" />
-          {/* 뒤쪽 벽 둘 + 바닥 */}
-          <Poly p={[LW(1, 0), LW(0, 0), LW(0, H), LW(1, H)]} fill={wall} />
-          <Poly p={[RW(0, 0), RW(1, 0), RW(1, H), RW(0, H)]} fill={dk(wall, 0.88)} />
-          <Dia cx={195} cy={412} hw={200} fill={floor} />
-          <Planks wall={wall} />
-          {/* 왼쪽 벽: 문(바깥쪽에 딱지가 붙어 있다) */}
-          <Poly p={[LW(0.86, 0), LW(0.66, 0), LW(0.66, 96), LW(0.86, 96)]} fill="#8E6540" sw={2.4} />
-          <circle cx={LW(0.7, 46)[0]} cy={LW(0.7, 46)[1]} r={3.2} fill={C.gold} stroke={O} strokeWidth={1.6} />
-          {run.house <= 0 && <g transform={`rotate(-27 ${LW(0.76, 66)[0]} ${LW(0.76, 66)[1]})`}><rect x={LW(0.76, 66)[0] - 15} y={LW(0.76, 66)[1] - 9} width={30} height={18} rx={2} fill={C.red} stroke={O} strokeWidth={1.8} /><text x={LW(0.76, 66)[0]} y={LW(0.76, 66)[1] + 4.5} textAnchor="middle" fontSize={11} fontWeight={800} fill="#fff">딱지</text></g>}
-          {/* 왼쪽 벽: 가구가 실려 간 자국 */}
-          <Poly p={[LW(0.44, 34), LW(0.2, 34), LW(0.2, 92), LW(0.44, 92)]} fill="none" sw={1.8} dash="5 6" />
-          {/* 오른쪽 벽: 창 + 창턱의 돌 */}
-          <Poly p={[RW(0.3, 56), RW(0.56, 56), RW(0.56, 112), RW(0.3, 112)]} fill="#CFE6EE" sw={2.4} />
-          <path className="pr-win-night" d={`M${RW(0.3, 56)} L${RW(0.56, 56)} L${RW(0.56, 112)} L${RW(0.3, 112)}z`} fill="#33406A" />
-          <path d={`M${RW(0.43, 56)} L${RW(0.43, 112)} M${RW(0.3, 84)} L${RW(0.56, 84)}`} stroke={O} strokeWidth={2} />
-          <Poly p={[RW(0.27, 52), RW(0.59, 52), RW(0.59, 46), RW(0.27, 46)]} fill={dk(wall, 0.7)} sw={2} />
-          {Array.from({ length: stones }, (_, i) => <ellipse key={i} cx={RW(0.5, 0)[0]} cy={RW(0.5, 57 + i * 7)[1]} rx={8 - i * 1.4} ry={4.2} fill={C.stone} stroke={O} strokeWidth={1.8} />)}
-          {/* 오른쪽 벽: 빈 못 하나 */}
-          <circle cx={RW(0.8, 96)[0]} cy={RW(0.8, 96)[1]} r={2.4} fill={O} />
+    <div ref={ref} className={'pr-world home' + (near ? ' near' : '') + (tint.night ? ' night' : '')} aria-label={houseName} role="img">
+      <div className="pr-stage" style={{ height: cam.imgH, transform: `translate3d(0, ${cam.top}px, 0)` }} data-cam={cam.top}>
+        <img className="bg" src={home.src} alt="" draggable={false} />
+        <button className="pr-wheel-hit" data-tap data-hl="wheel" onPointerDown={onRoll} aria-label={first ? '쳇바퀴 굴리기 (코인 채굴)' : '쳇바퀴가 없다'}
+          style={{ left: pct(TAP_AREA[0], HOME_IMG.w), top: pct(TAP_AREA[1], HOME_IMG.h), width: pct(TAP_AREA[2], HOME_IMG.w), height: pct(TAP_AREA[3], HOME_IMG.h) }} />
+        <svg className="fg" viewBox={`0 0 390 ${VB_H.toFixed(2)}`} preserveAspectRatio="none">
+          <image href={patch.src} x={FLOOR_PATCH[0] * K} y={FLOOR_PATCH[1] * K} width={FLOOR_PATCH[2] * K} height={FLOOR_PATCH[3] * K} />
+          {spots}
           {items.map((it) => <g key={it.key}>{it.node}</g>)}
           {!waiting && collector && collector.interest > 0 && (
             collector.overdue
-              ? <Spiky key={`sb${collector.at}`} x={cx0 + 14} y={cy0 - 122} w={168} h={30} text="이자가 모자라요오. 연체." tail={6} />
-              : <Round key={`rb${collector.at}`} x={cx0 + 14} y={cy0 - 122} w={176} h={28} text={`이자 ${comma(collector.interest)} 수납 완료요오~`} tail={6} />
+              ? <Spiky key={`sb${collector.at}`} {...bubble(168)} y={cy0 - 126} w={168} h={30} text="이자가 모자라요오. 연체." />
+              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={`이자 ${comma(collector.interest)} 수납 완료요오~`} />
           )}
-          {waiting && <Round x={cx0 + 14} y={cy0 - 100} w={150} h={28} text="사무소로 오세요오." tail={6} />}
+          {waiting && <Round {...bubble(150)} y={cy0 - 114} w={150} h={28} text="사무소로 오세요오." />}
           {floats.map((f) => <text key={f.id} x={f.x} y={f.y} textAnchor="middle" className={'pa-float ' + f.cls}>{f.t}</text>)}
-        </g>
-      </svg>
+        </svg>
+        {hint && <div className="pr-tok" style={{ left: pct(WHEEL_SLOTS[0][0] + WHEEL_FACE.dx, HOME_IMG.w), top: pct(WHEEL_SLOTS[0][1] + WHEEL_BOX.dy - 14, HOME_IMG.h) }} aria-hidden="true">쳇바퀴를 톡톡</div>}
+      </div>
+      <div className="pr-place" aria-hidden="true">{houseName}</div>
       <div className="pr-tint" style={{ background: tint.color, opacity: tint.op }} />
       {near && <div className="pr-gloom" />}
     </div>

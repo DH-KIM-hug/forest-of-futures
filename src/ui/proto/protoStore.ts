@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import type { CardData } from './shareCard';
 import { tipSeen, type HlKey } from './guide';
+import { loadPanel, savePanel } from './home';
 
 /** 탭 셋(U-29·U-30): 지도 · 집(가운데) · 거래소. 'phone' 은 거래소 탭의 내부 이름(중고폰 속 FRX 앱). */
 export type Tab = 'lot' | 'phone' | 'map';
@@ -64,6 +65,13 @@ interface P {
   tutorial: 'none' | 'await' | 'run' | 'lost' | 'notice' | 'done';
   /** 지도에서 강조할 장소 */
   mapFocus: string | null;
+  /** 집 아래 판(쳇바퀴 자리 칸)을 펴 두었는가(U-34). 마지막 상태를 기억한다(home.ts PANEL_KEY) */
+  panelOpen: boolean;
+  /** 더 놓은 쳇바퀴가 앉은 바닥 자리(uid → 자리 1~5). 칸을 눌러 놓은 자리를 기억한다. 적히지 않은 쳇바퀴는 빈 자리 번호순 */
+  slotOf: Record<string, number>;
+  /** 방금 누른 칸의 자리(세상에서 잠깐 밝힌다) */
+  slotHi: number | null;
+  setPanel: (open: boolean) => void;
   setTab: (t: Tab) => void;
   patch: (p: Partial<P>) => void;
   pushScene: (s: Scene) => void;
@@ -74,10 +82,12 @@ const fresh = () => ({
   tab: 'lot' as Tab, goalIdx: 0, everOpened: false, scenes: [] as Scene[], cutCount: 0, negSettles: 0,
   toast: null, collector: null, tapping: false, wallet: false, profit: null, wins: 0, closes: 0, mapFocus: null,
   waiting: false, loanTaken: false, sentAwayAt: -1, tutorial: 'none' as P['tutorial'],
+  slotOf: {} as Record<string, number>, slotHi: null as number | null,
 });
 
 export const useProto = create<P>((set) => ({
-  ...fresh(), visited: { lot: true }, everUnlocked: { lot: true }, seen: {}, gen: 0, prologue: false,
+  ...fresh(), visited: { lot: true }, everUnlocked: { lot: true }, seen: {}, gen: 0, prologue: false, panelOpen: loadPanel(),
+  setPanel: (open) => set((s) => { if (s.panelOpen === open) return s; savePanel(open); return { panelOpen: open }; }),
   setTab: (tab) => set((s) => ({ tab, visited: { ...s.visited, [tab]: true } })),
   patch: (p) => set(p as any),
   pushScene: (sc) => set((s) => {

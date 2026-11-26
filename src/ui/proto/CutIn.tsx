@@ -8,10 +8,11 @@ import { comma } from '../../engine/util';
 import { Badger, O } from './art';
 import { play } from './audio';
 import { say } from './watch';
-import { hlSel, hlTab, markTip } from './guide';
+import { hlPanel, hlSel, hlTab, markTip } from './guide';
 
 const TAB_LABEL: Record<string, string> = { map: '지도', phone: '거래소', lot: '집' };
 import heroFront from './img/hero_front.png';
+import { sprite } from './sprites';
 
 /** 오소리 대부 반신. win=웃음, 아니면 정색 */
 function BossBust({ win }: { win: boolean }) {
@@ -67,6 +68,9 @@ function Face({ fur, muzzle, mask, smile, slim }: { fur: string; muzzle: string;
 }
 
 function Bust({ who, smile }: { who: Who; smile: boolean }) {
+  // 새 그림이 들어온 인물은 그 그림으로(sprites.ts: boss · weasel · collector)
+  const art = who === 'boss' || who === 'weasel' || who === 'collector' ? sprite(who) : null;
+  if (art) return <img className="bust" src={art.src} alt="" />;
   switch (who) {
     case 'boss': return <BossBust win={smile} />;
     case 'collector': return <svg className="bust" viewBox="0 0 200 200" aria-hidden="true"><Badger cx={100} cy={196} h={180} /></svg>;
@@ -139,6 +143,9 @@ function CutInScene({ sc }: { sc: Scene }) {
     const tab = hlTab(line.hl);
     const P = useProto.getState();
     if (tab && P.tab !== tab && (tab === 'lot' || P.everUnlocked[tab])) P.setTab(tab);
+    // 집 아래 판은 이 줄이 짚는 것이 보이는 상태로 맞춘다(U-34: 세상의 쳇바퀴·한 줄 = 접힘, 칸·견줌 막대 = 펴짐)
+    const panel = hlPanel(line.hl);
+    if (panel) P.setPanel(panel === 'open');
     const sel = hlSel(line.hl);
     let scrolled = false;
     const measure = () => {

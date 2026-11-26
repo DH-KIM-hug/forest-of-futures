@@ -1,0 +1,8 @@
+Redraw the reference home (same layout: big hollow tree-stump home, wide plank floor, loft at the back with a short stair, round door on the back wall, red notice, one small hamster wheel, two moving boxes, pale square where a bed was, unplugged lamp) with a different rendering:
+1) CAMERA: zoom in a lot. The building is HUGE and runs off the top, left and right edges of the frame; we only see part of the roof at the top. Only a thin strip of grass shows at the bottom. No big empty lawn.
+2) CUT WALLS: every cut wall and log shows its thickness — a chunky, lighter-coloured flat top cap on each cut edge, like a dollhouse cross-section.
+3) LINES: dark warm-grey outlines, slightly hand-drawn and a little uneven, with lots of small inner detail lines: wood-grain swirls and knots on every plank, plank ends, nail dots, cracks, chipped corners, bark ridges on the stump.
+4) COLOUR: desaturated and slightly greyed — muted cocoa and khaki browns, dusty terracotta (not bright orange-red) roof tiles that are big, chunky and a bit weathered with a little moss, a flat light lime-sage grass with tiny pale specks.
+5) SHADING: soft subtle shading in corners and under objects (gentle ambient-occlusion darkening), a faint grainy paper feel; not glossy, not clip-art.
+6) Props drawn as chunky, slightly worn objects with taped seams and dents.
+No characters, no text, no UI.

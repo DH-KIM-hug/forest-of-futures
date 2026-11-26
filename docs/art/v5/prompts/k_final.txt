@@ -1,0 +1,4 @@
+Redraw the chipmunk from the FIRST reference image keeping his design, pose, view (seen from behind three-quarter, slightly above), proportions, outline and shading EXACTLY, with two changes:
+1) Fur colours from the SECOND reference image: pale sandy-beige fur, cream belly and face, the single back stripe in a soft light brown (keep the stripe shape from the first image).
+2) The phone is a small modern SMARTPHONE (thin slab, rounded corners, big dark screen, no keypad, no antenna, not a flip phone), held in both stubby paws, with a tiny red ribbon bow hanging on a short strap from the phone's corner (the only accent colour).
+Single character, full body, plain flat background, no text, no ground shadow.

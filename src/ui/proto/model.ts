@@ -6,6 +6,7 @@ import { forecast } from '../../engine/settlement';
 import { interestDue, lenderLimit, ownedCoins, totalDebt } from '../../engine/selectors';
 import type { CoinId, GameState } from '../../engine/types';
 import { HOME_WHEEL_NAME } from './text';
+import { assignSlots, SLOT_COUNT } from './home';
 import type { TipArgs } from './guide';
 import { tapValue } from '../../engine/equipment';
 
@@ -50,21 +51,26 @@ export function currentGoal(g: GameState, from: number, f: GoalFlags): number {
   return i;
 }
 
-// ── 집의 쳇바퀴 자리(U-30): 쳇바퀴 = 자산(고정가), 알바 햄스터 = 노동(일당). 자리마다 한 줄 ──────────
-export interface Slot {
-  key: string;
-  /** first = 엄마의 쳇바퀴, wheel = 더 놓은 쳇바퀴, empty = 빈 자리, lost = 첫 쳇바퀴가 실려 간 자리 */
-  kind: 'first' | 'wheel' | 'empty' | 'lost';
+// ── 집의 쳇바퀴 자리(U-30·U-34): 쳇바퀴 = 자산(고정가), 알바 햄스터 = 노동(일당). 바닥 자리 여섯 = 아래 판의 칸 여섯 ──────────
+/** 판의 한 칸 = 바닥의 한 자리. 칸마다 상태 하나 + 할 일 하나. */
+export interface Tile {
+  /** 바닥 자리 번호(home.ts WHEEL_SLOTS). 0 = 엄마의 쳇바퀴 */
+  slot: number;
+  /** run = 알바가 돌린다, idle = 쳇바퀴만 서 있다, empty = 빈 자리, lost = 엄마의 쳇바퀴가 실려 간 자리 */
+  state: 'run' | 'idle' | 'empty' | 'lost';
   uid?: string;
   name: string;
-  sub: string;
-  staffed: boolean;
   tagged: boolean;
   /** 알바가 돌릴 때 정산마다 남는 돈(판 값 − 일당). 알바가 없으면 null */
   net: number | null;
+  /** 상태 한 줄(단추가 없을 때 보인다): "초당 +25.9", 잠겼으면 짧은 까닭 */
+  text: string;
+  /** 지금은 할 수 없는 칸(흐리게): 폰이 없다, 엄마의 쳇바퀴부터 … */
+  locked: boolean;
   action: 'hire' | 'place' | 'rebuy' | null;
   btn: string;
   btnSub: string;
+  /** 단추가 켜져 있는가(돈이 모자라면 꺼진 채 보인다) */
   canAct: boolean;
 }
 const n = (x: number) => Math.round(x).toLocaleString('ko-KR');
@@ -84,37 +90,35 @@ export const staffedCount = (g: GameState): number =>
   ownedCoins(g.run).filter((c) => g.run.coinWheels[c].staffed).length + g.run.equipment.filter((u) => u.staffed).length;
 export const maxWheels = (): number => 1 + tierMaxUnits(EXTRA_WHEEL);
 
-export function slots(g: GameState): Slot[] {
+/** 빈 자리에 쳇바퀴를 놓을 수 없는 까닭을 칸에 들어갈 만큼 짧게(돈이 모자란 것은 까닭이 아니라 꺼진 단추로 보인다) */
+const shortWhy = (why: string): string => (/쳇바퀴/.test(why) ? '엄마 쳇바퀴부터' : /집/.test(why) ? '집이 좁다' : '놓을 수 없다');
+
+/** 바닥 자리 여섯의 상태(자리 번호순). prefs = 화면에서 고른 자리(uid → 자리 번호, protoStore.slotOf). */
+export function tiles(g: GameState, prefs: Record<string, number> = {}): Tile[] {
   const run = g.run;
-  const out: Slot[] = [];
   const hm = hamsterMath(g);
   const phone = run.futures.open;
-  const working = `알바가 캐서 판 값 ${secOf(hm.sold)} − 일당 ${secOf(hm.wage)}`;
-  const hireBtn = { action: 'hire' as const, btn: '알바 부르기', btnSub: `일당 ${n(hm.wage)}/정산`, canAct: phone };
-  const done = { action: null, btn: '도는 중', btnSub: '알바 1마리', canAct: false };
+  const running = { state: 'run' as const, net: hm.net, text: `초당 +${secOf(hm.net)}`, locked: false, action: null, btn: '', btnSub: '', canAct: false };
+  const idle = () => phone
+    ? { state: 'idle' as const, net: null, text: '알바 없음', locked: false, action: 'hire' as const, btn: '알바 부르기', btnSub: `일당 ${n(hm.wage)}`, canAct: true }
+    : { state: 'idle' as const, net: null, text: '폰이 없다', locked: true, action: null, btn: '', btnSub: '', canAct: false };
+  const out: Tile[] = [];
   const w = run.coinWheels[WHEEL_COIN];
-  if (w) {
-    out.push({
-      key: 'first', kind: 'first', name: HOME_WHEEL_NAME, staffed: !!w.staffed, tagged: !!w.tagBy, net: w.staffed ? hm.net : null,
-      sub: w.staffed ? working : phone ? '내가 탭할 때만 돈다 · 알바를 부르면 혼자 돈다' : '내가 탭할 때만 돈다 · 알바를 부를 폰이 없다',
-      ...(w.staffed ? done : hireBtn),
-    });
-  } else {
+  if (w) out.push({ slot: 0, name: HOME_WHEEL_NAME, tagged: !!w.tagBy, ...(w.staffed ? running : idle()) });
+  else {
     const cost = wheelByCoin[WHEEL_COIN].cost;
-    out.push({ key: 'first', kind: 'lost', name: '쳇바퀴가 있던 자리', staffed: false, tagged: false, net: null, sub: '실려 갔다. 쳇바퀴가 없으면 캘 수 없다', action: 'rebuy', btn: '다시 사기', btnSub: n(cost), canAct: run.cash >= cost });
+    out.push({ slot: 0, state: 'lost', name: '실려 간 자리', tagged: false, net: null, text: '쳇바퀴가 실려 갔다', locked: false, action: 'rebuy', btn: '다시 사기', btnSub: n(cost), canAct: run.cash >= cost });
   }
-  run.equipment.filter((u) => u.tier === EXTRA_WHEEL).forEach((u, i) => {
-    out.push({
-      key: u.uid, kind: 'wheel', uid: u.uid, name: `${tierById[EXTRA_WHEEL].name} ${i + 1}`, staffed: !!u.staffed, tagged: !!u.tagBy, net: u.staffed ? hm.net : null,
-      sub: u.staffed ? working : phone ? '알바가 없으면 안 돈다' : '알바가 없으면 안 돈다 · 부를 폰이 없다',
-      ...(u.staffed ? done : hireBtn),
-    });
-  });
-  const left = tierMaxUnits(EXTRA_WHEEL) - unitsOfTier(run, EXTRA_WHEEL);
-  if (left > 0 && w) {
-    const price = nextTierCost(run, EXTRA_WHEEL);
-    const why = tierBlockReason(g, EXTRA_WHEEL, WHEEL_COIN);
-    out.push({ key: 'empty', kind: 'empty', name: `빈 자리 ${left}칸`, staffed: false, tagged: false, net: null, sub: `쳇바퀴를 놓고 알바를 부르면 초당 +${secOf(hm.net)}`, action: 'place', btn: '쳇바퀴 놓기', btnSub: n(price), canAct: why === null });
+  const extras = run.equipment.filter((u) => u.tier === EXTRA_WHEEL);
+  const seat = assignSlots(extras.map((u) => u.uid), prefs);
+  const price = nextTierCost(run, EXTRA_WHEEL);
+  const why = tierBlockReason(g, EXTRA_WHEEL, WHEEL_COIN);
+  const blocked = why !== null && why !== '현금 부족';
+  for (let slot = 1; slot < SLOT_COUNT; slot++) {
+    const u = extras.find((x) => x.uid === seat[slot]);
+    if (u) out.push({ slot, uid: u.uid, name: tierById[EXTRA_WHEEL].name, tagged: !!u.tagBy, ...(u.staffed ? running : idle()) });
+    else if (blocked) out.push({ slot, state: 'empty', name: '빈 자리', tagged: false, net: null, text: shortWhy(why!), locked: true, action: null, btn: '', btnSub: '', canAct: false });
+    else out.push({ slot, state: 'empty', name: '빈 자리', tagged: false, net: null, text: '빈 자리', locked: false, action: 'place', btn: '놓기', btnSub: n(price), canAct: why === null });
   }
   return out;
 }

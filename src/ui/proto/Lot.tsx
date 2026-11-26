@@ -1,73 +1,64 @@
-import { useRef, useState } from 'react';
+// 집 탭(U-34): 세상(집 그림)이 화면을 채우고, 아래에 접히는 판이 있다.
+//   접힘: 탭 줄 위에 얇은 한 줄("▲ 초당 +89 ≥ 이자 초당 69 · 정산 1:42"). 누르거나 위로 끌면 펴진다. 이때 세상의 쳇바퀴를 누르면 굴린다.
+//   펴짐: 버는 돈 · 견줌 막대 · 나가는 돈 + 바닥 자리 여섯을 2×3 칸으로(칸마다 상태 하나 + 할 일 하나). ▼·아래로 끌기·세상 아무 데나 누르면 접힌다(그 탭은 굴리지 않는다).
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useUI } from '../uiStore';
 import { useProto } from './protoStore';
-import { slots, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, secOf, rateTxt, perSec, type Slot } from './model';
+import { tiles, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, rateTxt, perSec, type Tile } from './model';
+import { TILE_GRID, afterDrag, DRAG_PX } from './home';
 import { say, sendAway } from './watch';
 import { comma } from '../../engine/util';
 import { marketById } from '../../engine/data';
 import { ownedCoins, stage } from '../../engine/selectors';
 import { tapValue } from '../../engine/equipment';
-import { sellFeeRate } from '../../engine/mining';
 import { positionView, type PositionView } from '../vm/trade';
-import { historyOf } from '../priceHistory';
 import { World } from './World';
-import { RowIcon, C } from './art';
-import { HOME_WHEEL_NAME } from './text';
+import { C } from './art';
+import { sprite } from './sprites';
 import { fx } from './fx';
 import { play, playTap } from './audio';
 
 const roeTxt = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}%`;
+const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 const bought = new Set<string>(); // 이번 접속에서 처음 사는 물건이면 짧은 팡파르
-
-function Spark({ market, up }: { market: string; up: boolean }) {
-  const h = historyOf(market).slice(-90);
-  if (h.length < 2) return <svg className="pr-spark" />;
-  const lo = Math.min(...h), hi = Math.max(...h), span = hi - lo || hi * 0.0002;
-  const pts = h.map((v, i) => `${((i / (h.length - 1)) * 100).toFixed(1)},${(30 - ((v - lo) / span) * 26 - 2).toFixed(1)}`).join(' ');
-  // 상승 / 하락 색(§11.3): #D0584A / #4F7FC0
-  return <svg className="pr-spark" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points={pts} fill="none" stroke={up ? '#D0584A' : '#4F7FC0'} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" /></svg>;
-}
 
 export function useOpenPositions(): PositionView[] {
   const g = useGame((s) => s.g);
   return Object.keys(g.run.positions).map((m) => positionView(g, m)!).filter(Boolean);
 }
 
+/** 내 포지션 한 줄(판 맨 위에 고정, 접혀 있어도 보인다): 누르면 거래소의 그 종목으로 */
 function PinRow({ p }: { p: PositionView }) {
   const setTab = useProto((s) => s.setTab);
   const call = isNearLiq(p);
   const m = marketById[p.market];
   return (
     <button className={'pr-pin' + (call ? ' call' : '') + (p.roe >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
-      <div className="l">
-        <div className="who"><i className="coin" style={{ background: C.dtc }} />{m.name}</div>
-        <div className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</div>
-        <div className="liq">청산까지 {p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%</div>
-      </div>
-      <div className="m"><div className="roe">{roeTxt(p.roe)}</div><div className="pnl">{p.pnl >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(p.pnl)))}</div></div>
-      <Spark market={p.market} up={p.roe >= 0} />
-      {call && <div className="warn">▼ 청산 임박</div>}
+      <span className="who"><i className="coin" style={{ background: C.dtc }} />{m.name}</span>
+      <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
+      <span className="liq">{call ? '▼ 청산 임박 ' : '청산까지 '}{p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%</span>
+      <span className="roe">{roeTxt(p.roe)}</span>
     </button>
   );
 }
 
-/** 쳇바퀴 자리 한 줄: 빈 자리 → [쳇바퀴 놓기] → 선 쳇바퀴 → [알바 부르기] → 도는 중(초당 수입). 한 번 누르면 한 걸음. */
-function SlotRow({ r, onAct }: { r: Slot; onAct: (r: Slot) => boolean }) {
+/** 판의 한 칸 = 바닥의 한 자리. 칸 전체가 단추다: 누르면 그 자리가 세상에서 밝아지고, 할 일이 있으면 한다. */
+function TileBtn({ t, 'data-hl': hl, onAct }: { t: Tile; 'data-hl'?: 'tileFirst' | 'tileEmpty'; onAct: (t: Tile) => boolean }) {
   const [pop, setPop] = useState(0);
-  const empty = r.kind === 'empty' || r.kind === 'lost';
+  const cls = 'pr-tile ' + t.state + (t.locked ? ' locked' : '') + (t.action ? ' act' : '') + (t.canAct ? ' can' : '') + (t.tagged ? ' tagged' : '');
   return (
-    <div className={'pr-row slot' + (empty ? ' locked' : '') + (r.staffed ? ' run' : '') + (r.tagged ? ' tagged' : '')} data-row={r.kind === 'wheel' ? 'wheel' : r.kind} data-hl={r.kind === 'first' ? 'rowFirst' : r.kind === 'empty' ? 'rowEmpty' : undefined} data-staffed={r.staffed ? '1' : '0'}>
-      <div className="ic">{empty ? <span className="q">+</span> : <RowIcon kind={r.staffed ? 'hamwheel' : 'wheel'} />}</div>
-      <div className="mid">
-        <div className="nm">{r.name}{r.tagged && <em className="tag">딱지</em>}</div>
-        <div className="sb">{r.net !== null && <b>초당 +{secOf(r.net)}</b>}{r.net !== null ? ' · ' : ''}{r.sub}</div>
-      </div>
-      <button key={pop} className={'buy' + (r.canAct ? ' on' : '') + (r.action === null ? ' done' : '') + (pop ? ' popped' : '')} disabled={r.action === null} data-act={r.action ?? 'none'} onClick={() => { if (onAct(r)) setPop((k) => k + 1); }}>
-        <span>{r.btn}</span><small>{r.btnSub}</small>
-      </button>
-    </div>
+    <button className={cls} data-tile={t.slot} data-state={t.state} data-act={t.action ?? 'none'} data-can={t.canAct ? '1' : '0'} data-hl={hl}
+      aria-label={`${t.name}: ${t.action ? `${t.btn} ${t.btnSub}` : t.text}`} onClick={() => { if (onAct(t)) setPop((k) => k + 1); }}>
+      <span className="cap">
+        <i className="ic">{t.state === 'empty' || t.state === 'lost' ? <b className="q">+</b> : <img src={sprite('wheel')!.src} alt="" />}</i>
+        <em>{t.name}</em>{t.tagged && <u>딱지</u>}
+      </span>
+      {t.action
+        ? <span key={pop} className={'do' + (t.canAct ? ' on' : '') + (pop ? ' popped' : '')}><b>{t.btn}</b><small>{t.btnSub}</small></span>
+        : <span className="stt">{t.state === 'run' ? <><b>{t.text}</b><small>알바가 돌린다</small></> : <small>{t.text}</small>}</span>}
+    </button>
   );
 }
 
@@ -76,17 +67,34 @@ export function Lot() {
   const act = useGame((s) => s.act);
   const mapOpen = useProto((s) => !!s.everUnlocked.map);
   const waiting = useProto((s) => s.waiting);
+  const open = useProto((s) => s.panelOpen);
+  const setPanel = useProto((s) => s.setPanel);
+  const slotOf = useProto((s) => s.slotOf);
   const pos = useOpenPositions();
   const run = g.run;
-  const rows = slots(g);
+  const cells = tiles(g, slotOf);
   const sum = homeSummary(g);
   const near = pos.some((p) => isNearLiq(p));
   const tapTimer = useRef<number | undefined>(undefined);
-  const rideCoin = run.riding ?? ownedCoins(run)[0];
-  const wheeled = stage(run) > 0 && !!rideCoin;
-  const [tapKey, setTapKey] = useState(0);
+  const hiTimer = useRef<number | undefined>(undefined);
 
+  // 판이 덮는 높이: 머리(한 줄 또는 견줌 줄 + 포지션 줄) + 펴졌을 때 칸들. 움직이는 중이 아니라 다 움직인 뒤의 높이를 잰다(세상의 구도가 같이 미끄러진다).
+  const headRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [cover, setCover] = useState(open ? 250 : 44);
+  useLayoutEffect(() => {
+    const measure = () => { const h = (headRef.current?.offsetHeight ?? 0) + (open ? gridRef.current?.offsetHeight ?? 0 : 0); setCover((o) => (Math.abs(o - h) < 1 ? o : h)); };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    if (headRef.current) ro.observe(headRef.current);
+    if (gridRef.current) ro.observe(gridRef.current);
+    return () => ro.disconnect();
+  }, [open, waiting, pos.length]);
+
+  /** 쳇바퀴 굴리기(세상의 쳇바퀴를 눌렀다). 엔진의 tap 행동 그대로. */
   const doTap = () => {
+    if (useProto.getState().panelOpen) { setPanel(false); return; } // 펴져 있을 때의 탭은 접기만 한다
     if (useProto.getState().waiting) { say('추심원이 문 앞에서 기다린다. 지도에서 사무소로 가거나, 돌려보낸다.'); return; }
     const g0 = useGame.getState().g;
     const before = g0.run.cash;
@@ -98,59 +106,100 @@ export function Lot() {
     const gain = useGame.getState().g.run.cash - before;
     const sold = !!g0.run.coinWheels[coin0]?.autoSell;
     playTap();
-    setTapKey((k) => k + 1);
     useProto.getState().patch({ tapping: true });
     fx.emit({ kind: 'tap', gain: sold ? `+${comma(gain)}` : `+${comma(worth)} 코인`, wheel: true, sold });
     window.clearTimeout(tapTimer.current);
     tapTimer.current = window.setTimeout(() => useProto.getState().patch({ tapping: false }), 700);
   };
-  const onAct = (r: Slot): boolean => {
-    const res = r.action === 'hire' ? act(r.uid ? { type: 'hire', uid: r.uid } : { type: 'hire', coin: WHEEL_COIN })
-      : r.action === 'place' ? act({ type: 'buyEquip', tier: EXTRA_WHEEL, coin: WHEEL_COIN })
-      : r.action === 'rebuy' ? act({ type: 'buyWheel', coin: WHEEL_COIN }) : { ok: false };
+  /** 칸을 눌렀다: 그 자리를 세상에서 밝히고, 할 일이 있으면 한다(놓기 · 알바 부르기 · 다시 사기). */
+  const onAct = (t: Tile): boolean => {
+    useProto.getState().patch({ slotHi: t.slot });
+    window.clearTimeout(hiTimer.current);
+    hiTimer.current = window.setTimeout(() => useProto.getState().patch({ slotHi: null }), 1500);
+    if (!t.action) { if (t.locked) say(t.state === 'idle' ? '알바는 폰으로 부른다. 아직 폰이 없다.' : t.text); return false; }
+    const had = new Set(useGame.getState().g.run.equipment.map((u) => u.uid));
+    const cash0 = useGame.getState().g.run.cash;
+    const res = t.action === 'hire' ? act(t.uid ? { type: 'hire', uid: t.uid } : { type: 'hire', coin: WHEEL_COIN })
+      : t.action === 'place' ? act({ type: 'buyEquip', tier: EXTRA_WHEEL, coin: WHEEL_COIN })
+      : act({ type: 'buyWheel', coin: WHEEL_COIN });
     if (!res.ok) { say(res.msg === '현금 부족' ? '도토리가 부족합니다' : res.msg ?? '할 수 없다'); play('insufficient'); return false; }
-    if (r.action === 'rebuy') act({ type: 'autoSell', coin: WHEEL_COIN, on: true }); // 시제품 기본: 캐면 바로 팔기(지갑 시트에서 끌 수 있다)
-    play(bought.has(r.action!) ? 'buy' : 'new_equipment');
-    bought.add(r.action!);
-    if (r.action === 'hire') say('알바 햄스터가 왔다. 일당은 정산 때 나간다.');
-    else fx.emit({ kind: 'buy', price: r.action === 'place' ? run.cash - useGame.getState().g.run.cash : 0, key: r.key });
+    if (t.action === 'rebuy') act({ type: 'autoSell', coin: WHEEL_COIN, on: true }); // 시제품 기본: 캐면 바로 팔기(지갑 시트에서 끌 수 있다)
+    if (t.action === 'place') {
+      // 누른 칸의 자리에 놓는다
+      const nu = useGame.getState().g.run.equipment.find((u) => !had.has(u.uid));
+      if (nu) useProto.getState().patch({ slotOf: { ...useProto.getState().slotOf, [nu.uid]: t.slot } });
+    }
+    play(bought.has(t.action) ? 'buy' : 'new_equipment');
+    bought.add(t.action);
+    if (t.action === 'hire') say('알바 햄스터가 왔다. 일당은 정산 때 나간다.');
+    else fx.emit({ kind: 'buy', price: t.action === 'place' ? cash0 - useGame.getState().g.run.cash : 0, key: String(t.slot) });
     return true;
   };
-  const tapNet = wheeled ? tapValue(g, rideCoin) * (run.coinWheels[rideCoin]?.autoSell ? 1 - sellFeeRate(run) : 1) : 0;
+
+  // 머리 줄: 누르면 접고 펴고, 위·아래로 끌어도 된다
+  const drag = useRef<{ y: number; id: number } | null>(null);
+  const dragged = useRef(false);
+  const onDown = (e: React.PointerEvent) => { drag.current = { y: e.clientY, id: e.pointerId }; dragged.current = false; };
+  const onUp = (e: React.PointerEvent) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || d.id !== e.pointerId) return;
+    const dy = e.clientY - d.y;
+    if (Math.abs(dy) < DRAG_PX) return; // 탭은 click 이 맡는다
+    dragged.current = true;
+    setPanel(afterDrag(dy, useProto.getState().panelOpen));
+  };
+  const onToggle = () => { if (dragged.current) { dragged.current = false; return; } play('ui_tap'); setPanel(!useProto.getState().panelOpen); };
+
   const idleSec = perSec(sum.idle), claimSec = perSec(sum.claim);
   const ahead = idleSec >= claimSec;
+  const share = idleSec + claimSec > 0 ? Math.max(0.04, Math.min(0.96, idleSec / (idleSec + claimSec))) : 0.5;
+  const left = mmss(Math.max(0, run.settleIn));
+  const todo = cells.some((t) => t.action && t.canAct);
+  const nextEmpty = cells.find((t) => t.state === 'empty')?.slot;
+  const bySlot = (s: number) => cells.find((t) => t.slot === s)!;
 
   return (
-    <div className="pr-lot">
-      <World near={near} />
-      <section className="pr-panel" aria-label="집의 쳇바퀴">
-        {waiting ? (
-          <div className="pr-wait" role="status" data-wait>
-            <span>추심원이 문 앞에서 기다린다</span>
-            {mapOpen && <button className="buy on" data-wait-go onClick={() => { useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); }}><span>사무소로</span><small>지도</small></button>}
-            <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>연체</small></button>
-          </div>
-        ) : (
-          <div className={'pr-sum' + (ahead ? ' ok' : ' short')} role="status" data-sum data-hl="sum">
-            <span>알바 {sum.hamsters}마리가 버는 돈 <b className="up">초당 {rateTxt(idleSec)}</b></span>
-            <i>{ahead ? '≥' : '<'}</i>
-            <span>이자·생활비 <b className="dn">초당 {rateTxt(claimSec)}</b><small>정산 때 {comma(sum.claim)}</small></span>
-          </div>
-        )}
-        <div className="pr-rows">
+    <div className={'pr-lot' + (open ? ' open' : '')} style={{ ['--cover' as string]: `${cover}px` }}>
+      <World near={near} cover={cover} open={open} onRoll={doTap} />
+      {open && <div className="pr-scrim" data-scrim onPointerDown={() => setPanel(false)} aria-hidden="true" />}
+      <section className={'pr-panel' + (open ? ' open' : '')} data-panel={open ? 'open' : 'closed'} aria-label="집의 쳇바퀴">
+        <div ref={headRef} className="hd">
           {pos.map((p) => <PinRow key={p.market} p={p} />)}
-          <div className="pr-row tap" data-hl="tap">
-            <button className="tapbody" onPointerDown={doTap} data-tap aria-label={wheeled ? '쳇바퀴 굴리기 (코인 채굴)' : '쳇바퀴가 없다'}>
-              <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind="wheel" /></div>
-              <div className="mid">
-                <div className="nm">쳇바퀴 굴리기</div>
-                <div className="sb">{wheeled ? `탭마다 도토코인 +${comma(Math.round(tapValue(g, rideCoin)))}어치${run.coinWheels[rideCoin]?.autoSell ? ' → 바로 팔려 도토리로' : ' → 콜드월렛'}` : `${HOME_WHEEL_NAME}가 실려 갔다`}</div>
-                {wheeled && <div className="sb ms">1초에 세 번 굴리면 초당 +{rateTxt(tapNet * 3)} · 탭 값은 오르지 않는다</div>}
-              </div>
-              <div className="buy tapbtn"><span>굴리기</span><small>탭!</small></div>
-            </button>
+          {waiting && (
+            <div className="pr-wait" role="status" data-wait>
+              <span>추심원이 문 앞에서 기다린다</span>
+              {mapOpen && <button className="buy on" data-wait-go onClick={() => { useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); }}><span>사무소로</span><small>지도</small></button>}
+              <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>연체</small></button>
+            </div>
+          )}
+          <button className={'pr-strip' + (ahead ? ' ok' : ' short') + (open ? ' full' : '')} data-strip data-sum data-hl={open ? 'bar' : 'strip'} aria-expanded={open}
+            aria-label={open ? '쳇바퀴 자리 접기' : '쳇바퀴 자리 펴기'} onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { drag.current = null; }} onClick={onToggle}>
+            <i className="grip" aria-hidden="true" />
+            {open ? (
+              <>
+                <span className="cmp">
+                  <span className="in"><i className="chev">▼&#xFE0E;</i><small>버는 돈</small><b>초당 {rateTxt(idleSec)}</b></span>
+                  <span className="bar" role="img" aria-label={ahead ? '버는 돈이 더 많다' : '나가는 돈이 더 많다'}><i style={{ width: `${share * 100}%` }} /><u /></span>
+                  <span className="out"><small>나가는 돈</small><b>초당 {rateTxt(claimSec)}</b></span>
+                </span>
+                <span className="nx">정산까지 <b>{left}</b> · 다음 정산 때 <b>{comma(sum.claim)}</b></span>
+              </>
+            ) : (
+              <span className="one">
+                <i className="chev">▲&#xFE0E;{todo && <u className="dot" />}</i>
+                <b className="in">초당 +{rateTxt(idleSec)}</b><i className="cmpch">{ahead ? '≥' : '<'}</i><b className="out">이자 초당 {rateTxt(claimSec)}</b>
+                <span className="tm">· 정산 {left}</span>
+              </span>
+            )}
+          </button>
+        </div>
+        <div className="body" aria-hidden={!open}>
+          <div className="clip">
+            <div ref={gridRef} className="pr-grid" data-hl="grid">
+              {TILE_GRID.map((s) => { const t = bySlot(s); return <TileBtn key={s} t={t} onAct={onAct} data-hl={s === 0 ? 'tileFirst' : s === nextEmpty ? 'tileEmpty' : undefined} />; })}
+            </div>
           </div>
-          {rows.map((r) => <SlotRow key={r.key} r={r} onAct={onAct} />)}
         </div>
       </section>
     </div>

@@ -4,12 +4,13 @@
 // 숫자는 엔진 값을 받아 끼운다(TipArgs = model.ts tipArgs). 이 파일은 엔진·저장소를 부르지 않는다(시험이 그대로 읽는다).
 import type { Line, Tab, Who } from './protoStore';
 
-/** 비출 수 있는 화면 조각: 화면 쪽에 data-hl="<이름>" 이 붙어 있다. tab 이 있으면 그 탭에서만 보인다(다른 탭이면 그 탭으로 넘긴다). */
+/** 비출 수 있는 화면 조각: 화면 쪽에 data-hl="<이름>" 이 붙어 있다. tab 이 있으면 그 탭에서만 보인다(다른 탭이면 그 탭으로 넘긴다).
+ *  panel 이 있으면 집 아래 판을 그 상태로 맞춘다(U-34: closed = 접힌 채 세상이 크게, open = 쳇바퀴 자리 칸이 펴진 채). */
 export const HL = {
-  tap: { tab: 'lot', label: '쳇바퀴 굴리기 줄' },
+  wheel: { tab: 'lot', panel: 'closed', label: '집 안의 쳇바퀴(누르면 구른다)' },
   acorn: { label: '가진 도토리 숫자' },
-  settle: { tab: 'lot', label: '정산 막대' },
-  goal: { tab: 'lot', label: '목표 막대' },
+  settle: { tab: 'lot', panel: 'closed', label: '정산 막대' },
+  goal: { tab: 'lot', panel: 'closed', label: '목표 막대' },
   debt: { label: '빚 칩(빚 · 이자 · 생활비)' },
   ps: { label: '초당 수입 칩' },
   wallet: { label: '지갑(콜드월렛) 칩' },
@@ -17,9 +18,11 @@ export const HL = {
   office: { tab: 'map', label: '오소리 사무소 카드' },
   borrow: { tab: 'map', label: '빌리기 단추' },
   pay: { tab: 'map', label: '갚기 단추' },
-  rowFirst: { tab: 'lot', label: '엄마의 쳇바퀴 줄(알바 부르기)' },
-  rowEmpty: { tab: 'lot', label: '빈 자리 줄(쳇바퀴 놓기)' },
-  sum: { tab: 'lot', label: '버는 돈 < > 나가는 돈 줄' },
+  tileFirst: { tab: 'lot', panel: 'open', label: '엄마의 쳇바퀴 칸(알바 부르기)' },
+  tileEmpty: { tab: 'lot', panel: 'open', label: '빈 자리 칸(쳇바퀴 놓기)' },
+  grid: { tab: 'lot', panel: 'open', label: '쳇바퀴 자리 여섯 칸' },
+  strip: { tab: 'lot', panel: 'closed', label: '접힌 판의 한 줄(버는 돈 ≥ < 나가는 돈 · 정산)' },
+  bar: { tab: 'lot', panel: 'open', label: '버는 돈 · 나가는 돈 견줌 막대' },
   coins: { tab: 'phone', label: '거래소 종목 줄' },
   chart: { tab: 'phone', label: '거래소 차트' },
   orders: { tab: 'phone', label: '롱 · 숏 단추' },
@@ -29,10 +32,11 @@ export const HL = {
   cond: { tab: 'phone', label: '손절 · 익절 줄' },
   posLiq: { tab: 'phone', label: '내 포지션의 청산까지' },
   closeBtn: { tab: 'phone', label: '정리하기 단추' },
-} satisfies Record<string, { tab?: Tab; label: string }>;
+} satisfies Record<string, { tab?: Tab; panel?: 'open' | 'closed'; label: string }>;
 export type HlKey = keyof typeof HL;
 export const hlSel = (k: HlKey): string => `[data-hl="${k}"]`;
 export const hlTab = (k: HlKey): Tab | undefined => (HL[k] as { tab?: Tab }).tab;
+export const hlPanel = (k: HlKey): 'open' | 'closed' | undefined => (HL[k] as { panel?: 'open' | 'closed' }).panel;
 
 /** 대사에 끼우는 숫자(전부 엔진 값) */
 export interface TipArgs {
@@ -71,9 +75,9 @@ const t = (moment: Moment, who: Who, text: TipDef['text'], hl?: HlKey, mood?: Li
 /** 튜토리얼 대사 전부. 적힌 순서가 곧 나오는 순서다. */
 export const TIPS = {
   // ── 집: 쳇바퀴가 무엇인가, 정산이 무엇인가 ──
-  'home.tap': t('home', 'collector', () => '가기 전에 하나만요오. 여기를 누르면 쳇바퀴가 돌아요오.', 'tap'),
-  'home.mine': t('home', 'collector', () => '돌면 전기가 생기고, 그 전기로 도토코인을 캐요오.', 'tap'),
-  'home.tiny': t('home', 'collector', (o) => `한 번 누르면 ${n(o.tap)}어치. 혼자 굴리면 그 정도예요오.`, 'tap', 'flat'),
+  'home.tap': t('home', 'collector', () => '가기 전에 하나만요오. 여기를 누르면 쳇바퀴가 돌아요오.', 'wheel'),
+  'home.mine': t('home', 'collector', () => '돌면 전기가 생기고, 그 전기로 도토코인을 캐요오.', 'wheel'),
+  'home.tiny': t('home', 'collector', (o) => `한 번 누르면 ${n(o.tap)}어치. 혼자 굴리면 그 정도예요오.`, 'wheel', 'flat'),
   'home.acorn': t('home', 'collector', () => '캔 코인은 바로 팔려서 도토리가 돼요오. 이게 가진 돈.', 'acorn'),
   'home.settle': t('home', 'collector', () => '이 막대가 다 차면 정산이에요오. 제가 걷으러 와요오.', 'settle'),
   'home.claim': t('home', 'collector', (o) => `이자에 생활비까지 ${n(o.claim)}. 그때까지 모아 두세요오.`, 'goal'),
@@ -99,12 +103,12 @@ export const TIPS = {
   // ── 첫 정산 ──
   'settle.what': t('settle', 'collector', (o) => `생활비 ${n(o.living)}도 같이 걷었어요오. 막대가 차면 또 와요오.`, 'settle'),
   // ── 알바 햄스터 · 쳇바퀴 ──
-  'ham.what': t('hamster', 'weasel', () => '햄스터가 쳇바퀴에 들어가면, 손을 떼도 혼자 돌아요~', 'rowFirst', 'smile'),
-  'ham.quit': t('hamster', 'weasel', () => '대신 일당을 못 받으면 말없이 나가요~ 깔끔하죠~', 'rowFirst', 'smile'),
-  'ham.wheel': t('hamster', 'weasel', (o) => `쳇바퀴는 한 대 ${n(o.wheel)}. 사 두면 사장님 재산이에요~`, 'rowEmpty', 'smile'),
-  'ham.pair': t('hamster', 'weasel', () => '단, 쳇바퀴 한 대에 햄스터 한 마리. 빈 쳇바퀴는 안 돌아요~', 'rowEmpty', 'smile'),
-  'ham.sum': t('hamster', 'weasel', () => '이 줄만 보세요~ 왼쪽이 버는 돈, 오른쪽이 나가는 돈이에요~', 'sum', 'smile'),
-  'ham.live': t('hamster', 'weasel', () => '왼쪽이 더 크면 가만있어도 살아요~ 아니면 굴리셔야죠~', 'sum', 'smile'),
+  'ham.what': t('hamster', 'weasel', () => '햄스터가 쳇바퀴에 들어가면, 손을 떼도 혼자 돌아요~', 'tileFirst', 'smile'),
+  'ham.quit': t('hamster', 'weasel', () => '대신 일당을 못 받으면 말없이 나가요~ 깔끔하죠~', 'tileFirst', 'smile'),
+  'ham.wheel': t('hamster', 'weasel', (o) => `쳇바퀴는 한 대 ${n(o.wheel)}. 사 두면 사장님 재산이에요~`, 'tileEmpty', 'smile'),
+  'ham.pair': t('hamster', 'weasel', () => '단, 쳇바퀴 한 대에 햄스터 한 마리. 빈 쳇바퀴는 안 돌아요~', 'grid', 'smile'),
+  'ham.sum': t('hamster', 'weasel', () => '이 줄만 보세요~ 왼쪽이 버는 돈, 오른쪽이 나가는 돈이에요~', 'strip', 'smile'),
+  'ham.live': t('hamster', 'weasel', () => '왼쪽이 더 크면 가만있어도 살아요~ 아니면 굴리셔야죠~', 'bar', 'smile'),
   // ── 거래소 ──
   'fx.coins': t('exchange', 'boss', () => '도토코인, 밤더리움… 숲의 코인들입니다. 값이 쉬지 않고 움직여요.', 'coins', 'smile'),
   'fx.what': t('exchange', 'boss', () => '선물은 내기입니다. 값이 오를지 내릴지에 도토리를 걸어요.', 'chart', 'smile'),

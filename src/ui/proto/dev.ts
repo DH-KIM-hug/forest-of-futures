@@ -8,7 +8,8 @@ import { prologueSeen } from './Prologue';
 import { KNOWN_AFTER_FIRST_LIFE } from './protoStore';
 import { balance, marketById } from '../../engine/data';
 import { pdev } from './config';
-import { resetGuide, setGuideOff } from './guide';
+import { resetGuide, setGuideOff, tips, MOMENT, type Moment } from './guide';
+import { tipArgs } from './model';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
@@ -34,6 +35,9 @@ export function bootProto(): void {
   if (pdev) g = scene(pdev, g);
   if (wantPrologue()) { useProto.getState().patch({ prologue: true }); st.setSpeed(0); }
   st.setGame(g);
+  // 화면 확인용: &pguide=<때> 는 그 때의 설명 장면을 바로 띄운다(예: pdev=cabin0&guide=1&pguide=hamster)
+  const pg = q.get('pguide') as Moment | null;
+  if (pg && pg in MOMENT) window.setTimeout(() => useProto.getState().pushScene({ id: 'guide_' + pg, again: true, lines: tips(pg, tipArgs(useGame.getState().g)) }), 400);
   const t = q.get('ptab');
   if (t) useProto.getState().setTab(t as Tab);
 }
@@ -114,18 +118,18 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       if (name === 'rebirth') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
       return g;
     }
-    case 'cabin1': case 'cabin2': case 'cabin3': {
-      // 오두막 그림 확인용: 쳇바퀴와 알바가 늘어난 방(1 = 첫 쳇바퀴에 알바 + 빈 쳇바퀴 하나, 2 = 세 대, 3 = 꽉 참)
+    case 'cabin0': case 'cabin1': case 'cabin2': case 'cabin3': {
+      // 집 그림 확인용: 쳇바퀴와 알바가 늘어난 방(0 = 폰만 받음, 1 = 첫 쳇바퀴에 알바 + 빈 쳇바퀴 하나, 2 = 세 대, 3 = 꽉 참)
       const g = clone(base);
-      const n = name === 'cabin1' ? 1 : name === 'cabin2' ? 2 : 5;
+      const n = name === 'cabin0' ? 0 : name === 'cabin1' ? 1 : name === 'cabin2' ? 2 : 5;
       P.patch({ everUnlocked: { ...un }, visited: { ...un } });
       g.run.cash = 500_000;
       stepMut(g, { type: 'action', action: { type: 'borrow', lender: 'shark1' } });
       stepMut(g, { type: 'action', action: { type: 'openAccount', sponsor: true } });
-      stepMut(g, { type: 'action', action: { type: 'hire', coin: 'DTC' } });
+      if (name !== 'cabin0') stepMut(g, { type: 'action', action: { type: 'hire', coin: 'DTC' } });
       for (let i = 0; i < n; i++) stepMut(g, { type: 'action', action: { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' } });
       g.run.equipment.forEach((u, i) => { if (name !== 'cabin1' && (name === 'cabin3' || i < 1)) stepMut(g, { type: 'action', action: { type: 'hire', uid: u.uid } }); });
-      g.run.cash = 31_240;
+      g.run.cash = name === 'cabin0' ? 91_240 : 31_240;
       g.run.settleIn = balance.settlement.intervalSec;
       return clone(g);
     }
