@@ -2,7 +2,7 @@
 // GET  /top?board=networth|roe|pnl&limit=50  → [{rank,name,value,detail,at}]
 // GET  /me?board=…&deviceId=…                 → 내 기록과 순위
 // POST /submit {deviceId,name,board,value,detail} → 검사 뒤 기기당 최고 기록만 남긴다
-import { BOARDS, LIMITS, REAL, checkLife, checkTradeAgainstCandles, checkTradeShape, parseSubmit, type Board, type Candle, type LifeDetail, type TradeDetail } from './verify';
+import { BOARDS, LIMITS, REAL, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, parseSubmit, type Board, type Candle, type LifeDetail, type TradeDetail } from './verify';
 
 export interface Env {
   DB: D1Database;
@@ -75,7 +75,18 @@ export default {
 
       let why: string | null;
       if (s.board === 'networth') {
-        why = checkLife(s.detail as LifeDetail, s.value);
+        const d = s.detail as LifeDetail;
+        why = checkLifeShape(d, s.value, now);
+        if (!why) {
+          // 종목마다 봉을 한 번에 받는다(그 생의 첫 진입 ~ 마지막 정리, 최대 5,000봉 ≈ 3.5일)
+          const byMarket = new Map<string, Candle[]>();
+          for (const m of new Set(d.trades.filter((t) => t.pnl > 0).map((t) => t.market))) {
+            const ts = d.trades.filter((t) => t.market === m && t.pnl > 0);
+            const from = Math.max(Math.min(...ts.map((t) => t.entryTs)), Math.max(...ts.map((t) => t.exitTs)) - 5000 * 60000);
+            byMarket.set(m, await candles(REAL[m], from, Math.max(...ts.map((t) => t.exitTs))));
+          }
+          why = checkLifeAgainstCandles(d, s.value, (t) => (byMarket.get(t.market) ?? []).filter((c) => c.t >= Math.floor(t.entryTs / 60000) * 60000 && c.t <= t.exitTs));
+        }
       } else {
         const d = s.detail as TradeDetail;
         why = checkTradeShape(d, s.board, s.value, now);

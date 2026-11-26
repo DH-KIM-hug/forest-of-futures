@@ -22,6 +22,8 @@ export interface LifeDetail {
   lifeNo: number;
   settles: number;
   peak: number;
+  /** 그 생의 끝난 거래 전부(이긴 것만 상한에 들어간다. 빠뜨려도 상한이 커지지 않는다). */
+  trades: TradeDetail[];
 }
 export interface Submit {
   deviceId: string;
@@ -106,12 +108,38 @@ export function checkTradeAgainstCandles(d: TradeDetail, candles: Candle[]): str
   return null;
 }
 
-export function checkLife(d: LifeDetail, value: number): string | null {
+export const LIFE = {
+  start: -300_000, // 엄마 빚 30만, 현금 0
+  mineMaxPerSettle: 50_000, // 쳇바퀴 6대 × 6,500 + 최대 탭(12회/초 × 180초 × 2) + 여유
+  eventMaxPerSettle: 3_000, // 마을 사건(지원금 등) 평균 상한
+  maxTrades: 300,
+};
+
+/** 한 생 재산: 모양 검사(시세 전). */
+export function checkLifeShape(d: LifeDetail, value: number, now: number): string | null {
   if (!(value > 0 && value <= LIMITS.maxNetworth)) return 'networth';
   if (!(Number.isInteger(d.lifeNo) && d.lifeNo >= 1)) return 'lifeNo';
-  if (!(Number.isInteger(d.settles) && d.settles >= 1)) return 'settles';
-  // 정산 한 번에 늘 수 있는 재산의 상한(거칠게): 시작 0 에서 정산마다 최대 2배 + 상수
-  const bound = 600_000 * Math.pow(2, Math.min(40, d.settles));
-  if (value > bound) return 'tooFast';
+  if (!(Number.isInteger(d.settles) && d.settles >= 1 && d.settles <= 100_000)) return 'settles';
+  if (!Array.isArray(d.trades) || d.trades.length > LIFE.maxTrades) return 'trades';
+  for (const t of d.trades) {
+    if (!REAL[t.market] || (t.dir !== 1 && t.dir !== -1) || !(t.lev >= 1 && t.lev <= LIMITS.maxLev)) return 'tradeShape';
+    if (!(t.margin > 0 && t.margin <= LIMITS.maxMargin) || !(t.exitTs > t.entryTs && t.exitTs <= now + 60_000)) return 'tradeShape';
+    if (!Number.isFinite(t.pnl) || !Number.isFinite(t.roe)) return 'tradeShape';
+    if (t.pnl > 0 && Math.abs(t.pnl - (t.margin * t.roe) / 100) > Math.max(2, t.margin * 0.01)) return 'pnlRoe';
+  }
+  return null;
+}
+
+/** 이긴 거래마다 실제 봉으로 가능한지 보고, 재산 상한 = 시작 + 이긴 거래 합 + 정산 × (쳇바퀴 + 사건). */
+export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf: (t: TradeDetail) => Candle[]): string | null {
+  let wins = 0;
+  for (const t of d.trades) {
+    if (t.pnl <= 0) continue;
+    const why = checkTradeAgainstCandles(t, candlesOf(t));
+    if (why) return `trade:${why}`;
+    wins += t.pnl;
+  }
+  const bound = LIFE.start + wins + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
+  if (value > bound) return `tooHigh(${Math.round(value)} > ${Math.round(bound)})`;
   return null;
 }

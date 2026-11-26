@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkLife, checkTradeAgainstCandles, checkTradeShape, cleanName, maxFavorablePct, parseSubmit, type TradeDetail } from '../src/verify';
+import { checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, cleanName, maxFavorablePct, parseSubmit, type TradeDetail } from '../src/verify';
 
 const T0 = 1_800_000_000_000;
 const trade = (o: Partial<TradeDetail> = {}): TradeDetail => ({ market: 'DTC', dir: 1, lev: 200, margin: 50000, entryTs: T0, exitTs: T0 + 180_000, roe: 31, pnl: 15500, ...o });
@@ -29,10 +29,19 @@ describe('랭킹 제출 검사', () => {
     expect(checkTradeAgainstCandles(trade({ roe: 80, pnl: 40000 }), cs)).toMatch(/roeTooHigh/);
     expect(checkTradeAgainstCandles(trade(), [])).toBe('noCandles');
   });
-  it('한 생 재산: 양수, 상한, 정산 수에 비해 너무 빠르면 거절', () => {
-    expect(checkLife({ lifeNo: 1, settles: 30, peak: 500000 }, 500000)).toBeNull();
-    expect(checkLife({ lifeNo: 1, settles: 1, peak: 5e9 }, 5e9)).toBe('networth');
-    expect(checkLife({ lifeNo: 1, settles: 1, peak: 2e6 }, 2e6)).toBe('tooFast');
+  it('한 생 재산: 상한 = −30만 + 검증된 이긴 거래 합 + 정산 × 53,000', () => {
+    const cs = [{ t: T0, h: 100.1, l: 100 }];
+    const win = trade({ roe: 31, pnl: 15500 });
+    const lose = trade({ roe: -40, pnl: -20000 });
+    const life = { lifeNo: 1, settles: 10, peak: 0, trades: [win, lose] };
+    expect(checkLifeShape(life, 200000, T0 + 300_000)).toBeNull();
+    // −300,000 + 15,500 + 10 × 53,000 = 245,500
+    expect(checkLifeAgainstCandles(life, 245000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 246000, () => cs)).toMatch(/tooHigh/);
+    // 이긴 거래를 부풀리면 그 거래에서 걸린다
+    const fake = { ...life, trades: [trade({ roe: 900, pnl: 450000 })] };
+    expect(checkLifeAgainstCandles(fake, 600000, () => cs)).toMatch(/trade:roeTooHigh/);
+    expect(checkLifeShape({ ...life, trades: 'x' as any }, 1, T0)).toBe('trades');
   });
   it('제출 파싱: 기기 번호 형식', () => {
     expect(parseSubmit({ deviceId: 'abc', name: 'a', board: 'roe', value: 1, detail: {} }).ok).toBe(false);
