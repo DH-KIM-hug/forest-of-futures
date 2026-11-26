@@ -1,6 +1,6 @@
 // 컷인 대화(§7.6·7.7, U-8·U-9): 사람이 크게 올라오고 이름표 + 한 줄씩. 탭으로 넘긴다. 아래에 진행 점.
 // 정산 컷인도 같은 틀을 쓴다(이자 금액은 추심원 대사에, 내 정산 합계는 따로 — U-23).
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Scene, type Who } from './protoStore';
 import { WHO_NAME } from './text';
@@ -8,6 +8,7 @@ import { comma } from '../../engine/util';
 import { Badger, O } from './art';
 import { play } from './audio';
 import { say } from './watch';
+import { hlSel, hlTab, markTip } from './guide';
 
 const TAB_LABEL: Record<string, string> = { map: '지도', phone: '거래소', lot: '집' };
 import heroFront from './img/hero_front.png';
@@ -82,13 +83,33 @@ function Bust({ who, smile }: { who: Who; smile: boolean }) {
   }
 }
 
+interface Spot { x: number; y: number; w: number; h: number; H: number; W: number }
+/** 대사 카드와 인물이 차지하는 높이(대략). 비추는 조각이 이 안에 들면 카드를 위로 올린다. */
+const CARD_ZONE = 300;
+
 export function CutIn() {
   const sc: Scene | undefined = useProto((s) => s.scenes[0]);
   const over = useGame((s) => s.g.run.over);
+  if (!sc || over) return null;
+  return <CutInScene key={sc.id} sc={sc} />;
+}
+
+function CutInScene({ sc }: { sc: Scene }) {
   const [i, setI] = useState(0);
+  const [spot, setSpot] = useState<Spot | null>(null);
+  const root = useRef<HTMLDivElement>(null);
   // 쳇바퀴를 연타하던 손가락이 대사를 넘겨 버리지 않게, 줄이 뜨고 0.6초는 탭을 받지 않는다
-  const shownAt = useRef(0);
-  useEffect(() => { setI(0); shownAt.current = performance.now(); if (sc) play('cutin_whoosh'); }, [sc?.id]);
+  const shownAt = useRef(performance.now());
+  const held = useRef(false);
+  const n = sc.lines.length;
+  const line = sc.lines[Math.min(i, n - 1)];
+  const last = i >= n - 1;
+
+  useEffect(() => {
+    play('cutin_whoosh');
+    // 설명이 든 장면은 읽는 동안 게임 시계를 멈춘다(정산 막대를 설명하는 사이에 정산이 오지 않게). 이미 멈춰 있으면 건드리지 않는다.
+    if (sc.hold && useGame.getState().speed !== 0) { held.current = true; useGame.getState().setSpeed(0); }
+  }, []);
   const end = () => {
     const P = useProto.getState();
     const cur = P.scenes[0];
@@ -100,33 +121,71 @@ export function CutIn() {
       play('unlock_tab');
       say(`${TAB_LABEL[cur.unlock]} 탭이 열렸다!`);
     }
+    if (held.current) { held.current = false; useGame.getState().setSpeed(1); }
     P.patch(patch);
     cur.onEnd?.();
   };
+  // 가만두면 넘어가는 장면(막지 않는 한두 줄): 줄마다 auto 밀리초
   useEffect(() => {
-    if (!sc?.auto) return;
-    const t = window.setTimeout(end, sc.auto);
+    if (!sc.auto) return;
+    const t = window.setTimeout(() => { if (last) end(); else setI((k) => k + 1); }, sc.auto);
     return () => window.clearTimeout(t);
-  }, [sc?.id]);
-  if (!sc || over) return null;
-  const line = sc.lines[Math.min(i, sc.lines.length - 1)];
+  }, [i]);
+  // 설명 줄은 화면에 뜬 순간 '봤다'고 적는다(평생 한 번)
+  useEffect(() => { if (line.tip) markTip(line.tip); }, [i]);
+  // 이 줄이 비추는 화면 조각의 자리를 잰다(다른 탭에 있으면 그 탭으로 넘긴다). 조각이 없으면 그냥 대사만 나온다.
+  useLayoutEffect(() => {
+    if (!line.hl) { setSpot(null); return; }
+    const tab = hlTab(line.hl);
+    const P = useProto.getState();
+    if (tab && P.tab !== tab && (tab === 'lot' || P.everUnlocked[tab])) P.setTab(tab);
+    const sel = hlSel(line.hl);
+    let scrolled = false;
+    const measure = () => {
+      const el = document.querySelector(sel);
+      const box = root.current?.getBoundingClientRect();
+      if (!el || !box) { setSpot(null); return; }
+      if (!scrolled) { scrolled = true; el.scrollIntoView({ block: 'nearest' }); }
+      const b = el.getBoundingClientRect();
+      if (b.width < 2 || b.height < 2) { setSpot(null); return; }
+      const x = Math.max(4, b.left - box.left - 5), y = Math.max(4, b.top - box.top - 5);
+      const w = Math.min(box.width - 4, b.right - box.left + 5) - x, h = Math.min(box.height - 4, b.bottom - box.top + 5) - y;
+      setSpot((o) => (o && Math.abs(o.x - x) < 0.5 && Math.abs(o.y - y) < 0.5 && Math.abs(o.w - w) < 0.5 && Math.abs(o.h - h) < 0.5 && o.H === box.height ? o : { x, y, w, h, H: box.height, W: box.width }));
+    };
+    measure();
+    const t = window.setInterval(measure, 180);
+    return () => window.clearInterval(t);
+  }, [i]);
+
   const smile = line.mood ? line.mood === 'smile' : sc.settle ? sc.settle.win : true;
-  const last = i >= sc.lines.length - 1;
   const pick = last ? sc.choices : undefined;
-  const next = () => { if (performance.now() - shownAt.current < 600) return; if (last && pick) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
-  const choose = (run: () => void) => { if (performance.now() - shownAt.current < 600) return; play('ui_tap'); end(); run(); };
+  const guarded = () => performance.now() - shownAt.current < 600;
+  const next = () => { if (guarded()) return; if (last && pick) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };
+  const choose = (run: () => void) => { if (guarded()) return; play('ui_tap'); end(); run(); };
+  /** 설명 건너뛰기: 이 장면의 설명 줄을 전부 본 것으로 적고 닫는다. 고를 것이 있는 장면은 고르는 줄로 간다. */
+  const skip = () => {
+    if (guarded()) return;
+    for (const l of sc.lines) if (l.tip) markTip(l.tip);
+    play('ui_tap');
+    if (sc.choices) { shownAt.current = performance.now(); setI(n - 1); } else end();
+  };
   const st = sc.settle;
+  // 비추는 조각이 화면 아래쪽(대사 카드 자리)에 있으면 카드를 위로 올린다
+  const top = !!spot && spot.y + spot.h > spot.H - CARD_ZONE;
   return (
-    <div className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win')} onClick={next} role="dialog" aria-label="컷인 대화" data-scene={sc.id}>
+    <div ref={root} className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win') + (line.hl ? ' hl' : '') + (spot ? ' spot' : '') + (top ? ' top' : '')} onClick={next} role="dialog" aria-label="컷인 대화"
+      data-scene={sc.id} data-line={i} data-tip={line.tip ?? ''} data-spot={spot ? line.hl : ''}>
+      {spot && <div className="pr-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} aria-hidden="true"><i className={'arr ' + (top ? 'dn' : 'up')} /></div>}
       <div key={line.who} className="bustbox"><Bust who={line.who} smile={smile} /></div>
       {st && !st.win && <div className="stamp">연체</div>}
       <div className={'say' + (line.who === 'note' ? ' note' : '') + (line.who === 'sms' ? ' sms' : '')}>
         {WHO_NAME[line.who] && <div className="tag">{WHO_NAME[line.who]}</div>}
+        {sc.guide && !last && <button className="skip" data-skip onClick={(e) => { e.stopPropagation(); skip(); }}>설명 건너뛰기</button>}
         <p key={i}>{line.text}</p>
         {st && i === 0 && (
           <div className="meta"><span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span><span>채굴 − 전기 − 이자 − 생활비</span></div>
         )}
-        {sc.lines.length > 1 && <div className="dots" aria-label={`${i + 1}/${sc.lines.length}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
+        {n > 1 && <div className="dots" aria-label={`${i + 1}/${n}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
         {last && sc.unlock && !pick && <div className="unl">끝나면 {TAB_LABEL[sc.unlock]} 탭이 열린다</div>}
         {pick && (
           <div className="pick">

@@ -1,7 +1,8 @@
 // 게임 상태 변화를 보고 시제품 화면 사건(추심원·정산 컷인·탭 해금·목표)을 만든다. 규칙은 엔진의 것만 쓴다.
 import { useGame } from '../../store/gameStore';
 import { useProto, type Scene } from './protoStore';
-import { currentGoal, lifeNo, officeOffer, claim, hamsterMath } from './model';
+import { currentGoal, lifeNo, officeOffer, claim, hamsterMath, tipArgs } from './model';
+import { tips, tipsLeft, type Moment } from './guide';
 import { STORY } from './text';
 import { comma } from '../../engine/util';
 import { DEBT_IDS, marketById } from '../../engine/data';
@@ -63,16 +64,35 @@ export function onFirstOfficeLoan(before: GameState): void {
   P.patch({ loanTaken: true, tutorial: P.tutorial === 'none' ? 'await' : P.tutorial });
   scene({
     id: 'office', unlock: 'phone',
-    lines: STORY.office({ lend: o.lend, ratePct: o.ratePct, oldInterest, newInterest: interestDue(g, 'shark1'), debt: g.run.debts.shark1.principal }),
+    lines: STORY.office({ lend: o.lend, ratePct: o.ratePct, oldInterest, newInterest: interestDue(g, 'shark1'), debt: g.run.debts.shark1.principal }, tipArgs(g)),
     // 대화가 끝나면 기다리던 추심원이 오늘 이자를 떼어 간다(시계가 다시 돈다)
     onEnd: () => { if (useProto.getState().waiting) { useProto.getState().patch({ waiting: false }); useProto.getState().setTab('lot'); } useGame.getState().setSpeed(1); },
   });
 }
 
+/** 설명 장면(guide.ts): 그 화면을 처음 보는 순간에 한 번. 다른 장면이 떠 있으면 기다린다. 줄마다 평생 한 번이라 다음 생·다음 접속에는 안 나온다. */
+export function guideCheck(): void {
+  const P = useProto.getState();
+  const g = useGame.getState().g;
+  const run = g.run;
+  if (P.prologue || run.over || P.scenes.length > 0 || g.family.generation !== P.gen) return;
+  const push = (m: Moment): boolean => { if (!tipsLeft(m)) return false; scene({ id: 'guide_' + m, again: true, lines: tips(m, tipArgs(g)) }); return true; };
+  if (P.tab === 'lot' && !P.waiting && run.settleIn > 2) {
+    // 집: 쳇바퀴·정산 → (조금 굴린 뒤) 빚 칩·초당·지갑
+    if (!P.loanTaken && run.settleNo === 0 && push('home')) return;
+    if (!tipsLeft('home') && (run.stats.laborTaps ?? 0) >= HUD_TIP_TAPS && push('hud')) return;
+  }
+  if (P.tab === 'map' && !P.loanTaken && push('map')) return;
+  if (P.tab === 'phone' && P.tutorial === 'done' && Object.keys(run.positions).length > 0) push('position');
+}
+/** 빚 칩 설명은 쳇바퀴를 이만큼 굴려 본 뒤에 */
+export const HUD_TIP_TAPS = 12;
+
 let started = false;
 export function startWatch(): void {
   if (started) return;
   started = true;
+  useProto.subscribe(() => guideCheck());
   let prev = useGame.getState().g;
   useProto.getState().patch({ gen: prev.family.generation });
   useGame.subscribe((s) => {
@@ -99,7 +119,7 @@ export function startWatch(): void {
         const c = claim(g);
         scene({
           id: `come${run.settleNo}`, unlock: 'map', again: true,
-          lines: STORY.collectorCome({ interest: c.interest, cash: Math.floor(run.cash), lend: officeOffer(g).lend, again: P.sentAwayAt >= 0, reborn: lifeNo(g) > 1 }),
+          lines: STORY.collectorCome({ interest: c.interest, cash: Math.floor(run.cash), lend: officeOffer(g).lend, again: P.sentAwayAt >= 0, reborn: lifeNo(g) > 1 }, tipArgs(g)),
           choices: [
             { id: 'go', label: '사무소로 간다', sub: '지도가 열린다', primary: true, run: () => { useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); } },
             { id: 'away', label: '돌려보낸다', sub: '연체로 적힌다', run: sendAway },
@@ -129,13 +149,13 @@ export function startWatch(): void {
         const meta = { net, interest: r.interest, win: !od, no };
         const tagged = !!run.coinWheels.DTC?.tagBy;
         if (od && !P.loanTaken) scene({ id: `refused${run.settleNo}`, lines: STORY.refused(r.interest, tagged), settle: meta });
-        else if (no === 1 && !od) scene({ id: 'firstSettle', lines: lifeNo(g) <= 1 ? STORY.firstSettle(r.interest) : STORY.rebornSettle(r.interest), settle: meta });
+        else if (no === 1 && !od) scene({ id: 'firstSettle', lines: lifeNo(g) <= 1 ? STORY.firstSettle(r.interest, tipArgs(g)) : STORY.rebornSettle(r.interest), settle: meta });
         else if (no <= FULL_CUTINS && Object.keys(run.positions).length === 0 && P.tab !== 'phone') scene({ id: `settle${run.settleNo}`, lines: od ? STORY.settleLose(r.interest) : STORY.settleWin(r.interest), settle: meta, auto: 4000 });
         else { const iv = comma(Math.round(r.interest)); say(od ? `추심원: 이자 ${iv}… 모자라네요오. (내 정산 ${net >= 0 ? '+' : '−'}${comma(Math.abs(net))})` : `추심원: 이자 ${iv} 수금 완료요오. (내 정산 ${net >= 0 ? '+' : '−'}${comma(Math.abs(net))})`); }
         // 빌린 뒤에도 이자를 못 낸 정산: 사채 문자
         if (od && P.loanTaken) { scene({ id: 'sms', lines: STORY.sms() }); if (!useProto.getState().seen.sms) useProto.getState().patch({ visited: { ...useProto.getState().visited, map: false } }); }
         // 폰을 받은 뒤 첫 정산: 족제비가 알바를 권한다(막지 않는 한 줄)
-        if (P.loanTaken && !od) scene({ id: 'hamsterHint', lines: STORY.hamsterHint(hamsterMath(g).wage), auto: 7000 });
+        if (P.loanTaken && !od) scene({ id: 'hamsterHint', lines: STORY.hamsterHint(hamsterMath(g).wage, tipArgs(g)), auto: 5000 });
       } else say(`땡! 정산 ${net >= 0 ? '+' : '−'}${comma(Math.abs(net))}`);
     }
     // 엔진의 마을 사건(금리 인상·지원금 등)은 속보 한 장으로 알린다. 모르는 사이에 이자가 바뀌지 않게.
@@ -184,6 +204,7 @@ export function startWatch(): void {
     if (everOpened !== P.everOpened) P.patch({ everOpened });
     const gi = currentGoal(g, useProto.getState().goalIdx, { everOpened, waiting: useProto.getState().waiting, loanTaken: useProto.getState().loanTaken });
     if (gi !== useProto.getState().goalIdx) { if (gi > useProto.getState().goalIdx) play('goal_complete'); useProto.getState().patch({ goalIdx: gi }); }
+    guideCheck();
     prev = g;
   });
 }

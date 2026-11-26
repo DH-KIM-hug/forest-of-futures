@@ -8,6 +8,7 @@ import { prologueSeen } from './Prologue';
 import { KNOWN_AFTER_FIRST_LIFE } from './protoStore';
 import { balance, marketById } from '../../engine/data';
 import { pdev } from './config';
+import { resetGuide, setGuideOff } from './guide';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
@@ -27,6 +28,9 @@ export function bootProto(): void {
   persistFlag.on = false;
   const st = useGame.getState();
   let g = freshGame();
+  // 튜토리얼 설명(guide.ts): &prologue=1 이나 &guide=1 이면 처음부터 다시, &guide=0 이나 장면 건너뛰기(pdev)에서는 끈다
+  if (q.get('prologue') === '1' || q.get('guide') === '1') resetGuide();
+  setGuideOff(q.get('guide') === '0' || (!!pdev && q.get('guide') !== '1'));
   if (pdev) g = scene(pdev, g);
   if (wantPrologue()) { useProto.getState().patch({ prologue: true }); st.setSpeed(0); }
   st.setGame(g);

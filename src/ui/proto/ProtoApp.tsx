@@ -72,13 +72,13 @@ function Hud() {
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {debtLine(g) > 0 && <div className="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배 · {rate.remaining}회 남음</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
+          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배 · {rate.remaining}회 남음</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
         </div>
         <DevBar />
         <div className="acorn">
-          <div className="n"><span key={bump.k} className={bump.k ? 'v n-' + bump.dir : 'v'}>{comma(cash)}</span><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
-          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps onClick={() => setBrk((b) => !b)}>초당 {ps >= 0 ? '+' : '−'}{rateTxt(perSec(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i></button>
-          {hasWheel && <button className="walbtn" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
+          <div className="n" data-hl="acorn"><span key={bump.k} className={bump.k ? 'v n-' + bump.dir : 'v'}>{comma(cash)}</span><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
+          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 {ps >= 0 ? '+' : '−'}{rateTxt(perSec(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i></button>
+          {hasWheel && <button className="walbtn" data-hl="wallet" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
         </div>
       </div>
       {brk && (
@@ -86,11 +86,11 @@ function Hud() {
       )}
       {lot && (
         <>
-          <div key={'g' + gi} className="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
+          <div key={'g' + gi} className="goal" data-hl="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
             <span><small>목표</small> {goal ? goal.label : '1막 끝. 이제 빚과 거래뿐'}</span>{goal && <em>{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
-          <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')}>
+          <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
             <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '정산 · 추심원이 기다린다' : '정산 (이자 걷는 시간)'}</span><em>{mmss(left)}</em>
           </div>
         </>
@@ -126,7 +126,7 @@ function TabBar() {
         const on = tab === t.id;
         const b = ok ? badge(t.id) : null;
         return (
-          <button key={t.id} data-tab={t.id} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '')} aria-current={on ? 'page' : undefined}
+          <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '')} aria-current={on ? 'page' : undefined}
             onClick={() => { if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
             {on && <i className="base" />}
             <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? <RowIcon kind={t.id} size={t.id === 'lot' ? 44 : on ? 38 : 32} /> : '?'}</span>

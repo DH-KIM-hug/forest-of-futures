@@ -6,6 +6,8 @@ import { forecast } from '../../engine/settlement';
 import { interestDue, lenderLimit, ownedCoins, totalDebt } from '../../engine/selectors';
 import type { CoinId, GameState } from '../../engine/types';
 import { HOME_WHEEL_NAME } from './text';
+import type { TipArgs } from './guide';
+import { tapValue } from '../../engine/equipment';
 
 export const WHEEL_COIN: CoinId = 'DTC';
 /** 집에 더 놓는 쳇바퀴(엔진 설비 id) */
@@ -147,4 +149,14 @@ export const TUT = { market: 'DTC' as CoinId, margin: 30000, lev: 10, stepMs: 26
 export function tutorialPrice(real: number, dir: 1 | -1, k: number): number {
   const wig = k % 3 === 2 ? -0.35 : 0; // 세 걸음에 한 번 살짝 되돌아갔다가 더 간다
   return real * (1 - dir * ((TUT.stepPct * k + wig) / 100));
+}
+
+/** 튜토리얼 대사(guide.ts)에 끼우는 숫자. 전부 엔진 값이다. */
+export function tipArgs(g: GameState): TipArgs {
+  const c = claim(g);
+  const coin = g.run.riding ?? ownedCoins(g.run)[0] ?? WHEEL_COIN;
+  return {
+    tap: Math.round(tapValue(g, coin)), claim: c.total, living: c.living, wage: laborWage(), wheel: nextTierCost(g.run, EXTRA_WHEEL),
+    lend: officeOffer(g).lend || (lenderById.shark1.borrowUnit ?? 0), debt: totalDebt(g.run), lev: TUT.lev,
+  };
 }

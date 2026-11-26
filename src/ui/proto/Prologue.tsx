@@ -6,6 +6,7 @@ import { C, O, Cube, Room, Wheel, Badger, Acorn, dk } from './art';
 import { play, playTap } from './audio';
 import { balance, lenderById } from '../../engine/data';
 import { comma } from '../../engine/util';
+import { prologueTalk, LEDGER_NOTE } from './text';
 import heroSide from './img/hero_side.png';
 import heroFront from './img/hero_front.png';
 
@@ -20,11 +21,7 @@ const CAPS = ((balance.start as unknown as { inheritedRateCap?: Record<string, n
 const INTEREST = Math.ceil(Object.entries(DEBTS).reduce((a, [id, p]) => a + p * Math.min(lenderById[id].rate, CAPS[id] ?? lenderById[id].rate), 0) - 1e-9);
 const TAP: number = balance.mining.tapBase;
 const WALK: [number, number][] = [[70, 560], [150, 500], [226, 452]];
-const TALK = [
-  `어머님 빚 ${DEBT_TOTAL / 10000}만, 오늘부터 상속인분 장부예요오.`,
-  `이자는 정산마다 ${comma(INTEREST)}. 어머님 때 이자 그대로예요오.`,
-  '저 쳇바퀴요? 굴리면 도토코인이 나와요오. 어머님도 그걸로 이자 내셨어요오.',
-];
+const TALK = prologueTalk({ debt: DEBT_TOTAL, interest: INTEREST });
 
 const Finger = ({ x, y }: { x: number; y: number }) => (
   <g className="pp-finger" style={{ transformOrigin: `${x}px ${y}px` }}>
@@ -144,7 +141,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             {step === 'p3' && (
               <g className="pa-walkin">
                 <Badger cx={300} cy={600} h={96} />
-                <g className="pa-bubble" key={talk}>
+                <g className={'pa-bubble' + (talk > 0 ? ' now' : '')} key={talk}>
                   <rect x={22} y={250} width={346} height={64} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
                   <path d="M286 312 l14 22 l8 -22z" fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={284} y={306} width={26} height={6} fill="#fff" />
                   <foreignObject x={32} y={254} width={326} height={58}><div className="pp-say">{TALK[talk]}</div></foreignObject>
@@ -174,7 +171,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             <div className="pp-led"><span>빚</span><b className="debt">{comma(DEBT_TOTAL)}</b></div>
             <div className="pp-led"><span>정산마다 이자</span><b className="debt">{comma(INTEREST)}</b></div>
             <div className="pp-led"><span>가진 돈</span><b><Acorn size={24} />0</b></div>
-            <small>엄마의 빚이 내 빚이 됐다. 가진 것은 쳇바퀴 하나.</small>
+            <small>{LEDGER_NOTE}</small>
             <em>탭하면 계속</em>
           </div>
         </div>

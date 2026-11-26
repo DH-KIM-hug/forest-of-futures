@@ -550,3 +550,26 @@
 .pp-led { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; padding: 0 6px; font-weight: 800; font-size: 15px; border-bottom: 2px dashed rgba(74, 70, 64, .25); }
 .pp-led b { display: inline-flex; align-items: center; gap: 4px; font-family: var(--dsp); font-weight: 400; font-size: 30px; font-variant-numeric: tabular-nums; }
 .pp-led b.debt { color: var(--red-ink); }
+
+/* ── U-32 튜토리얼 대사: 설명하는 화면 조각을 비춘다(나머지는 어둡게) · 조각이 아래에 있으면 대사 카드가 위로 · 설명 건너뛰기 ── */
+.pr-cutin p { font-size: 20px; line-height: 1.36; }
+.pr-cutin .dots i { flex: 0 1 30px; min-width: 6px; }
+.pr-cutin.spot { background: transparent; animation: none; }
+.pr-spot { position: absolute; z-index: 0; border-radius: 16px; pointer-events: none; box-shadow: 0 0 0 3px #FFD45A, 0 0 0 6px rgba(255, 248, 228, .5), 0 0 0 2400px rgba(29, 27, 25, .62); transition: left .26s cubic-bezier(.22, 1, .36, 1), top .26s cubic-bezier(.22, 1, .36, 1), width .26s, height .26s; }
+.pr-spot::after { content: ''; position: absolute; inset: -4px; border-radius: 19px; border: 3px solid #FFD45A; animation: spotPulse 1.1s ease-out infinite; }
+.pr-spot .arr { position: absolute; left: 50%; width: 0; height: 0; margin-left: -13px; border: 13px solid transparent; filter: drop-shadow(0 0 2px rgba(29, 27, 25, .9)); }
+.pr-spot .arr.dn { top: -32px; border-bottom-width: 0; border-top: 17px solid #FFD45A; animation: arrDn .6s ease-in-out infinite alternate; }
+.pr-spot .arr.up { bottom: -32px; border-top-width: 0; border-bottom: 17px solid #FFD45A; animation: arrUp .6s ease-in-out infinite alternate; }
+@keyframes spotPulse { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.06, 1.18); } }
+@keyframes arrDn { to { transform: translateY(-7px); } }
+@keyframes arrUp { to { transform: translateY(7px); } }
+/* 비추는 줄에서는 인물을 작게(조각을 가리지 않게) */
+.pr-cutin.hl .bustbox { width: 104px; margin: 0 8px -16px auto; animation: none; }
+.pr-cutin.hl .bustbox .bust.hero { width: 70%; margin-bottom: 18px; }
+.pr-cutin.top { justify-content: flex-start; padding-top: calc(env(safe-area-inset-top) + 10px); padding-bottom: 0; }
+.pr-cutin.top .bustbox { width: 84px; }
+.pr-cutin.top.who-note { padding-top: calc(env(safe-area-inset-top) + 26px); }
+.pr .pr-cutin .skip { position: absolute; top: -15px; right: 12px; min-width: 0; min-height: 28px; padding: 0 12px; border-radius: 14px; background: var(--card); border: 2px solid var(--o); font-size: 12.5px; font-weight: 800; color: var(--sub); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .pr-spot, .pr-spot::after, .pr-spot .arr { transition: none; animation: none; } }
+/* 프롤로그 말풍선: 걸어 들어오는 첫 줄만 기다리고, 다음 줄부터는 바로 뜬다 */
+.pa-bubble.now { animation-delay: 0s; }

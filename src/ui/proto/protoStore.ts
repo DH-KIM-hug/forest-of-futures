@@ -1,6 +1,7 @@
 // 시제품 화면 상태(저장하지 않음). 게임 상태(엔진)는 store/gameStore 가 가진다.
 import { create } from 'zustand';
 import type { CardData } from './shareCard';
+import { tipSeen, type HlKey } from './guide';
 
 /** 탭 셋(U-29·U-30): 지도 · 집(가운데) · 거래소. 'phone' 은 거래소 탭의 내부 이름(중고폰 속 FRX 앱). */
 export type Tab = 'lot' | 'phone' | 'map';
@@ -8,7 +9,8 @@ export interface Collector { interest: number; fill: number; overdue: boolean; a
 
 /** 컷인에 나오는 사람(§7.7). hero = 주인공 속마음, sms = 폰 문자, note = 지문 */
 export type Who = 'collector' | 'boss' | 'weasel' | 'hero' | 'sms' | 'note';
-export interface Line { who: Who; text: string; mood?: 'smile' | 'flat' }
+/** tip = 튜토리얼 설명 줄의 이름(guide.ts, 평생 한 번만 나온다). hl = 그 줄이 비추는 화면 조각 */
+export interface Line { who: Who; text: string; mood?: 'smile' | 'flat'; tip?: string; hl?: HlKey }
 export interface Choice { id: string; label: string; sub?: string; primary?: boolean; run: () => void }
 /** 컷인 한 장면: 줄을 탭으로 넘긴다. settle 이 있으면 정산 합계를 같이 보여 준다. unlock 은 끝날 때 열리는 탭. */
 export interface Scene {
@@ -23,6 +25,10 @@ export interface Scene {
   /** 장면이 끝난 뒤 한 번(같은 생에 다시 나올 수 있는 장면은 again) */
   onEnd?: () => void;
   again?: boolean;
+  /** 떠 있는 동안 게임 시계를 멈춘다(설명 줄이 든 장면은 저절로 켜진다) */
+  hold?: boolean;
+  /** 설명 줄이 들어 있다(건너뛰기 단추가 붙는다). pushScene 이 채운다 */
+  guide?: boolean;
 }
 
 /** 이번 생에서 이미 지나간 이야기 사건(다음 생에서는 다시 나오지 않는 것들) */
@@ -74,7 +80,14 @@ export const useProto = create<P>((set) => ({
   ...fresh(), visited: { lot: true }, everUnlocked: { lot: true }, seen: {}, gen: 0, prologue: false,
   setTab: (tab) => set((s) => ({ tab, visited: { ...s.visited, [tab]: true } })),
   patch: (p) => set(p as any),
-  pushScene: (sc) => set((s) => ((!sc.again && s.seen[sc.id]) || s.scenes.some((x) => x.id === sc.id) ? s : { scenes: [...s.scenes, sc] })),
+  pushScene: (sc) => set((s) => {
+    if ((!sc.again && s.seen[sc.id]) || s.scenes.some((x) => x.id === sc.id)) return s;
+    // 이미 본 설명 줄은 뺀다. 설명 줄이 남은 장면은 읽는 동안 시계를 멈추고, 저절로 닫히지 않는다.
+    const lines = sc.lines.filter((l) => !l.tip || !tipSeen(l.tip));
+    if (!lines.length) return s;
+    const guide = lines.some((l) => !!l.tip);
+    return { scenes: [...s.scenes, { ...sc, lines, guide, hold: sc.hold ?? guide, auto: guide ? undefined : sc.auto }] };
+  }),
   // 다음 생: 사무소 가는 길은 이미 안다(지도는 열린 채). 폰과 거래소는 다시 빌려야 받는다.
   resetLife: (gen, first) => set(first
     ? { ...fresh(), visited: { lot: true }, everUnlocked: { lot: true }, seen: {}, gen }

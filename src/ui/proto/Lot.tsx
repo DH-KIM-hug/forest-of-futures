@@ -58,7 +58,7 @@ function SlotRow({ r, onAct }: { r: Slot; onAct: (r: Slot) => boolean }) {
   const [pop, setPop] = useState(0);
   const empty = r.kind === 'empty' || r.kind === 'lost';
   return (
-    <div className={'pr-row slot' + (empty ? ' locked' : '') + (r.staffed ? ' run' : '') + (r.tagged ? ' tagged' : '')} data-row={r.kind === 'wheel' ? 'wheel' : r.kind} data-staffed={r.staffed ? '1' : '0'}>
+    <div className={'pr-row slot' + (empty ? ' locked' : '') + (r.staffed ? ' run' : '') + (r.tagged ? ' tagged' : '')} data-row={r.kind === 'wheel' ? 'wheel' : r.kind} data-hl={r.kind === 'first' ? 'rowFirst' : r.kind === 'empty' ? 'rowEmpty' : undefined} data-staffed={r.staffed ? '1' : '0'}>
       <div className="ic">{empty ? <span className="q">+</span> : <RowIcon kind={r.staffed ? 'hamwheel' : 'wheel'} />}</div>
       <div className="mid">
         <div className="nm">{r.name}{r.tagged && <em className="tag">딱지</em>}</div>
@@ -131,7 +131,7 @@ export function Lot() {
             <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>연체</small></button>
           </div>
         ) : (
-          <div className={'pr-sum' + (ahead ? ' ok' : ' short')} role="status" data-sum>
+          <div className={'pr-sum' + (ahead ? ' ok' : ' short')} role="status" data-sum data-hl="sum">
             <span>알바 {sum.hamsters}마리가 버는 돈 <b className="up">초당 {rateTxt(idleSec)}</b></span>
             <i>{ahead ? '≥' : '<'}</i>
             <span>이자·생활비 <b className="dn">초당 {rateTxt(claimSec)}</b><small>정산 때 {comma(sum.claim)}</small></span>
@@ -139,7 +139,7 @@ export function Lot() {
         )}
         <div className="pr-rows">
           {pos.map((p) => <PinRow key={p.market} p={p} />)}
-          <div className="pr-row tap">
+          <div className="pr-row tap" data-hl="tap">
             <button className="tapbody" onPointerDown={doTap} data-tap aria-label={wheeled ? '쳇바퀴 굴리기 (코인 채굴)' : '쳇바퀴가 없다'}>
               <div key={tapKey} className={'ic' + (tapKey ? ' boing' : '')}><RowIcon kind="wheel" /></div>
               <div className="mid">

@@ -3,7 +3,8 @@
 // 그 뒤 오소리 대부가 10만을 더 빌려주고(엔진 borrow), "지금부터 실제 시세" 알림이 뜨면 튜토리얼이 끝난다.
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
-import { TUT, tutorialPrice, officeOffer } from './model';
+import { TUT, tutorialPrice, officeOffer, tipArgs } from './model';
+import { tips, tipsLeft } from './guide';
 import { STORY } from './text';
 import { clone } from '../../engine/game';
 import { processPrice } from '../../engine/futures';
@@ -17,7 +18,7 @@ import { say } from './watch';
 export function tutorialIntro(): void {
   const P = useProto.getState();
   if (P.tutorial !== 'await' || P.seen.tutIntro) return;
-  P.pushScene({ id: 'tutIntro', lines: STORY.tutIntro(tutorialMargin(), TUT.lev) });
+  P.pushScene({ id: 'tutIntro', lines: STORY.tutIntro(tutorialMargin(), TUT.lev, tipArgs(useGame.getState().g)) });
 }
 /** 거는 돈: 정해 둔 3만, 가진 돈이 모자라면 그 4분의 3. 최소 증거금도 안 되면 0(튜토리얼을 건너뛴다). */
 export function tutorialMargin(): number {
@@ -66,7 +67,7 @@ function finish(real: number, steps: number, margin: number): void {
   const lend = officeOffer(g2).lend;
   useProto.getState().patch({ tutorial: 'lost' });
   useProto.getState().pushScene({
-    id: 'tutLost', lines: STORY.tutLost(margin, lend, Math.round(nextBorrowRate(g2, 'shark1') * 100)),
+    id: 'tutLost', lines: STORY.tutLost(margin, lend, Math.round(nextBorrowRate(g2, 'shark1') * 100), tipArgs(g2)),
     choices: lend > 0
       ? [{ id: 'borrow', label: '더 빌린다', sub: `+${lend.toLocaleString('ko-KR')} · 금리 ${Math.round(nextBorrowRate(g2, 'shark1') * 100)}%`, primary: true, run: () => { const r = useGame.getState().act({ type: 'borrow', lender: 'shark1' }); play(r.ok ? 'collector_paid' : 'insufficient'); useProto.getState().patch({ tutorial: 'notice' }); } }]
       : [{ id: 'ok', label: '…', primary: true, run: () => useProto.getState().patch({ tutorial: 'notice' }) }],
@@ -77,4 +78,6 @@ function finish(real: number, steps: number, margin: number): void {
 export function tutorialEnd(): void {
   useProto.getState().patch({ tutorial: 'done' });
   useGame.getState().setSpeed(1);
+  // 튜토리얼이 끝난 자리에서 목표를 말해 준다: 빚을 다 갚는 것, 못 갚으면 파산(평생 한 번)
+  if (tipsLeft('goal')) useProto.getState().pushScene({ id: 'guide_goal', again: true, lines: tips('goal', tipArgs(useGame.getState().g)) });
 }

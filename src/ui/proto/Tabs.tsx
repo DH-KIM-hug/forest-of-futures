@@ -60,7 +60,7 @@ export function MapTab() {
         const payAmt = Math.min(l.stampUnit, d.principal);
         const first = id === 'shark1' && !loanTaken;
         return (
-          <div key={id} className={'pr-card plc' + (id === 'shark1' ? ' ring' : '') + (id === 'shark1' && (smsSeen || waiting) ? ' blink' : '') + (focus === id ? ' focus' : '')} data-place={id}>
+          <div key={id} className={'pr-card plc' + (id === 'shark1' ? ' ring' : '') + (id === 'shark1' && (smsSeen || waiting) ? ' blink' : '') + (focus === id ? ' focus' : '')} data-place={id} data-hl={id === 'shark1' ? 'office' : undefined}>
             <div className="plc-top"><div className="ic"><RowIcon kind={id} /></div><div className="mid">
               <div className="nm">{pl.name} <small>{pl.npc}</small></div>
               <div className="sb"><b>빚 {comma(d.principal)}</b> · 정산마다 이자 {comma(interestDue(g, id))}{d.overdue > 0 ? <em className="od"> · 연체 {d.overdue}회</em> : ''}</div>
@@ -68,8 +68,8 @@ export function MapTab() {
               {first && <div className="sq">{pl.npc} 「오셨어요? 앉으세요. 도장 하나면 됩니다.」</div>}
             </div></div>
             <div className="btns">
-              <button className={'buy' + (amt > 0 ? ' on' : '')} disabled={amt <= 0} data-borrow={id} onClick={() => doBorrow(id)}><span>{amt > 0 ? '빌리기' : '한도 다 씀'}</span><small>{amt > 0 ? '+' + comma(got) : ''}</small></button>
-              <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-pay={id} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
+              <button className={'buy' + (amt > 0 ? ' on' : '')} disabled={amt <= 0} data-borrow={id} data-hl={id === 'shark1' ? 'borrow' : undefined} onClick={() => doBorrow(id)}><span>{amt > 0 ? '빌리기' : '한도 다 씀'}</span><small>{amt > 0 ? '+' + comma(got) : ''}</small></button>
+              <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-pay={id} data-hl={id === 'shark1' ? 'pay' : undefined} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} onClick={() => doPay(id, 'all')}><span>전부</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
             </div>
           </div>

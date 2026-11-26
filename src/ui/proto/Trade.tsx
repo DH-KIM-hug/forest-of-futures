@@ -139,7 +139,7 @@ export function PChart({ market, hist, pos }: { market: string; hist: number[]; 
   const dz = pos && liqIn ? (pos.dir === 1 ? { y: Y(pos.liq), hgt: 100 - Y(pos.liq) } : { y: 0, hgt: Y(pos.liq) }) : null;
 
   return (
-    <div className="pt-chart" data-chart={market}>
+    <div className="pt-chart" data-chart={market} data-hl="chart">
       <div className="plot" ref={box} role="img" aria-label={`${marketById[market].name} 최근 2분 시세`}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {[25, 50, 75].map((y) => <line key={y} className="grid" x1="0" x2="100" y1={y} y2={y} />)}
@@ -376,7 +376,7 @@ export function ProtoTrade() {
     <div className="pt-tutb" role="status" data-tut={tutSt}>{tutSt === 'await' ? <>오소리 대부 「롱이든 숏이든 한번 걸어 보세요.」 <b>{comma(tutorialMargin())} · {TUT.lev}배</b></> : <>…시세가 움직인다</>}</div>
   ) : null;
   const coins = (
-    <>{tutBanner}<div className="pt-coins" role="tablist" aria-label="종목">
+    <>{tutBanner}<div className="pt-coins" data-hl="coins" role="tablist" aria-label="종목">
       {tabs.map((t) => (
         <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct' + (t.id === market ? ' on' : '')} onClick={() => setTrade({ market: t.id })}>
           <Coin id={t.id} size={20} />
@@ -437,7 +437,7 @@ export function ProtoTrade() {
     </div>
   );
   const marginChips = (
-    <div className="pt-mg" role="radiogroup" aria-label="증거금">
+    <div className="pt-mg" data-hl="mg" role="radiogroup" aria-label="증거금">
       {MARGIN_PCTS.map((p) => (
         <button key={p} role="radio" aria-checked={pct === p} className={'pt-chip' + (pct === p ? ' on' : '')} onClick={() => setTrade({ pct: p })}>
           <b>{p === 100 ? '전부' : `${p}%`}</b><small>{comma(marginFromPct(run.cash, lev, p))}</small>
@@ -452,7 +452,7 @@ export function ProtoTrade() {
   const order = (
     <div className="pt-order">
       {!pos && (
-        <div className="pt-ruler" role="radiogroup" aria-label="배율">
+        <div className="pt-ruler" data-hl="ruler" role="radiogroup" aria-label="배율">
           {ruler.map((nt) => (
             <button key={nt.lev} role="radio" aria-checked={nt.lev === lev} aria-label={`${nt.lev}배${nt.locked ? ' 잠김' : ''}`}
               className={'nt' + (nt.lev === lev ? ' on' : '') + (nt.hot ? ' hot' : '') + (nt.locked ? ' locked' : '')}
@@ -463,7 +463,7 @@ export function ProtoTrade() {
         </div>
       )}
       {marginChips}
-      <div className={'pt-risk' + (prev.reason ? ' bad' : '') + (pos ? ' add' : '')} role="status">
+      <div className={'pt-risk' + (prev.reason ? ' bad' : '') + (pos ? ' add' : '')} data-hl="risk" role="status">
         {prev.reason ? <span>{prev.reason}</span> : (
           <>
             <span>{pos ? '추가 ' : ''}증거금 {comma(prev.margin)} · 수수료 {comma(prev.fee)}</span>
@@ -506,7 +506,7 @@ export function ProtoTrade() {
                 <div className="roe">{Math.abs(pos.roe) >= 100 ? `${sign(pos.roe)}${Math.abs(pos.roe).toFixed(0)}%` : roeTxt(pos.roe)}</div>
                 <div className="sub"><b>{money(pos.pnl)}</b> 도토리</div>
               </div>
-              <div className={'liq' + (call ? ' hot' : '')}><small>청산까지</small><b>{pos.dir === 1 ? '−' : '+'}{pos.liqDistPct.toFixed(1)}%</b></div>
+              <div className={'liq' + (call ? ' hot' : '')} data-hl="posLiq"><small>청산까지</small><b>{pos.dir === 1 ? '−' : '+'}{pos.liqDistPct.toFixed(1)}%</b></div>
             </div>
             <div className="gauge" aria-hidden="true">
               <i className="end">청산</i>
@@ -523,7 +523,7 @@ export function ProtoTrade() {
               {pos.tags.length > 0 && <span className="tg">{pos.tags.join(', ')}</span>}
             </div>
           </div>
-        ) : tut ? (
+        ) : tut && !tutBanner ? (
           <p className="pt-tut"><img src={heroFront} alt="" />{tut}</p>
         ) : null}
         {order}
@@ -533,7 +533,7 @@ export function ProtoTrade() {
           <span><b>고위험 거래 확인서</b><small>「손실은 전부 본인 책임입니다」 · 도장을 찍으면 200배</small></span><i>도장</i>
         </button>
         ) : (
-        <button className="pt-cond" onClick={() => setSheet('stops')}>
+        <button className="pt-cond" data-hl="cond" onClick={() => setSheet('stops')}>
           <span className="vals">
             {curSl === null && curTp === null ? <span>손절·익절 없음</span> : <><span className={curSl !== null ? 'set' : ''}>손절 {slTxt}</span><span className={curTp !== null ? 'set' : ''}>익절 {tpTxt}</span></>}
           </span>
@@ -541,13 +541,13 @@ export function ProtoTrade() {
         </button>
         )}
         {noteLine}
-        <div className="pt-orders">
+        <div className="pt-orders" data-hl={pos ? undefined : 'orders'}>
           {pos ? (
             <>
               <button className={'pt-btn ' + (pos.dir === 1 ? 'long' : 'short')} disabled={!!prev.reason} onClick={doAdd}>
                 <span><Tri up={pos.dir === 1} size={13} />추가 진입</span><small>+{comma(prev.margin)}</small>
               </button>
-              <button className={'pt-btn close' + (arm ? ' arm' : '') + (netNow >= 0 ? ' gain' : '')} onClick={doClose}>
+              <button className={'pt-btn close' + (arm ? ' arm' : '') + (netNow >= 0 ? ' gain' : '')} data-hl="closeBtn" onClick={doClose}>
                 <span>{arm ? '한 번 더 누르면 정리' : '정리하기'}</span>
                 <small>{rawPos ? comma(Math.round(rawPos.margin0)) : ''} <b className={arm ? '' : netNow >= 0 ? 'up' : 'down'}>{money(netNow)}</b>{arm ? ' 확정' : ''}</small>
               </button>
