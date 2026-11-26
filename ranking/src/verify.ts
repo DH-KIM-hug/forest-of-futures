@@ -1,0 +1,117 @@
+// 제출 검사(순수 함수, 시험 가능). 서버는 계산하지 않고 "있을 수 있는 기록인가"만 본다.
+// 거래 판(roe·pnl): 진입~정리 사이 실제 1분 봉의 최고·최저로 가능한 최대 유리 폭을 구하고,
+// 주장한 수익률이 배율 × 그 폭(+여유)을 넘으면 거절한다.
+
+export type Board = 'networth' | 'roe' | 'pnl';
+export const BOARDS: Board[] = ['networth', 'roe', 'pnl'];
+
+/** 게임 종목 → 실제 시세(Hyperliquid). 서버 안에서만 쓴다. */
+export const REAL: Record<string, string> = { DTC: 'BTC', BTH: 'ETH', SMS: 'xyz:SMSN', MDT: 'DOGE', JQQ: 'xyz:XYZ100' };
+
+export interface TradeDetail {
+  market: string;
+  dir: 1 | -1;
+  lev: number;
+  margin: number; // 도토리
+  entryTs: number; // ms
+  exitTs: number; // ms
+  roe: number; // %, 수수료 포함 손익 ÷ 증거금
+  pnl: number; // 도토리
+}
+export interface LifeDetail {
+  lifeNo: number;
+  settles: number;
+  peak: number;
+}
+export interface Submit {
+  deviceId: string;
+  name: string;
+  board: Board;
+  value: number;
+  detail: TradeDetail | LifeDetail;
+}
+export interface Candle { t: number; h: number; l: number }
+
+export const LIMITS = {
+  nameMax: 12,
+  maxLev: 200,
+  maxMargin: 2e8,
+  maxNetworth: 3e9, // 마을 사다리 꼭대기(30억)
+  maxHoldMs: 7 * 24 * 3600e3,
+  slackPct: 0.15, // 봉 사이 틈·수수료 반올림 여유(가격 폭 %p)
+  minIntervalMs: 10_000,
+};
+
+export function cleanName(s: unknown): string | null {
+  if (typeof s !== 'string') return null;
+  const t = s.normalize('NFC').replace(/[\u0000-\u001f\u007f<>]/g, '').trim();
+  if (t.length < 1 || [...t].length > LIMITS.nameMax) return null;
+  return t;
+}
+
+export function parseSubmit(body: unknown): { ok: true; s: Submit } | { ok: false; why: string } {
+  const b = body as Record<string, unknown> | null;
+  if (!b || typeof b !== 'object') return { ok: false, why: 'body' };
+  const deviceId = typeof b.deviceId === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(b.deviceId) ? b.deviceId : null;
+  if (!deviceId) return { ok: false, why: 'deviceId' };
+  const name = cleanName(b.name);
+  if (!name) return { ok: false, why: 'name' };
+  const board = b.board as Board;
+  if (!BOARDS.includes(board)) return { ok: false, why: 'board' };
+  const value = Number(b.value);
+  if (!Number.isFinite(value)) return { ok: false, why: 'value' };
+  const d = b.detail as Record<string, unknown> | null;
+  if (!d || typeof d !== 'object') return { ok: false, why: 'detail' };
+  return { ok: true, s: { deviceId, name, board, value, detail: d as unknown as TradeDetail | LifeDetail } };
+}
+
+/** 거래 기록의 모양 검사(시세를 보기 전). */
+export function checkTradeShape(d: TradeDetail, board: Board, value: number, now: number): string | null {
+  if (!REAL[d.market]) return 'market';
+  if (d.dir !== 1 && d.dir !== -1) return 'dir';
+  if (!(d.lev >= 1 && d.lev <= LIMITS.maxLev)) return 'lev';
+  if (!(d.margin > 0 && d.margin <= LIMITS.maxMargin)) return 'margin';
+  if (!(d.entryTs > 0 && d.exitTs > d.entryTs && d.exitTs <= now + 60_000)) return 'time';
+  if (d.exitTs - d.entryTs > LIMITS.maxHoldMs) return 'hold';
+  if (!Number.isFinite(d.roe) || !Number.isFinite(d.pnl)) return 'num';
+  if (d.roe <= 0 || d.pnl <= 0) return 'notWin';
+  // pnl 과 roe 는 같은 증거금에서 나와야 한다(1% 여유)
+  if (Math.abs(d.pnl - (d.margin * d.roe) / 100) > Math.max(2, d.margin * 0.01)) return 'pnlRoe';
+  if (board === 'roe' && Math.abs(value - d.roe) > 1e-6) return 'value';
+  if (board === 'pnl' && Math.abs(value - d.pnl) > 1e-6) return 'value';
+  return null;
+}
+
+/** 진입~정리 사이 봉들로 가능한 최대 유리 폭(%). 롱: 최저에서 사서 최고에 판 폭, 숏: 반대. */
+export function maxFavorablePct(candles: Candle[], dir: 1 | -1): number {
+  if (!candles.length) return 0;
+  let best = 0;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const c of candles) {
+    // 이 봉까지 나온 최저(롱)·최고(숏)에서 들어가 이 봉의 최고(롱)·최저(숏)에 나온다
+    lo = Math.min(lo, c.l);
+    hi = Math.max(hi, c.h);
+    if (dir === 1) best = Math.max(best, (c.h / lo - 1) * 100);
+    else best = Math.max(best, (1 - c.l / hi) * 100);
+  }
+  return best;
+}
+
+export function checkTradeAgainstCandles(d: TradeDetail, candles: Candle[]): string | null {
+  if (!candles.length) return 'noCandles';
+  const fav = maxFavorablePct(candles, d.dir);
+  const cap = d.lev * (fav + LIMITS.slackPct);
+  if (d.roe > cap) return `roeTooHigh(${d.roe.toFixed(2)} > ${cap.toFixed(2)})`;
+  return null;
+}
+
+export function checkLife(d: LifeDetail, value: number): string | null {
+  if (!(value > 0 && value <= LIMITS.maxNetworth)) return 'networth';
+  if (!(Number.isInteger(d.lifeNo) && d.lifeNo >= 1)) return 'lifeNo';
+  if (!(Number.isInteger(d.settles) && d.settles >= 1)) return 'settles';
+  // 정산 한 번에 늘 수 있는 재산의 상한(거칠게): 시작 0 에서 정산마다 최대 2배 + 상수
+  const bound = 600_000 * Math.pow(2, Math.min(40, d.settles));
+  if (value > bound) return 'tooFast';
+  return null;
+}
