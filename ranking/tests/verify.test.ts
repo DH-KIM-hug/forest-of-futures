@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { flyCandles } from '../../src/engine/feed/fly';
+import { flyCandles, FLY_V2_FROM } from '../../src/engine/feed/fly';
+import { flyCandlesV1 } from '../../src/engine/feed/flyV1';
+import { flyCandlesVerified, FLY_GRACE_SEC } from '../src/flyVersions';
 import { LIFE, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, cleanName, maxFavorablePct, parseSubmit, popAllowance, type TradeDetail } from '../src/verify';
 
 const T0 = 1_800_000_000_000;
@@ -52,8 +54,9 @@ describe('랭킹 제출 검사', () => {
     expect(checkLifeShape({ ...life, trades: 'x' as any }, 1, T0)).toBe('trades');
   });
   it('날다람쥐코인(FLY): 실제 시장이 없어도 같은 함수로 다시 셈한 봉에 대조한다', () => {
-    const e = 1_764_003_600_000, x = e + 10 * 60_000;
-    const cs = flyCandles(e / 1000, x / 1000).map((c) => ({ t: c.t, h: c.h, l: c.l }));
+    const e = (FLY_V2_FROM + FLY_GRACE_SEC + 3600) * 1000, x = e + 10 * 60_000;
+    const cs = flyCandlesVerified(e / 1000, x / 1000);
+    expect(cs).toEqual(flyCandles(e / 1000, x / 1000).map((c) => ({ t: c.t, h: c.h, l: c.l })));
     const fav = maxFavorablePct(cs, 1);
     const ok = trade({ market: 'FLY', entryTs: e, exitTs: x, lev: 50, margin: 10000, roe: 50 * fav * 0.9, pnl: (10000 * 50 * fav * 0.9) / 100 });
     expect(checkTradeShape(ok, 'roe', ok.roe, x + 1000)).toBeNull();
@@ -94,3 +97,28 @@ describe('랭킹 제출 검사', () => {
     expect(parseSubmit({ deviceId: 'abcdefgh12', name: 'a', board: 'roe', value: 1, detail: {} }).ok).toBe(true);
   });
 });
+
+describe('U-57 날다람쥐 시세 함수의 판', () => {
+  const cut = FLY_V2_FROM;
+  it('바꾼 시각 앞의 거래는 1판 봉으로 다시 센다(지난 전광판 기록이 그대로 맞는다)', () => {
+    const e = (cut - 7200) * 1000, x = e + 10 * 60_000;
+    const cs = flyCandlesVerified(e / 1000, x / 1000);
+    expect(cs).toEqual(flyCandlesV1(e / 1000, x / 1000).map((c) => ({ t: c.t, h: c.h, l: c.l })));
+    const fav = maxFavorablePct(cs, -1);
+    const ok = trade({ market: 'FLY', dir: -1, entryTs: e, exitTs: x, lev: 20, margin: 10000, roe: 20 * fav * 0.9, pnl: (10000 * 20 * fav * 0.9) / 100 });
+    expect(checkTradeAgainstCandles(ok, cs)).toBeNull();
+  });
+  it('바꾼 뒤 사흘은 두 판 중 넓은 쪽(옛 앱이 낸 거래도 받는다), 그 뒤는 2판만', () => {
+    const a = cut + 600;
+    const cs = flyCandlesVerified(a, a + 300), v1 = flyCandlesV1(a, a + 300), v2 = flyCandles(a, a + 300);
+    cs.forEach((c, i) => { expect(c.h).toBe(Math.max(v1[i].h, v2[i].h)); expect(c.l).toBe(Math.min(v1[i].l, v2[i].l)); });
+    // 경계를 걸친 구간도 분마다 이어진다(빠지거나 겹치는 분이 없다)
+    const b = flyCandlesVerified(cut - 300, cut + 300);
+    expect(b.length).toBe(11);
+    for (let i = 1; i < b.length; i++) expect(b[i].t - b[i - 1].t).toBe(60_000);
+    const g = flyCandlesVerified(cut + FLY_GRACE_SEC - 120, cut + FLY_GRACE_SEC + 120);
+    expect(g.length).toBe(5);
+    expect(g[4]).toEqual((({ t, h, l }) => ({ t, h, l }))(flyCandles(cut + FLY_GRACE_SEC + 120, cut + FLY_GRACE_SEC + 120)[0]));
+  });
+});
+

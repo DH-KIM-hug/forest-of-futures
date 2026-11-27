@@ -32,8 +32,9 @@ export interface ChartModel {
   n: number;
 }
 /** 최근 가격 열의 범위에 세로축을 맞춘다. 여백은 위아래 각 4%, 범위가 0이면 가격의 0.02%를 최소 폭으로 쓴다. */
-export function chartModel(prices: number[]): ChartModel {
-  const data = prices.slice(-CHART_SECONDS);
+/** span = 세로 폭을 셀 최근 값의 수(기본 2분). 긴 창의 차트는 보이는 값 전부로 센다 */
+export function chartModel(prices: number[], span = CHART_SECONDS): ChartModel {
+  const data = prices.slice(-span);
   if (data.length === 0) return { lo: 0, hi: 1, dataLo: 0, dataHi: 1, spanPct: 0, label: '', n: 0 };
   let dLo = Math.min(...data);
   let dHi = Math.max(...data);

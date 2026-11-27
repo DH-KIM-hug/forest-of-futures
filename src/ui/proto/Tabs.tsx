@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
-import { onFirstOfficeLoan, retireNow, say } from './watch';
+import { onFirstOfficeLoan, retireNow, say, shortAtSettle } from './watch';
+import { clone } from '../../engine/game';
+import { act as engineAct } from '../../engine/actions';
 import { canRetireAct1 } from '../../engine/act1Retire';
 import { treeAward } from '../../engine/skilltree';
 import { balance } from '../../engine/data';
@@ -124,13 +126,26 @@ export function MapTab() {
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-pay={id} data-hl={id === 'shark1' ? 'pay' : undefined} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-payall={id} onClick={() => doPay(id, 'all')}><span>전부 갚기</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
             </div>
+            {/* 전부 갚기 경고(회차 15 평가): 전부 갚으면 다음 정산에 낼 돈이 손에 안 남을 때 한 줄. 갚는 원금만큼 이자도 준다 */}
+            {(() => {
+              if (d.principal <= 0 || !loanTaken) return null;
+              const all = Math.min(d.principal, Math.floor(run.cash));
+              const left = Math.floor(run.cash) - all;
+              if (all <= 0 || left >= dueNext) return null;
+              // 갚은 뒤 바로 정산이 온다면 모자라는가(엔진 셈 그대로, 갚은 원금만큼 이자도 준다)
+              const g2 = clone(g);
+              if (!engineAct(g2, { type: 'stamp', lender: id, mult: 'all' }).ok) return null;
+              const short = shortAtSettle(g2);
+              if (short <= 0) return null;
+              return <p className="pay-warn" data-pay-warn={short}>전부 갚으면 손에 {comma(left)}. {run.settleIn}초 뒤 정산에 {comma(short)} 모자라 연체</p>;
+            })()}
             {/* 정산 빼고 갚기(U-42): 다음 정산에 낼 돈은 손에 남기고 갚는다. [전부]는 그 돈까지 갚아 버린다 — 둘의 차이가 단추에 보인다 */}
             {id === 'shark1' && loanTaken && keepPay && keepPay.amount > payAmt && keepPay.amount < Math.min(d.principal, Math.floor(run.cash)) && (
-              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>남길 돈 {comma(Math.round(dueNext))}, 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 ? `, 금박 +${keepPay.stamps}` : ''}</small></button>
+              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>남길 돈 {comma(Math.round(dueNext))}, 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 ? `, 황금 도토코인 +${keepPay.stamps}` : ''}</small></button>
             )}
             {/* 빚을 다 갚은 생은 여기서 닫을 수 있다(U-39 ⑧): 은퇴 = 엔딩 카드 → 환생 */}
             {id === 'shark1' && canRetireAct1(g) && (
-              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>이번 생 마치기, 황금 +{treeAward(run)}</small></button>
+              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>이번 생 마치기, 황금 도토코인 +{treeAward(run)}</small></button>
             )}
           </div>
         );
@@ -198,7 +213,7 @@ function Ledger() {
       {closes > 0 && <div className="lg-jr" data-journey="ledger">{jr.text}</div>}
       <div className="lg-st" data-stamps={stamps}>
         <span className="dots">{Array.from({ length: Math.min(10, stamps + 1) }, (_, i) => <i key={i} className={i < stamps ? 'on' : ''} />)}{stamps > 9 && <em>×{stamps}</em>}</span>
-        <small>금박 도장 {stamps}개{g.run.debts.shark1.principal > 0 ? `, 다음 도장까지 ${comma(Math.min(toNext, g.run.debts.shark1.principal))} (5만마다 한 개)` : ', 장부가 깨끗하다'}</small>
+        <small>황금 도토코인 {stamps}개{g.run.debts.shark1.principal > 0 ? `, 다음 하나까지 ${comma(Math.min(toNext, g.run.debts.shark1.principal))} (5만마다 한 개)` : ', 장부가 깨끗하다'}</small>
       </div>
     </div>
   );

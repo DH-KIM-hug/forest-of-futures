@@ -198,7 +198,7 @@ describe('이번 생의 길 (U-41)', () => {
     expect(L.map((l) => l.who)).toEqual(['collector', 'hero', 'hero', 'hero']); // 개정 대본 장면 20: 추심원 → 칩멍크
     expect(L[0].text).toContain('15,500');
     expect(L[1].text).toContain('15,812');
-    expect(L[3].text).toContain('금박 도장까지 50,000');
+    expect(L[3].text).toContain('황금 도토코인까지 50,000');
     expect(STORY.winClaim({ first: 'x', pnl: 15_812, claim: 15_500, spins: null, stampLeft: null, momLeft: 0 })).toHaveLength(3);
   });
 });

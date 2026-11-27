@@ -8,11 +8,12 @@ import { tips, tipsLeft } from './guide';
 import { STORY } from './text';
 import { clone } from '../../engine/game';
 import { processPrice } from '../../engine/futures';
-import { balance } from '../../engine/data';
+import { balance, marketById } from '../../engine/data';
+import { useUI } from '../uiStore';
 import { marginFromPct } from '../../engine/futures';
 import { feeRate } from '../../engine/skilltree';
 import { nextBorrowRate } from '../../engine/selectors';
-import { pushOne, dropLast } from '../priceHistory';
+import { pushOne, dropLast, beginScript, endScript } from '../priceHistory';
 import { play } from './audio';
 import { say } from './watch';
 
@@ -41,6 +42,7 @@ export function tutorialOpen(dir: 1 | -1): boolean {
   st.setSpeed(0);
   useProto.getState().patch({ tutorial: 'run', forceTrade: false, pointTab: null });
   const real = useGame.getState().g.run.prices[TUT.market];
+  beginScript(TUT.market);
   let k = 0;
   const timer = window.setInterval(() => {
     k += 1;
@@ -64,6 +66,7 @@ function finish(real: number, steps: number, margin: number): void {
   if (g.run.positions[TUT.market]) { st.act({ type: 'close', market: TUT.market }); }
   // 짜 둔 시세를 걷어 내고 진짜 시세로 돌아간다
   dropLast(TUT.market, steps);
+  endScript(TUT.market);
   const g2 = clone(useGame.getState().g);
   g2.run.prices[TUT.market] = real;
   // 전부 걸었다: 손에 남은 것은 1 도토리도 안 되는 끝자리뿐이다(쳇바퀴가 1초씩 넣은 돈의 소수점). 0 으로 적는다
@@ -82,6 +85,8 @@ function finish(real: number, steps: number, margin: number): void {
 /** "지금부터 실제 시세" 알림을 닫는다: 튜토리얼 끝. 시계가 다시 돈다. */
 export function tutorialEnd(): void {
   useProto.getState().patch({ tutorial: 'done' });
+  // 튜토리얼 뒤 거래소는 날다람쥐코인에서 연다(U-57 사용자 결정): 움직임이 큰 종목이 첫 화면. 실제 시세 종목은 탭 한 번 옆
+  if (marketById.FLY?.tradable) useUI.getState().setTrade({ market: 'FLY' });
   // 튜토리얼이 끝난 자리에서 목표를 말해 준다: 빚을 다 갚는 것, 못 갚으면 파산(평생 한 번). 시계를 돌리기 전에 줄 세운다 — 오픈 기념 문자(U-40)는 그 뒤에 온다
   if (tipsLeft('goal')) useProto.getState().pushScene({ id: 'guide_goal', again: true, lines: tips('goal', tipArgs(useGame.getState().g)) });
   // 정산이 20초에서 60초가 된다(U-47): 이번 정산 구간의 남은 몫은 그대로, 남은 시간만 늘어난다. 목표 장면을 줄 세운 뒤에 한다(상태가 바뀌면 다른 알림이 먼저 끼어든다)

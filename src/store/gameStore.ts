@@ -56,7 +56,7 @@ const feedSearch = (): string => {
 };
 export const feedMode: FeedMode = hasWindow ? pickFeedMode(feedSearch(), (import.meta as any).env?.VITE_FEED) : 'sim';
 
-// 화면 확인용(U-52): &pfly=초 → 연습 시세가 그 번호에서 시작한다(날다람쥐코인의 숲 소문이 도는 때로 건너뛰기)
+// 화면 확인용(U-52): &pfly=초 → 연습 시세가 그 번호에서 시작한다(날다람쥐코인의 모양이 끝나는 때로 건너뛰기)
 const simStartN = hasWindow ? Math.max(0, Math.floor(+(new URLSearchParams(window.location.search).get('pfly') ?? 0)) || 0) : 0;
 // 연습 시세의 날다람쥐코인은 벽시계를 따른다(U-56 ②, 사용자 결정): 실시간 판과 같은 때 같은 값, 같은 바람과 급등락. &pfly 화면 확인만 옛 기준 시각
 const simFlyEpoch = simStartN > 0 ? SIM_FLY_EPOCH : Math.floor(Date.now() / 1000);

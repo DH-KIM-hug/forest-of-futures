@@ -161,7 +161,7 @@ export const STORY = {
   ],
   /** 장면 31 엄마 이야기의 단서: 한 번에 하나, 설명 없음. reason = 첫 금박 도장 뒤, mirror = 갚다가 다시 빌린 때, frame = 엄마 빚 줄에 처음 손이 닿은 때 */
   momClue: (k: 'reason' | 'mirror' | 'frame'): Line[] =>
-    k === 'reason' ? [L('note', '금박 도장 옆에 먹이 번져 있다. 「빌린 까닭」 칸에서 ‘서까래’ 세 글자만 읽힌다.')]
+    k === 'reason' ? [L('note', '황금 도토코인 도장 옆에 먹이 번져 있다. 「빌린 까닭」 칸에서 ‘서까래’ 세 글자만 읽힌다.')]
     : k === 'mirror' ? [
       L('note', '대부가 장부를 넘기자 모서리가 해진 차용증이 미끄러져 나온다. 엄마 이름이다.'),
       L('note', '「남은 돈 10만, 추가로 빌린 돈 20만」. 날짜를 보니 눈이 많이 오던 그 겨울이다.'),
@@ -256,7 +256,7 @@ export const STORY = {
     L('collector', o.first, 'smile'),
     L('hero', o.spins !== null && o.spins >= 2 ? `+${n(o.pnl)}. 바퀴 한 대로 ${o.spins}번 정산할 돈이다.` : `+${n(o.pnl)}. 이자와 생활비 한 번 치다.`),
     L('hero', '지금 갚으면 다음번엔 덜 내겠지.'),
-    ...(o.momLeft > 0 && o.stampLeft !== null ? [L('hero', `금박 도장까지 ${n(o.stampLeft)}.`)] : []),
+    ...(o.momLeft > 0 && o.stampLeft !== null ? [L('hero', `황금 도토코인까지 ${n(o.stampLeft)}.`)] : []),
   ],
   /** 장면 29 이자와 생활비 한 번 치를 두 판 연달아 땄다(이번 생에 한 번) */
   winRun: (o: { sum: number; stampPct: number | null }): Line[] => [

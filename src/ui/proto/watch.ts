@@ -41,8 +41,6 @@ import { closeBack, exitFee, roePct } from '../../engine/futures';
 import { exitFeeMul, feeEventLeft, openingEvent, feeRate } from '../../engine/skilltree';
 import { recentRange } from './tension';
 import { allQuiet, liveliest, sessionOpen, sessionHoursKst, SESSIONS, feeSaved, LIVELY_PCT, QUIET_PCT, openHeadsUp, spanText, untilHourMin } from './market';
-import { flySecOf, windNow, TELL_TEXT } from './flyWind';
-import { TELL_WINDOW } from '../../engine/feed/fly';
 import type { GameState, Position } from '../../engine/types';
 
 /** 포지션이 닫힌 것을 보고 이번 생 승률을 올리고, 이익이면 수익 인증서 물음을 띄운다(한 번 닫을 때 한 번). */
@@ -157,6 +155,12 @@ export function phoneRing(): void {
   });
 }
 
+/** 청산 도장이 떠 있는 시간(ProtoApp LiqStamp 1.8초). 그동안 승급 카드와 승급 알림은 기다린다 */
+export const LIQ_QUIET_MS = 1900;
+let liqAt = 0;
+/** 청산 도장이 걷히기까지 남은 ms(없으면 0) */
+export const liqQuietLeft = (): number => Math.max(0, liqAt + LIQ_QUIET_MS - Date.now());
+
 /** 급하지 않은 장면(문자·속보·족제비): 포지션이 열려 있는 동안에는 띄우지 않고 기다린다 — 정리 단추를 가리지 않게. */
 const calm: Scene[] = [];
 function sceneCalm(sc: Scene): void {
@@ -181,7 +185,17 @@ function sceneHeld(sc: Scene, toast?: string, urgent = false): void {
 }
 function flushHeld(): void {
   if (!held.length || busyTrading()) return;
-  for (const sc of held.splice(0)) scene(sc);
+  // 생이 끝났으면 밀린 연체 문자는 띄우지 않는다: 엔딩이 말한다(회차 15: 닫는 순간 압류, 연체, 파산이 한 묶음으로 이어졌다)
+  if (useGame.getState().g.run.over) { held.length = 0; calm.length = 0; return; }
+  for (const sc of collapseHeld(held.splice(0))) scene(sc);
+}
+/** 들고 있는 동안 밀린 장면을 한 번에 풀 때(회차 15 평가): 연체 장면은 가장 마지막 것 하나만(앞의 것은 그 뒤로 묵은 말), 연체 장면이 있으면 사채 문자는 뺀다(같은 말),
+ *  압류는 연체보다 먼저(무엇을 잃었는지가 먼저 보이게). 순서는 압류 → 연체 → 그 밖 */
+export function collapseHeld(xs: Scene[]): Scene[] {
+  const od = xs.filter((x) => x.id.startsWith('overdue'));
+  const lastOd = od[od.length - 1];
+  const rank = (x: Scene) => (x.id.startsWith('seize') ? 0 : x.id.startsWith('overdue') ? 1 : 2);
+  return xs.filter((x) => (!x.id.startsWith('overdue') || x === lastOd) && !(x.id === 'sms' && lastOd)).map((x, i) => ({ x, i })).sort((a, b) => rank(a.x) - rank(b.x) || a.i - b.i).map((o) => o.x);
 }
 
 /** 이 거래로 지금까지 늘거나 준 돈: 지금 정리하면 돌려받는 돈 − 넣은 돈 − 들어갈 때 낸 수수료(결과 카드와 같은 셈). */
@@ -278,7 +292,7 @@ function holdTick(g: GameState): void {
 }
 
 // ── 장이 조용한가 · 본장이 열리고 닫히는가(U-40): 있는 그대로를 말한다. 가짜 출렁임은 없다 ─────────────
-const mk = { quietFor: 0, lastLineAt: -9999, wasQuiet: false, n: 0, sess: {} as Record<string, boolean>, flyAt: -9999, tellAt: -1, tellDone: -1 };
+const mk = { quietFor: 0, lastLineAt: -9999, wasQuiet: false, n: 0, sess: {} as Record<string, boolean>, flyAt: -9999 };
 /** 날다람쥐코인이 1분 새 이만큼(%) 출렁이면 신문 속보 한 줄(U-48). 평소 1분 폭은 0.6%쯤, 하루에 스무 번 남짓 넘는다 */
 export const FLY_NEWS_PCT = 3;
 /** 속보 사이 최소 간격(틱 = 초) */
@@ -307,22 +321,6 @@ function marketTick(g: GameState): void {
       openSaid.add(hu.key);
       say(`[도토리일보] ${marketById[id]?.name ?? id} 본장 개장까지 ${hu.min}분 (${(sessionHoursKst(id, now) ?? '').split('~')[0]})`, 7000);
       break;
-    }
-  }
-  // 숲 소문(U-52): 날다람쥐코인의 급등락 앞에 돌기도 하고 헛돌기도 하는 말. 시세 함수와 같은 씨앗에서 센다(flyWind.ts)
-  if (marketById.FLY?.tradable) {
-    const fs = flySecOf(run);
-    const t = fs !== null ? windNow(fs).tell : null;
-    if (t?.state === 'live' && mk.tellAt !== t.x.at && t.left > 15) {
-      mk.tellAt = t.x.at;
-      play('news_alarm', { vol: 0.6 });
-      say(`[숲 소문] ${marketById.FLY.name}: ${TELL_TEXT[t.x.dir]}. ${TELL_WINDOW}초 안에 ${t.x.dir === 1 ? '▲' : '▼'} 큰 바람? 소문은 둘에 하나쯤 맞는다`, 6500, true);
-      if (P.tab !== 'phone') { useProto.getState().patch({ pointTab: 'phone' }); window.clearTimeout(flyPointT); flyPointT = window.setTimeout(() => { if (!useProto.getState().forceTrade && useProto.getState().pointTab === 'phone') useProto.getState().patch({ pointTab: null }); }, 4500); }
-      return;
-    }
-    if (t && t.state !== 'live' && mk.tellAt === t.x.at && mk.tellDone !== t.x.at) {
-      mk.tellDone = t.x.at;
-      say(t.state === 'came' ? `[숲 소문] ${t.jump.dir === t.x.dir ? '소문대로' : '소문과 반대로'} 큰 바람 ${t.jump.dir === 1 ? '▲' : '▼'}` : '[숲 소문] 헛소문이었다. 바람은 오지 않았다', 4000);
     }
   }
   // 날다람쥐코인 급등락 속보(U-48): 값이 정말로 1분 새 크게 출렁였을 때만(시세에서 센 것). 거래소 밖이면 거래소 탭을 잠깐 가리킨다
@@ -376,6 +374,12 @@ export const SAVINGS_STEPS = [100_000, 300_000, 1_000_000];
 export const savingsStep = (seen: Record<string, boolean>): number => { let k = 0; while (k < SAVINGS_STEPS.length && seen['savings' + k]) k++; return k; };
 
 /** 지금 이대로 정산하면 못 내는 돈이 생기는가: 엔진의 정산을 복사본에 돌려 본다(추측하지 않는다). */
+/** 지금 정산이 온다면 못 내는 돈(0 = 다 낸다) */
+export function shortAtSettle(g: GameState): number {
+  const p = clone(g);
+  settle(p);
+  return Math.round(p.run.lastSettlement?.unpaid ?? 0);
+}
 export function wouldBeShort(g: GameState): boolean {
   const p = clone(g);
   settle(p);
@@ -468,7 +472,7 @@ export function startWatch(): void {
       calm.length = 0; held.length = 0;
       useProto.getState().resetLife(g.family.generation, lifeNo(g) <= 1);
       // 거래 화면에서 고른 배율·증거금·손절은 지난 생의 것이다(새 생에는 잠긴 배율이 골라져 있지 않게)
-      useUI.getState().setTrade({ market: 'DTC', lev: null, pct: 25, sl: null, tp: null, tpK: null, slK: null, keep: false });
+      useUI.getState().setTrade({ market: lifeNo(g) > 1 && marketById.FLY?.tradable ? 'FLY' : 'DTC', lev: null, pct: 25, sl: null, tp: null, tpK: null, slK: null, keep: false });
       if (lifeNo(g) > 1) scene({ id: 'reborn', lines: STORY.reborn(), auto: 6000 });
       // U-46: 새 생은 튜토리얼이 끝난 자리(engine act1Start.ts) — 사무소에서 이미 빌렸고, 폰 · 지도 · 거래소가 열려 있다
       if (lifeNo(g) > 1) useProto.getState().patch({ loanTaken: true, everUnlocked: { ...useProto.getState().everUnlocked, map: true, phone: true }, visited: { ...useProto.getState().visited, phone: false } });
@@ -481,6 +485,12 @@ export function startWatch(): void {
     const run = g.run;
     const sameLife = g.family.generation === prev.family.generation;
     const settled = run.settleNo > prev.run.settleNo && !!run.lastSettlement && !run.over && sameLife;
+    // 파산한 순간(회차 15 평가): 줄 서 있던 연체, 압류, 사채 문자는 걷는다 — 엔딩이 그 이야기를 한다. 지금 떠 있는 장면 하나는 그대로
+    if (sameLife && run.over && !prev.run.over) {
+      held.length = 0; calm.length = 0;
+      const sc = useProto.getState().scenes;
+      if (sc.length > 1) useProto.getState().patch({ scenes: [sc[0], ...sc.slice(1).filter((x) => !/^(overdue|seize|sms)/.test(x.id))] });
+    }
 
     // ── 알바를 다 들였다 → 중고폰이 울린다(U-43 사용자: "알바 고용하고 거래소 강제로 가게 하는 게 없음") ──
     // 알바를 들여 쳇바퀴마다 알바가 든 순간(주인공이 굴릴 쳇바퀴가 없다) — 빌린 돈으로 쳇바퀴를 더 놓았거나 더 놓을 돈이 없을 때. 엄마의 쳇바퀴 하나에만 알바를 들이고 돈이 남았으면 아직 울리지 않는다(쳇바퀴를 놓을 차례). 튜토리얼 거래를 아직 안 했을 때만.
@@ -636,7 +646,8 @@ export function startWatch(): void {
       }
     }
     // 압류: 실려 가는 것의 이름을 부르는 장면(집에서 그 물건이 사라진다)
-    if (sameLife && (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0)) {
+    // 같은 틱에 파산했으면 압류 장면은 띄우지 않는다(엔딩 카드가 판에 걸려 있던 돈까지 말한다)
+    if (sameLife && !run.over && (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0)) {
       const ev = [...run.eventLog].reverse().find((e) => e.kind.startsWith('seize:'));
       const what = ev?.kind.startsWith('seize:wheel:') ? 'mom' : ev?.kind === 'seize:wallet' ? 'wallet' : 'wheel';
       later(1200, () => play('overdue_stamp'));
@@ -647,7 +658,7 @@ export function startWatch(): void {
     // 강제 청산: 흔들림 + 도장(한 틱에 여럿이면 소리는 한 번)
     const liqPs = closedPs.filter((p) => closedMath(run, p).kind === 'liq');
     // 청산(U-49): 둔탁한 의사봉 한 방 + 깨지는 도장(새 소리 liq_gavel 를 앞에)
-    if (liqPs.length) { play('liq_gavel'); later(260, () => play('liquidation')); }
+    if (liqPs.length) { play('liq_gavel'); later(260, () => play('liquidation')); liqAt = Date.now(); }
     // 판이 닫힌 순간의 숨(U-48): 거래소를 보고 있으면 결과 카드, 청산 도장, 축하가 먼저 보이고, 장면(추심원의 말 등)은 그 뒤에 온다
     // U-49: 집이나 지도에 있어도 같다(크게 이긴 판은 어디서든 터진다)
     if (closedPs.length) {
@@ -676,7 +687,8 @@ export function startWatch(): void {
           P2.patch({ frxStamps: stamps, bestWin: Math.max(P2.bestWin, pnl), rankUp: after.r > before.r ? { k: (P2.rankUp?.k ?? 0) + 1, r: after.r, name: after.name } : P2.rankUp });
           // 이긴 판이 터지면 그 상자에 「승급」 칩이 같이 뜬다(장면이 덮기 전에 보이게). 아니면 0.7초 뒤 한 줄과 팡파르
           if (after.r > before.r && tierB) later(900, () => play('goal_complete'));
-          if (after.r > before.r && !tierB) later(700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 이제 ${rankFeeText(after.r)}. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500, true); });
+          // 승급 한 줄은 거래소 밖에서만(거래소에서는 승급 카드가 같은 말을 한다). 청산이면 도장이 걷힌 뒤에(회차 15: 승급 카드, 청산 도장, 알림이 세 겹)
+          if (after.r > before.r && !tierB && useProto.getState().tab !== 'phone') later(endKind === 'liq' ? LIQ_QUIET_MS + 300 : 700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 이제 ${rankFeeText(after.r)}. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500, true); });
         }
         if (tierB) {
           const P0 = useProto.getState();
@@ -811,7 +823,7 @@ export function startWatch(): void {
         if (beat === 'firstCleared') useProto.getState().patch({ clueAt: run.settleNo });
         // 5만을 갚을 때마다 장부에 금박 도장이 하나 찍힌다(환생 때 황금 실물 도토코인이 된다 — 그 생에 갚은 만큼은 남는다)
         const gs = goldStamps(g);
-        if (gs > goldStamps(prev)) { play('goal_complete'); later(400, () => say(`장부에 ${gs}번째 금박 도장이 찍혔다.`, 4500)); }
+        if (gs > goldStamps(prev)) { play('goal_complete'); later(400, () => say(`장부에 황금 도토코인 ${gs}개째가 찍혔다. 다음 생의 나무에 쓴다.`, 4500)); }
         if (beat) scene({ id: 'ledger_' + beat, lines: STORY.ledger(beat, { cut: (() => { const r = ledgerRows(prev).find((x) => x.key === 'repeat'); return r ? Math.round((r.start * r.ratePct) / 100) : 0; })(), otherDebt: lenderDebtTotal(run), frame: !!useProto.getState().seen.momClue_frame, momLeft: ledgerRows(g).find((x) => x.key === 'mom')?.left ?? 0 }) });
       }
       // 모든 빚 0: 이 생을 닫을지 고른다(U-39 ⑧). 은퇴 = 엔딩 카드(도감에 남는다) → 환생, 계속 = 2막의 문턱 장면 하나 뒤에 그대로 이어 간다
@@ -826,7 +838,7 @@ export function startWatch(): void {
         }
       }
       if (lenderDebtTotal(run) === 0 && lenderDebtTotal(prev.run) > 0) scene({ id: 'clear', lines: STORY.clear(), hold: true, choices: [
-        { id: 'retire', label: '은퇴한다', sub: `이번 생 마치기, 황금 +${treeAward(run)}`, run: retireNow },
+        { id: 'retire', label: '은퇴한다', sub: `이번 생 마치기, 황금 도토코인 +${treeAward(run)}`, run: retireNow },
         { id: 'continue', label: '계속 산다', sub: '빚 없이 이어 하기', primary: true, run: () => { useProto.getState().patch({ seen: { ...useProto.getState().seen, continued: true } }); scene({ id: 'act2Hook', lines: STORY.act2Hook() }); } },
       ] });
     }

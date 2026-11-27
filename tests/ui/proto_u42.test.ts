@@ -75,7 +75,7 @@ describe('정산 빼고 전부 · 정산 빼고 갚기 (U-42 ③ ⑤)', () => {
     expect(g.run.cash).toBeGreaterThanOrEqual(due);
     expect(g.run.cash).toBeLessThan(due + 2);
   });
-  it('갚기: 다음 정산에 낼 돈을 남기고 도장 단위로 갚는다. 줄어드는 이자와 금박 도장이 적힌다', () => {
+  it('갚기: 다음 정산에 낼 돈을 남기고 도장 단위로 갚는다. 줄어드는 이자와 황금 도토코인이 적힌다', () => {
     const g = bare();
     g.run.debts.shark1 = { principal: 490_000, inherited: 300_000, overdue: 0, graceLeft: 0, tranches: [{ amount: 90_000, rate: 0.06 }] } as GameState['run']['debts']['shark1'];
     g.run.cash = 124_900; g.run.stats['repaid.shark1'] = 10_000;
@@ -83,7 +83,7 @@ describe('정산 빼고 전부 · 정산 빼고 갚기 (U-42 ③ ⑤)', () => {
     expect(b.amount).toBe(100_000); expect(b.mult).toBe(10);
     expect(b.cut).toBe(interestCut(g, 100_000));
     expect(b.stamps).toBe(Math.floor((10_000 + 100_000) / STAMP_STEP));
-    expect(b.text).toMatch(/^100,000 갚으면 이자 −[\d,]+, 금박 도장 \+2$/);
+    expect(b.text).toMatch(/^100,000 갚으면 이자 −[\d,]+, 황금 도토코인 \+2$/);
     const cash0 = g.run.cash;
     const r = A(g, { type: 'stamp', lender: 'shark1', mult: b.mult });
     expect(r.ok).toBe(true);

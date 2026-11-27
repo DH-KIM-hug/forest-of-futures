@@ -132,7 +132,7 @@ function Hud() {
           <div key={'g' + gi + (lg ? ':' + Math.floor(lg.cur / lg.need) : '')} className="goal" data-hl="goal" role="progressbar" aria-valuenow={goal?.cur ?? 1} aria-valuemax={goal?.need ?? 1} aria-label="목표">
             {ghost !== null && <div className="fill ghost" data-ghost style={{ width: `${ghost * 100}%` }} />}
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
-            <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{ghost !== null ? <i className="gsub gh">{ghost >= 1 ? '갚으면 도장' : `손에 +${comma(spare)}`}</i> : goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
+            <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{ghost !== null ? <i className="gsub gh">{ghost >= 1 ? '갚으면 황금 도토코인' : `손에 +${comma(spare)}`}</i> : goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
           {/* 정산 읽기는 하나(U-48): 집 판의 정산 막대(U-47)가 "다음 수금 0:42"와 낼 돈을 말한다. 머리의 옛 「정산 때 −Y  0:39」 띠는 뺐다 */}
         </>

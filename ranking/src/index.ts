@@ -2,7 +2,7 @@
 // GET  /top?board=networth|roe|pnl&limit=50  → [{rank,name,value,detail,at}]
 // GET  /me?board=…&deviceId=…                 → 내 기록과 순위
 // POST /submit {deviceId,name,board,value,detail} → 검사 뒤 기기당 최고 기록만 남긴다
-import { flyCandles } from '../../src/engine/feed/fly';
+import { flyCandlesVerified } from './flyVersions';
 import { BOARDS, LIMITS, REAL, SYNTH, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, parseSubmit, type Board, type Candle, type LifeDetail, type TradeDetail } from './verify';
 
 export interface Env {
@@ -25,9 +25,9 @@ function cors(env: Env, req: Request): Record<string, string> {
 const json = (data: unknown, status: number, h: Record<string, string>) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...h } });
 
-/** 게임 종목의 1분 봉(from · to 는 ms). 날다람쥐코인(FLY)은 시각의 함수로 셈하고, 나머지는 실제 시세(Hyperliquid)에서 받는다 */
+/** 게임 종목의 1분 봉(from · to 는 ms). 날다람쥐코인(FLY)은 시각의 함수로 셈하고(바꾼 시각 앞은 1판, flyVersions.ts), 나머지는 실제 시세(Hyperliquid)에서 받는다 */
 async function marketCandles(market: string, from: number, to: number): Promise<Candle[]> {
-  if (SYNTH[market]) return flyCandles(Math.floor(from / 1000), Math.floor(to / 1000)).map((c) => ({ t: c.t, h: c.h, l: c.l })).filter((c) => c.t <= to);
+  if (SYNTH[market]) return flyCandlesVerified(Math.floor(from / 1000), Math.floor(to / 1000)).filter((c) => c.t <= to);
   return candles(REAL[market], from, to);
 }
 

@@ -8,11 +8,17 @@ const hist: Record<string, number[]> = {};
 const live: Record<string, number> = {};
 let lastTick = -1;
 let started = false;
+/** 짜 둔 시세가 도는 종목(튜토리얼): 그동안 틱이 와도 그 종목 값은 쌓지 않는다(틱의 값이 짜 둔 값이라, 끝나고 걷어 낼 때 남아 실제 차트 앞에 계단이 남았다 — 회차 15 평가) */
+const scripted = new Set<string>();
+export function beginScript(market: string): void { scripted.add(market); }
+export function endScript(market: string): void { scripted.delete(market); }
+export const isScripted = (market: string): boolean => scripted.has(market);
 
 export function pushPrices(prices: Record<string, number>, tick: number, seed = false): void {
   if (tick === lastTick) return;
   lastTick = tick;
   for (const [k, v] of Object.entries(prices)) {
+    if (scripted.has(k)) continue;
     const a = (hist[k] ??= []);
     a.push(v);
     if (!seed) live[k] = Math.min(HIST_LEN, (live[k] ?? 0) + 1); // 시작할 때의 값(저장된 값 · 장면 건너뛰기의 값)은 시세가 아니라 씨앗이다
@@ -43,6 +49,7 @@ export function markLive(market: string): void { live[market] = (hist[market] ??
 export function resetHistory(): void {
   for (const k of Object.keys(hist)) delete hist[k];
   for (const k of Object.keys(live)) delete live[k];
+  scripted.clear();
   lastTick = -1;
 }
 
@@ -56,7 +63,7 @@ export function startHistory(): void {
     if (s.g.run.tick !== prev.g.run.tick) {
       pushPrices(s.g.run.prices, s.g.run.tick);
       const now = Date.now();
-      for (const [k, v] of Object.entries(s.g.run.prices)) pushDayPrice(k, v, now);
+      for (const [k, v] of Object.entries(s.g.run.prices)) if (!scripted.has(k)) pushDayPrice(k, v, now);
     }
   });
 }

@@ -94,7 +94,17 @@ export function flyIcons(html: string, from: DOMRect | null, to: DOMRect | null,
 }
 
 /** 숫자가 목표로 굴러간다(ease-out 350ms). 동작 줄이기면 바로 바뀐다. */
+/** 그림이 마지막으로 그려진 때(requestAnimationFrame 심장 박동). 오래 안 그려졌으면 숫자는 굴리지 않고 바로 끝값 */
+let lastFrame = 0;
+let beating = false;
+function heartbeat(): void {
+  if (beating || typeof requestAnimationFrame === 'undefined') return;
+  beating = true;
+  const beat = () => { lastFrame = performance.now(); requestAnimationFrame(beat); };
+  requestAnimationFrame(beat);
+}
 export function useCountUp(v: number, ms = 380, snapKey: string | number = ''): number {
+  heartbeat();
   const [d, setD] = useState(v);
   const cur = useRef(v);
   const key = useRef(snapKey);
@@ -105,7 +115,7 @@ export function useCountUp(v: number, ms = 380, snapKey: string | number = ''): 
   useEffect(() => {
     const from = cur.current;
     if (from === v) return;
-    if (reduced() || Math.abs(v - from) < 2) { cur.current = v; setD(v); return; }
+    if (reduced() || Math.abs(v - from) < 2 || performance.now() - lastFrame > 300) { cur.current = v; setD(v); return; }
     let raf = 0;
     const t0 = performance.now();
     const step = (t: number) => {
@@ -116,7 +126,10 @@ export function useCountUp(v: number, ms = 380, snapKey: string | number = ''): 
       if (k < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    // 그림이 그려지지 않는 동안(가려진 탭, 절전, 백그라운드)에는 requestAnimationFrame 이 오지 않는다: 굴리던 숫자가 그 자리에 멈춰
+    // 포지션 카드만 +0.0% 로 남고 머리 알약과 정리 단추는 +14,023 이던 것(회차 15 평가). 시간이 지나면 시계로 끝값에 닿는다
+    const done = window.setTimeout(() => { cancelAnimationFrame(raf); cur.current = v; setD(v); }, ms + 80);
+    return () => { cancelAnimationFrame(raf); window.clearTimeout(done); };
   }, [v, ms]);
   return d;
 }

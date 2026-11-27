@@ -9,12 +9,12 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefO
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
 import { TUT, hamsterMath, claim, lifeNo } from './model';
-import { flySecOf, windNow, TELL_SHORT, TELL_ODDS_TEXT } from './flyWind';
-import { TELL_WINDOW, flyTellsBetween, flyTellOutcome } from '../../engine/feed/fly';
+import { flySecOf, windNow, donePatterns, PATTERN_ODDS_TEXT } from './flyWind';
+import { flySeconds } from '../../engine/feed/fly';
 import { ForestLine, forestOpen } from './ForestBoard';
 import { rankFeeText, rankFeePct } from './frxRank';
 import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier, slowHint, typicalRange } from './tension';
-import { closedMath, tradeNet, say as toast } from './watch';
+import { closedMath, tradeNet, say as toast, liqQuietLeft } from './watch';
 import { exitFee, fundingRateNow } from '../../engine/futures';
 import { exitFeeMul } from '../../engine/skilltree';
 import { recentRange } from './tension';
@@ -125,10 +125,10 @@ const money = (x: number) => `${sign(x)}${comma(Math.abs(Math.round(x)))}`;
 
 // ── 차트 ────────────────────────────────────────────────────────────────
 interface Tag { key: string; cls: string; label: string; price: number; edge?: 'up' | 'down' }
-/** 날다람쥐 차트의 소문 깃발(U-53): 소문이 돈 때(깃발, 맞았는지 색으로)와 큰 바람이 시작한 때(바닥의 세모) */
-export interface ChartMark { key: string; ago: number; kind: 'live' | 'hit' | 'flip' | 'miss' | 'jump'; dir: 1 | -1; label: string }
+/** 날다람쥐 차트의 끝난 모양(U-57): 끝난 뒤에만. ago = 마지막 값에서 몇 초 전(시작, 끝), 꼭짓점은 옅은 점선으로 */
+export interface ChartPat { key: string; from: number; to: number; ok: boolean; label: string; pts: { ago: number; p: number }[] }
 /** 깨끗한 사각형 안에는 시세 선과 가로선뿐이다. 가격 꼬리표는 오른쪽 축 띠(차트 밖)에 둔다. */
-export function PChart({ market, hist, pos, win = 120, band = null, foot = null, footH = 0, note = '', onPlotTap, marks = [] }: { /** 차트에 남기는 소문 깃발(U-53): ago = 마지막 값에서 몇 초 전 */ marks?: ChartMark[]; /** 차트를 눌렀다(크게 · 작게, U-43) */ onPlotTap?: () => void; market: string; hist: number[]; pos: PositionView | null; win?: number; /** 지난 1분 폭(%): 지금 값 둘레에 그 폭만큼 띠를 그린다(청산선이 그 안에 들어오는지가 보인다) */ band?: number | null; /** 축 띠 맨 아래에 놓는 것(차트 창 고르기). 차트 안에는 아무것도 넣지 않는다 */ foot?: ReactNode; /** foot 의 높이(px): 꼬리표가 그 위에서 멈춘다 */ footH?: number; /** 축 띠에 적는 한 줄(화면 전체 폭). 자리가 넉넉할 때만 보인다 */ note?: string }) {
+export function PChart({ market, hist, pos, win = 120, band = null, foot = null, footH = 0, note = '', onPlotTap, pats = [] }: { /** 끝난 차트 모양(U-57) */ pats?: ChartPat[]; /** 차트를 눌렀다(크게 · 작게, U-43) */ onPlotTap?: () => void; market: string; hist: number[]; pos: PositionView | null; win?: number; /** 지난 1분 폭(%): 지금 값 둘레에 그 폭만큼 띠를 그린다(청산선이 그 안에 들어오는지가 보인다) */ band?: number | null; /** 축 띠 맨 아래에 놓는 것(차트 창 고르기). 차트 안에는 아무것도 넣지 않는다 */ foot?: ReactNode; /** foot 의 높이(px): 꼬리표가 그 위에서 멈춘다 */ footH?: number; /** 축 띠에 적는 한 줄(화면 전체 폭). 자리가 넉넉할 때만 보인다 */ note?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [h, setH] = useState(0);
   useLayoutEffect(() => {
@@ -141,7 +141,8 @@ export function PChart({ market, hist, pos, win = 120, band = null, foot = null,
   }, []);
   const data = hist.slice(-win);
   const n = data.length;
-  const cm = chartModel(data);
+  // 보이는 창 전부로 세로 폭을 센다(5분, 10분, 30분 창에서 2분 밖의 값이 차트 밖으로 삐져나가 기둥처럼 보이던 것)
+  const cm = chartModel(data, data.length);
   let lo = cm.dataLo, hi = cm.dataHi;
   if (pos) { lo = Math.min(lo, pos.entry); hi = Math.max(hi, pos.entry); }
   // 청산가는 시세 선이 납작해지지 않을 때만 화면 안에 넣는다. 아니면 축 띠 끝에 꼬리표만.
@@ -169,7 +170,7 @@ export function PChart({ market, hist, pos, win = 120, band = null, foot = null,
   }
   // 꼬리표끼리 겹치지 않게 세로로 민다(축 띠 안에서만).
   // 축 띠 아래의 단추는 차트가 아주 낮으면(시트가 열렸을 때) 뺀다. 위아래 끝 값은 꼬리표 자리가 넉넉할 때만 적는다
-  const fH = foot && h >= footH + 64 ? footH : 0;
+  const fH = foot && h >= footH + 50 ? footH : 0;
   const lims = h - fH >= 130;
   const noteH = lims && note ? 14 : 0;
   const GAP = 21, TOP = lims ? 30 : 11, BOT = Math.max(TOP, h - TOP - fH - noteH);
@@ -202,13 +203,15 @@ export function PChart({ market, hist, pos, win = 120, band = null, foot = null,
           {pos && pos.tp !== null && inside(pos.tp) && <line className="ln tp" x1="0" x2="100" y1={Y(pos.tp)} y2={Y(pos.tp)} />}
           {pos && pos.sl !== null && inside(pos.sl) && <line className="ln sl" x1="0" x2="100" y1={Y(pos.sl)} y2={Y(pos.sl)} />}
           {pos && liqIn && <line className="ln liq" x1="0" x2="100" y1={Y(pos.liq)} y2={Y(pos.liq)} />}
+          {pats.filter((pt) => pt.to >= 0 && pt.from <= n - 1).map((pt) => <polyline key={'k' + pt.key} className="pat-sk" points={pt.pts.filter((q) => q.ago <= n - 1).map((q) => `${X(n - 1 - q.ago).toFixed(2)},${Y(q.p).toFixed(2)}`).join(' ')} />)}
           {n >= 2 && <path className="px" d={line} />}
         </svg>
-        {marks.filter((mk) => mk.ago >= 0 && mk.ago <= n - 1).map((mk) => (
-          <span key={mk.key} className={'pt-mark ' + mk.kind + (mk.dir === 1 ? ' up' : ' dn') + (X(n - 1 - mk.ago) > 66 ? ' lf' : '')} data-mark={mk.kind} style={{ left: `${X(n - 1 - mk.ago)}%` }} aria-hidden="true">
-            {mk.kind === 'jump' ? <i className="jm">{mk.dir === 1 ? '▲' : '▼'}</i> : <b>{mk.label}</b>}
-          </span>
-        ))}
+        {pats.filter((pt) => pt.to >= 0 && pt.from <= n - 1).map((pt) => {
+          const x0 = X(n - 1 - Math.min(pt.from, n - 1)), x1 = X(n - 1 - pt.to);
+          return (
+            <span key={pt.key} className={'pt-pat' + (pt.ok ? '' : ' fake') + (x1 > 80 ? ' lf' : x0 < 12 ? ' rt' : '')} data-pat={pt.label} style={{ left: `${x0}%`, width: `${Math.max(1, x1 - x0)}%` }} aria-hidden="true"><b>{pt.label}</b></span>
+          );
+        })}
         {n >= 1 && <i className="dot" style={{ left: `${X(n - 1)}%`, top: `${Y(last)}%` }} />}
         {n < 12 && <span className="warm">시세를 모으는 중…</span>}
         <PhoneLane />
@@ -389,24 +392,18 @@ export function ProtoTrade() {
   const ranges = tabs.map((t) => ({ id: t.id, r: recentRange(liveHistoryOf(t.id)) }));
   const rangeOf = (id: string): number | null => ranges.find((x) => x.id === id)?.r ?? null;
   const wild = liveliest(ranges);
-  // 날다람쥐코인의 바람 세기와 숲 소문(U-52): 시세 함수와 같은 씨앗에서 센다
+  // 날다람쥐코인의 바람 세기와 끝난 차트 모양(U-52, U-57): 시세 함수와 같은 씨앗에서 센다
   const flySec = marketById.FLY?.tradable ? flySecOf(run) : null;
   const wind = flySec !== null && tutSt === 'done' ? windNow(flySec) : null;
-  // 차트의 소문 깃발(U-53): 보이는 창 안에 돈 소문과 그 결과. 초 단위 실시간 값이 쌓인 데까지만(복원한 분 봉 자리에는 안 그린다)
-  const flyMarks = (win0: number): ChartMark[] => {
+  // 차트의 끝난 모양(U-57): 보이는 창 안에서 끝난 모양에만 이름을 붙인다(생기는 중인 모양에는 아무것도 없다 — 앞일을 알려 주지 않는다)
+  const flyPats = (win0: number, n0: number): ChartPat[] => {
     if (flySec === null || tutSt !== 'done' || !marketById[market].synthetic) return [];
-    const liveN = liveHistoryOf(market).length;
-    const span0 = Math.min(win0, liveN) - 1;
-    if (span0 < 5) return [];
-    const out: ChartMark[] = [];
-    for (const x of flyTellsBetween(flySec - span0, flySec)) {
-      const o = flyTellOutcome(x, flySec);
-      const kind: ChartMark['kind'] = o === undefined ? 'live' : o === null ? 'miss' : o.dir === x.dir ? 'hit' : 'flip';
-      const arrow = x.dir === 1 ? '▲' : '▼';
-      out.push({ key: 't' + x.at, ago: flySec - x.at, kind, dir: x.dir, label: kind === 'live' ? `소문${arrow}?` : kind === 'hit' ? `소문${arrow} 맞음` : kind === 'flip' ? `소문${arrow} 반대` : `소문${arrow} 헛` });
-      if (o) out.push({ key: 'j' + o.at, ago: flySec - o.at, kind: 'jump', dir: o.dir, label: '' });
-    }
-    return out;
+    const span0 = Math.min(win0, n0) - 1;
+    if (span0 < 30) return [];
+    return donePatterns(flySec - span0, flySec).filter((e) => e.t1 - e.t0 <= span0 * 1.5).map((e) => ({
+      key: 'p' + e.t0, from: flySec - e.t0, to: flySec - e.t1, ok: e.ok, label: e.label,
+      pts: e.pts.map((q) => ({ ago: flySec - q.t, p: q.p })),
+    }));
   };
   const now = new Date();
   const sess = sessionOf(market, now, rangeOf(market));
@@ -514,7 +511,8 @@ export function ProtoTrade() {
   const profitOn = useProto((st0) => !!st0.profit);
   useEffect(() => {
     if (!rankUp || rankUp.k <= rankSeen || talkingNow || burst || profitOn || tutSt !== 'done' || mode.mode !== 'orders') return;
-    const t0 = window.setTimeout(() => { setRankCard({ k: rankUp.k, r: rankUp.r }); useProto.getState().patch({ rankSeen: rankUp.k }); play('paw_stamp'); }, 650);
+    // 청산 도장이 떠 있으면 걷힌 뒤에(회차 15: 승급 카드, 청산 도장, 알림이 세 겹으로 쌓였다)
+    const t0 = window.setTimeout(() => { setRankCard({ k: rankUp.k, r: rankUp.r }); useProto.getState().patch({ rankSeen: rankUp.k }); play('paw_stamp'); }, Math.max(650, liqQuietLeft() + 250));
     return () => window.clearTimeout(t0);
   }, [rankUp?.k, rankSeen, talkingNow, !!burst, profitOn, tutSt]);
   useEffect(() => { if (!rankCard) return; const t = window.setTimeout(() => setRankCard(null), 4200); return () => window.clearTimeout(t); }, [rankCard?.k]);
@@ -782,8 +780,7 @@ export function ProtoTrade() {
           <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '재는 중' : r.toFixed(3) + '%'}`}>
             <i className="bars" aria-hidden="true"><u /><u /><u /></i>{ss?.badge ?? swingText(r).replace(/^1분 /, '')}
           </small>
-          {wind?.tell?.state === 'live' && marketById[t.id].synthetic ? <i className="wild rumor" data-rumor title="숲 소문이 돈다">소문</i>
-            : wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
+          {wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
           {/* 포지션이 있는 종목(U-47: 여러 종목을 함께 든다): 방향과 지금 손익 색 */}
           {t.hasPos && <i className={'pd ' + ((t.posNet ?? 0) >= 0 ? 'up' : 'down')} data-posdir={t.posDir} aria-label={`${t.posDir === 1 ? '롱' : '숏'} 포지션, ${(t.posNet ?? 0) >= 0 ? '이익' : '손실'} ${comma(Math.abs(Math.round(t.posNet ?? 0)))}`}>{t.posDir === 1 ? '▲' : '▼'}</i>}
         </button>
@@ -803,19 +800,17 @@ export function ProtoTrade() {
         : <div className={'mood m-' + (moodQ === '잔잔함' || moodQ === '잔바람' ? 'calm' : moodQ === '격동' || moodQ === '돌풍' || moodQ === '센바람' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : m.synthetic ? '밈코인' : '24시간')}</span>{moodQ}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
     </div>
   );
-  // 바람 줄(U-52): 날다람쥐코인을 볼 때만. 지금 10분의 바람 세기, 숲 소문(돌고 있으면 남은 초), 지난 하루 소문 성적
+  // 바람 줄(U-52, U-57): 날다람쥐코인을 볼 때만. 지금 10분의 바람 세기, 방금 끝난 차트 모양(끝난 뒤에만), 지난 하루 모양 성적
   const windLine = wind && marketById[market].synthetic ? (() => {
-    const t = wind.tell, gw = wind.gust;
-    const rec = `지난 하루 소문 ${wind.rec.n}번, 큰 바람 ${wind.rec.hit}번, 말한 쪽 ${wind.rec.dirHit}번`;
-    const cls = 'pt-wind' + (t?.state === 'live' ? ' live' : t?.state === 'came' ? ' came' : '') + (gw.mul >= 1.35 ? ' gusty' : gw.mul < 0.75 ? ' calm' : '');
+    const d = wind.done, gw = wind.gust;
+    const rec = wind.rec.n ? `지난 하루 끝난 모양 ${wind.rec.n}개 중 ${wind.rec.ok}개가 교과서대로` : '';
+    const cls = 'pt-wind' + (d ? ' came' + (d.e.ok ? '' : ' fake') : '') + (gw.mul >= 1.35 ? ' gusty' : gw.mul < 0.75 ? ' calm' : '');
     return (
-      <button className={cls} data-wind={t?.state ?? 'none'} data-gust={gw.word} onClick={() => { play('ui_tap'); toast(`${TELL_ODDS_TEXT}. ${rec}. 바람 세기는 지금 10분 동안의 흔들림(평소의 ${gw.mul.toFixed(1)}배).`, 7000); }}
-        aria-label={`바람 ${gw.word}${t ? ', 숲 소문' : ''}`}>
+      <button className={cls} data-wind={d ? (d.e.ok ? 'ok' : 'fake') : 'none'} data-gust={gw.word} onClick={() => { play('ui_tap'); toast(`${PATTERN_ODDS_TEXT}. ${rec ? rec + '. ' : ''}모양 이름은 끝난 뒤에만 붙는다. 바람 세기는 지금 10분 동안의 흔들림(평소의 ${gw.mul.toFixed(1)}배).`, 8000); }}
+        aria-label={`바람 ${gw.word}${d ? ', 방금 ' + d.e.label : ''}`}>
         <span className={'gw g' + Math.min(3, Math.floor(gw.mul / 0.65))}><i className="bars" aria-hidden="true"><u /><u /><u /></i>{gw.word}<small>{Math.ceil(gw.leftSec / 60)}분</small></span>
-        {t?.state === 'live' ? <><span className="tl"><b>숲 소문</b> {TELL_SHORT[t.x.dir]}<em className={t.x.dir === 1 ? 'up' : 'down'}>{t.x.dir === 1 ? '▲?' : '▼?'}</em></span><i className="cd" style={{ ['--p' as string]: String(t.left / TELL_WINDOW) }}>{t.left}초</i></>
-          : t?.state === 'came' ? <span className="tl"><b>{t.jump.dir === t.x.dir ? '소문대로' : '소문과 반대로'}</b> 큰 바람 <em className={t.jump.dir === 1 ? 'up' : 'down'}>{t.jump.dir === 1 ? '▲' : '▼'}</em></span>
-          : t?.state === 'miss' ? <span className="tl dim">헛소문이었다. 바람은 오지 않았다</span>
-          : <span className="tl dim">소문 없음<small>{wind.rec.n ? `지난 하루 ${wind.rec.n}번 중 ${wind.rec.hit}번 맞음` : `1분 폭 평소 ${gw.pct1m.toFixed(1)}%쯤`}</small></span>}
+        {d ? <span className="tl" data-pat-done={d.e.label}><b>방금</b> {d.e.label}<em className={d.e.ok ? (d.e.dir === 1 ? 'up' : 'down') : (d.e.dir === 1 ? 'down' : 'up')}>{(d.e.ok ? d.e.dir : -d.e.dir) === 1 ? '▲' : '▼'}</em></span>
+          : <span className="tl dim">1분 폭 평소 {gw.pct1m.toFixed(1)}%쯤<small>{wind.rec.n ? `교과서대로 ${wind.rec.ok}/${wind.rec.n}` : ''}</small></span>}
       </button>
     );
   })() : null;
@@ -837,10 +832,14 @@ export function ProtoTrade() {
     );
   })() : null;
   // 차트 창: 나무의 초봉 차트(A3a)를 30초 · 긴 창으로 돌려 둔 동안에는 그것이 먼저다. 아니면 고른 시간(2분 · 5분 · 10분)
-  const win = sk.zoom && zoom !== 0 ? (zoom === 1 ? 30 : longChartSec(run)) : span;
+  // 날다람쥐코인은 값이 시각의 함수라 지난 값을 언제든 다시 셀 수 있다(U-57): 차트를 함수 값으로 그리고, 30분 창도 연다(모양 하나가 다 들어온다)
+  const flyChart = marketById[market].synthetic && flySec !== null && tutSt === 'done';
+  const span1 = !flyChart && span > 600 ? 600 : span;
+  const win = sk.zoom && zoom !== 0 ? (zoom === 1 ? 30 : longChartSec(run)) : span1;
+  const chartHist = flyChart ? flySeconds(flySec!, Math.max(win, 120)) : hist;
   const spanLabel = win === 120 ? cm.label : (() => {
     // 화면 전체 폭: chartModel 과 같은 셈을 지금 창에 대고 한다
-    const d = hist.slice(-win);
+    const d = chartHist.slice(-win);
     if (!d.length) return '';
     let a = Math.min(...d), b = Math.max(...d);
     const mid = (a + b) / 2, minSpan = mid * 0.0002;
@@ -848,15 +847,15 @@ export function ProtoTrade() {
     const pad = (b - a) * 0.04;
     return `차트 세로 폭 ${(((b - a + pad * 2) / ((a + b) / 2)) * 100).toFixed(2)}%`;
   })();
-  const WINS = [120, 300, 600];
+  const WINS = flyChart ? [120, 300, 600, 1800] : [120, 300, 600];
   const winCtl = (
     <div className="pt-win">
-      {sk.zoom && <button className="pt-zoom" data-zoom={zoom} onClick={() => setZoom((z) => (z + 1) % 3)}>{zoom === 1 ? '초봉 30초' : zoom === 2 ? `긴 창 ${(longChartSec(run) / 60).toFixed(1)}분` : `${span / 60}분`} ⇄</button>}
-      <div className="seg" role="radiogroup" aria-label="차트에 보이는 시간">
+      {sk.zoom && <button className="pt-zoom" data-zoom={zoom} onClick={() => setZoom((z) => (z + 1) % 3)}>{zoom === 1 ? '초봉 30초' : zoom === 2 ? `긴 창 ${(longChartSec(run) / 60).toFixed(1)}분` : `${span1 / 60}분`} ⇄</button>}
+      <div className={'seg' + (WINS.length > 3 ? ' four' : '')} role="radiogroup" aria-label="차트에 보이는 시간">
         {WINS.map((w, i) => {
-          const on = (!sk.zoom || zoom === 0) && span === w;
+          const on = (!sk.zoom || zoom === 0) && span1 === w;
           // 기록이 아직 그만큼 안 쌓였으면 흐리게(눌러도 보이는 것은 같다)
-          const thin = i > 0 && hist.length <= WINS[i - 1];
+          const thin = i > 0 && chartHist.length <= WINS[i - 1];
           return <button key={w} role="radio" aria-checked={on} className={(on ? 'on' : '') + (thin ? ' thin' : '')} data-win={w} title={thin ? '기록이 아직 그만큼 쌓이지 않았다' : undefined} onClick={() => { setSpan(w); setZoom(0); }}>{w / 60}분</button>;
         })}
       </div>
@@ -864,7 +863,7 @@ export function ProtoTrade() {
   );
   const chart = (
     <>
-      <PChart market={market} hist={hist} pos={pos} win={win} marks={flyMarks(win)} band={tn?.rangePct ?? null} foot={winCtl} footH={sk.zoom ? 50 : 26} note={spanLabel} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
+      <PChart market={market} hist={chartHist} pos={pos} win={win} pats={flyPats(win, chartHist.length)} band={tn?.rangePct ?? null} foot={winCtl} footH={(sk.zoom ? 50 : 26) + (WINS.length > 3 ? 18 : 0)} note={spanLabel} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
       {ins && ins.shortNotional > 0 && (
         <div className="pt-meta">
           <span>지갑 평가액 {comma(Math.floor(ins.walletValue))}, 숏으로 상쇄하는 비율 {ins.ratioPct}%</span>
@@ -957,7 +956,7 @@ export function ProtoTrade() {
   // 느린 판(U-51): 평소대로면 목표까지 5분 넘게 걸리는 판이면 그렇다고, 지금 더 빨리 움직이는 종목이 있으면 그 이름을 — 손 놓고 기다리지 않게. 눌러서 그 종목으로 간다
   const altM = wild && wild.id !== market && !rankRow ? { id: wild.id, name: marketById[wild.id].name, r: wild.r } : null;
   const heldSec = rawPos ? run.tick - rawPos.openTick : 0;
-  const slow = tutSt !== 'done' || result || (marketById[market].synthetic && wind?.tell?.state === 'live') ? null
+  const slow = tutSt !== 'done' || result ? null
     : pos && rawPos ? (heldSec >= 30 && netRoe < 15 ? slowHint({ needPct: (15 - netRoe) / pos.lev, rangePct: typicalRange(liveHist), goal: '+15%', alt: altM, ownR: rangeOf(market) }) : null)
     : odds && !odds.liqFirst && !prev.reason ? slowHint({ needPct: odds.needPct, rangePct: typicalRange(liveHist), goal: '이자 한 번', alt: altM, ownR: rangeOf(market) }) : null;
   const slowLine = slow ? (

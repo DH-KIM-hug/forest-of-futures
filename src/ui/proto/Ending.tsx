@@ -83,7 +83,7 @@ export function EndingFlow() {
       </div>
       <div className="award" data-award={e.gold ?? 0}>
         <img className="coin art" data-art="goldcoin" src={sprite('goldcoin')!.src} alt="" />
-        <span>지난 생에 갚은 원금 <b className="sm">{comma(repaid)}</b><br /><small>5만마다 금박 도장 하나{run.debts.shark1.principal <= 0 && repaid > 0 ? ', 완납 +2' : ''}</small></span>
+        <span>지난 생에 갚은 원금 <b className="sm">{comma(repaid)}</b><br /><small>5만마다 황금 도토코인 하나{run.debts.shark1.principal <= 0 && repaid > 0 ? ', 완납 +2' : ''}</small></span>
         <b>+{comma(e.gold ?? 0)}</b>
       </div>
       <SkillTree />
@@ -194,7 +194,7 @@ function SkillTree() {
         {cur.level > 0 && cur.pair && !cur.picked
           ? <button className="buy on" data-pick onClick={pick}><span>이번 생에 켠다</span></button>
           : cur.cost !== null
-            ? <button className={'buy' + (cur.canBuy ? ' on' : '')} data-buy disabled={!cur.canBuy} onClick={buy}><span>{cur.level > 0 ? '키운다' : '연다'}</span><small>{cur.canBuy ? `황금 ${cur.cost}개` : cur.reason ?? ''}</small></button>
+            ? <button className={'buy' + (cur.canBuy ? ' on' : '')} data-buy disabled={!cur.canBuy} onClick={buy}><span>{cur.level > 0 ? '키운다' : '연다'}</span><small>{cur.canBuy ? `황금 도토코인 ${cur.cost}개` : cur.reason ?? ''}</small></button>
             : <span className="have">열림</span>}
       </div>
       {pathEnds.length > 0 && (
