@@ -50,6 +50,7 @@ import { flyAcorns, reduced, useCountUp } from './fx';
 import { dayBars } from '../dayHistory';
 import { WinBurst } from './Juice';
 import { play, playTap, later } from './audio';
+import { useOpenPositions } from './Lot';
 import { pushPop, treePing } from './popBus';
 import { rankOf, lookOf, rankName, stampsFor, CASE_COL } from './frxRank';
 import { sprite } from './sprites';
@@ -745,10 +746,11 @@ export function ProtoTrade() {
   // 훅은 모두 이른 return 앞에서 부른다(회차 13: 잠김, 계좌 없음 화면으로 바뀌는 순간 훅 수가 달라져 화면이 통째로 꺼졌다)
   const firstTry = useProto((s0) => s0.firstTry);
 
-  // 0단계: 아직 앱이 잠겨 있다
+  // 0단계: 아직 앱이 잠겨 있다. 압류로 잠겼는데 판이 열려 있으면 그 판을 여기서 닫는다(회차 14: 열린 판이 화면에서 사라졌다)
+  const lockedOpen = Object.values(run.positions);
   if (mode.mode === 'locked') {
     return frame(
-      <div className="pt-lockbox"><Lock size={34} /><p>{(run.stats.assetsSeized ?? 0) > 0 ? '연결된 쳇바퀴 없음. 집에서 한 대를 다시 놓으면 거래를 재개할 수 있어요.' : mode.text}</p></div>,
+      <div className="pt-lockbox"><Lock size={34} /><p>{(run.stats.assetsSeized ?? 0) > 0 ? '연결된 쳇바퀴 없음. 집에서 한 대를 다시 놓으면 거래를 재개할 수 있어요.' : mode.text}</p>{lockedOpen.length > 0 && <LockedPositions ps={lockedOpen} />}</div>,
     );
   }
 
@@ -787,7 +789,7 @@ export function ProtoTrade() {
     <div className="pt-quote">
       <div className="px"><i className="qn">{marketById[market].name}</i><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
       {status ? <div className="st-bad" role="status">{status}</div>
-        : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><b>{sess.state === 'closed' ? '본장 마감' : sess.state === 'after' ? '본장 마감, 그래도 움직인다' : '장중인데 조용함, 휴장인 듯'}</b><small data-opens-in>{opensInText(market, now) ? `다음 개장 ${sess.hours.split('~')[0]} (${opensInText(market, now)})` : `본장 ${sess.hours}`}</small></div>
+        : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><b>{sess.state === 'closed' ? '본장 마감' : sess.state === 'after' ? '본장 마감, 그래도 움직인다' : '장중인데 조용함, 휴장인 듯'}</b><small data-opens-in>{opensInText(market, now) ? `개장 ${sess.hours.split('~')[0]}, ${opensInText(market, now)!.replace(/^본장까지 /, '')} 뒤` : `본장 ${sess.hours}`}</small></div>
         : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : m.synthetic ? '밈코인' : '24시간')}</span>{mood}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
     </div>
   );
@@ -1189,4 +1191,20 @@ export function ProtoTrade() {
     );
   })() : null;
   return frame(<>{coins}{quote}{windLine}{rankRow}{chart}{unbig}{lower}{rankCardEl}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : ''));
+}
+
+/** 거래 화면이 잠겼는데 열린 판(회차 14): 종목, 손익, [정리] — 정리는 한곳 정리 판과 같은 행동(close) */
+function LockedPositions({ ps }: { ps: { market: string; dir: 1 | -1; lev: number }[] }) {
+  const act = useGame((s) => s.act);
+  const views = useOpenPositions();
+  return (
+    <div className="pt-lockpos" data-lockpos>
+      <small>열린 판은 그대로 움직인다</small>
+      {ps.map((p) => { const v = views.find((x) => x.market === p.market); const net = v ? Math.round(v.net) : 0; return (
+        <button key={p.market} className={'lp ' + (net >= 0 ? 'up' : 'dn')} data-lockclose={p.market} onClick={() => { const r = act({ type: 'close', market: p.market }); play(r.ok ? (net >= 0 ? 'close_profit' : 'close_loss') : 'insufficient'); }}>
+          <span>{marketById[p.market]?.name ?? p.market} {p.dir === 1 ? '롱' : '숏'} {p.lev}배</span><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(net))}</b><em>정리</em>
+        </button>
+      ); })}
+    </div>
+  );
 }

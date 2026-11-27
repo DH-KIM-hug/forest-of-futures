@@ -17,7 +17,7 @@ import { tips, tipsLeft, type Moment } from './guide';
 import { STORY, WHO_NAME } from './text';
 import { comma } from '../../engine/util';
 import { DEBT_IDS, eventById, lenderById, marketById } from '../../engine/data';
-import { levCapNow } from '../../engine/progression';
+import { levCapNow, tradeGate } from '../../engine/progression';
 import { forecast } from '../../engine/settlement';
 import { tradeReaction, settleRemark, remarkIsRoutine, ROUTINE_GAP_MS, isTiny, worthCertificate } from './react';
 /** 되풀이 정산 한 줄을 마지막으로 말한 때(U-53) */
@@ -170,9 +170,11 @@ function flushCalm(): void {
 /** 급한 장면(연체·압류·미납 문자)도, 포지션을 열어 둔 채 거래소를 보고 있는 동안에는 기다린다 — [정리하기]를 가리지 않게(U-39 ②).
  *  그 사이에는 한 줄 알림으로만 알리고, 포지션을 닫거나 거래소 탭을 떠나면 뜬다. */
 const held: Scene[] = [];
-const busyTrading = (): boolean => Object.keys(useGame.getState().g.run.positions).length > 0 && useProto.getState().tab === 'phone' && !useGame.getState().g.run.over;
-function sceneHeld(sc: Scene, toast?: string): void {
-  if (!busyTrading()) { scene(sc); return; }
+// 회차 14: 쳇바퀴를 다 빼앗겨 거래 화면이 잠기면 가릴 [정리하기]도 없다 — 그때는 기다리지 않는다
+const busyTrading = (): boolean => { const g = useGame.getState().g; return Object.keys(g.run.positions).length > 0 && useProto.getState().tab === 'phone' && !g.run.over && tradeGate(g).mode !== 'locked'; };
+/** urgent = 압류, 또는 한 번 더 밀리면 파산하는 연체(회차 14: 판을 쥔 채 거래소에 있으면 장면 하나 없이 엔딩으로 갔다). 이런 장면은 기다리지 않는다 */
+function sceneHeld(sc: Scene, toast?: string, urgent = false): void {
+  if (urgent || !busyTrading()) { scene(sc); return; }
   if (!held.some((x) => x.id === sc.id)) held.push(sc);
   if (toast) say(toast, 6000);
 }
@@ -576,7 +578,9 @@ export function startWatch(): void {
           // 돈이 포지션에 묶여 있었는가
           const locked = Object.values(run.positions).reduce((a, p) => a + p.margin0, 0);
           sceneHeld({ id: `overdue${run.settleNo}`, again: true, lines: STORY.overdue({ interest: badger, nth: (useProto.getState().odSeen += 1), tagged, seized: (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0), nothingLeft: run.equipment.length === 0 && ownedCoins(run).length === 0, living: lv, livingCapital: lvCap, locked, short: r.unpaid }), settle: meta },
-            '이자 미납. 상세 내역은 거래 뒤에 확인');
+            '이자 미납. 상세 내역은 거래 뒤에 확인',
+            // 한 번 더 밀리면 파산(어느 곳이든 연체가 한도 − 1)이거나 방금 무엇을 빼앗겼으면 기다리지 않는다
+            (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0) || DEBT_IDS.some((id) => id !== 'tax' && run.debts[id].overdue >= lenderById[id].maxOverdue - 1));
         }
         else if (no === 1) scene({ id: 'firstSettle', lines: lifeNo(g) <= 1 ? STORY.firstSettle(badger, tipArgs(g)) : STORY.rebornSettle(badger), settle: meta });
         else if (no <= FULL_CUTINS && Object.keys(run.positions).length === 0 && P.tab !== 'phone') scene({ id: `settle${run.settleNo}`, lines: STORY.settleWin(badger), settle: meta, auto: 4000 });
@@ -635,7 +639,7 @@ export function startWatch(): void {
       const ev = [...run.eventLog].reverse().find((e) => e.kind.startsWith('seize:'));
       const what = ev?.kind.startsWith('seize:wheel:') ? 'mom' : ev?.kind === 'seize:wallet' ? 'wallet' : 'wheel';
       later(1200, () => play('overdue_stamp'));
-      sceneHeld({ id: `seize${run.stats.assetsSeized}`, again: true, lines: STORY.seize({ what, off: Math.abs(ev?.amount ?? 0) }) }, what === 'mom' ? '엄마의 쳇바퀴 압류. 집에서 내역 확인' : what === 'wallet' ? '콜드월렛 압류. 집에서 내역 확인' : '보조 쳇바퀴 압류. 집에서 내역 확인');
+      sceneHeld({ id: `seize${run.stats.assetsSeized}`, again: true, lines: STORY.seize({ what, off: Math.abs(ev?.amount ?? 0) }) }, what === 'mom' ? '엄마의 쳇바퀴 압류. 집에서 내역 확인' : what === 'wallet' ? '콜드월렛 압류. 집에서 내역 확인' : '보조 쳇바퀴 압류. 집에서 내역 확인', true);
     }
     // 닫힌 포지션(U-47: 여러 종목을 함께 들 수 있다 — 한 틱에 둘 이상 닫혀도 하나씩 다 본다)
     const closedPs = Object.values(prev.run.positions).filter((p) => { const c = run.positions[p.market]; return !c || c.openTick !== p.openTick; });

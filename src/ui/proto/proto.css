@@ -495,7 +495,7 @@
 .pr-hud .settle.held .fill { background: var(--red); animation: breatheRed .9s ease-in-out infinite alternate; }
 .pr-hud .debt .int.bumped { animation: nudge .5s ease-out; color: var(--red-ink); }
 .pr-cutin .pick { display: flex; gap: 10px; margin-top: 6px; }
-.pr-cutin .pick .buy { flex: 1; width: auto; min-height: 56px; }
+.pr-cutin .pick .buy { flex: 1; width: auto; min-height: 56px; padding: 6px 8px; }
 .pr-cutin .pick .buy span { font-size: 18px; }
 .pr-notice { position: absolute; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; padding: 22px; background: rgba(29, 27, 25, .66); animation: fadeIn .2s ease-out; }
 .pr-notice .box { width: min(340px, 100%); padding: 18px 18px 16px; border-radius: 18px; background: var(--card); border: 3px solid var(--o); box-shadow: 0 0 0 4px #fff, 0 12px 26px rgba(0, 0, 0, .45); animation: popIn .32s cubic-bezier(.34, 1.56, .64, 1) both; }
@@ -666,7 +666,7 @@
 .pr-ledger .lg-row[data-row="mom"] .bar u { background: #C2413B; }
 .pr-ledger .lg-row .amt { grid-area: amt; font-family: var(--dsp); font-weight: 400; font-size: 15px; font-variant-numeric: tabular-nums; min-width: 62px; text-align: right; }
 .pr-ledger .lg-row .iv { grid-area: iv; font-size: 11.5px; font-weight: 700; color: var(--sub); }
-.pr-ledger .lg-row.top .iv::after { content: ' · 지금 갚는 줄'; color: var(--red-ink); }
+.pr-ledger .lg-row.top .iv::after { content: ', 지금 갚는 줄'; color: var(--red-ink); }
 .pr-ledger .lg-row.top { background: rgba(255, 255, 255, .55); border-radius: 8px; }
 .pr-ledger .lg-row.done { opacity: .5; } .pr-ledger .lg-row.done .nm { text-decoration: line-through; }
 .pr-ledger .lg-st { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px; border-top: 1.5px solid #E6D9B5; }

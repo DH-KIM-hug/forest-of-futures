@@ -50,7 +50,8 @@ export function ProfitPrompt() {
     try {
       const cv = cvRef.current ?? await renderCard(p);
       if (!cvRef.current) { cvRef.current = cv; setThumb(cv.toDataURL('image/png')); (window as unknown as { __lastCard?: string }).__lastCard = cv.toDataURL('image/png'); }
-      const r = await saveCard(cv, p.date);
+      // 회차 14: 공유 창이 끝나지 않는 기기에서 「그리는 중」에 영원히 멈췄다 — 10초면 놓는다
+      const r = await Promise.race([saveCard(cv, p.date), new Promise<'cancelled'>((res) => window.setTimeout(() => res('cancelled'), 10_000))]);
       if (r !== 'cancelled') play('shutter');
       setNote(r === 'shared' ? '자랑했어요' : r === 'downloaded' ? '이미지로 저장했어요' : '보내지 않았어요');
     } catch { setNote('그림을 만들지 못했어요'); }
@@ -70,7 +71,7 @@ export function ProfitPrompt() {
           <div className="tx"><b>{p.gold ? '금테 수익 인증서 나왔어요' : '수익 인증서 나왔어요'}</b><small>{p.coin} {p.dir === 1 ? '롱' : '숏'} {p.lev}배, +{comma(Math.round(p.pnl))} 도토리</small></div>
           <div className="bt">
             <button className="yes" data-brag onClick={save} disabled={stage === 'busy'}>{stage === 'busy' ? '그리는 중' : '자랑하기'}</button>
-            <button className="no" onClick={close} disabled={stage === 'busy'}>건너뛰기</button>
+            <button className="no" onClick={close}>건너뛰기</button>
           </div>
         </>
       )}

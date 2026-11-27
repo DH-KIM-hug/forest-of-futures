@@ -209,6 +209,13 @@
 /* 잠김·개설 전 */
 .pt-lockbox { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; font-size: 14px; font-weight: 700; color: var(--sub); }
 .pt-lockbox p { margin: 0; max-width: 24ch; }
+/* 잠긴 거래 화면의 열린 판(회차 14) */
+.pt-lockpos { display: flex; flex-direction: column; gap: 6px; width: min(300px, 92%); margin-top: 6px; }
+.pt-lockpos small { font-size: 12px; color: var(--sub); }
+.pt-lockpos .lp { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border-radius: 14px; border: 2.5px solid var(--o); background: var(--card); font-family: inherit; font-size: 14px; font-weight: 800; color: var(--ink, #3a352f); }
+.pt-lockpos .lp span { flex: 1; text-align: left; }
+.pt-lockpos .lp.up b { color: var(--up); } .pt-lockpos .lp.dn b { color: var(--down); }
+.pt-lockpos .lp em { font-style: normal; padding: 3px 10px; border-radius: 10px; background: #9AD0C2; border: 2px solid var(--o); }
 .pt-gate { flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px; padding: 12px; background: var(--card); border: 3px solid var(--o); border-radius: 16px; box-shadow: var(--drop); }
 .pt-gate > b { font-family: var(--dsp); font-weight: 400; font-size: 19px; }
 .pt-gate .gl { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--sub); }
@@ -356,7 +363,7 @@
 .pt-ct.sw-still:not(.shut) .pt-coin.logo { filter: grayscale(.35); }
 .pt-quote .mood.m-sess { flex-direction: column; align-items: flex-end; gap: 0; padding: 2px 9px; background: #E7E2D3; font-family: -apple-system, 'Apple SD Gothic Neo', sans-serif; }
 .pt-quote .mood.m-sess b { font-size: 12.5px; font-weight: 800; line-height: 1.25; white-space: nowrap; }
-.pt-quote .mood.m-sess small { font-size: 10.5px; font-weight: 700; color: var(--sub); line-height: 1.2; white-space: nowrap; }
+.pt-quote .mood.m-sess small { font-size: 10.5px; font-weight: 700; color: var(--sub); line-height: 1.2; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .pt-quote .mood.m-sess.s-after { background: #FFF3C4; }
 .pt-bar .pt-fee { margin-left: auto; padding: 1px 8px; border-radius: 9px; font-size: 10.5px; font-weight: 800; line-height: 16px; color: var(--sub); white-space: nowrap; background: rgba(255, 255, 255, .5); }
 .pt-bar .pt-fee.on { background: #FFF3C4; border: 1.8px dashed #C98A2B; color: #8A5A16; }
@@ -827,7 +834,9 @@
 
 /* ── U-53(회차 12) ── */
 /* 꼭 읽힐 알림(소문, 승급)은 말 자리에서 잘리지 않는다: 360 폭에서 세 줄로 넘쳐 끝이 잘리던 것 */
-.pt-chart .plot .pr-lane.keep { -webkit-line-clamp: 4; max-width: calc(100% - 12px); }
+.pt-chart .plot .pr-lane.keep { -webkit-line-clamp: 4; max-width: calc(100% - 12px); max-height: calc(1.28em * 4 + 11px); }
+/* 회차 14: 말줄임 줄 밑의 셋째 줄 머리가 아래 여백으로 비쳐 보였다 — 줄 수만큼의 높이로 자른다 */
+.pt-chart .plot .pr-lane { max-height: calc(1.28em * 2 + 11px); }
 /* 낮은 폰에서도 「소문」 꼬리표는 남긴다(출렁 꼬리표만 숨긴다) */
 @media (max-height: 720px) { .pr .pt .pt-ct .wild.rumor { display: inline-block; } .pr .pt .pt-ct:has(.wild.rumor) small.swg { display: none; } }
 /* 차트의 소문 깃발(U-53): 위에 깃발(맞음 금빛, 반대 붉은 테, 헛소문 회색, 도는 중 깜빡임), 아래에 큰 바람이 시작한 세모 */
