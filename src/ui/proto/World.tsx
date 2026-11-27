@@ -85,7 +85,12 @@ function WheelAt({ foot, kind, running, tagged, label, bump, id, pop, cheer = fa
               <image href={drum.src} x={ox} y={oy} width={ow} height={oh} />
               <ellipse className="wh-ticks" cx={ox + hp.cx * u} cy={oy + hp.cy * u} rx={hp.rx * u} ry={hp.ry * u} strokeWidth={12 * u} strokeDasharray={`${20 * u} ${40 * u}`} style={{ ['--tick' as string]: `${60 * u}px` }} />
               <ellipse className="wh-ticks hi" cx={ox + hp.cx * u} cy={oy + hp.cy * u} rx={hp.rx * u} ry={hp.ry * u} strokeWidth={7 * u} strokeDasharray={`${9 * u} ${51 * u}`} strokeDashoffset={-24 * u} style={{ ['--tick' as string]: `${60 * u}px` }} />
-              <image className="wh-bob" data-runner href={runner.src} x={ox} y={oy} width={ow} height={oh} style={{ transformOrigin: `${ox + ow * 0.55}px ${oy + oh * 0.68}px` }} />
+              {runner.n ? (
+                // 옆모습으로 달리는 이(U-47): 띠 그림을 한 칸씩 넘긴다. 빠르기는 주인공이면 누르는 빠르기를 따른다
+                <svg x={ox} y={oy} width={ow} height={oh} overflow="hidden">
+                  <image className="wh-strip" data-runner href={runner.src} x={0} y={0} width={ow * runner.n} height={oh} preserveAspectRatio="none" style={{ ['--strip' as string]: `${-ow * runner.n}px`, ['--n' as string]: runner.n, animationTimingFunction: `steps(${runner.n})`, animationDuration: `${runner.n * (hero ? 0.05 : 0.07)}s` }} />
+                </svg>
+              ) : <image className="wh-bob" data-runner href={runner.src} x={ox} y={oy} width={ow} height={oh} style={{ transformOrigin: `${ox + ow * 0.55}px ${oy + oh * 0.68}px` }} />}
             </g>
           ) : empty ? <image href={img.src} x={x - ew / 2} y={y + EMPTY_WHEEL_DY * K - eh} width={ew} height={eh} />
             : <image href={img.src} x={x + WHEEL_BOX.dx * K} y={y + WHEEL_BOX.dy * K} width={WHEEL_BOX.w * K} height={WHEEL_BOX.h * K} />}

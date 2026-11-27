@@ -1013,3 +1013,9 @@
 .g-pulse { animation: gPulse .6s ease-out; }
 @keyframes gPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 212, 90, .95); transform: scale(1); } 40% { transform: scale(1.06); } 100% { box-shadow: 0 0 0 14px rgba(255, 212, 90, 0); transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .g-pulse { animation: none; outline: 3px solid #FFD45A; } }
+
+/* U-47: 쳇바퀴 안에서 옆모습으로 쌩쌩 달린다(띠 그림을 한 칸씩). 안 돌 때는 첫 칸에 멈춘다 */
+.wh-strip { animation-name: whStrip; animation-iteration-count: infinite; animation-play-state: paused; }
+.wh-run.on .wh-strip, .wh-run.byhero .wh-strip { animation-play-state: running; }
+@keyframes whStrip { from { transform: translateX(0); } to { transform: translateX(var(--strip)); } }
+@media (prefers-reduced-motion: reduce) { .wh-strip { animation: none !important; } }

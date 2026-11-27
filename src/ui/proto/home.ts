@@ -43,7 +43,7 @@ export const RIG_H = 172;
 /** 채굴기 그림(261×300) 안의 자리(그림 칸): 전선이 꽂히는 곳 · 불빛 열두 개 · 잎 날개 둘 */
 export const RIG_ART = { w: 261, h: 300, socket: [247, 226] as Pt, out: [236, 150] as Pt, leds: [[61, 152], [72, 152], [83, 152], [95, 152], [106, 152], [117, 152], [60, 166], [72, 166], [83, 166], [94, 166], [106, 166], [117, 166]] as Pt[], fans: [[58, 215], [118, 223]] as Pt[], fanR: 20 };
 /** 쳇바퀴 그림 안의 앞 테(도는 테)의 타원: 그림 칸(가운데 · 반지름). 이 테를 따라 이음매가 돈다 */
-export const HOOP = { hamster: { cx: 154, cy: 148, rx: 91, ry: 110 }, hero: { cx: 154, cy: 141, rx: 95, ry: 113 } };
+export const HOOP = { hamster: { cx: 150, cy: 140, rx: 90, ry: 95 }, hero: { cx: 150, cy: 140, rx: 90, ry: 95 } }; // 앞이 뚫린 쳇바퀴의 앞 테(U-47)
 /** 주인공이 서는 곳: 굴릴 수 있는 쳇바퀴(자리 slot) 옆. 굴릴 쳇바퀴가 없으면(-1) 엄마의 쳇바퀴 옆 그 자리 */
 export function heroSpotFor(slot: number): Pt {
   if (slot <= 0) return HERO_SPOT;

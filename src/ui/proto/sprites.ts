@@ -54,10 +54,10 @@ import cHeroWalkFront from './img/v5/c_hero_walk_front.webp';
 import cHeroWalkBackB from './img/v5/c_hero_walk_back_b.webp';
 import cHeroWalkFrontB from './img/v5/c_hero_walk_front_b.webp';
 import cHeroWalkEmptyB from './img/v5/c_hero_walk_empty_b.webp';
-import cHamsterDrum from './img/v5/c_hamster_wheel_drum.webp';
-import cHamsterRunner from './img/v5/c_hamster_wheel_runner.webp';
-import cHeroDrum from './img/v5/c_hero_wheel_drum.webp';
-import cHeroRunner from './img/v5/c_hero_wheel_runner.webp';
+// 쳇바퀴 두 겹(U-47): 앞이 뚫린 비스듬한 쳇바퀴 하나를 주인공과 알바가 같이 쓰고, 안에서 옆모습으로 달리는 이는 칸을 가로로 이은 띠 그림이다
+import openDrum from './img/v5/wheel_open_drum.webp';
+import heroRunStrip from './img/v5/hero_run_strip.webp';
+import hamsterRunStrip from './img/v5/hamster_run_strip.webp';
 
 export type SpriteId =
   | 'home' //      집 그림(바닥 전체). 집 단계별 그림이 생기면 HOME_BY_LEVEL 에
@@ -88,11 +88,11 @@ export type SpriteId =
   | 'miner' | 'minerFan1' | 'minerFan2' // 채굴기(쳇바퀴의 전기로 코인을 캔다)와 그 잎 날개 둘(돌린다)
   | 'heroWalkBackB' | 'heroWalkFrontB' | 'heroWalkEmptyB' // 걷기 둘째 걸음(U-46)
   | 'heroWalkBack' | 'heroWalkFront' //   주인공: 멀어지며 걷는다(등) · 다가오며 걷는다(앞). 빈손
-  | 'hamsterDrum' | 'hamsterRunner' | 'heroDrum' | 'heroRunner' // 쳇바퀴 두 겹: 쳇바퀴(달리는 이를 지운 것) / 달리는 이 — 같은 크기의 판이라 겹치면 원래 그림
+  | 'hamsterDrum' | 'hamsterRunner' | 'heroDrum' | 'heroRunner' // 쳇바퀴 두 겹: 앞이 뚫린 쳇바퀴 / 옆모습으로 달리는 이의 띠 그림(한 칸이 쳇바퀴와 같은 크기)
   | 'village2'; //    지도 바탕: 빈터 다섯(조합 · 사무소 · 캐피탈 · 집 · 뒷골목)이 떨어져 있어 누를 수 있다
 
-/** src = 파일, w·h = 그림 비율(가로/세로를 재는 데만 쓴다) */
-export interface Sprite { src: string; w: number; h: number }
+/** src = 파일, w·h = 그림 비율(가로/세로를 재는 데만 쓴다). n = 띠 그림의 칸 수(w·h 는 한 칸) */
+export interface Sprite { src: string; w: number; h: number; n?: number }
 
 export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   home: { src: homeStump, w: 992, h: 1586 },
@@ -144,10 +144,10 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   heroWalkBackB: { src: cHeroWalkBackB, w: 198, h: 300 },
   heroWalkFrontB: { src: cHeroWalkFrontB, w: 229, h: 300 },
   heroWalkEmptyB: { src: cHeroWalkEmptyB, w: 243, h: 300 },
-  hamsterDrum: { src: cHamsterDrum, w: 264, h: 300 },
-  hamsterRunner: { src: cHamsterRunner, w: 264, h: 300 },
-  heroDrum: { src: cHeroDrum, w: 271, h: 300 },
-  heroRunner: { src: cHeroRunner, w: 271, h: 300 },
+  hamsterDrum: { src: openDrum, w: 526, h: 600 },
+  hamsterRunner: { src: hamsterRunStrip, w: 526, h: 600, n: 4 },
+  heroDrum: { src: openDrum, w: 526, h: 600 },
+  heroRunner: { src: heroRunStrip, w: 526, h: 600, n: 12 },
 };
 /** 컷인에 나오는 사람 → 반신 그림 */
 export const BUST_OF: Partial<Record<string, SpriteId>> = { collector: 'collector', boss: 'boss', weasel: 'weasel', raccoon: 'raccoon', owl: 'owl', viper: 'viper' };
