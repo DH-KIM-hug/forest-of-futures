@@ -32,8 +32,8 @@ describe('오소리 장부: 엄마 빚은 고정금리 (U-39 ⑥)', () => {
     expect(interestAfterHike(g, 2)).toBe(24500);
     const lines = STORY.rateHike({ text: '속보', from: 14500, to: 24500, times: 2, fixed: 4500 });
     expect(lines[1].text).toContain('14,500에서 24,500');
-    expect(lines[2].text).toBe('어머님 빚 이자 4,500은 안 올라요오. 어머님 때 이자 그대로라서요오.');
-    expect(STORY.rateHike({ text: '속보', from: 2000, to: 4000, times: 2, fixed: 0 })).toHaveLength(3); // 엄마 빚을 다 갚은 뒤에는 그 줄이 없다
+    expect(lines[2].text).toBe('어머님 빚 이자 4,500은 안 올라요오.');
+    expect(STORY.rateHike({ text: '속보', from: 2000, to: 4000, times: 2, fixed: 0 })).toHaveLength(2); // U-44: 월급 농담은 뺐다. 엄마 빚을 다 갚은 뒤에는 그 줄이 없다
   });
   it('빌린 적 없이 밀려서 얹힌 돈은 그 이름으로 적힌다', () => {
     (balance as { act1?: unknown }).act1 = { friends: false };
@@ -66,8 +66,8 @@ describe('정산 알림: 들고 있는 포지션을 추심원이 흘끗 본다',
   const c = { interest: 14500, other: 0, net: -6000, cashAfter: 80000, nextClaim: 15500, nextNet: -6000, overdue: false, posOpen: true, negStreak: 1, firstPositive: false };
   it('이자의 3할이 넘는 이익 · 손실은 숫자로, 작으면 전처럼', () => {
     expect(settleRemark({ ...c, posPnl: 9000 })).toContain('폰에 +9,000이 떠 있네요오. 아직 도토리는 아니에요오.');
-    expect(settleRemark({ ...c, posPnl: -9000 })).toContain('폰에 −9,000이 떠 있네요오. 저는 못 본 걸로 할게요오.');
-    expect(settleRemark({ ...c, posPnl: -300 })).toContain('거래 중이시네요오. 이자는 이자대로 가요오.');
+    expect(settleRemark({ ...c, posPnl: -9000 })).toContain('폰에 −9,000이 떠 있네요오. 못 본 걸로 할게요오.');
+    expect(settleRemark({ ...c, posPnl: -300 })).toContain('거래 중이시네요오.');
     expect(settleRemark({ ...c })).toContain('거래 중이시네요오.');
   });
 });
@@ -76,8 +76,8 @@ describe('정산 때 낼 돈이 포지션에 묶이는가', () => {
   it('회차 2 에서 겪은 일: 전부 걸면 손에 0, 알바가 캐 오는 9,335 로는 이자·생활비·일당 19,100 을 못 낸다', () => {
     const s = squeezeOf({ cash: 0, income: 9335, due: 19100, settleIn: 125, holding: false })!;
     expect(s).toMatchObject({ due: 19100, have: 9335, short: 9765 });
-    expect(s.text).toBe('넣고 나면 손에 9,335 · 정산(2:05 뒤) 낼 돈 19,100 — 못 닫으면 연체');
-    expect(squeezeOf({ cash: 0, income: 9335, due: 19100, settleIn: 42, holding: true })!.text).toBe('정산 0:42 뒤 낼 돈 19,100 · 손에 9,335 — 닫아야 낸다');
+    expect(s.text).toBe('거래 후 잔액 9,335, 2:05 뒤 낼 돈 19,100. 그때까지 못 닫으면 연체');
+    expect(squeezeOf({ cash: 0, income: 9335, due: 19100, settleIn: 42, holding: true })!.text).toBe('0:42 뒤 낼 돈 19,100, 손에 9,335. 닫아야 낸다');
   });
   it('낼 돈이 남으면 아무 말도 없다', () => {
     expect(squeezeOf({ cash: 50000, income: 9335, due: 19100, settleIn: 60, holding: false })).toBeNull();
@@ -88,7 +88,7 @@ describe('정산 때 낼 돈이 포지션에 묶이는가', () => {
 describe('새 대사 (U-39)', () => {
   it('빚 0: 오소리 대부의 두 줄과 지문, 그리고 계속하면 족제비의 할부', () => {
     const c = STORY.clear();
-    expect(c.map((l) => l.who)).toEqual(['boss', 'boss', 'note']);
+    expect(c.map((l) => l.who)).toEqual(['boss', 'boss']); // U-44: 폰 지문은 뺐다
     expect(c[1].text).toBe('…그런데 이제 뭘로 사세요?');
     const h = STORY.act2Hook();
     expect(h.slice(0, 3).every((l) => l.who === 'weasel' && l.text.endsWith('~'))).toBe(true);
@@ -103,7 +103,7 @@ describe('새 대사 (U-39)', () => {
     expect(STORY.overdue({ ...base, locked: 3000 })).toHaveLength(3); // 묶인 돈이 이자보다 작으면 그 줄이 없다
     expect(STORY.overdue({ ...base, locked: 168209 })[1].text).toContain('168,209가 묶여'); // 조사
     const living = STORY.overdue({ ...base, living: 1000 });
-    expect(living.some((l) => l.text === '생활비 1,000도 못 내셨네요오. 그것도 장부에 얹었어요오.')).toBe(true);
+    expect(living.some((l) => l.text === '못 낸 이자하고 생활비 1,000은 원금에 얹었어요오.')).toBe(true);
     for (const l of [...locked, ...living]) { expect(l.who).toBe('collector'); expect(l.text).toMatch(/요오\.$/); }
   });
   it('숲속 캐피탈: 너구리가 자동이체와 압류 순서를 말한다. 지도와 데이터의 이름이 같다', () => {

@@ -1,6 +1,7 @@
 // 도토리일보 시세면(U-41, 회차 4): 지난 몇 시간 동안 다섯 종목이 실제로 얼마나 움직였는지를 한 장으로 읽어 준다.
 // 숫자는 전부 받은 시세에서 센 것이다(실시간 판 = 시작할 때 받아 온 지난 24시간의 1분 봉 + 그 뒤의 실시간 값, 연습 시세 판 = 이 판이 시작된 뒤의 값).
 // 시세는 건드리지 않는다. 예측도 하지 않는다 — "지난 하루 중 가장 시끄러웠던 때"와 "지금은 평소의 몇 배인가"를 말할 뿐이다.
+import { josa } from '../../engine/util';
 import { useProto } from './protoStore';
 
 import { type MinBar } from '../dayHistory';
@@ -61,7 +62,7 @@ export function dayNote(markets: { id: string; name: string }[], bars: Record<st
   const rows = markets.map((m) => rowOf(m.id, m.name, bars[m.id] ?? [], now));
   const spanMin = Math.max(0, ...markets.map((m) => { const b = bars[m.id] ?? []; return b.length ? (now - b[0].t) / 60000 : 0; }));
   const got = rows.filter((r) => r.range !== null);
-  if (!got.length) return { spanMin, rows, headline: '아직 실을 시세가 없습니다.', sub: '몇 분 뒤에 다시 펴 보세요.', boss: '신문도 쓸 게 있어야 나옵니다.' };
+  if (!got.length) return { spanMin, rows, headline: '아직 실을 시세가 없습니다.', sub: '몇 분 뒤에 다시 펴 보세요.', boss: '시세가 한 시간 치 모이면 첫 호가 나옵니다.' };
   const win = span(Math.min(360, spanMin));
   const top = got.reduce((a, b) => (b.range! > a.range! ? b : a));
   const low = got.reduce((a, b) => (b.range! < a.range! ? b : a));
@@ -75,14 +76,13 @@ export function dayNote(markets: { id: string; name: string }[], bars: Record<st
     const avg = rs.reduce((a, r) => a + r.ratio!, 0) / rs.length;
     const hot = rs.reduce((a, b) => (b.now1m! > a.now1m! ? b : a));
     const lt = loud.length ? loud.reduce((a, b) => (b.loud1m! > a.loud1m! ? b : a)) : null;
-    const when = lt ? ` 지난 하루에 제일 시끄러웠던 건 ${lt.loudHour}시대의 ${lt.name}였고요(1분 ${lt.loud1m!.toFixed(2)}%).` : '';
-    boss = avg < 0.6 ? `지금은 평소의 ${avg.toFixed(1)}배쯤 움직입니다. 조용한 시간이에요.${when}`
-      : avg > 1.6 ? `지금은 평소의 ${avg.toFixed(1)}배입니다. 시끄러운 시간이에요. 제일 뛰는 건 ${hot.name}(1분 ${hot.now1m!.toFixed(2)}%).${when}`
-      : `지금은 평소만큼 움직입니다. 그중엔 ${hot.name}(1분 ${hot.now1m!.toFixed(2)}%).${when}`;
-  } else boss = spanMin < 60 ? '아직 한 시간 치도 안 모였습니다. 신문은 느려요.' : '기록이 모자란 종목이 있네요. 있는 것만 실었습니다.';
+    const when = lt ? ` 어제는 ${lt.loudHour}시 무렵 ${josa(lt.name, '이었고요.', '였고요.')}` : '';
+    boss = avg < 0.6 ? `오늘은 조용한 편입니다.${when}`
+      : `지금 제일 뛰는 건 ${hot.name}입니다.${when}`;
+  } else boss = spanMin < 60 ? '시세가 한 시간 치 모이면 첫 호가 나옵니다.' : '기록이 모자란 종목은 뺐습니다.';
   return { spanMin, rows, headline, sub, boss };
 }
 /** 표의 한 칸: "+0.42%" 또는 "–" */
 export const cell = (x: number | null): string => (x === null ? '–' : pc(x));
 /** 한 줄 알림용(거래소를 처음 펼 때): "[도토리일보 시세면] 지난 6시간, 삼솔전자의 고저 폭 2.10% · 가장 조용했던 곳은 멍도토 (0.31%)" */
-export const noteToast = (n: DayNote): string => `[도토리일보 시세면] ${n.headline} · ${n.sub}`;
+export const noteToast = (n: DayNote): string => `[도토리일보 시세면] ${n.headline}. ${n.sub}`;

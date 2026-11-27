@@ -64,7 +64,7 @@ export function ledgerGoal(g: GameState): LedgerGoal | null {
   const rows = ledgerRows(g);
   const top = rows.find((r) => r.left > 0)!;
   const what = top.key === 'mom' ? `엄마 빚 ${man(left)} 남음` : `${top.ratePct}% 빚부터`;
-  return { label: `오소리 장부 · ${what}`, cur, need, cut: interestCut(g, need - cur) };
+  return { label: `오소리 장부, ${what}`, cur, need, cut: interestCut(g, need - cur) };
 }
 const man = (x: number) => (x % 10000 === 0 ? `${x / 10000}만` : Math.round(x).toLocaleString('ko-KR'));
 
@@ -113,5 +113,5 @@ export function repayBuys(g: GameState, keep: number): RepayBuys | null {
   const from = Math.round((cur / STAMP_STEP) * 100), to = Math.round((((cur + amount) % STAMP_STEP) / STAMP_STEP) * 100);
   const cut = interestCut(g, amount);
   const nn = (x: number) => Math.round(x).toLocaleString('ko-KR');
-  return { amount, mult: Math.max(1, mult), cut, stamps, from, to, text: `${nn(amount)} 갚으면 이자 −${nn(cut)} · ${stamps > 0 ? `금박 도장 +${stamps}` : `도장 ${from}→${to}%`}` };
+  return { amount, mult: Math.max(1, mult), cut, stamps, from, to, text: `${nn(amount)} 갚으면 이자 −${nn(cut)}, ${stamps > 0 ? `금박 도장 +${stamps}` : `도장 ${from}→${to}%`}` };
 }

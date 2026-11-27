@@ -56,7 +56,7 @@ export function ProfitPrompt() {
         </>
       ) : (
         <>
-          <div className="tx"><b>{p.gold ? '금테 수익 인증서 저장할까요?' : '수익 인증서 저장할까요?'}</b><small>{p.coin} {p.dir === 1 ? '롱' : '숏'} {p.lev}배 · +{comma(Math.round(p.pnl))} 도토리</small></div>
+          <div className="tx"><b>{p.gold ? '금테 수익 인증서 저장할까요?' : '수익 인증서 저장할까요?'}</b><small>{p.coin} {p.dir === 1 ? '롱' : '숏'} {p.lev}배, +{comma(Math.round(p.pnl))} 도토리</small></div>
           <div className="bt">
             <button className="yes" onClick={save} disabled={stage === 'busy'}>{stage === 'busy' ? '그리는 중…' : '저장'}</button>
             <button className="no" onClick={close} disabled={stage === 'busy'}>괜찮아요</button>

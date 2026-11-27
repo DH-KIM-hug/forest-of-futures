@@ -31,14 +31,15 @@ describe('거래에 대한 반응 (tradeReaction)', () => {
     const w = tradeReaction(T({ pnl: 20000 }), C())!;
     expect(w.who).toBe('boss');
     expect(w.lines[0]).toContain('이자 한 번 치');
-    expect(w.lines[0]).toContain('쳇바퀴 한 대 4.3정산치');
+    // U-44: 쳇바퀴로 치면 얼마는 결과 카드의 꼬리표와 주인공의 속마음이 말한다(대부가 되풀이하지 않는다)
+    expect(wheelWorth(20000, 4667)).toBe('쳇바퀴 한 대 4.3정산치');
     // U-41: 이번 생 처음은 장면(한 번), 그 뒤로는 오소리 대부 · 추심원 · 족제비가 번갈아 한 줄(되풀이)
     expect(w).toMatchObject({ key: 'winClaim1', scene: true, once: true });
     const seen = { winClaim1: true };
     const again = [2, 3, 4].map((k) => tradeReaction(T({ pnl: 20000 }), C({ seen, claimWins: k }))!);
     expect(again.map((r) => r.who)).toEqual(['boss', 'collector', 'weasel']);
     expect(again.every((r) => !r.scene && !r.once)).toBe(true);
-    expect(again[0].lines[0]).toContain('쳇바퀴 한 대 4.3정산치');
+    expect(again[0].lines[0]).toContain('이자 한 번 치');
     expect(tradeReaction(T({ pnl: -16000 }), C())!).toMatchObject({ who: 'collector', key: 'lossClaim' });
   });
   it('크게 딴 날은 오소리 대부가 장면으로 나온다(한 생에 한 번)', () => {
@@ -96,7 +97,7 @@ describe('정산 한 줄 (settleRemark)', () => {
   });
   it('남기 시작한 정산 · 세 번째 적자 · 거래 중', () => {
     expect(settleRemark({ ...S, net: 900, nextNet: 900, firstPositive: true })).toContain('남기 시작했네요오');
-    expect(settleRemark({ ...S, negStreak: 3 })).toContain('세 번째 적자');
+    expect(settleRemark({ ...S, negStreak: 3 })).toContain('세 번째예요오');
     expect(settleRemark({ ...S, posOpen: true })).toContain('거래 중이시네요오');
   });
 });

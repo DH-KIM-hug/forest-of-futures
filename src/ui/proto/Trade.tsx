@@ -32,14 +32,14 @@ import { price } from '../../engine/selectors';
 import type { Position } from '../../engine/types';
 import { historyOf, liveHistoryOf, markLive } from '../priceHistory';
 import { coinLogo } from './coins';
-import { acornStops, autoExit, carryOf, chipCount, halfHint, keepDueMargin, netForRoe, orderCtx, planLine, stopLabel, swingCount, swingText as swingCountText, type StopCtx } from './stops';
+import { acornStops, autoExit, carryOf, chipCount, keepDueMargin, netForRoe, orderCtx, planLine, stopLabel, swingCount, swingText as swingCountText, type StopCtx } from './stops';
 import { rollWheel, rolledFor } from './roll';
 import { dayNoteOpen } from './daynote';
 import { ctxOfPosition, plans, reapplyPlan } from './exitPlan';
 import { swingOf, swingText, sessionOf, liveliest, allQuiet, feeEventChip, SESSIONS, opensInText } from './market';
 import { feeEventLeft, openingEvent } from '../../engine/skilltree';
 import {
-  chartModel, fmtPrice, levRuler, marketMood, marketTabs, MARGIN_PCTS, orderPreview, positionView, SL_OPTIONS, TP_OPTIONS, tradeMode, tutorialLine,
+  chartModel, fmtPrice, levRuler, marketMood, marketTabs, MARGIN_PCTS, orderPreview, positionView, SL_OPTIONS, TP_OPTIONS, tradeMode,
   type PositionView,
 } from '../vm/trade';
 import { Acorn } from './art';
@@ -359,8 +359,8 @@ export function ProtoTrade() {
   const cm = chartModel(hist);
   const offline = net.source === 'server' && net.conn !== 'open';
   const status =
-    run.marketStatus === 'halted' ? '시장 정지 · 포지션은 멈춰 있습니다'
-    : run.marketStatus === 'delayed' ? '시세 지연 · 새 진입은 막혀 있습니다'
+    run.marketStatus === 'halted' ? '시장이 멈췄습니다. 포지션도 멈춰 있습니다'
+    : run.marketStatus === 'delayed' ? '시세가 늦어져 새 거래를 열 수 없습니다'
     : offline ? '시장에 연결할 수 없습니다' : null;
   const ins = m.minable ? shortInsurance(run, market) : null;
   const call = !!pos && isNearLiq(pos);
@@ -434,7 +434,7 @@ export function ProtoTrade() {
     // 걸어 둔 익절 폭이 지난 기록에 한 번도 없었다(조용한 장): 이번 생에 한 번, 오소리 대부가 있는 그대로 말한다 — 기다리는 동안에도 정산은 온다(U-41 ⑩)
     if (tpK !== null && acOrder?.tpMove != null && hist.length >= 60 && swingCount(hist, acOrder.tpMove) === 0 && !useProto.getState().seen.farTp) {
       useProto.getState().patch({ seen: { ...useProto.getState().seen, farTp: true } });
-      window.setTimeout(() => toast(`오소리 대부: 그 익절 폭(${acOrder.tpMove!.toFixed(2)}%)은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 한 번도 안 나왔습니다. 기다리셔도 됩니다. 정산은 그동안에도 와요.`, 7000), 1200);
+      window.setTimeout(() => toast(`오소리 대부: 그 익절 폭(${acOrder.tpMove!.toFixed(2)}%)은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 한 번도 안 나왔습니다. 정산은 그동안에도 와요.`, 7000), 1200);
     }
     // 도토리로 건 출구: 실제로 들어간 크기(쪼개 넣기면 셋 가운데 하나)에 맞춰 다시 건다
     if (tpK !== null || slK !== null) { plan.current[market] = { tp: tpK !== null ? tpK * cl.total : null, sl: slK !== null ? slK * cl.total : null, one: acAuto, by: acAuto ? auto.by : undefined }; reapply(); }
@@ -496,7 +496,7 @@ export function ProtoTrade() {
   const doWater = () => {
     const r = act({ type: 'addMargin', market, amount: waterAmt });
     if (!r.ok) { say(r.msg ?? '더 넣을 수 없습니다'); play('insufficient'); return; }
-    play('buy'); say(`증거금 +${comma(waterAmt)}. 청산가가 멀어졌다. 걸린 돈도 커졌다.`, false);
+    play('buy'); say(`증거금 +${comma(waterAmt)}. 청산가가 멀어졌다.`, false);
   };
   const dayLim = run.dayLossLimit ?? null;
   const DAY_OPTS: (number | null)[] = [null, 10000, 30000, 50000, 100000];
@@ -561,8 +561,8 @@ export function ProtoTrade() {
       applyPos(a.sl, a.tp);
     } else setTrade({ acAuto: true, tpK: null, slK: null, tp: null, sl: null });
     if (a && a.sl === null) say(slWhyText(a.slWhy, auto.net));
-    else if (auto.by === 'range' && auto.seenPct !== null) say(`지난 ${Math.max(1, Math.round(hist.length / 60))}분에 본 가장 큰 폭이 ${auto.seenPct.toFixed(2)}%다. 그만큼만 건다(±${comma(auto.net)}). 이자 한 번 치는 [바꾸기]에서.`, false);
-    else if (auto.by === 'flat') say(`지난 ${Math.max(1, Math.round(hist.length / 60))}분엔 걸 만한 폭이 없었다. 이자 한 번 치로 건다 — 한동안 안 닿을 수 있다.`, false);
+    else if (auto.by === 'range' && auto.seenPct !== null) say(`지난 ${Math.max(1, Math.round(hist.length / 60))}분 가장 큰 폭 ${auto.seenPct.toFixed(2)}%만큼 건다(±${comma(auto.net)}).`, false);
+    else if (auto.by === 'flat') say(`지난 ${Math.max(1, Math.round(hist.length / 60))}분엔 걸 만한 폭이 없었다. 한동안 안 닿을 수 있다.`, false);
   };
   const slTxt = stopLabel(curSl, sctx, 'sl');
   const tpTxt = stopLabel(curTp, sctx, 'tp');
@@ -579,7 +579,7 @@ export function ProtoTrade() {
           <em>선물</em>
           {/* 오픈 기념 수수료 무료(U-40): 거래소 머리에 늘 걸려 있다. 끝난 뒤에는 지금 수수료율 */}
           {feeChipH && <span className={'pt-fee' + (feeChipH.on ? ' on' : '') + (feeChipH.on && feeChipH.left <= 3 ? ' last' : '')} data-fee-event={feeChipH.left} role="status" aria-label={feeChipH.text}>{feeChipH.on ? '오픈 기념 무료' : feeChipH.text.replace('거래 ', '')}</span>}
-          {Object.keys(activeLevels(g)).length > 0 && <button className="pt-perk" data-perks onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 켜진 나무 노드">나무 {Object.keys(activeLevels(g)).length}</button>}
+          {Object.keys(activeLevels(g)).length > 0 && <button className="pt-perk" data-perks onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 열린 가지">나무 {Object.keys(activeLevels(g)).length}</button>}
         </header>
         {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' ? '(+' : '(−') : skillById[id]?.tail ? ` Lv${lv} (${id === 'A3a' ? `+${Math.round(tailRun(run, id))}초` : id === 'B2' ? `−${(tailRun(run, id) * 100).toFixed(2)}%p` : `${id === 'B3b' || id === 'C4' ? '+' : '−'}${(tailRun(run, id) * 100).toFixed(1)}%`})` : ''}</span>)}</div>}
         {body}
@@ -590,12 +590,12 @@ export function ProtoTrade() {
   // 0단계: 아직 앱이 잠겨 있다
   if (mode.mode === 'locked') {
     return frame(
-      <div className="pt-lockbox"><Lock size={34} /><p>{(run.stats.assetsSeized ?? 0) > 0 ? '쳇바퀴가 압류되어 거래 앱이 잠겼습니다. 쳇바퀴를 다시 사야 열립니다.' : mode.text}</p></div>,
+      <div className="pt-lockbox"><Lock size={34} /><p>{(run.stats.assetsSeized ?? 0) > 0 ? '쳇바퀴가 실려 가서 앱이 잠겼다. 다시 사면 열린다.' : mode.text}</p></div>,
     );
   }
 
   const tutBanner = tutSt === 'await' || tutSt === 'run' ? (
-    <div className="pt-tutb" role="status" data-tut={tutSt}>{tutSt === 'await' ? <>오소리 대부 「롱이든 숏이든 한번 걸어 보세요.」 <b>{comma(tutorialMargin())} · {TUT.lev}배</b></> : <>…시세가 움직인다</>}</div>
+    <div className="pt-tutb" role="status" data-tut={tutSt}>{tutSt === 'await' ? <>첫 주문 전표 <b>실제 도토리 {comma(tutorialMargin())} 출금, {TUT.lev}배</b></> : <>…시세가 움직인다</>}</div>
   ) : null;
   const coins = (
     <>{tutBanner}<div className="pt-coins" data-hl="coins" role="tablist" aria-label="종목">
@@ -617,12 +617,14 @@ export function ProtoTrade() {
       })}
     </div></>
   );
+  // 첫 주문(튜토리얼)의 시세는 짜 둔 재생 기록이다: 그동안 시세 줄의 꼬리표가 그렇다고 적고, 전표가 닫히면 다시 실제 시세의 시간표로 돌아간다(U-44)
+  const feedTag = tutSt === 'run' ? '재생 기록' : tutSt === 'lost' || tutSt === 'notice' ? '재생 종료' : null;
   const quote = (
     <div className="pt-quote">
       <div className="px"><i className="qn">{marketById[market].name}</i><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
       {status ? <div className="st-bad" role="status">{status}</div>
-        : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><b>{sess.state === 'closed' ? '장 마감 · 조용함' : sess.state === 'after' ? '장 마감 · 그래도 움직인다' : '장중인데 조용함 · 휴장인 듯'}</b><small data-opens-in>{opensInText(market, now) ? `${opensInText(market, now)} · ${sess.hours.split('~')[0]} 개장` : `본장 ${sess.hours}`}</small></div>
-        : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span>{sess ? `본장 ${sess.hours}` : '지금 장'}</span>{mood}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
+        : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><b>{sess.state === 'closed' ? '본장 마감' : sess.state === 'after' ? '본장 마감, 그래도 움직인다' : '장중인데 조용함, 휴장인 듯'}</b><small data-opens-in>{opensInText(market, now) ? `다음 개장 ${sess.hours.split('~')[0]} (${opensInText(market, now)})` : `본장 ${sess.hours}`}</small></div>
+        : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : '24시간')}</span>{mood}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
     </div>
   );
   // 차트 창: 나무의 초봉 차트(A3a)를 30초 · 긴 창으로 돌려 둔 동안에는 그것이 먼저다. 아니면 고른 시간(2분 · 5분 · 10분)
@@ -656,7 +658,7 @@ export function ProtoTrade() {
       <PChart market={market} hist={hist} pos={pos} win={win} band={tn?.rangePct ?? null} foot={winCtl} footH={sk.zoom ? 50 : 26} note={spanLabel} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
       {ins && ins.shortNotional > 0 && (
         <div className="pt-meta">
-          <span>지갑 {comma(Math.floor(ins.walletValue))}어치 중 숏으로 지킨 {ins.ratioPct}%</span>
+          <span>지갑 {comma(Math.floor(ins.walletValue))}어치 중 {ins.ratioPct}%를 숏으로 지켰다</span>
         </div>
       )}
     </>
@@ -680,7 +682,6 @@ export function ProtoTrade() {
   const plus = !!pos && netNow >= 0;
   const liqRoe = pos ? Math.abs(((pos.liq / pos.entry - 1) * pos.dir) * pos.lev * 100) : 100;
   const gx = (roe: number) => 50 + Math.max(-50, Math.min(50, (roe / liqRoe) * 50));
-  const tut = tutorialLine(g);
 
   const stepper = (label: string, cls: string, txt: string, on: boolean, dec: () => void, inc: () => void) => (
     <div className={'pt-step ' + cls + (on ? ' set' : '')}>
@@ -708,7 +709,7 @@ export function ProtoTrade() {
         const cnt = a ? chipCount(hist, kind === 'tp' ? a.tpMove : a.slMove) : null;
         return (
         <button key={k} role="radio" aria-checked={acIs(kind, k)} className={'pt-chip' + (acIs(kind, k) ? ' on' : '')} data-ak={kind + k} data-cnt={cnt ?? undefined} onClick={() => setAcorn(kind, k)}>
-          <b>{akName(k)}</b><small>{kind === 'tp' ? '+' : '−'}{comma(Math.round(k * cl.total))}{cnt && <i> · {cnt}</i>}</small>
+          <b>{akName(k)}</b><small>{kind === 'tp' ? '+' : '−'}{comma(Math.round(k * cl.total))}{cnt && <i> {cnt}</i>}</small>
         </button>
         );
       })}
@@ -722,8 +723,8 @@ export function ProtoTrade() {
         </button>
       ))}
       {/* 정산 빼고 전부(U-42 ③): 다음 정산에 낼 돈은 손에 남긴다 — 정산을 굶기지 않고 판을 키우는 길 */}
-      <button role="radio" aria-checked={keepOn} className={'pt-chip keep' + (keepOn ? ' on' : '')} data-keep={keepM} disabled={tutSt !== 'done'} onClick={() => { setTrade({ keep: true }); if (keepM < 1) say(`손에 든 돈이 다음 정산에 낼 돈(${comma(Math.round(dueAll))})보다 적다. 남길 것을 빼면 걸 돈이 없다.`); }}
-        aria-label={`정산 빼고 전부: 다음 정산에 낼 돈 ${comma(Math.round(dueAll))}은 남기고 ${comma(keepM)}`}>
+      <button role="radio" aria-checked={keepOn} className={'pt-chip keep' + (keepOn ? ' on' : '')} data-keep={keepM} disabled={tutSt !== 'done'} onClick={() => { setTrade({ keep: true }); if (keepM < 1) say(`다음 정산에 낼 ${comma(Math.round(dueAll))}도 모자란다.`); }}
+        aria-label={`정산 빼고 전부: ${comma(Math.round(dueAll))}은 남기고 ${comma(keepM)}`}>
         <b>정산 빼고</b><small>{keepM > 0 ? comma(keepM) : '걸 돈 없음'}</small>
       </button>
       <button role="radio" aria-checked={!keepOn && pct === 100} className={'pt-chip' + (!keepOn && pct === 100 ? ' on' : '')} onClick={() => setTrade({ pct: 100, keep: false })}>
@@ -737,7 +738,7 @@ export function ProtoTrade() {
   const sqHold = pos ? squeezeOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, holding: true }) : null;
   const stillNow = swingOf(rangeOf(market)) === 'still';
   // 도토리로 건 출구가 있으면 그 줄이 "이자까지" 줄을 대신한다. 그 폭이 지난 몇 분에 실제로 몇 번 나왔는지도 센다(약속이 아니라 센 것)
-  const planTxt = !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist, hint: tpK === 1 ? halfHint(hist, acOrder.tpMove) : null }) : null;
+  const planTxt = !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist }) : null;
   const oddsSwing = odds ? swingCountText(hist, odds.needPct) : null;
   const carry = pos && rawPos ? carryOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, notional: rawPos.notional, fundingRate: balance.trading.fundingRate as number }) : null;
   const noteLine = note && <div key={note.k} className={'pt-note' + (note.bad ? ' bad' : '')} role="status">{note.text}</div>;
@@ -763,24 +764,24 @@ export function ProtoTrade() {
         </div>
       )}
       {(!pos || addOpen) && marginChips}
-      {pos && sk.water && <button className="pt-water" data-water disabled={waterAmt < 1} onClick={doWater}><b>물타기</b><span>증거금만 +{comma(waterAmt)} · 청산가가 멀어진다</span></button>}
-      {!pos && sk.split && <button className={'pt-water split' + (split ? ' on' : '')} data-split aria-pressed={split} onClick={() => setSplit((v) => !v)}><b>쪼개 넣기</b><span>{split ? '켜짐 · 세 번에 나눠 들어간다(2초 간격)' : '꺼짐'}</span></button>}
+      {pos && sk.water && <button className="pt-water" data-water disabled={waterAmt < 1} onClick={doWater}><b>물타기</b><span>증거금만 +{comma(waterAmt)}, 청산가가 멀어진다</span></button>}
+      {!pos && sk.split && <button className={'pt-water split' + (split ? ' on' : '')} data-split aria-pressed={split} onClick={() => setSplit((v) => !v)}><b>쪼개 넣기</b><span>{split ? '세 번에 나눠 들어간다' : '꺼짐'}</span></button>}
       {/* 증거금 · 수수료 줄과 "이자까지" 줄은 한 덩이다. 수수료가 없는 동안에는 "이자까지" 한 줄만 보이고, 누르면 증거금 · 수수료 줄이 펼쳐진다(차트에 자리를 준다) */}
       <div className={'pt-info' + (foldRisk ? ' fold' : '') + (canFold ? ' tap' : '') + (prev.fee <= 0 ? ' nofee' : '')} data-hl="risk" data-more={canFold ? (more ? 'open' : 'shut') : undefined} onClick={canFold ? () => setMore((v) => !v) : undefined}>
         <div className={'pt-risk' + (prev.reason ? ' bad' : '') + (pos ? ' add' : '')} role="status">
           {prev.reason ? <span>{prev.reason}</span> : (
             <>
-              <span>{pos ? '추가 ' : ''}증거금 {comma(prev.margin)} · 수수료 {prev.fee > 0 ? comma(prev.fee) : evLeft > 0 ? <b className="free" data-fee-free aria-label={`오픈 기념 수수료 무료 · 정산 ${evLeft}번 남음`}>무료 · 정산 {evLeft}번 남음</b> : '0'}</span>
+              <span>{pos ? '추가 ' : ''}증거금 {comma(prev.margin)}, 수수료 {prev.fee > 0 ? comma(prev.fee) : evLeft > 0 ? <b className="free" data-fee-free aria-label={`오픈 기념 수수료 무료, 정산 ${evLeft}번 남음`}>무료 (정산 {evLeft}번 남음)</b> : '0'}</span>
               {pos ? <span>배율 {pos.lev}배 그대로</span> : <b>청산 약 −{liqAbs}%</b>}
             </>
           )}
         </div>
         {oddsShown && (planTxt
           ? <div className="pt-odds plan" data-odds data-plan>{planTxt}</div>
-          : <div className={'pt-odds' + (odds!.liqFirst ? ' no' : '')} data-odds>{odds!.text}{!odds!.liqFirst && oddsSwing ? ` · ${oddsSwing}` : ''}</div>)}
+          : <div className={'pt-odds' + (odds!.liqFirst ? ' no' : '')} data-odds>{odds!.text}{!odds!.liqFirst && oddsSwing ? `, ${oddsSwing}` : ''}</div>)}
         {/* 지금 고른 종목이 자고 있다: 이자까지의 셈 대신, 다른 종목이 깨어 있으면 어디가 움직이는지, 전부 조용하면 그렇다고 말한다(가짜 출렁임은 없다) */}
         {quietShown && (
-          <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 다섯 종목이 다 조용하다. 걸어도 한동안 아무 일도 없다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? `장 마감이라(${opensInText(market, now) ?? '본장 밖'})` : '지금'} 거의 안 움직인다 · 깨어 있는 곳: ${marketById[wild.id].name} (1분 ${wild.r.toFixed(2)}%)` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
+          <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 다섯 종목 모두 값이 거의 그대로다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? '본장 마감이라' : '지금'} 거의 안 움직인다. 움직이는 곳은 ${marketById[wild.id].name} (1분 ${wild.r.toFixed(2)}%)` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
         )}
       </div>
       {!pos && !prev.reason && tutSt === 'done' && sqOrder && <div className="pt-squeeze" data-squeeze="order">{sqOrder.text}</div>}
@@ -790,17 +791,17 @@ export function ProtoTrade() {
   let lower: ReactNode;
   if (sheet === 'stops') {
     lower = (
-      <section className="pt-sheet" aria-label="손절·익절">
+      <section className="pt-sheet" aria-label="출구">
         <div className="sh-top">
-          <div className="sh-title"><b>손절·익절</b><span>{pos ? `${m.name} ${pos.dirText} ${pos.lev}배` : '다음 진입에 걸린다'}</span></div>
-          <button className="pt-x" aria-label="손절·익절 닫기" onClick={() => setSheet(null)}><Cross /></button>
+          <div className="sh-title"><b>출구</b><span>{pos ? `${m.name} ${pos.dirText} ${pos.lev}배` : '다음 진입에 걸린다'}</span></div>
+          <button className="pt-x" aria-label="출구 닫기" onClick={() => setSheet(null)}><Cross /></button>
         </div>
-        {cl.total > 0 && <>{acRow('tp')}{acRow('sl')}<p className="pt-acnote" data-acnote>이자 한 번 = 다음 정산에 걷어 갈 돈 {comma(cl.total)}(수수료까지 넣은 돈). 닿으면 알아서 나온다.{hist.length >= 60 ? ` 「n번」 = 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 그 폭이 나온 횟수.` : ''}</p></>}
+        {cl.total > 0 && <>{acRow('tp')}{acRow('sl')}<p className="pt-acnote" data-acnote>이자 한 번 = 다음 정산에 낼 {comma(cl.total)}.{hist.length >= 60 ? ` 「n번」은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 그 폭이 나온 횟수.` : ''}</p></>}
         {stops}
         {sk.dayLimit && (
           <div className="pt-stops day" data-daylimit>
             {stepper('하루 한도', 'sl', dayLim === null ? '없음' : `−${comma(dayLim)}`, dayLim !== null, () => act({ type: 'setDayLimit', value: stepOf(DAY_OPTS, dayLim, -1) }), () => act({ type: 'setDayLimit', value: stepOf(DAY_OPTS, dayLim, 1) }))}
-            <p>오늘 잃은 돈 {comma(Math.round((run.stats.dayLoss as number | undefined) ?? 0))}. 한도를 넘으면 다음 아침까지 새 진입이 잠긴다.</p>
+            <p>오늘 잃은 돈 {comma(Math.round((run.stats.dayLoss as number | undefined) ?? 0))}. 넘으면 다음 아침까지 새 거래가 잠긴다.</p>
           </div>
         )}
         {noteLine}
@@ -814,7 +815,7 @@ export function ProtoTrade() {
             <img className="me" data-art={result.kind === 'liq' ? 'heroSad' : result.pnl > 0 ? 'heroHappy' : 'hero'} src={(result.kind === 'liq' ? sprite('heroSad') : result.pnl > 0 ? sprite('heroHappy') : sprite('hero'))!.src} alt="" />
             <div className="big">
               <div className="roe">{money(result.pnl)}</div>
-              <div className="sub" data-why>시세 <b className={result.move >= 0 ? 'up' : 'down'}>{money(result.move)}</b> · 수수료 {result.fees > 0 ? <b className="down">−{comma(result.fees)}</b> : <b>0</b>}<span className="xtra">넣은 돈 {comma(Math.round(result.margin))} · {result.dirText} {result.lev}배</span></div>
+              <div className="sub" data-why>시세 <b className={result.move >= 0 ? 'up' : 'down'}>{money(result.move)}</b>  수수료 {result.fees > 0 ? <b className="down">−{comma(result.fees)}</b> : <b>0</b>}<span className="xtra">넣은 돈 {comma(Math.round(result.margin))}, {result.dirText} {result.lev}배</span></div>
               {/* 쳇바퀴 단위와 아낀 수수료(U-40: 오픈 기념 덕인지 나무 덕인지, 정가였다면 얼마를 더 냈을지)를 한 줄에 — 카드가 길어지지 않게 */}
               {(result.worth || (result.savedBy && result.saved >= 10) || result.rolled >= 10) && (
                 <div className="tags">
@@ -840,8 +841,8 @@ export function ProtoTrade() {
               ) : <img className={'me' + (call ? ' shake' : '')} src={heroFront} alt="" />}
               <div className={'big' + (whyOpen ? ' more' : '')} data-hl="posNet" onClick={() => setWhyOpen((v) => !v)}>
                 <div className="roe" data-netroe>{Math.abs(netRoe) >= 100 ? `${sign(netRoe)}${Math.abs(netRoe).toFixed(0)}%` : roeTxt(netRoe)}</div>
-                <div className="sub" data-net><b>{money(netNow)}</b>{share ? <i className="shr"> · {share}</i> : ' 도토리'}</div>
-                <div className="why" data-poswhy>시세 <b className={pos.pnl >= 0 ? 'up' : 'down'}>{money(pos.pnl)}</b> · 수수료 {feesNow > 0 ? <b className="down">−{comma(feesNow)}</b> : <b>0{evLeft > 0 ? ' (오픈 기념)' : ''}</b>}</div>
+                <div className="sub" data-net><b>{money(netNow)}</b>{share ? <i className="shr"> {share}</i> : ' 도토리'}</div>
+                <div className="why" data-poswhy>시세 <b className={pos.pnl >= 0 ? 'up' : 'down'}>{money(pos.pnl)}</b>  수수료 {feesNow > 0 ? <b className="down">−{comma(feesNow)}</b> : <b>0{evLeft > 0 ? ' (오픈 기념)' : ''}</b>}</div>
               </div>
               <div className={'liq' + (call ? ' hot' : '')} data-hl="posLiq"><small>청산까지</small><b>{pos.dir === 1 ? '−' : '+'}{pos.liqDistPct.toFixed(1)}%</b></div>
             </div>
@@ -871,14 +872,12 @@ export function ProtoTrade() {
             </div>
             <Think cls="fx" />
           </div>
-        ) : tut && !tutBanner ? (
-          <p className="pt-tut"><img src={heroFront} alt="" />{tut}</p>
         ) : null}
         {order}
         {/* 확인서를 찍을 수 있을 때는 손절·익절 줄 자리에 확인서가 온다(화면 높이를 늘리지 않는다) */}
         {!pos && mode.waiver ? (
         <button className="pt-waiver" data-waiver onClick={() => { const r = act({ type: 'signWaiver' }); if (r.ok) play('overdue_stamp'); else say(r.msg ?? '아직 안 됩니다'); }}>
-          <span><b>고위험 거래 확인서</b><small>「손실은 전부 본인 책임입니다」 · 도장을 찍으면 200배</small></span><i>도장</i>
+          <span><b>고위험 거래 확인서</b><small>도장을 찍으면 200배</small></span><i>도장</i>
         </button>
         ) : (
         <div className="pt-condrow">
@@ -887,7 +886,7 @@ export function ProtoTrade() {
             <button className={'pt-ac' + (acOn || acTpOnly ? ' on' : '')} data-acorn={acOn ? 'on' : acTpOnly ? 'tp' : 'off'} data-acby={acBy} data-acnet={Math.round(auto.net)} aria-pressed={acOn || acTpOnly} onClick={toggleClaim}>
               {/* 장에 맞춰 줄였으면 "출구 걸기 ±n"과 그 까닭(지난 10분 최대 폭 기준), 이자 한 번 치 그대로면 예전 글 그대로 */}
               <b>{acBy === 'range' ? `${acOn ? '출구 걸림' : acTpOnly ? '익절만 걸림' : '출구 걸기'} ±${comma(Math.round(acNet))}` : acOn ? '이자 한 번 걸림' : acTpOnly ? '익절만 걸림' : '이자 한 번 걸기'}</b>
-              <small data-acwhy={acBy}>{acBy === 'range' ? `지난 ${Math.max(1, Math.round(hist.length / 60))}분 최대 폭 기준` : <>{acOn ? `${tpTxt} · ${slTxt}` : acTpOnly ? tpTxt : `±${comma(auto.net)}`}{acBy === 'flat' && !(acOn || acTpOnly) ? <i> · 걸 만한 폭이 없었다</i> : null}</>}</small>
+              <small data-acwhy={acBy}>{acBy === 'range' ? `지난 ${Math.max(1, Math.round(hist.length / 60))}분 최대 폭 기준` : <>{acOn ? `${tpTxt} / ${slTxt}` : acTpOnly ? tpTxt : `±${comma(auto.net)}`}{acBy === 'flat' && !(acOn || acTpOnly) ? <i> 걸 만한 폭이 없었다</i> : null}</>}</small>
             </button>
           )}
           <button className="pt-cond" data-hl="cond" onClick={() => setSheet('stops')}>
@@ -903,7 +902,7 @@ export function ProtoTrade() {
           {pos ? (
             <>
               <button className={'pt-btn ' + (pos.dir === 1 ? 'long' : 'short') + (addOpen ? ' armadd' : '')} data-add={addOpen ? 'open' : 'shut'} disabled={!!prev.reason && addOpen} onClick={() => { if (!addOpen) { play('ui_tap'); setAddOpen(true); return; } setAddOpen(false); doAdd(); }}>
-                <span><Tri up={pos.dir === 1} size={13} />{addOpen ? '추가로 넣기' : '추가 진입'}</span><small>{addOpen ? `+${comma(prev.margin)}` : '얼마나 더 넣을지 고른다'}</small>
+                <span><Tri up={pos.dir === 1} size={13} />{addOpen ? '추가로 넣기' : '추가 진입'}</span><small>{addOpen ? `+${comma(prev.margin)}` : '금액 고르기'}</small>
               </button>
               {sk.flip && <button className="pt-btn flip" data-flip onClick={doFlip}><span>⇅</span><small>뒤집기</small></button>}
               <button className={'pt-btn close' + (arm ? ' arm' : '') + (netNow >= 0 ? ' gain' : '')} data-hl="closeBtn" onClick={doClose}>
@@ -913,8 +912,8 @@ export function ProtoTrade() {
             </>
           ) : (
             <>
-              <button className="pt-btn long" disabled={!!prev.reason} onClick={() => doOpen(1)}><span><Tri up size={13} />롱</span><small>오른다 · {lev}배</small></button>
-              <button className="pt-btn short" disabled={!!prev.reason} onClick={() => doOpen(-1)}><span><Tri up={false} size={13} />숏</span><small>내린다 · {lev}배</small></button>
+              <button className="pt-btn long" disabled={!!prev.reason} onClick={() => doOpen(1)}><span><Tri up size={13} />롱</span><small>오른다 {lev}배</small></button>
+              <button className="pt-btn short" disabled={!!prev.reason} onClick={() => doOpen(-1)}><span><Tri up={false} size={13} />숏</span><small>내린다 {lev}배</small></button>
             </>
           )}
         </div>
@@ -924,6 +923,6 @@ export function ProtoTrade() {
 
   // 차트를 크게 본 동안에는 아래 덩이(주문 조건)를 접고, 머리에 돌아오는 단추 하나(U-43)
   const bigOn = bigChart && !sheet && !result && tutSt === 'done';
-  const unbig = bigOn ? <button className="pt-unbig" data-unbig onClick={() => setBigChart(false)}>차트 크게 · 누르면 주문으로</button> : null;
+  const unbig = bigOn ? <button className="pt-unbig" data-unbig onClick={() => setBigChart(false)}>주문으로 돌아가기</button> : null;
   return frame(<>{coins}{quote}{chart}{unbig}{lower}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : ''));
 }

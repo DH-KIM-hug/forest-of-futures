@@ -9,7 +9,8 @@ import { aliveStyle, useBlink, talkBob } from './alive';
 import { play, playTap } from './audio';
 import { balance, lenderById } from '../../engine/data';
 import { comma } from '../../engine/util';
-import { prologueTalk, LEDGER_NOTE } from './text';
+import { prologueTalk, ledgerNote } from './text';
+import { firstVisitSec } from './model';
 import { Typed, useSpeech } from './speech';
 
 export const PROLOGUE_KEY = 'fof.proto.prologue.v3';
@@ -134,9 +135,10 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
   };
   const tapLedger = () => { if (lock.current) return; play('ui_tap'); setLedger(false); go('p4', 150); };
 
-  const caption = step === 'p1' ? (walk === 0 ? '소식을 듣고, 엄마가 살던 오두막에 왔다.' : '창이 어둡다. 문에 붉은 딱지가 붙어 있다.')
-    : step === 'p2' ? (ribbon ? '' : '안은 비었다. 다 실려 갔다. 쳇바퀴 하나만 남았다.')
-    : step === 'p3' ? '' : gain ? '' : '가진 돈 0. 쳇바퀴를 눌러 굴린다.';
+  // U-44: 왜 오늘 저녁 여기 왔는지(사무소의 연락), 빈 방에 쳇바퀴만 남은 까닭(반출 목록의 비고)
+  const caption = step === 'p1' ? (walk === 0 ? '오소리 사무소에서 해 지기 전에 엄마 집으로 오라고 했다.' : '창이 어둡다. 문에 붉은 딱지가 붙어 있다.')
+    : step === 'p2' ? (ribbon ? '' : '다 실려 갔다. 반출 목록에서 쳇바퀴만 「이자 납부용」으로 빠져 있다.')
+    : step === 'p3' ? '' : gain ? '' : '쳇바퀴를 눌러 굴린다.';
   const hint = step === 'p1' ? '화면을 누르면 걷는다' : step === 'p2' && !ribbon ? '쳇바퀴를 눌러 본다' : step === 'p3' && !ledger ? '탭하면 계속' : '';
   const [hx, hy, hk] = WALK[Math.min(walk, 2)];
   const emptyImg = sprite('heroEmpty')!, backImg = spriteOr('heroWalkBack', 'heroWalkEmpty')!, rideImg = sprite('heroWheel')!, wheelImg = spriteOr('wheelEmpty', 'wheel')!, outside = sprite('prologue')!;
@@ -196,7 +198,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
         <div className="pp-card-back" onClick={(e) => { e.stopPropagation(); tapCard(); }}>
           <div key={card} className="pp-card b-ribbon" data-card="ribbon">
             <svg viewBox="0 0 200 130" className="pp-art"><circle className="pp-glow" cx={100} cy={64} r={46} fill="#F8D978" /><g className={card === 2 ? 'pp-swing' : ''} style={{ transformOrigin: '100px 20px' }}><Ribbon x={100} y={62} k={1.9} /></g></svg>
-            {card === 1 ? <><p>손잡이에 붉은 리본이 묶여 있다.</p><small>엄마가 머리에 묶던 것이다.</small></> : <><p>풀어서 주머니에 넣었다.</p><small>아직 따뜻하다.</small></>}
+            {card === 1 ? <><p>손잡이에 붉은 리본이 묶여 있다.</p><small>엄마가 머리에 묶던 것이다.</small></> : <p>풀어서 주머니에 넣었다.</p>}
             <em>탭하면 계속</em>
           </div>
         </div>
@@ -208,7 +210,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             <div className="pp-led"><span>빚</span><b className="debt">{comma(DEBT_TOTAL)}</b></div>
             <div className="pp-led"><span>정산마다 이자</span><b className="debt">{comma(INTEREST)}</b></div>
             <div className="pp-led"><span>가진 돈</span><b><Acorn size={24} />0</b></div>
-            <small>{LEDGER_NOTE}</small>
+            <small>{ledgerNote(firstVisitSec(balance.settlement.intervalSec))}</small>
             <em>탭하면 계속</em>
           </div>
         </div>

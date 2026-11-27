@@ -42,11 +42,11 @@ export function goalAt(g: GameState, i: number, f: GoalFlags): Goal {
   const mk = (label: string, cur: number, need: number, done = cur >= need): Goal => ({ label, cur: Math.min(cur, need), need, done });
   const borrowed = f.loanTaken || (run.stats.sharkBorrowed ?? 0) > 0;
   switch (i) {
-    case 0: { const c = claim(g).total; return mk('정산 전에 이자·생활비 벌기', Math.floor(run.cash), c, f.waiting || borrowed || run.settleNo >= 1 || run.cash >= c); }
-    case 1: return mk('오소리 사무소에서 빌리기 (지도)', borrowed ? 1 : 0, 1);
+    case 0: { const c = claim(g).total; return mk('수금 전에 이자와 생활비 모으기', Math.floor(run.cash), c, f.waiting || borrowed || run.settleNo >= 1 || run.cash >= c); }
+    case 1: return mk('지도에서 오소리 사무소 가기', borrowed ? 1 : 0, 1);
     case 2: return mk('알바 햄스터 부르기', staffedCount(g) > 0 || (run.stats.hired ?? 0) > 0 ? 1 : 0, 1);
-    case 3: return mk('FRX 앱으로 첫 포지션 열기', f.everOpened || Object.keys(run.positions).length > 0 ? 1 : 0, 1);
-    default: return mk('엄마 빚 첫 상환 (지도 → 오소리 사무소)', (run.stats.stamps ?? 0) > 0 ? 1 : 0, 1);
+    case 3: return mk('FRX 앱으로 첫 거래', f.everOpened || Object.keys(run.positions).length > 0 ? 1 : 0, 1);
+    default: return mk('오소리 장부 첫 상환', (run.stats.stamps ?? 0) > 0 ? 1 : 0, 1);
   }
 }
 /** 지금 목표 번호: 이미 지난 목표는 되돌아가지 않는다. 끝나면 GOAL_COUNT. */

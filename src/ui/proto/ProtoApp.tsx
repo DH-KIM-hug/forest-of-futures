@@ -20,6 +20,8 @@ import { endPrologue } from './dev';
 import { ProfitPrompt } from './ProfitPrompt';
 import { WalletSheet } from './Wallet';
 import { DayNoteSheet } from './NewsSheet';
+import { RankBoard } from './RankingBoard';
+import { startRanking } from './ranking';
 import { dayBars } from './daynote';
 import { tutorialEnd } from './tutorial';
 import { isFast, isCheat } from './config';
@@ -69,13 +71,13 @@ function Hud() {
   const seenP = useProto((st) => st.seen);
   // 빚 없는 생을 이어 가는 동안([계속한다], U-40): 모은 돈의 다음 고비가 목표다. 다 넘으면 언제든 닫을 수 있다고만 적는다
   const sv = seenP.continued && lenderDebtTotal(run) === 0 ? savingsStep(seenP) : -1;
-  const goalSave = sv >= 0 && sv < SAVINGS_STEPS.length ? { label: '빚 없는 아침 · 모은 돈', cur: Math.min(Math.floor(run.cash), SAVINGS_STEPS[sv]), need: SAVINGS_STEPS[sv] } : null;
+  const goalSave = sv >= 0 && sv < SAVINGS_STEPS.length ? { label: '빚 없는 아침, 모은 돈', cur: Math.min(Math.floor(run.cash), SAVINGS_STEPS[sv]), need: SAVINGS_STEPS[sv] } : null;
   const otherDebt = lenderDebtTotal(run) - run.debts.shark1.principal;
   const goal: { label: string; cur: number; need: number; sub?: string } | null = goal0 ?? (lg ? { label: lg.label, cur: lg.cur, need: lg.need, sub: `이자 −${comma(lg.cut)}` } : goalSave);
   // 손에 든 돈으로 지금 갚으면 금박 도장 막대가 어디까지 차는가(U-41): 다음 정산에 낼 돈은 남겨 두고 센다. 거래로 딴 돈이 장부에 얼마나 가까운지가 집에서 보인다
   const spare = lg ? Math.max(0, Math.min(lg.need - lg.cur, Math.floor(run.cash - (fc0.interest + fc0.living + fc0.wages)))) : 0;
   const ghost = lg && spare >= 1000 ? Math.min(1, (lg.cur + spare) / lg.need) : null;
-  const goalEnd = sv >= SAVINGS_STEPS.length ? '도토리 100만 · 사무소에서 언제든 이 생을 닫을 수 있다' : otherDebt > 0 ? `오소리 장부는 깨끗하다 · 다른 빚 ${comma(otherDebt)} (지도)` : '빚 0 · 장부가 깨끗하다';
+  const goalEnd = sv >= SAVINGS_STEPS.length ? '도토리 100만. 사무소에서 언제든 이 생을 닫을 수 있다' : otherDebt > 0 ? `오소리 장부는 깨끗하다. 다른 빚 ${comma(otherDebt)}` : '빚 0, 장부가 깨끗하다';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
   const lot = tab === 'lot';
   const [brk, setBrk] = useState(() => pdev === 'wallet' && /pbrk=1/.test(window.location.search));
@@ -101,7 +103,7 @@ function Hud() {
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배 · {rate.remaining}회 남음{run.debts.shark1.inherited > 0 ? ' · 엄마 빚 빼고' : ''}</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
+          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배, {rate.remaining}회 남음{run.debts.shark1.inherited > 0 ? ' (엄마 빚 빼고)' : ''}</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
         </div>
         <DevBar />
         <div className="acorn">
@@ -111,7 +113,7 @@ function Hud() {
         </div>
       </div>
       {brk && (
-        <div className="brk" role="status"><i>초당 (탭은 빼고)</i> 알바 채굴 <b className="up">+{sec(fc.mined)}</b> · 일당 <b className="dn">−{sec(fc.wages)}</b> · 이자 <b className="dn">−{sec(fc.interest)}</b> · 생활비 <b className="dn">−{sec(fc.living)}</b> = <b className={fc.net >= 0 ? 'up' : 'dn'}>{fc.net >= 0 ? '+' : '−'}{sec(Math.abs(fc.net))}</b><br /><i>정산 때 걷는 돈</i> 이자 {rd(fc.interest)} + 생활비 {rd(fc.living)} + 일당 {rd(fc.wages)}</div>
+        <div className="brk" role="status"><i>초당</i> 알바 채굴 <b className="up">+{sec(fc.mined)}</b> 일당 <b className="dn">−{sec(fc.wages)}</b> 이자 <b className="dn">−{sec(fc.interest)}</b> 생활비 <b className="dn">−{sec(fc.living)}</b> = <b className={fc.net >= 0 ? 'up' : 'dn'}>{fc.net >= 0 ? '+' : '−'}{sec(Math.abs(fc.net))}</b><br /><i>정산 때 걷는 돈</i> 이자 {rd(fc.interest)} + 생활비 {rd(fc.living)} + 일당 {rd(fc.wages)}</div>
       )}
       {lot && (
         <>
@@ -121,7 +123,7 @@ function Hud() {
             <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{ghost !== null ? <i className="gsub gh">{ghost >= 1 ? '갚으면 도장' : `손에 +${comma(spare)}`}</i> : goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
           <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
-            <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '정산 · 추심원이 기다린다' : '정산 (이자 걷는 시간)'}</span><em>{mmss(left)}</em>
+            <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '추심원이 기다린다' : '정산'}</span><em>{mmss(left)}</em>
           </div>
         </>
       )}
@@ -191,7 +193,7 @@ function LiqStamp({ onShake }: { onShake: () => void }) {
   return (
     <div key={hit.k} className="pr-liq" aria-live="assertive">
       <div className={'stamp' + (legend ? ' legend' : '')}>청산</div>
-      <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name} 포지션이 강제로 정리됐다`}</p>
+      <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name} 포지션이 강제로 닫혔다`}</p>
     </div>
   );
 }
@@ -223,13 +225,13 @@ function AwayNote() {
       <div className="box">
         <h3>{a.title}</h3>
         {a.note && <p className="col"><b>추심원의 쪽지</b>「{a.note}」</p>}
-        {a.left.length > 0 && <p className="sub">나갈 때 열어 둔 포지션: {a.left.join(', ')}{a.stillOpen > 0 ? ` · 아직 ${a.stillOpen}개 열려 있다` : ''}</p>}
+        {a.left.length > 0 && <p className="sub">나갈 때 열어 둔 포지션: {a.left.join(', ')}{a.stillOpen > 0 ? `. 아직 ${a.stillOpen}개 열려 있다` : ''}</p>}
         {a.rows.length > 0 && (
           <div className="rows">
             {a.rows.map((r) => <div key={r.key} className={'rw ' + r.tone}><span>{r.text}{r.after && <small>{r.after}</small>}</span>{r.amount !== null && <b>{awayMoney(r.amount)}</b>}</div>)}
           </div>
         )}
-        {a.rows.length === 0 && !a.note && <p className="sub">아무 일도 없었다. 시세만 움직였다.</p>}
+        {a.rows.length === 0 && !a.note && <p className="sub">시세만 움직였다.</p>}
         <div className="sum"><span>가진 돈 <b className={a.cashDelta >= 0 ? 'up' : 'dn'}>{awayMoney(a.cashDelta)}</b></span><span>빚 <b className={a.debtDelta > 0 ? 'dn' : 'up'}>{awayMoney(a.debtDelta)}</b></span></div>
         <button className="buy on wide" data-away-ok onClick={close}><span>확인</span></button>
       </div>
@@ -237,21 +239,24 @@ function AwayNote() {
   );
 }
 
-/** 튜토리얼 끝 알림(U-31): 방금 그 거래는 짜 둔 시세였고, 지금부터는 실제 시세라는 것을 그대로 말한다. */
+/** 첫 주문 전표의 뒷면(U-31 → U-44): 튜토리얼 끝을 게임 밖 알림 대신 세상 안의 전표로 말한다. 방금 그 시세는 짜 둔 재생 기록이었고, 다음 주문부터는 실제 시세다. */
 function TutorialNotice() {
   const on = useProto((s) => s.tutorial === 'notice');
   const scene = useProto((s) => s.scenes.length > 0);
   const net = useGame((s) => s.net);
   if (!on || scene) return null;
   const live = net.source === 'hl' && !net.fallback;
+  const t = new Date();
+  const hhmmss = [t.getHours(), t.getMinutes(), t.getSeconds()].map((x) => String(x).padStart(2, '0')).join(':');
   return (
-    <div className="pr-notice" role="dialog" aria-label="튜토리얼 끝" data-notice>
-      <div className="box">
-        <h3>튜토리얼 끝</h3>
-        <p>방금 그 거래는 <b>연습용으로 짜 둔 시세</b>였습니다. 어느 쪽을 골라도 청산되게 되어 있었습니다.</p>
-        <p>{live ? <>지금부터 거래소 시세는 <b>실제 시세</b>(실시간)로 움직입니다.</> : <>지금부터 거래소 시세는 짜 둔 길 없이 움직입니다. <b>이 판은 오프라인 연습 시세</b>이고, 온라인이면 실제 시세(실시간)를 씁니다.</>}</p>
-        <p className="sub">빚과 이자, 쳇바퀴와 알바는 아까 그대로입니다.</p>
-        <button className="buy on wide" data-notice-ok onClick={tutorialEnd}><span>확인</span></button>
+    <div className="pr-notice" role="dialog" aria-label="첫 주문 전표 뒷면" data-notice>
+      <div className="box rcpt">
+        <h3>첫 주문 전표 <small>뒷면</small></h3>
+        <p>시세 원본: <b>첫 주문용으로 짜 둔 재생 기록</b></p>
+        <p>롱을 고르면 하락, 숏을 고르면 상승</p>
+        <i className="rstamp" aria-hidden="true">재생 종료</i>
+        <p className="sub">{live ? <>다음 주문부터 실제 시세<br />마지막 수신 {hhmmss}</> : <>다음 주문부터 연습 시세<br />실제 시세가 들어오지 않는다</>}</p>
+        <button className="buy on wide" data-notice-ok onClick={tutorialEnd}><span>전표를 넣는다</span></button>
       </div>
     </div>
   );
@@ -268,7 +273,7 @@ export function ProtoApp() {
   const tense = openPos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach));
   useAudioDirector(dark || tense);
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => { startHistory(); startWatch(); }, []);
+  useEffect(() => { startHistory(); startWatch(); startRanking(); }, []);
   // 자동 플레이 검증용 읽기 전용 창(&e2e=1): 상태를 읽기만 한다. 바꾸는 길은 없다.
   useEffect(() => {
     if (!/[?&]e2e=1/.test(window.location.search)) return;
@@ -304,6 +309,7 @@ export function ProtoApp() {
       <TutorialNotice />
       <AwayNote />
       <DayNoteSheet />
+      <RankBoard />
       {prologue && <Prologue onDone={endPrologue} canSkip={skip} />}
       {pdev === 'sounds' && <SoundLab />}
     </div>

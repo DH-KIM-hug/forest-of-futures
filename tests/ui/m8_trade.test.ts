@@ -88,7 +88,7 @@ describe('배율 눈금자와 주문 미리보기', () => {
     const r = levRuler(g);
     expect(r.map((n) => n.lev)).toEqual([1, 2, 5, 10, 25, 50, 100, 200]);
     expect(r.filter((n) => n.locked).map((n) => n.lev)).toEqual([25, 50, 100, 200]);
-    expect(r.find((n) => n.lev === 50)!.lockText).toBe('끝난 거래 3건 뒤 50배 — 지금 1건');
+    expect(r.find((n) => n.lev === 50)!.lockText).toBe('끝난 거래 3건 뒤 50배 (지금 1건)');
     expect(r.find((n) => n.lev === 100)!.hot).toBe(true);
     g.run.futures.closedTrades = 10;
     expect(levRuler(g).find((n) => n.lev === 200)!.lockText).toContain('확인서');

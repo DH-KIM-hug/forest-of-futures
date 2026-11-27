@@ -68,9 +68,9 @@ export function sessionOf(id: string, now: Date, rangePct: number | null): Sessi
   const quiet = rangePct === null ? !open : rangePct < SESSION_QUIET_PCT;
   const state: Session['state'] = open ? (quiet && rangePct !== null ? 'holiday' : 'open') : quiet ? 'closed' : 'after';
   const home = SESSIONS[id].home;
-  const text = state === 'closed' ? `장 마감 · 조용함 (본장 ${hours})`
-    : state === 'after' ? `장 마감 · 그래도 움직인다 (본장 ${hours})`
-    : state === 'holiday' ? `장중인데 조용함 · ${home} 휴장인 듯`
+  const text = state === 'closed' ? `본장 마감 (본장 ${hours})`
+    : state === 'after' ? `본장 마감, 그래도 움직인다 (본장 ${hours})`
+    : state === 'holiday' ? `장중인데 조용함, ${home} 휴장인 듯`
     : `장중 (본장 ${hours})`;
   return { open, quiet, state, badge: state === 'closed' ? '장 마감' : state === 'holiday' ? '휴장?' : null, text, hours };
 }
@@ -92,7 +92,7 @@ export function liveliest(ranges: { id: string; r: number | null }[]): { id: str
 /** 주문 판의 딱지: 남은 정산 수 → 글. 끝났으면 지금 수수료율을 말한다. */
 export function feeEventChip(left: number, ratePct: number): { on: boolean; text: string } {
   return left > 0
-    ? { on: true, text: `오픈 기념 수수료 무료 · 정산 ${left}번 남음` }
+    ? { on: true, text: `오픈 기념 수수료 무료, 정산 ${left}번 남음` }
     : { on: false, text: `거래 수수료 ${ratePct.toFixed(ratePct < 0.01 ? 3 : 2)}%` };
 }
 /** 이벤트 동안 수수료 없이 오간 크기(명목) → 끝난 뒤의 수수료율로 쳤다면 냈을 돈(들어갈 때 + 나올 때) */

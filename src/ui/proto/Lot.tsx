@@ -127,9 +127,9 @@ export function Lot() {
   const doTap = () => {
     if (useProto.getState().panelOpen) { setPanel(false); return; } // 펴져 있을 때의 탭은 접기만 한다
     if (useProto.getState().forceTrade) { say(FORCE_NUDGE); useProto.getState().patch({ pointTab: 'phone' }); return; }
-    if (useProto.getState().waiting) { say('추심원이 문 앞에서 기다린다. 지도에서 사무소로 가거나, 돌려보낸다.'); return; }
+    if (useProto.getState().waiting) { say('추심원이 문 앞에서 기다린다.'); return; }
     const r = rollWheel();
-    if (!r.ok) { if (r.why === 'nowheel') { say('쳇바퀴가 없다. 다시 사야 캘 수 있다.'); play('insufficient'); } else if (r.why === 'staffed') staffedTap(); return; }
+    if (!r.ok) { if (r.why === 'nowheel') { say('쳇바퀴가 없다.'); play('insufficient'); } else if (r.why === 'staffed') staffedTap(); return; }
     playTap();
     useProto.getState().patch({ tapping: true });
     fx.emit({ kind: 'tap', gain: r.sold ? `+${comma(r.gain)}` : `+${comma(r.worth)} 코인`, wheel: true, sold: r.sold });
@@ -142,7 +142,7 @@ export function Lot() {
     window.clearTimeout(hiTimer.current);
     hiTimer.current = window.setTimeout(() => useProto.getState().patch({ slotHi: null }), 1500);
     if (useProto.getState().forceTrade) { say(FORCE_NUDGE); useProto.getState().patch({ pointTab: 'phone' }); return false; }
-    if (!t.action) { if (t.locked) say(t.state === 'idle' ? '알바는 폰으로 부른다. 아직 폰이 없다.' : t.text); return false; }
+    if (!t.action) { if (t.locked) say(t.state === 'idle' ? '알바는 폰으로 부른다. 폰이 없다.' : t.text); return false; }
     const had = new Set(useGame.getState().g.run.equipment.map((u) => u.uid));
     const cash0 = useGame.getState().g.run.cash;
     const res = t.action === 'hire' ? act(t.uid ? { type: 'hire', uid: t.uid } : { type: 'hire', coin: WHEEL_COIN })
@@ -157,7 +157,7 @@ export function Lot() {
     }
     play(bought.has(t.action) ? 'buy' : 'new_equipment');
     bought.add(t.action);
-    if (t.action === 'hire') say('알바 햄스터가 왔다. 캔 돈은 1초마다 들어오고, 일당은 정산 때 나간다.');
+    if (t.action === 'hire') say('알바 햄스터가 왔다.');
     else fx.emit({ kind: 'buy', price: t.action === 'place' ? cash0 - useGame.getState().g.run.cash : 0, key: String(t.slot) });
     return true;
   };
@@ -211,7 +211,7 @@ export function Lot() {
                   <span className="bar" role="img" aria-label={ahead ? '버는 돈이 더 많다' : '나가는 돈이 더 많다'}><i style={{ width: `${share * 100}%` }} /><u /></span>
                   <span className="out"><small>나가는 돈</small><b>초당 {rateTxt(claimSec)}</b></span>
                 </span>
-                <span className="nx">정산까지 <b>{left}</b> · 다음 정산 때 <b>{comma(sum.claim)}</b></span>
+                <span className="nx">정산까지 <b>{left}</b>, 그때 낼 돈 <b>{comma(sum.claim)}</b></span>
                 {/* 이번 생의 길(U-41): 낸 돈과 거래가 벌어 온 돈 */}
                 {(run.settleNo > 0 || closes > 0) && <span className="jr" data-journey="home">{jr.text}</span>}
               </>

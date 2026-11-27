@@ -33,7 +33,7 @@ export function tensionOf(liqDistPct: number, hist: number[]): Tension {
   const steps = stepsOf(liqDistPct, rangePct);
   const reach = reachOf(steps);
   const dots = steps === null ? 0 : steps < 1 ? 5 : steps < 2 ? 4 : steps < 3 ? 3 : steps < 8 ? 2 : steps < 20 ? 1 : 0;
-  const text = steps === null ? '시세를 모으는 중' : `1분 폭(${rangePct!.toFixed(2)}%)의 ${times(steps)} · ${REACH_TEXT[reach]}`;
+  const text = steps === null ? '시세를 모으는 중' : `1분 폭(${rangePct!.toFixed(2)}%)의 ${times(steps)}, ${REACH_TEXT[reach]}`;
   return { rangePct, steps, reach, dots, text };
 }
 
@@ -55,8 +55,8 @@ export function orderOdds(o: { margin: number; lev: number; claim: number; feeRa
   const liqFirst = needPct >= liqPct;
   const pc = (x: number) => (x >= 10 ? x.toFixed(0) : x >= 1 ? x.toFixed(1) : x.toFixed(2));
   const text = liqFirst
-    ? `이 판으로는 이자 ${n(o.claim)}을 못 번다 (시세 ${pc(needPct)}% 필요 · 청산은 ${pc(liqPct)}%)`
-    : `이자 ${n(o.claim)}까지 시세 ${pc(needPct)}%${needSteps !== null ? ` (1분 폭의 ${times(needSteps)})` : ''} · 청산까지 ${pc(liqPct)}%`;
+    ? `이 판으로는 이자 ${n(o.claim)}을 못 번다 (시세 ${pc(needPct)}% 필요, 청산은 ${pc(liqPct)}%)`
+    : `이자 ${n(o.claim)}까지 시세 ${pc(needPct)}%${needSteps !== null ? ` (1분 폭의 ${times(needSteps)})` : ''}, 청산까지 ${pc(liqPct)}%`;
   return { needPct, liqPct, needSteps, liqSteps, liqFirst, text };
 }
 
@@ -98,19 +98,19 @@ export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): H
   const claim = Math.max(1, s.claim);
   const B = (key: string, ...v: string[]): HoldBeat | null => (seen[key] ? null : { key, text: rot(nth, ...v) });
   const free = s.feesPaid === 0;
-  return (s.reach === 'edge' ? B('edge', '…지금 흔들리는 만큼만 더 가면 끝이다.', '…숨 한 번 쉬는 폭 안에 청산선이 있다.', '…눈을 깜빡이면 없어질 것 같다.') : null)
-    ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '…한 번만 더 출렁이면 닿는다.', '…한 번이다. 한 번만 반대로 가면.', '…청산선이 보인다. 보이면 안 되는 건데.') : null)
-    ?? (s.squeezed ? B('squeeze', '…정산이 온다. 낼 돈이 전부 여기 묶여 있다.', '…추심원 발소리가 들리는 것 같다. 돈은 폰 안에 있다.') : null)
-    ?? (s.roe >= 100 ? B('double', '…두 배다. 두 배면… 조금만 더.', '…두 배. 엄마도 여기서 안 닫았을까.') : null)
-    ?? (s.pnl >= claim ? B('claim', `…이자 한 번 치다. 지금 닫으면 ${n(s.pnl)}.`, `…+${n(s.pnl)}. 이자 한 번이 폰에 떠 있다. 아직 도토리는 아니다.`, `…지금 닫으면 이번 정산은 넘긴다. ${n(s.pnl)}.`) : null)
-    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `…아까는 +${n(s.peakPnl)}이었다. 아까 닫을 걸.`, `…+${n(s.peakPnl)}까지 갔었다. 그때 손가락이 안 움직였다.`) : null)
-    ?? (s.roe <= -50 ? B('half', '…넣은 돈의 절반이 녹았다.', '…절반 남았다. 절반이면 아직… 아니다.') : null)
-    ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '…본전이다. 본전이면 나가야 하는데.', '…돌아왔다. 여기서 나가면 아무 일도 없던 거다.') : null)
-    ?? ((s.rolled ?? 0) >= claim * 0.05 ? B('rolled', `…굴린 것만 ${n(s.rolled!)}. 다음 정산의 ${Math.round((s.rolled! / claim) * 100)}%다. 눈은 폰에, 발은 쳇바퀴에.`, `…기다리는 동안 굴려 번 것이 ${n(s.rolled!)}. 이건 폰 속 숫자가 아니라 진짜 도토리다.`) : null)
-    ?? (s.settles >= 1 ? B('settled', '…정산이 한 번 지나갔다. 아직 들고 있다.', '…추심원이 다녀갔다. 포지션은 그대로다.') : null)
+  return (s.reach === 'edge' ? B('edge', '…조금만 더 밀리면 청산이다.') : null)
+    ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '…한 번만 더 출렁이면 닿는다.') : null)
+    ?? (s.squeezed ? B('squeeze', '…정산이 온다. 낼 돈이 전부 여기 묶여 있다.') : null)
+    ?? (s.roe >= 100 ? B('double', '…두 배다. 두 배면… 조금만 더.') : null)
+    ?? (s.pnl >= claim ? B('claim', `…이자 한 번 치다. 지금 닫으면 ${n(s.pnl)}.`) : null)
+    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `…아까는 +${n(s.peakPnl)}이었다. 아까 닫을 걸.`) : null)
+    ?? (s.roe <= -50 ? B('half', '…넣은 돈의 절반이 녹았다.') : null)
+    ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '…본전이다. 본전이면 나가야 하는데.') : null)
+    ?? ((s.rolled ?? 0) >= claim * 0.05 ? B('rolled', `…굴린 것만 ${n(s.rolled!)}. 다음에 낼 돈의 ${Math.round((s.rolled! / claim) * 100)}%는 모았다.`) : null)
+    ?? (s.settles >= 1 ? B('settled', '…정산이 한 번 지나갔다. 아직 들고 있다.') : null)
     ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakPnl < claim * 0.1
-      ? (free ? B('flat', '…안 움직인다. 수수료가 공짜라 잃은 것도 없다. 번 것도 없다.', '…차트가 누워 있다. 공짜로 구경 중이다.', '…아무 일도 없다. 다른 코인은 움직이나.')
-        : B('flat', '…안 움직인다. 수수료만 냈다.', '…차트가 누워 있다. 수수료는 이미 나갔다.', '…아무 일도 없다. 아무 일도 없는데 돈은 줄었다.')) : null);
+      ? (free ? B('flat', '…안 움직인다.', '…다른 코인은 움직이나.')
+        : B('flat', '…안 움직인다. 수수료만 냈다.', '…차트가 누워 있다. 수수료는 이미 나갔다.')) : null);
 }
 
 // ── 정산 때 낼 돈이 포지션에 묶여 있는가 ───────────────────────────────
@@ -123,7 +123,7 @@ export function squeezeOf(o: { cash: number; income: number; due: number; settle
   if (!(o.due > 0) || have >= o.due) return null;
   const mm = `${Math.floor(Math.max(0, o.settleIn) / 60)}:${String(Math.max(0, o.settleIn) % 60).padStart(2, '0')}`;
   const text = o.holding
-    ? `정산 ${mm} 뒤 낼 돈 ${n(o.due)} · 손에 ${n(have)} — 닫아야 낸다`
-    : `넣고 나면 손에 ${n(have)} · 정산(${mm} 뒤) 낼 돈 ${n(o.due)} — 못 닫으면 연체`;
+    ? `${mm} 뒤 낼 돈 ${n(o.due)}, 손에 ${n(have)}. 닫아야 낸다`
+    : `거래 후 잔액 ${n(have)}, ${mm} 뒤 낼 돈 ${n(o.due)}. 그때까지 못 닫으면 연체`;
   return { due: Math.round(o.due), have, short: Math.round(o.due - have), text };
 }

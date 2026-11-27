@@ -43,7 +43,7 @@ export function awayCard(r: AwayReport, before: AwayPurse, after: AwayPurse, o: 
     if (could > r.economySettlements) note += ' 빈 집에선 더 안 걷어요오.';
   } else if (could >= 1) note = '안 계셔서 그냥 갔어요오. 다음 정산에 봬요오.';
   return {
-    title: `자리를 비운 사이 · ${awayDur(r.awaySec)}`, note, rows,
+    title: `자리를 비운 ${awayDur(r.awaySec)}`, note, rows,
     left: r.openAtLeave.map((p) => `${o.names[p.market] ?? p.market} ${p.dir === 1 ? '롱' : '숏'} ${p.lev}배`),
     stillOpen: o.openNow, cashDelta: after.cash - before.cash, debtDelta: after.debt - before.debt, bankrupt: r.bankrupt,
   };

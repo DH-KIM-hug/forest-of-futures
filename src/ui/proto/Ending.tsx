@@ -10,6 +10,7 @@ import { nodeOdds, treeOddsLine } from './odds';
 import { endingById, skillById, skillPathEndings } from '../../engine/data';
 import { act1Text } from '../../engine/act1';
 import { play } from './audio';
+import { RankRebirth } from './RankingBoard';
 
 /** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
@@ -42,13 +43,13 @@ export function EndingFlow() {
           <div className={'stamp' + (retired ? ' gold' : '')} aria-label={retired ? '은퇴' : '파산'}>{retired ? '은퇴' : '파산'}</div>
         </figure>
         <div className="card">
-          <div className="cause" style={{ background: m.color }}>{m.no} · {m.causeLabel}</div>
+          <div className="cause" style={{ background: m.color }}>{m.no}  {m.causeLabel}</div>
           <p className="line">{m.line}</p>
           <div className="blk"><h4>마지막 세 장면</h4>
             {m.scenes.length === 0 && <p className="sub">기록이 없습니다.</p>}
             {m.scenes.map((s, i) => <div key={i} className="sc"><span>{placeName(s.text)}</span>{s.amount !== null && <b className={s.amount >= 0 ? 'up' : 'dn'}>{s.amount >= 0 ? '+' : '−'}{comma(Math.abs(s.amount))}</b>}</div>)}
           </div>
-          <p className="sub">{m.status} · 장부 {m.ledger}</p>
+          <p className="sub">{m.status}, 장부 {m.ledger}</p>
         </div>
         <button className="go" data-rebirth onClick={() => act({ type: 'estateNext' })}>환생하기</button>
       </div>
@@ -64,16 +65,17 @@ export function EndingFlow() {
         <img src={sprite('hero')!.src} alt="" width={42} height={56} />
         <div>
           <h2>다시 눈을 뜬다</h2>
-          <p>{retired ? '빚 없는 아침이 며칠 지났다. 폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.' : '폰 고리의 리본이 빛난다. 다시 그 오두막, 그날이다. 빚 30만도 그대로다.'}</p>
+          <p>{retired ? '빚을 다 갚고 며칠 뒤, 그 오두막에서 눈을 떴다. 엄마 장부에 다시 30만이 적혀 있다.' : '다시 그 오두막, 그날이다. 엄마 장부에 30만이 그대로 있다.'}</p>
         </div>
       </div>
       <div className="award" data-award={e.gold ?? 0}>
         <img className="coin art" data-art="goldcoin" src={sprite('goldcoin')!.src} alt="" />
-        <span>지난 생에 갚은 원금 <b className="sm">{comma(repaid)}</b><br /><small>장부의 금박 도장 5만마다 하나{run.debts.shark1.principal <= 0 && repaid > 0 ? ' · 완납 +2' : ''}</small></span>
+        <span>지난 생에 갚은 원금 <b className="sm">{comma(repaid)}</b><br /><small>5만마다 금박 도장 하나{run.debts.shark1.principal <= 0 && repaid > 0 ? ', 완납 +2' : ''}</small></span>
         <b>+{comma(e.gold ?? 0)}</b>
       </div>
       <SkillTree />
-      <p className="re-stat">지난 생: 정산 {run.settleNo}번 · 거래 {run.futures.closedTrades}건 · 청산 {(run.stats.liqCount as number | undefined) ?? 0}번</p>
+      <p className="re-stat">지난 생: 정산 {run.settleNo}번, 거래 {run.futures.closedTrades}건, 청산 {(run.stats.liqCount as number | undefined) ?? 0}번</p>
+      <RankRebirth />
       <button className="go" data-next-life onClick={() => { if (act({ type: 'nextGeneration' }).ok) rebirthOverride(); }}>{lifeNo(g) + 1}번째 생 시작</button>
     </div>
   );
@@ -153,7 +155,7 @@ function SkillTree() {
           {effectText(cur) && (cur.kind === 'scaled' || cur.tail) && <small data-effect>{effectText(cur)}</small>}
           {/* 이 노드가 「이자 한 번 걸기」 한 판을 얼마나 바꾸는가(U-42 ④): 수수료가 기울인 승률을 지금 → 다음 레벨로. 시세는 그대로다 */}
           {od && cur.cost !== null && <small className={'odds' + ((od.next.p ?? 0) < (od.now.p ?? 0) ? ' worse' : '')} data-odds={cur.id}>{od.text}</small>}
-          {cur.level > 0 && !cur.picked && <small>지금은 짝 노드가 켜져 있다. 한 생에 둘 중 하나만.</small>}
+          {cur.level > 0 && !cur.picked && <small>짝 가지가 켜져 있다. 한 생에 하나만.</small>}
           {msg && <small className="bad">{msg}</small>}
         </div>
         {cur.level > 0 && cur.pair && !cur.picked

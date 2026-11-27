@@ -101,6 +101,7 @@ describe('AC-v2-138 앱 번들에 시세 출처 주소·실제 종목 이름이 
     // 의도는 그대로다: 연결을 여는 코드가 흩어지지 않고, 주소·종목 이름 문자열이 src 에 없다(위 테스트). 시제품(GitHub Pages)은 서버가 없어서 io.ts 가 하나 더 있다.
     const files = walk(join(root, 'src')).filter((f) => !f.includes('/engine/'));
     const users = files.filter((f) => /\bfetch\(|new WebSocket\(|fetchFn\(|wsFactory\(/.test(readFileSync(f, 'utf8')));
-    expect(users.map((f) => f.replace(root, '')).sort()).toEqual(['src/net/hlDirect/io.ts', 'src/net/serverFeed.ts']);
+    // 전광판(랭킹 Worker, U-45)과 말하는 곳 rankingIo.ts 가 하나 더 있다(주소는 ranking/client.json 에서 읽는다)
+    expect(users.map((f) => f.replace(root, '')).sort()).toEqual(['src/net/hlDirect/io.ts', 'src/net/rankingIo.ts', 'src/net/serverFeed.ts']);
   });
 });

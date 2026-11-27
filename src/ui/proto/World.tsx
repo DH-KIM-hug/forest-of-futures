@@ -432,7 +432,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
           {!waiting && collector && collector.interest > 0 && (
             collector.overdue
               ? <Spiky key={`sb${collector.at}`} {...bubble(168)} y={cy0 - 126} w={168} h={30} text={<SvgSay who="collector" text="이자가 모자라요오. 연체." delay={0.9} mute={talking} />} />
-              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={<SvgSay who="collector" text={`이자 ${comma(collector.interest)} 수납 완료요오~`} delay={0.9} mute={talking} />} />
+              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={<SvgSay who="collector" text={`이자 ${comma(collector.interest)}, 받았어요오.`} delay={0.9} mute={talking} />} />
           )}
           {waiting && <Round {...bubble(150)} y={cy0 - 114} w={150} h={28} text={<SvgSay who="collector" text="사무소로 오세요오." delay={0.9} mute={talking} />} />}
           {/* 폰 꼬리표(U-42): 포지션을 든 채 집에 있으면 주인공 머리 위에 지금 손익이 뜬다. 굴려 번 돈이 있으면 그 아래에 */}

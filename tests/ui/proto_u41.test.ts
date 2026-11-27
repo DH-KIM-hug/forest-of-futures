@@ -103,7 +103,7 @@ describe('출구를 도토리로 (U-41)', () => {
     const hist = Array.from({ length: 600 }, (_, i) => 100 * (1 + Math.sin(i / 30) * 0.002));
     const c = orderCtx({ margin: 50_000, lev: 200, feeRate: 0, maint: 0.001 });
     const line = planLine({ tpNet: 15_500, slNet: 15_500, st: acornStops(c, 15_500, 15_500), hist })!;
-    expect(line).toMatch(/^익절 \+15,500 = 시세 0\.1[56]% · 지난 10분에 \d+번 · 손절 −15,500 = 0\.1[56]%$/);
+    expect(line).toMatch(/^익절 \+15,500 \(유리한 쪽 0\.1[56]%, 지난 10분에 \d+번\), 손절 −15,500 \(반대쪽 0\.1[56]%\)$/);
     const small = orderCtx({ margin: 10_000, lev: 200, feeRate: 0, maint: 0.001 });
     expect(planLine({ tpNet: 15_500, slNet: 15_500, st: acornStops(small, 15_500, 15_500), hist })).toContain('손절 −15,500보다 청산이 먼저다');
     expect(planLine({ tpNet: null, slNet: null, st: acornStops(c, null, null), hist })).toBeNull();
@@ -118,7 +118,7 @@ describe('출구를 도토리로 (U-41)', () => {
     expect(halfHint(quiet, null)).toBeNull();
     const c = orderCtx({ margin: 45_000, lev: 200, feeRate: 0, maint: 0.001 });
     const st = acornStops(c, 15_500, 15_500);
-    expect(planLine({ tpNet: 15_500, slNet: 15_500, st, hist: quiet, hint: halfHint(quiet, st.tpMove) })).toMatch(/^익절 \+15,500 = 시세 0\.17% · 지난 10분엔 없었다 \(반 번 폭은 \d+번\) · 손절 −15,500 = 0\.17%$/);
+    expect(planLine({ tpNet: 15_500, slNet: 15_500, st, hist: quiet, hint: halfHint(quiet, st.tpMove) })).toMatch(/^익절 \+15,500 \(유리한 쪽 0\.17%, 지난 10분엔 없었다\), 손절 −15,500 \(반대쪽 0\.17%\)$/); // U-44: 반 번 폭의 덧말은 뺐다(halfHint 셈은 남는다)
     expect(chipCount(quiet, 0.05)).toMatch(/^\d+번$/);
     expect(chipCount(quiet, -0.17)).toBe('0번');
     expect(chipCount(quiet.slice(0, 30), 0.05)).toBeNull();
@@ -130,7 +130,7 @@ describe('정산을 넘겨 들고 있기 (U-41)', () => {
   it('손에 낼 돈이 있으면: 손에서 나가는 돈 · 포지션은 그대로 · 펀딩비 · 남는 돈', () => {
     const c = carryOf({ cash: 56_800, income: 0, due: 19_100, settleIn: 20, notional: 10_000_000, fundingRate: 0.00001 })!;
     expect(c).toMatchObject({ due: 19_100, left: 37_700, funding: 100 });
-    expect(c.text).toBe('정산 0:20 뒤 손에서 −19,100 · 포지션은 그대로 · 37,700 남음');
+    expect(c.text).toBe('0:20 뒤 정산 −19,100, 포지션은 그대로, 37,700 남음');
   });
   it('손에 낼 돈이 모자라면 null(붉은 줄이 대신 말한다) · 낼 돈이 없으면 null', () => {
     expect(carryOf({ cash: 5_000, income: 0, due: 19_100, settleIn: 20, notional: 1e7, fundingRate: 1e-5 })).toBeNull();
@@ -147,7 +147,7 @@ describe('정산을 넘겨 들고 있기 (U-41)', () => {
     expect(p.notional).toBe(before.notional);
     expect(p.entry).toBe(before.entry);
     expect(before.margin - p.margin).toBe(100); // 명목 1,000만의 0.001%
-    expect(STORY.carried({ paid: 6_100, funding: 100 })).toBe('정산을 넘겼다: 손에서 −6,100 · 포지션은 그대로 · 펀딩비 −100(증거금에서)');
+    expect(STORY.carried({ paid: 6_100, funding: 100 })).toBe('정산을 넘겼다. 손에서 −6,100, 포지션은 그대로, 펀딩비 −100은 증거금에서');
   });
 });
 
@@ -182,8 +182,8 @@ describe('이번 생의 길 (U-41)', () => {
   it('거래가 벌어 온 돈을 이자 몇 번 치로 읽는다', () => {
     const j = journeyOf({ tradeNet: 31_000, claim: 15_500, settles: 14, paid: 85_400, claimWins: 1 });
     expect(j.share).toBe(2);
-    expect(j.text).toBe('이번 생 정산 14번에 낸 돈 85,400 · 거래가 벌어 온 돈 +31,000 (이자 2.0번 치) · 한 판에 이자를 번 적 1번');
-    expect(journeyOf({ tradeNet: -8_000, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).text).toBe('이번 생 정산 3번에 낸 돈 18,300 · 거래가 벌어 온 돈 −8,000 (이자 −0.5번 치)');
+    expect(j.text).toBe('이번 생 낸 돈 85,400, 거래로 +31,000 (이자 2.0번 치)');
+    expect(journeyOf({ tradeNet: -8_000, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).text).toBe('이번 생 낸 돈 18,300, 거래로 −8,000 (이자 −0.5번 치)');
     expect(journeyOf({ tradeNet: 500, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).short).toBe('거래 +500');
   });
   it('한 판에 이자 한 번 치(이번 생 처음)의 장면: 오소리 대부 → 추심원 → 주인공, 숫자는 받은 것 그대로', () => {
@@ -192,7 +192,6 @@ describe('이번 생의 길 (U-41)', () => {
     expect(L[1].text).toContain('15,500');
     expect(L[2].text).toContain('15,812');
     expect(L[3].text).toContain('금박 도장까지 50,000');
-    expect(L[3].text).toContain('오소리 장부의 300,000');
     expect(STORY.winClaim({ boss: 'x', pnl: 15_812, claim: 15_500, spins: null, stampLeft: null, momLeft: 0 })).toHaveLength(3);
   });
 });
@@ -219,8 +218,8 @@ describe('도토리일보 시세면 (U-41)', () => {
     expect(c.loud1m!).toBeCloseTo(0.8, 1);
     expect(n.headline).toBe(`지난 6시간, 가코인의 고저 폭 ${a.range!.toFixed(2)}%`);
     expect(n.sub).toContain('나코인');
-    expect(n.boss).toMatch(/^지금은 /);
-    expect(n.boss).toContain('23시대의 다코인');
+    expect(n.boss).toMatch(/^(오늘은|지금 제일)/);
+    expect(n.boss).toContain('23시 무렵 다코인');
     expect(noteToast(n)).toMatch(/^\[도토리일보 시세면\] 지난 6시간, 가코인/);
     expect(Math.round(n.spanMin)).toBe(1440);
   });
@@ -230,7 +229,7 @@ describe('도토리일보 시세면 (U-41)', () => {
     expect(n.rows[0].range).not.toBeNull();
     expect(n.rows[1].range).toBeNull();
     expect(n.headline).toContain('지난 30분');
-    expect(n.boss).toContain('한 시간 치도');
+    expect(n.boss).toContain('한 시간 치 모이면');
     expect(cell(null)).toBe('–');
     expect(cell(0.421)).toBe('+0.42%');
     expect(cell(-12.34)).toBe('−12.3%');

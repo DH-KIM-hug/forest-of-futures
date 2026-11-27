@@ -1,0 +1,64 @@
+/* 마을 전광판(U-45): 숲 재료의 나무 게시판. 크림 종이 줄에 순위를 붙인다. 색 · 선은 proto.css 의 토큰을 쓴다. */
+.pr-rank { z-index: 60; padding: 16px; }
+.pr-rank .box { width: min(370px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 12px; background: #F6E9C8; border-color: #6B4A35;
+  background-image: repeating-linear-gradient(0deg, rgba(107, 74, 53, .05) 0 2px, transparent 2px 9px); }
+.pr-rank .rk-mast { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 4px 6px; border-bottom: 3px double #6B4A35; }
+.pr-rank .rk-mast b { font-family: var(--dsp); font-weight: 400; font-size: 22px; letter-spacing: 1px; }
+.pr-rank .rk-mast span { font-size: 11px; font-weight: 800; color: var(--sub); white-space: nowrap; }
+.pr-rank .rk-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.pr-rank .rk-tabs button { min-height: 44px; padding: 4px 4px; border-radius: 11px; border: 2px solid var(--o); background: var(--cream); font: inherit; font-size: 12.5px; font-weight: 800; line-height: 1.2; color: var(--sub); cursor: pointer; touch-action: manipulation; }
+.pr-rank .rk-tabs button.on { background: var(--orange); color: var(--o); box-shadow: inset 0 -3px 0 var(--orange-lo); }
+.pr-rank .rk-title { margin: 0; padding: 0 4px; font-size: 12.5px; font-weight: 700; color: var(--sub); }
+.pr-rank .rk-list { flex: 1 1 auto; min-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 2px; scrollbar-width: thin; scrollbar-color: #CDBF98 transparent; }
+.pr-rank .rk-empty { margin: 18px 6px; text-align: center; font-size: 13px; font-weight: 700; color: var(--sub); }
+.pr-rank .rk-row { flex: 0 0 auto; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; border-radius: 10px; background: var(--card); border: 2px solid rgba(74, 70, 64, .35); }
+.pr-rank .rk-row .no { font-style: normal; font-family: var(--dsp); font-size: 17px; text-align: center; font-variant-numeric: tabular-nums; }
+.pr-rank .rk-row .who { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.pr-rank .rk-row .who b { font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-rank .rk-row .who em { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: var(--teal); color: #fff; font-style: normal; font-size: 11px; font-weight: 800; vertical-align: 1px; }
+.pr-rank .rk-row .who small { font-size: 11.5px; font-weight: 600; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-rank .rk-row .val { font-family: var(--dsp); font-weight: 400; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pr-rank .rk-row.top1 { background: #FFF1B8; border-color: #C9A227; }
+.pr-rank .rk-row.top1 .no { color: #9A7414; }
+.pr-rank .rk-row.top2 { background: #F4F1EA; border-color: #A8A29A; }
+.pr-rank .rk-row.top3 { background: #F8E3CF; border-color: #C08A5A; }
+.pr-rank .rk-row.me { border: 2.5px solid var(--teal); box-shadow: 0 0 0 3px rgba(47, 127, 134, .18); }
+.pr-rank .rk-row.mine { margin-top: -2px; }
+.pr-rank .rk-fine { margin: 0; padding: 0 4px; font-size: 12px; font-weight: 700; color: var(--sub); }
+.pr-rank .rk-fine.warn { color: #6B4A35; }
+.pr-rank .buy.wide { width: 100%; min-height: 48px; margin-top: 2px; }
+
+/* 이름 적기 */
+.rk-name { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 10px; background: rgba(255, 248, 228, .7); font-size: 12.5px; font-weight: 700; color: var(--sub); }
+.rk-name b { color: var(--o); font-weight: 800; }
+.rk-link { min-height: 32px; padding: 0 10px; border-radius: 9px; border: 2px solid var(--o); background: var(--cream); font: inherit; font-size: 12px; font-weight: 800; color: var(--o); cursor: pointer; }
+.rk-ask { display: flex; flex-direction: column; gap: 3px; padding: 9px 10px 10px; border-radius: 12px; background: #FFF3C4; border: 2px dashed #C98A2B; text-align: left; }
+.rk-ask label { font-family: var(--dsp); font-size: 16px; }
+.rk-ask small { font-size: 11.5px; font-weight: 600; color: var(--sub); }
+.rk-ask .row { display: flex; gap: 8px; margin-top: 4px; }
+.rk-ask input { flex: 1 1 auto; min-width: 0; min-height: 44px; padding: 0 10px; border-radius: 10px; border: 2px solid var(--o); background: #fff; font: inherit; font-size: 16px; font-weight: 700; color: var(--o); }
+.rk-ask .buy { width: 78px; min-height: 44px; }
+.rk-ask .buy:not(.on) { background: var(--idle); border: 2px solid var(--o55); }
+
+/* 지도 위 나무 게시판(.pr-vmap 안, 빈터 왼쪽 냇가 옆) */
+.pr .pr-vmap .rk-sign { position: absolute; left: 3%; top: 47%; z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 0; margin: 0; background: none; border: 0; cursor: pointer; touch-action: manipulation; font: inherit; color: var(--o); min-width: 64px; min-height: 64px; }
+.pr .rk-sign .plank { display: flex; flex-direction: column; align-items: center; padding: 4px 9px 5px; border-radius: 7px; background: #C99B6A; border: 2.5px solid var(--o); box-shadow: inset 0 -3px 0 #A97C4E, 0 0 0 2px #fff, var(--drop); transform: rotate(-3deg);
+  background-image: repeating-linear-gradient(180deg, transparent 0 9px, rgba(74, 70, 64, .14) 9px 11px); }
+.pr .rk-sign .plank b { font-family: var(--dsp); font-weight: 400; font-size: 15px; line-height: 1.1; color: #FFF8E4; text-shadow: 0 1.5px 0 var(--o); }
+.pr .rk-sign .plank small { font-size: 10.5px; font-weight: 800; line-height: 1.1; color: #3E2C1E; }
+.pr .rk-sign .posts { display: flex; gap: 22px; margin-top: -2px; }
+.pr .rk-sign .posts i { display: block; width: 6px; height: 14px; border-radius: 0 0 2px 2px; background: #8A6A4A; border: 2px solid var(--o); border-top: 0; }
+.pr .rk-sign:active .plank { transform: rotate(-3deg) scale(.94); }
+
+/* 환생 화면의 단추 */
+.pr .rk-open { min-height: 44px; padding: 0 20px; border-radius: 12px; border: 2.5px solid var(--o); background: #C99B6A; box-shadow: inset 0 -3px 0 #A97C4E, var(--drop); font: inherit; font-family: var(--dsp); font-size: 16px; color: #FFF8E4; text-shadow: 0 1.5px 0 var(--o); cursor: pointer; touch-action: manipulation; }
+.pr .rk-open:active { transform: scale(.96); }
+.pr-end .rk-ask { width: min(360px, 100%); }
+.pr-end .rk-rebirth { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+
+/* 전역 '젤리 단추'(styles.css)를 쓰지 않는다 */
+.pr .rk-sign, .pr .rk-open, .pr .rk-link, .pr .rk-tabs button { min-width: 0; transform: none; filter: none; transition: transform .12s cubic-bezier(.34, 1.56, .64, 1); }
+.pr .rk-sign { box-shadow: none; border-radius: 0; }
+.pr .rk-link { box-shadow: none; }
+.pr .rk-link:active, .pr .rk-tabs button:active { transform: scale(.95); }
+.pr .rk-tabs button:not(.on) { box-shadow: none; }

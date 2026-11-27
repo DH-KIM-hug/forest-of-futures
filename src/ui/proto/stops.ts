@@ -84,12 +84,12 @@ export function swingText(hist: number[], pct: number): string | null {
 export function planLine(o: { tpNet: number | null; slNet: number | null; st: AcornStops; hist: number[]; /** 익절 폭이 한 번도 안 나온 조용한 장: 더 작은 출구(이자 반 번 치)의 폭은 몇 번 나왔는지 덧붙인다 */ hint?: string | null }): string | null {
   const parts: string[] = [];
   const pc = (x: number) => (Math.abs(x) >= 1 ? Math.abs(x).toFixed(1) : Math.abs(x).toFixed(2));
-  if (o.tpNet !== null && o.st.tpMove !== null) { const s = swingText(o.hist, o.st.tpMove); parts.push(`익절 +${n(o.tpNet)} = 시세 ${pc(o.st.tpMove)}%${s ? ` · ${s}` : ''}${o.hint ? ` (${o.hint})` : ''}`); }
-  if (o.slNet !== null) parts.push(o.st.slMove !== null ? `손절 −${n(o.slNet)} = ${pc(o.st.slMove)}%` : o.st.slWhy === 'liq' ? `손절 −${n(o.slNet)}보다 청산이 먼저다` : `수수료만으로 −${n(o.slNet)}를 넘는다`);
+  if (o.tpNet !== null && o.st.tpMove !== null) { const s = swingText(o.hist, o.st.tpMove); parts.push(`익절 +${n(o.tpNet)} (유리한 쪽 ${pc(o.st.tpMove)}%${s ? `, ${s}` : ''})`); }
+  if (o.slNet !== null) parts.push(o.st.slMove !== null ? `손절 −${n(o.slNet)} (반대쪽 ${pc(o.st.slMove)}%)` : o.st.slWhy === 'liq' ? `손절 −${n(o.slNet)}보다 청산이 먼저다` : `수수료만으로 −${n(o.slNet)}를 넘는다`);
   // 수수료가 승률을 기울였으면 그 기울기를 적는다(U-42 ④): 익절은 멀고 손절은 가깝다
   const od = o.tpNet !== null && o.slNet !== null ? oddsText(fairOdds(o.st)) : null;
   if (od) parts.push(`수수료 탓에 ${od}`);
-  return parts.length ? parts.join(' · ') : null;
+  return parts.length ? parts.join(', ') : null;
 }
 
 /** 조용한 장에서 고를 거리(회차 4 의 실시간 판에서 본 것: 새벽의 조용한 장에서는 200배 · 이자 한 번 치의 폭 0.17% 가 9분 동안 한 번도 안 나왔다).
@@ -118,7 +118,7 @@ export function carryOf(o: { cash: number; income: number; due: number; settleIn
   if (left < 0) return null; // 모자라면 "닫아야 낸다"는 붉은 줄(tension.ts squeezeOf)이 대신 말한다
   const funding = Math.ceil(o.notional * o.fundingRate - 1e-9);
   const mm = `${Math.floor(Math.max(0, o.settleIn) / 60)}:${String(Math.max(0, o.settleIn) % 60).padStart(2, '0')}`;
-  return { due: Math.round(o.due), left, funding, text: `정산 ${mm} 뒤 손에서 −${n(o.due)} · 포지션은 그대로 · ${n(left)} 남음` };
+  return { due: Math.round(o.due), left, funding, text: `${mm} 뒤 정산 −${n(o.due)}, 포지션은 그대로, ${n(left)} 남음` };
 }
 
 /** 이번 생에 거래가 벌어 온 돈을 "정산 몇 번 치"로(집 판 · 장부의 한 줄). claim = 지금 정산 한 번에 걷어 가는 돈 */
@@ -128,8 +128,8 @@ export function journeyOf(o: { tradeNet: number; claim: number; settles: number;
   const sign = o.tradeNet >= 0 ? '+' : '−';
   return {
     share,
-    short: `거래 ${sign}${n(o.tradeNet)}${o.claim > 0 && Math.abs(share) >= 0.1 ? ` · 이자 ${k}번 치` : ''}`,
-    text: `이번 생 정산 ${o.settles}번에 낸 돈 ${n(o.paid)} · 거래가 벌어 온 돈 ${sign}${n(o.tradeNet)}${o.claim > 0 && Math.abs(share) >= 0.1 ? ` (이자 ${k}번 치)` : ''}${o.claimWins > 0 ? ` · 한 판에 이자를 번 적 ${o.claimWins}번` : ''}`,
+    short: `거래 ${sign}${n(o.tradeNet)}${o.claim > 0 && Math.abs(share) >= 0.1 ? `, 이자 ${k}번 치` : ''}`,
+    text: `이번 생 낸 돈 ${n(o.paid)}, 거래로 ${sign}${n(o.tradeNet)}${o.claim > 0 && Math.abs(share) >= 0.1 ? ` (이자 ${k}번 치)` : ''}`,
   };
 }
 
@@ -169,7 +169,7 @@ export interface AutoExit {
 export function autoExit(c: StopCtx | null, claim: number, hist: number[]): AutoExit {
   const seen = maxSwing(hist, AUTO_MIN_COUNT);
   const mins = Math.max(1, Math.round(hist.length / 60));
-  if (!c || !(c.notional > 0) || seen === null) return { net: claim, by: 'claim', seenPct: seen, why: '익절 · 손절을 한 번에' };
+  if (!c || !(c.notional > 0) || seen === null) return { net: claim, by: 'claim', seenPct: seen, why: '익절과 손절을 한 번에' };
   const can = Math.floor(netForRoe(seen * c.lev, c, 'tp') / AUTO_STEP) * AUTO_STEP;
   if (can >= claim) return { net: claim, by: 'claim', seenPct: seen, why: `지난 ${mins}분에 나온 폭` };
   if (can < Math.max(AUTO_STEP * 2, claim * 0.1)) return { net: claim, by: 'flat', seenPct: seen, why: `지난 ${mins}분엔 걸 만한 폭이 없었다` };

@@ -61,12 +61,12 @@ export function WalletSheet() {
               </div>
               <button className={'auto' + (auto ? ' on' : '')} role="switch" aria-checked={auto} onClick={() => act({ type: 'autoSell', coin: c, on: !auto })}>
                 <span className="tg"><i /></span>
-                <span className="tx"><b>캐면 바로 팔기</b><small>{auto ? '켜짐 · 캘 때마다 도토리로' : '꺼짐 · 코인으로 모아 둔다'}</small></span>
+                <span className="tx"><b>캐면 바로 팔기</b><small>{auto ? '캘 때마다 도토리로' : '코인으로 모아 둔다'}</small></span>
               </button>
             </div>
           );
         })}
-        <p className="fee">팔 때 수수료 {(fee * 100).toFixed(1)}% 가 붙는다</p>
+        <p className="fee">팔 때 수수료 {(fee * 100).toFixed(1)}%</p>
       </section>
     </div>
   );

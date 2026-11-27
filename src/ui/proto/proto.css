@@ -498,6 +498,11 @@
 .pr-notice p b { color: var(--red-ink); }
 .pr-notice p.sub { font-size: 13px; color: var(--sub); }
 .pr-notice .buy.wide { width: 100%; margin-top: 4px; }
+/* 첫 주문 전표의 뒷면(U-44): 영수증 종이 + 붉은 도장 */
+.pr-notice .box.rcpt { position: relative; background: #FBF6E8; border-style: dashed; text-align: center; }
+.pr-notice .box.rcpt h3 small { font-size: 15px; color: var(--sub); }
+.pr-notice .box.rcpt p { font-size: 14px; }
+.pr-notice .rstamp { display: inline-block; margin: 2px 0 10px; padding: 3px 12px; border: 3px solid var(--red-ink); border-radius: 8px; color: var(--red-ink); font-family: var(--dsp); font-style: normal; font-size: 20px; transform: rotate(-6deg); opacity: .9; }
 .pp-say { height: 58px; display: flex; align-items: center; justify-content: center; text-align: center; font-family: var(--dsp); font-size: 17px; line-height: 1.25; color: #B8432C; }
 .pp-led { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; padding: 0 6px; font-weight: 800; font-size: 15px; border-bottom: 2px dashed rgba(74, 70, 64, .25); }
 .pp-led b { display: inline-flex; align-items: center; gap: 4px; font-family: var(--dsp); font-weight: 400; font-size: 30px; font-variant-numeric: tabular-nums; }
@@ -840,7 +845,7 @@
 .pr-herotag text.s { fill: #7A4E12; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .pa-hero.glance { animation: none !important; } }
 .pr-tree .tr-odds { margin: 3px 0 0; padding: 4px 8px; border-radius: 9px; background: #FFF3C4; border: 1.5px dashed #C98A2B; font-size: 11.5px; font-weight: 700; line-height: 1.35; color: #7A4E12; }
-.pr-tree .tr-info small.odds { display: block; margin-top: 2px; color: #2F6B4F; font-weight: 800; }
+.pr-tree .tr-info small.odds { display: block; white-space: pre-line; margin-top: 2px; color: #2F6B4F; font-weight: 800; }
 .pr-tree .tr-info small.odds.worse { color: #B8432C; }
 /* 어느 쪽도 밀지 않는 고르기(U-42 ⑤): 두 단추가 같은 무게로 살아 있다 */
 .pr-cutin .pick.even .buy { background: #FFF8DC; border-color: var(--o, #4A4640); color: var(--o, #4A4640); }

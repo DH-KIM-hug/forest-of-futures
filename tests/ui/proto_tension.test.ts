@@ -42,7 +42,7 @@ describe('청산까지 = 지난 1분 폭의 몇 배', () => {
     expect(dots[dots.length - 1]).toBe(5);
   });
   it('한 줄에 폭과 배수와 말이 다 있다', () => {
-    expect(tensionOf(0.4, wave(100, 0.1)).text).toMatch(/1분 폭\(0\.10%\)의 \d\.\d배 · 보이는 거리/);
+    expect(tensionOf(0.4, wave(100, 0.1)).text).toMatch(/1분 폭\(0\.10%\)의 \d\.\d배, 보이는 거리/);
   });
   it('단계 경계', () => {
     expect([0.5, 1, 2.9, 3, 7.9, 8].map(reachOf)).toEqual(['edge', 'tight', 'tight', 'seen', 'seen', 'far']);
@@ -144,7 +144,7 @@ describe('자리를 비운 사이', () => {
   });
   it('청산과 나간 알바가 줄로, 나간 지 얼마 만인지와 함께', () => {
     const c = awayCard(rep(), { cash: 60000, debt: 500000 }, { cash: 4000, debt: 500000 }, o);
-    expect(c.title).toBe('자리를 비운 사이 · 12분');
+    expect(c.title).toBe('자리를 비운 12분');
     expect(c.rows.map((r) => r.text)).toEqual(['멍도토 롱 50배 강제 청산', '알바 햄스터가 일당을 못 받고 나갔다']);
     expect(c.rows[0]).toMatchObject({ amount: -52000, tone: 'loss', after: '나간 지 2분' });
     expect(c.left).toEqual(['멍도토 롱 50배']);

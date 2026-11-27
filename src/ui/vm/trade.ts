@@ -108,10 +108,10 @@ export function levLockText(g: GameState, lev: number): string {
   const need = step.closedTrades ?? 0;
   if (step.waiver) {
     return f.closedTrades >= need
-      ? `${step.cap}배: 캐피탈 창구에서 고위험 거래 확인서에 도장을 찍으면 열립니다`
-      : `끝난 거래 ${need}건 뒤 ${step.cap}배 — 지금 ${f.closedTrades}건`;
+      ? `${step.cap}배: 고위험 거래 확인서에 도장을 찍으면 열립니다`
+      : `끝난 거래 ${need}건 뒤 ${step.cap}배 (지금 ${f.closedTrades}건)`;
   }
-  return `끝난 거래 ${need}건 뒤 ${step.cap}배 — 지금 ${f.closedTrades}건`;
+  return `끝난 거래 ${need}건 뒤 ${step.cap}배 (지금 ${f.closedTrades}건)`;
 }
 export interface Notch { lev: number; locked: boolean; hot: boolean; lockText: string | null }
 export function levRuler(g: GameState): Notch[] {

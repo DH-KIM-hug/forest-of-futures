@@ -167,7 +167,7 @@ function CutInScene({ sc }: { sc: Scene }) {
         {sc.guide && !last && <button className="skip" data-skip onClick={(e) => { e.stopPropagation(); skip(); }}>설명 건너뛰기</button>}
         <p key={i}><Typed text={line.text} shown={sp.shown} /></p>
         {st && i === 0 && (
-          <div className="meta"><span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span><span>채굴 − 전기 − 이자 − 생활비</span></div>
+          <div className="meta"><span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span></div>
         )}
         {n > 1 && <div className="dots" aria-label={`${i + 1}/${n}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
         {last && sc.unlock && !pick && <div className="unl">끝나면 {TAB_LABEL[sc.unlock]} 탭이 열린다</div>}

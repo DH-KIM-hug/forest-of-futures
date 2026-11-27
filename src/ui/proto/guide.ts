@@ -16,18 +16,14 @@ export const HL = {
   goal: { tab: 'lot', panel: 'closed', label: '목표 막대' },
   debt: { label: '빚 칩(빚 · 이자 · 생활비)' },
   ps: { label: '초당 수입 칩' },
-  wallet: { label: '지갑(콜드월렛) 칩' },
   tabMap: { label: '지도 탭' },
   office: { tab: 'map', label: '오소리 사무소 카드' },
   borrow: { tab: 'map', label: '빌리기 단추' },
   pay: { tab: 'map', label: '갚기 단추' },
   tileFirst: { tab: 'lot', panel: 'open', label: '엄마의 쳇바퀴 칸(알바 부르기)' },
   tileEmpty: { tab: 'lot', panel: 'open', label: '빈 자리 칸(쳇바퀴 놓기)' },
-  grid: { tab: 'lot', panel: 'open', label: '쳇바퀴 자리 여섯 칸' },
-  strip: { tab: 'lot', panel: 'closed', label: '접힌 판의 한 줄(버는 돈 ≥ < 나가는 돈 · 정산)' },
-  bar: { tab: 'lot', panel: 'open', label: '버는 돈 · 나가는 돈 견줌 막대' },
+  strip: { tab: 'lot', panel: 'closed', label: '접힌 판의 한 줄(초당 버는 돈 / 나가는 돈, 정산)' },
   coins: { tab: 'phone', label: '거래소 종목 줄' },
-  chart: { tab: 'phone', label: '거래소 차트' },
   orders: { tab: 'phone', label: '롱 · 숏 단추' },
   mg: { tab: 'phone', label: '증거금 비율 칩' },
   ruler: { tab: 'phone', label: '배율 눈금' },
@@ -55,19 +51,18 @@ export interface TipArgs {
   /** 튜토리얼 거래 배율 */ lev: number;
 }
 
-export type Moment = 'home' | 'hud' | 'come' | 'map' | 'office' | 'settle' | 'hamster' | 'exchange' | 'liquidated' | 'goal' | 'position';
+export type Moment = 'home' | 'hud' | 'come' | 'map' | 'settle' | 'hamster' | 'exchange' | 'liquidated' | 'goal' | 'position';
 /** 그 설명이 나오는 때(문서 표와 보고에 쓴다) */
 export const MOMENT: Record<Moment, string> = {
   home: '프롤로그가 끝나고 집 화면이 처음 뜰 때',
   hud: '쳇바퀴를 12번 굴린 뒤',
   come: '첫 정산 직전, 추심원이 왔는데 돈이 모자랄 때',
   map: '지도 탭을 처음 열었을 때(빌리기 전)',
-  office: '오소리 사무소에서 처음 빌렸을 때',
   settle: '빌린 뒤 첫 정산',
   hamster: '폰을 받은 뒤 첫 정산 직후(족제비 상인)',
   exchange: '거래소 탭을 처음 열었을 때',
   liquidated: '튜토리얼 거래가 청산된 직후',
-  goal: '"튜토리얼 끝" 알림을 닫은 직후',
+  goal: '첫 주문 전표(뒷면)를 닫은 직후',
   position: '진짜 시세로 첫 포지션을 열었을 때',
 };
 
@@ -80,67 +75,56 @@ const t = (moment: Moment, who: Who, text: TipDef['text'], hl?: HlKey, mood?: Li
 /** 튜토리얼 대사 전부. 적힌 순서가 곧 나오는 순서다. */
 export const TIPS = {
   // ── 집: 쳇바퀴가 무엇인가, 정산이 무엇인가 ──
-  'home.tap': t('home', 'collector', () => '가기 전에 하나만요오. 여기를 누르면 쳇바퀴가 돌아요오.', 'wheel'),
-  'home.cable': t('home', 'collector', () => '돌면 전기가 나요오. 이 전선을 타고 가요오.', 'cables'),
-  'home.mine': t('home', 'collector', () => '저 채굴기가 그 전기로 도토코인을 캐요오.', 'rig'),
-  'home.wallet': t('home', 'collector', () => '캔 코인은 옆의 콜드월렛으로 들어가요오.', 'walletDev'),
-  'home.tiny': t('home', 'collector', (o) => `한 번 누르면 ${n(o.tap)}어치. 혼자 굴리면 그 정도예요오.`, 'wheel', 'flat'),
-  'home.acorn': t('home', 'collector', () => '캔 코인은 바로 팔려서 도토리가 돼요오. 이게 가진 돈.', 'acorn'),
-  'home.settle': t('home', 'collector', () => '이 막대가 다 차면 정산이에요오. 제가 걷으러 와요오.', 'settle'),
-  'home.claim': t('home', 'collector', (o) => `이자에 생활비까지 ${n(o.claim)}. 그때까지 모아 두세요오.`, 'goal'),
-  'home.overdue': t('home', 'collector', () => '못 내면 연체. 쳇바퀴에 딱지 붙이고, 다음엔 실어 가요오.', 'goal', 'flat'),
+  'home.tap': t('home', 'collector', () => '여기를 누르면 쳇바퀴가 돌아요오.', 'wheel'),
+  'home.cable': t('home', 'collector', () => '전기가 이 전선을 타고요오.', 'cables'),
+  'home.mine': t('home', 'collector', () => '채굴기가 도토코인을 캐요오.', 'rig'),
+  'home.wallet': t('home', 'collector', () => '코인은 콜드월렛에서 바로 팔려요오.', 'walletDev'),
+  'home.acorn': t('home', 'collector', () => '판 돈은 도토리로 여기 쌓이고요오.', 'acorn'),
+  'home.settle': t('home', 'collector', () => '이 막대가 차면 제가 걷으러 와요오.', 'settle'),
+  'home.claim': t('home', 'collector', (o) => `이자에 생활비까지 ${n(o.claim)}이에요오.`, 'goal'),
+  'home.overdue': t('home', 'collector', () => '못 내시면 딱지 붙이고, 다음엔 실어 가요오.', 'goal', 'flat'),
   'home.go': t('home', 'hero', (o) => `…한 번에 ${n(o.tap)}. 일단 굴리자.`),
-  // ── 집: 빚 칩 · 초당 · 지갑 ──
-  'hud.debt': t('hud', 'collector', () => '아, 하나 깜빡했네요오. 이 빨간 숫자가 빚이에요오.', 'debt'),
-  'hud.notcash': t('hud', 'collector', () => '갚을 돈이지 쓸 돈이 아니에요오. 쓸 수 있는 건 도토리뿐.', 'debt', 'flat'),
-  'hud.interest': t('hud', 'collector', () => '그 밑이 정산마다 낼 이자. 빚이 늘면 이자도 늘어요오.', 'debt'),
-  'hud.ps': t('hud', 'collector', () => "'초당'은 1초에 남는 돈. 빨간색이면 새는 중이에요오.", 'ps'),
-  'hud.wallet': t('hud', 'collector', () => '지갑은 코인을 안 팔고 모으는 곳. 지금은 바로 팔려서 0.', 'wallet'),
+  // ── 집: 빚 칩 · 초당 ──
+  'hud.debt': t('hud', 'collector', () => '참, 이 빨간 숫자가 빚이에요오.', 'debt'),
+  'hud.notcash': t('hud', 'collector', () => '갚을 돈이지 쓸 돈이 아니에요오.', 'debt', 'flat'),
+  'hud.interest': t('hud', 'collector', () => '밑에 건 정산마다 낼 이자고요오.', 'debt'),
+  'hud.ps': t('hud', 'collector', () => '초당은 1초에 남는 돈이에요오. 빨가면 새는 중이고요.', 'ps'),
   // ── 추심원이 왔다: 왜 모자란가, 왜 사무소에 가는가 ──
-  'come.why': t('come', 'collector', () => '혼자 굴려서는 원래 안 돼요오. 다들 일꾼을 써요오.', undefined, 'flat'),
-  'come.loan': t('come', 'collector', () => '빌린 돈으로 일꾼을 부르면 숨통이 트여요오. 이자는 늘지만요.', undefined, 'smile'),
-  'come.away': t('come', 'collector', () => '돌려보내셔도 돼요오. 그럼 연체. 쳇바퀴에 딱지 붙어요오.', undefined, 'flat'),
+  'come.why': t('come', 'collector', () => '혼자 굴려선 원래 안 돼요오. 다들 일꾼을 써요오.', undefined, 'flat'),
+  'come.away': t('come', 'collector', () => '돌려보내시면 연체예요오. 쳇바퀴에 딱지 붙고요오.', undefined, 'flat'),
   // ── 지도: 빌리고 갚는 곳 ──
-  'map.tab': t('map', 'note', () => '지도 탭이 열렸다. 돈을 빌리거나 갚을 때 여기로 온다.', 'tabMap'),
-  'map.office': t('map', 'note', (o) => `오소리 사무소. 엄마가 남긴 빚 ${man(o.debt)}이 이곳 장부에 있다.`, 'office'),
-  'map.borrow': t('map', 'note', (o) => `[빌리기]를 누르면 ${man(o.lend)}을 받는다. 빚과 이자도 그만큼 는다.`, 'borrow'),
-  'map.pay': t('map', 'note', () => '[갚기]는 원금을 줄인다. 원금이 줄면 이자도 준다.', 'pay'),
-  // ── 사무소 ──
-  'office.rule': t('office', 'boss', () => '빌릴수록 이자가 늘고, 갚으면 줍니다. 여기 적혀 있죠?', 'debt', 'smile'),
+  'map.office': t('map', 'note', (o) => `엄마 빚 ${man(o.debt)}이 적힌 장부가 여기 있다.`, 'office'),
+  'map.borrow': t('map', 'note', (o) => `[빌리기]는 ${man(o.lend)}. 빚도 이자도 그만큼 는다.`, 'borrow'),
+  'map.pay': t('map', 'note', () => '[갚기]는 원금을 줄인다. 이자도 같이 준다.', 'pay'),
   // ── 첫 정산 ──
-  'settle.what': t('settle', 'collector', (o) => `생활비 ${n(o.living)}도 같이 걷었어요오. 막대가 차면 또 와요오.`, 'settle'),
+  'settle.what': t('settle', 'collector', (o) => `생활비 ${n(o.living)}도 같이요오. 막대가 차면 또 와요오.`, 'settle'),
   // ── 알바 햄스터 · 쳇바퀴 ──
-  'ham.what': t('hamster', 'weasel', () => '햄스터가 쳇바퀴에 들어가면, 손을 떼도 혼자 돌아요~', 'tileFirst', 'smile'),
-  'ham.trickle': t('hamster', 'weasel', () => '햄스터가 캔 돈은 1초마다 들어와요~ 정산은 걷어 가기만 하고요~', 'acorn', 'smile'),
-  'ham.mine': t('hamster', 'weasel', () => '알바가 든 쳇바퀴는 사장님이 못 굴려요~ 한 대에 한 명이니까요~', 'tileFirst', 'smile'),
-  'ham.quit': t('hamster', 'weasel', () => '대신 일당을 못 받으면 말없이 나가요~ 깔끔하죠~', 'tileFirst', 'smile'),
-  'ham.wheel': t('hamster', 'weasel', (o) => `쳇바퀴는 한 대 ${n(o.wheel)}. 사 두면 사장님 재산이에요~`, 'tileEmpty', 'smile'),
-  'ham.pair': t('hamster', 'weasel', () => '단, 쳇바퀴 한 대에 햄스터 한 마리. 빈 쳇바퀴는 안 돌아요~', 'grid', 'smile'),
-  'ham.sum': t('hamster', 'weasel', () => '이 줄만 보세요~ 왼쪽이 버는 돈, 오른쪽이 나가는 돈이에요~', 'strip', 'smile'),
-  'ham.live': t('hamster', 'weasel', () => '왼쪽이 더 크면 가만있어도 살아요~ 아니면 굴리셔야죠~', 'bar', 'smile'),
+  'ham.what': t('hamster', 'weasel', () => '햄스터가 들어가면 손을 떼도 혼자 돌아요~', 'tileFirst', 'smile'),
+  'ham.trickle': t('hamster', 'weasel', () => '캔 돈은 1초마다 들어와요~', 'acorn', 'smile'),
+  'ham.mine': t('hamster', 'weasel', () => '알바가 든 쳇바퀴는 사장님이 못 굴려요~ 한 대에 한 명~', 'tileFirst', 'smile'),
+  'ham.quit': t('hamster', 'weasel', () => '일당 밀리면 햄스터는 제가 데려가요~', 'tileFirst', 'smile'),
+  'ham.sum': t('hamster', 'weasel', () => '초록이 버는 돈, 빨강이 나가는 돈이에요~', 'strip', 'smile'),
+  'ham.wheel': t('hamster', 'weasel', (o) => `쳇바퀴는 한 대 ${n(o.wheel)}, 사장님 재산이에요~`, 'tileEmpty', 'smile'),
   // ── 거래소 ──
-  'fx.coins': t('exchange', 'boss', () => '도토코인, 밤더리움… 숲의 코인들입니다. 값이 쉬지 않고 움직여요.', 'coins', 'smile'),
-  'fx.what': t('exchange', 'boss', () => '선물은 내기입니다. 값이 오를지 내릴지에 도토리를 걸어요.', 'chart', 'smile'),
-  'fx.dir': t('exchange', 'boss', () => '오를 것 같으면 롱, 내릴 것 같으면 숏. 맞히면 법니다.', 'orders', 'smile'),
-  'fx.margin': t('exchange', 'boss', () => '증거금은 거는 돈입니다. 가진 도토리의 몇 %를 걸지 고르세요.', 'mg', 'smile'),
-  'fx.lev': t('exchange', 'boss', (o) => `배율은 판을 키웁니다. ${o.lev}배면 1% 움직일 때 ${o.lev}%를 벌거나 잃어요.`, 'ruler', 'smile'),
-  'fx.liq': t('exchange', 'boss', (o) => `${o.lev}배면 ${Math.round(100 / o.lev)}% 반대로 가면 넣은 돈이 다 사라져요. 그게 청산.`, 'risk', 'smile'),
-  'fx.stops': t('exchange', 'boss', () => '손절·익절은 미리 정해 두는 출구입니다. 닿으면 알아서 나와요.', 'cond', 'smile'),
+  'fx.coins': t('exchange', 'boss', () => '도토코인, 밤더리움… 값이 쉬지 않고 움직여요.', 'coins', 'smile'),
+  'fx.dir': t('exchange', 'boss', () => '오를 것 같으면 롱, 내릴 것 같으면 숏.', 'orders', 'smile'),
+  'fx.lev': t('exchange', 'boss', (o) => `배율 ${o.lev}배면 1% 움직일 때 ${o.lev}%를 벌거나 잃어요.`, 'ruler', 'smile'),
+  'fx.liq': t('exchange', 'boss', (o) => `${Math.round(100 / o.lev)}% 반대로 가면 넣은 돈이 다 사라져요. 그게 청산.`, 'risk', 'smile'),
   // ── 청산 직후 ──
-  'liq.why': t('liquidated', 'boss', (o) => `${o.lev}배였죠. 값이 ${Math.round(100 / o.lev)}% 반대로 가서 증거금이 0이 된 겁니다.`, undefined, 'smile'),
-  'liq.safe': t('liquidated', 'boss', () => '잃는 건 건 돈까지입니다. 쳇바퀴와 알바는 그대로예요.', undefined, 'smile'),
-  'liq.truth': t('liquidated', 'boss', () => '솔직히 여기선 잃는 분이 더 많습니다. 덕분에 제가 먹고살죠.', undefined, 'smile'),
-  // ── 튜토리얼 끝: 목표 ──
-  'goal.real': t('goal', 'boss', () => '이제부터 시세는 진짜입니다. 저도 어디로 갈지 몰라요.', undefined, 'smile'),
-  'goal.repay': t('goal', 'boss', (o) => `끝내는 법은 하나. 빚 ${man(o.debt)}을 다 갚는 겁니다. 지도의 사무소에서요.`, 'tabMap', 'smile'),
-  'goal.order': t('goal', 'boss', () => '갚으면 이자가 줄어요. 비싼 이자부터 지워 드립니다.', 'debt', 'smile'),
+  'liq.safe': t('liquidated', 'boss', () => '쳇바퀴와 알바는 그대로입니다.', undefined, 'smile'),
+  'liq.truth': t('liquidated', 'boss', () => '여기선 잃는 분이 더 많습니다. 덕분에 먹고살죠.', undefined, 'smile'),
+  // ── 첫 주문 전표가 닫힌 뒤(진짜 시세): 목표와, 이제 직접 고르는 것 ──
+  'goal.real': t('goal', 'boss', () => '이제부터 시세는 진짜입니다. 저도 몰라요.', undefined, 'smile'),
+  'fx.margin': t('goal', 'boss', () => '증거금, 얼마를 걸지 이제 직접 고르세요.', 'mg', 'smile'),
+  'fx.stops': t('goal', 'boss', () => '출구를 걸어 두시면 닿을 때 알아서 나와요.', 'cond', 'smile'),
+  'goal.repay': t('goal', 'boss', (o) => `빚 ${man(o.debt)}, 사무소에 오셔서 갚으시면 됩니다.`, 'tabMap', 'smile'),
+  'goal.order': t('goal', 'boss', () => '비싼 이자부터 지워 드릴게요.', 'debt', 'smile'),
   'goal.fail': t('goal', 'boss', () => '끝내 못 갚으시면 파산입니다. …그래도 장부는 안 없어져요.', undefined, 'smile'),
-  'goal.hero': t('goal', 'hero', () => '…쳇바퀴를 늘리든, 거래로 따든. 갚아야 끝난다.'),
   // ── 첫 진짜 포지션 ──
-  'pos.net': t('position', 'note', () => '큰 숫자는 지금 닫으면 늘거나 주는 돈이다. 수수료는 이미 뺐다.', 'posNet'),
-  'pos.liq': t('position', 'note', () => "'청산까지'는 남은 거리다. 0이 되면 넣은 돈이 사라진다.", 'posLiq'),
-  'pos.tense': t('position', 'note', () => '그 거리를 지난 1분의 흔들림으로 잰 줄이다. 점이 찰수록 가깝다.', 'posTense'),
-  'pos.close': t('position', 'note', () => '[정리하기]를 누르면 지금 손익 그대로 끝낸다.', 'closeBtn'),
+  'pos.net': t('position', 'note', () => '큰 숫자는 지금 닫으면 남는 손익. 수수료까지 뺐다.', 'posNet'),
+  'pos.liq': t('position', 'note', () => '청산까지가 0이 되면 넣은 돈이 사라진다.', 'posLiq'),
+  'pos.tense': t('position', 'note', () => '점이 찰수록 청산이 가깝다.', 'posTense'),
+  'pos.close': t('position', 'note', () => '[정리하기]는 지금 손익 그대로 끝낸다.', 'closeBtn'),
 } satisfies Record<string, TipDef>;
 export type TipId = keyof typeof TIPS;
 export const TIP_IDS = Object.keys(TIPS) as TipId[];

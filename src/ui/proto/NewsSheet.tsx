@@ -24,7 +24,7 @@ export function DayNoteSheet() {
   return (
     <div className="pr-notice pr-daynote" role="dialog" aria-label="도토리일보 시세면" data-daynote-sheet onClick={() => dayNoteOpen(false)}>
       <div className="box" onClick={(e) => e.stopPropagation()}>
-        <div className="mast"><b>도토리일보</b><span>시세면 · {live ? '실제 시세' : '연습 시세'} · 지난 {span(note.spanMin)}</span></div>
+        <div className="mast"><b>도토리일보</b><span>시세면  {live ? '실제 시세' : '연습 시세'}, 지난 {span(note.spanMin)}</span></div>
         <h3 data-headline>{note.headline}</h3>
         <p className="sub">{note.sub}</p>
         <div className="tbl" role="table">
@@ -36,13 +36,12 @@ export function DayNoteSheet() {
                 <span className="nm"><Coin id={r.id} size={18} />{r.name}</span>
                 <span className={cls(r.h1)}>{cell(r.h1)}</span><span className={cls(r.h6)}>{cell(r.h6)}</span><span className={cls(r.h24)}>{cell(r.h24)}</span>
                 <span className="now">{r.now1m === null ? '–' : `${r.now1m.toFixed(2)}%`}{r.ratio !== null && <small className={r.ratio >= 1.6 ? 'hot' : r.ratio < 0.6 ? 'cold' : ''}>평소의 {r.ratio.toFixed(1)}배</small>}</span>
-                {(r.loudHour !== null || ss?.badge) && <small className="loud">{ss?.badge && <i data-note-opens={r.id}>{ss.badge === '휴장?' ? '휴장인 듯' : `${ss.badge}${opensInText(r.id, new Date(now)) ? ` · ${opensInText(r.id, new Date(now))}` : ''}`}</i>}{r.loudHour !== null && `지난 하루 가장 시끄러웠던 때 ${r.loudHour}시대 · 1분 ${r.loud1m!.toFixed(2)}%`}</small>}
+                {(r.loudHour !== null || ss?.badge) && <small className="loud">{ss?.badge && <i data-note-opens={r.id}>{ss.badge === '휴장?' ? '휴장인 듯' : `${ss.badge}${opensInText(r.id, new Date(now)) ? `, ${opensInText(r.id, new Date(now))}` : ''}`}</i>}{r.loudHour !== null && `가장 뛴 때 ${r.loudHour}시 무렵, 1분 ${r.loud1m!.toFixed(2)}%`}</small>}
               </button>
             );
           })}
         </div>
         <p className="boss" data-note-boss><b>오소리 대부</b>「{note.boss}」</p>
-        <p className="sub fine">받은 시세에서 센 숫자다. 다음에 어디로 갈지는 신문도 모른다.</p>
         <button className="buy on wide" data-daynote-ok onClick={() => dayNoteOpen(false)}><span>접는다</span></button>
       </div>
     </div>

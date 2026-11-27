@@ -93,7 +93,7 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     act1(true);
     const own = { R: 1 };
     const a1 = nodeOdds(own, 'A1', 0)!;
-    expect(a1.text).toMatch(/익절 37\.1% → 38\.1% · 판당 −4,000 → −3,700/);
+    expect(a1.text).toMatch(/익절 확률 37\.1% → 38\.1%\n한 판 평균 −4,000 → −3,700/);
     expect(nodeOdds(own, 'B1', 0)!.next.p!).toBeGreaterThan(a1.now.p!);
     for (const id of ['R', 'A3a', 'B2', 'B4', 'C3a', 'C4']) expect(nodeOdds(own, id, id === 'R' ? 1 : 0)).toBeNull();
     // 비상금 주머니는 보험료(+0.01%p)만큼 이 판을 더 기울인다 — 그것도 적는다
@@ -102,7 +102,7 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     // 전부 100레벨씩 올려도 반반에는 못 미친다(수수료는 0이 되지 않는다)
     const all = Object.fromEntries(Object.keys(skillById).filter((k) => k !== 'C2' && k !== 'A3a' && k !== 'B3b' && k !== 'C3a').map((k) => [k, 100]));
     expect(betOdds(all).p!).toBeLessThan(0.5);
-    expect(treeOddsLine(own)).toMatch(/수수료 0\.02% · 「이자 한 번 걸기」\(5만 · 200배\)는 익절 37 : 손절 63/);
+    expect(treeOddsLine(own)).toMatch(/수수료 0\.02%\. 「이자 한 번 걸기」\(5만, 200배\)는 익절 37 : 손절 63/);
     expect(treeOddsLine({ R: 1, A1: 5, B1: 5 })).toMatch(/익절 42 : 손절 58 \(나무 없이는 37 : 63\)/);
     expect(REF_BET).toMatchObject({ margin: 50_000, lev: 200, claim: 15_500 });
   });
@@ -133,7 +133,7 @@ describe('정산 빼고 전부 · 정산 빼고 갚기 (U-42 ③ ⑤)', () => {
     expect(b.amount).toBe(100_000); expect(b.mult).toBe(10);
     expect(b.cut).toBe(interestCut(g, 100_000));
     expect(b.stamps).toBe(Math.floor((10_000 + 100_000) / STAMP_STEP));
-    expect(b.text).toMatch(/^100,000 갚으면 이자 −[\d,]+ · 금박 도장 \+2$/);
+    expect(b.text).toMatch(/^100,000 갚으면 이자 −[\d,]+, 금박 도장 \+2$/);
     const cash0 = g.run.cash;
     const r = A(g, { type: 'stamp', lender: 'shark1', mult: b.mult });
     expect(r.ok).toBe(true);
@@ -181,11 +181,10 @@ describe('연달아 이긴 · 진 판, 들고 있는 동안 굴린 돈 (U-42)', 
   it('장면의 줄: 숫자는 받은 값 그대로, 엄마 이야기는 건드리지 않는다(빚이 어디서 왔는지는 아직 아무도 말하지 않는다)', () => {
     const w = STORY.winRun({ sum: 31_402, stampPct: 63 }), l = STORY.lossRun({ sum: 31_000, spins: 7, cash: 95_100, claim: 15_500 });
     expect(w.map((x) => x.who)).toEqual(['weasel', 'boss', 'collector', 'hero']);
-    expect(w[1].text).toContain('+31,402'); expect(w[1].text).toContain('63%');
+    expect(w[1].text).toContain('+31,402'); // U-44: 금박 도장 몇 %는 장부가 보여 준다(대사에서 뺐다)
     expect(l[0].text).toContain('−31,000'); expect(l[1].text).toContain('7정산'); expect(l[3].text).toContain('95,100');
     expect(STORY.lossRun({ sum: 31_000, spins: null, cash: 9_000, claim: 15_500 })[3].text).toContain('15,500에 모자란다');
     for (const x of [...w, ...l]) expect(x.text).not.toMatch(/엄마|어머님/);
-    expect(STORY.winRun({ sum: 31_000, stampPct: null })[1].text).not.toContain('금박');
   });
   it('속마음: 굴린 돈이 다음 정산의 5%를 넘으면 한 번 — 숫자가 그대로 들어간다', () => {
     const base = { pnl: 100, roe: 0.2, heldSec: 50, claim: 15_500, reach: 'far' as const, peakPnl: 200, lowRoe: -1, settles: 0 };

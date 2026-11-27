@@ -42,7 +42,7 @@ describe('본장 시간 (삼솔전자 = 서울, 잣스닥 = 뉴욕)', () => {
   it('달력과 시세를 함께 본다: 장 마감 · 조용함 / 장 마감인데 움직인다 / 장중 / 장중인데 조용함(휴장인 듯)', () => {
     const night = kst('2026-11-25T20:00'), day = kst('2026-11-25T10:00');
     expect(sessionOf('SMS', night, 0)).toMatchObject({ state: 'closed', badge: '장 마감', open: false, quiet: true, hours: '09:00~15:30' });
-    expect(sessionOf('SMS', night, 0)!.text).toBe('장 마감 · 조용함 (본장 09:00~15:30)');
+    expect(sessionOf('SMS', night, 0)!.text).toBe('본장 마감 (본장 09:00~15:30)');
     expect(sessionOf('SMS', night, 0.2)).toMatchObject({ state: 'after', badge: null }); // 실제로 미국 장 시간에는 움직인다(회차 3 실측)
     expect(sessionOf('SMS', day, 0.2)).toMatchObject({ state: 'open', badge: null });
     expect(sessionOf('SMS', day, 0)).toMatchObject({ state: 'holiday', badge: '휴장?' });
@@ -103,7 +103,7 @@ describe('코인 로고', () => {
 
 describe('오픈 기념 딱지와 대사', () => {
   it('주문 판의 딱지: 남은 정산 수, 끝나면 지금 수수료율', () => {
-    expect(feeEventChip(20, 0)).toEqual({ on: true, text: '오픈 기념 수수료 무료 · 정산 20번 남음' });
+    expect(feeEventChip(20, 0)).toEqual({ on: true, text: '오픈 기념 수수료 무료, 정산 20번 남음' });
     expect(feeEventChip(1, 0).text).toContain('정산 1번 남음');
     expect(feeEventChip(0, 0.02)).toEqual({ on: false, text: '거래 수수료 0.02%' });
     expect(feeEventChip(0, 0.0072).text).toBe('거래 수수료 0.007%');
@@ -129,8 +129,8 @@ describe('되풀이되지 않는 줄', () => {
   it('속마음은 포지션 순번으로 번갈아 나온다. 첫 줄은 회차 2 그대로', () => {
     const a = holdBeat(snap, {}, 0)!, b = holdBeat(snap, {}, 1)!, c = holdBeat(snap, {}, 2)!;
     expect(a.text).toBe('…안 움직인다. 수수료만 냈다.');
-    expect(new Set([a.text, b.text, c.text]).size).toBe(3);
-    expect(holdBeat(snap, {}, 3)!.text).toBe(a.text);
+    expect(new Set([a.text, b.text, c.text]).size).toBe(2); // U-44: 겹치는 줄은 덜어 냈다(두 줄이 번갈아)
+    expect(holdBeat(snap, {}, 2)!.text).toBe(a.text);
     expect(a.key).toBe(b.key);
   });
   it('수수료가 무료인 판에서는 "수수료만 냈다"고 말하지 않는다', () => {
@@ -141,15 +141,15 @@ describe('되풀이되지 않는 줄', () => {
     const ctx = { claim: 15000, wheelNet: 3000, cashAfter: 50000, liqs: 1, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} };
     const t = { pnl: -30000, margin: 30000, lev: 50, liq: true, heldSec: 40, fundedBy: null, allIn: false };
     expect(tradeReaction(t, { ...ctx, feeFree: true })!.lines[0]).toContain('공짜');
-    expect(tradeReaction(t, ctx)!.lines[0]).toContain('수수료를 벌었고요');
+    expect(tradeReaction(t, ctx)!.lines[0]).toContain('수수료는 이미 받았고요');
     const flat = { ...t, pnl: 0, liq: false };
     expect(tradeReaction(flat, { ...ctx, tinyStreak: 3, feesLife: 0, feeFree: true })!.key).toBe('flatFree');
     expect(tradeReaction(flat, { ...ctx, tinyStreak: 3, feesLife: 2400 })!.key).toBe('feeBleed');
   });
   it('정산 알림도 번갈아 쓴다', () => {
     const c = { interest: 14500, other: 0, net: 3000, cashAfter: 90000, nextClaim: 15500, nextNet: 3000, overdue: false, posOpen: false, negStreak: 0, firstPositive: false };
-    const lines = [0, 1, 2, 3].map((nth) => settleRemark({ ...c, nth }));
-    expect(new Set(lines).size).toBe(4);
+    const lines = [0, 1, 2].map((nth) => settleRemark({ ...c, nth }));
+    expect(new Set(lines).size).toBe(3);
     expect(settleRemark(c)).toBe(lines[0]);
     for (const l of lines) expect(l).toMatch(/^추심원: 이자 14,500/);
   });

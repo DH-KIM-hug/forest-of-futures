@@ -57,7 +57,7 @@ export async function renderCard(d: CardData): Promise<HTMLCanvasElement> {
   // 머리띠
   box(c, 70, 70, 940, 120, 30, d.gold ? '#F3D774' : '#BCD48E');
   text(c, d.gold ? '금테 수익 인증서' : '수익 인증서', 110, 148, d.gold ? 54 : 62);
-  text(c, 'FRX 숲거래소 · 선물시장', 970, 146, 30, '#3d4a2a', 'right');
+  text(c, 'FRX 숲거래소 선물', 970, 146, 30, '#3d4a2a', 'right');
 
   // 종목 줄
   const long = d.dir === 1;

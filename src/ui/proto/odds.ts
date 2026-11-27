@@ -35,11 +35,11 @@ export function nodeOdds(active: Record<string, number>, id: string, ownLevel: n
   if (def.pair) { delete up[def.pair]; }
   const now = betOdds(cur), next = betOdds(up);
   if (now.p === null || next.p === null || (Math.abs(now.p - next.p) < 0.0005 && now.ev === next.ev)) return null;
-  return { now, next, text: `수수료가 돌아온 뒤 「이자 한 번 걸기」(5만 · 200배): 익절 ${pc(now.p)} → ${pc(next.p)} · 판당 ${ev(now.ev)} → ${ev(next.ev)}` };
+  return { now, next, text: `무료 기간이 끝나면 「이자 한 번 걸기」(5만, 200배)\n익절 확률 ${pc(now.p)} → ${pc(next.p)}\n한 판 평균 ${ev(now.ev)} → ${ev(next.ev)}` };
 }
 /** 나무 머리의 한 줄: 지금 나무로 기준 판을 걸면 */
 export function treeOddsLine(active: Record<string, number>): string {
   const o = betOdds(active), bare = betOdds({});
   const w = o.p === null ? null : Math.round(o.p * 100);
-  return `오픈 기념이 끝나면 수수료 ${o.ratePct.toFixed(o.ratePct < 0.01 ? 4 : 3).replace(/0+$/, '').replace(/\.$/, '')}% · 「이자 한 번 걸기」(5만 · 200배)는 익절 ${w ?? '–'} : 손절 ${w === null ? '–' : 100 - w}${bare.p !== null && o.p !== null && o.p - bare.p >= 0.005 ? ` (나무 없이는 ${Math.round(bare.p * 100)} : ${100 - Math.round(bare.p * 100)})` : ''}`;
+  return `무료 기간이 끝나면 수수료 ${o.ratePct.toFixed(o.ratePct < 0.01 ? 4 : 3).replace(/0+$/, '').replace(/\.$/, '')}%. 「이자 한 번 걸기」(5만, 200배)는 익절 ${w ?? '–'} : 손절 ${w === null ? '–' : 100 - w}${bare.p !== null && o.p !== null && o.p - bare.p >= 0.005 ? ` (나무 없이는 ${Math.round(bare.p * 100)} : ${100 - Math.round(bare.p * 100)})` : ''}`;
 }
