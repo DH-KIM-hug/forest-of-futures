@@ -27,7 +27,9 @@ export function reapplyPlan(market: string): void {
   if (!p) { delete plans[market]; return; }
   if (!pl || (pl.tp === null && pl.sl === null)) return;
   const a = acornStops(ctxOfPosition(run, p), pl.tp, pl.sl);
-  const sl = pl.sl !== null ? a.sl : p.slRoe, tp = pl.tp !== null ? a.tp : p.tpRoe;
+  // 따라가는 손절(나무 C1, U-50)로 올라온 손절은 내리지 않는다
+  const sl0 = pl.sl !== null ? a.sl : p.slRoe;
+  const sl = p.trailed && sl0 !== null && p.slRoe !== null ? Math.max(sl0, p.slRoe) : sl0, tp = pl.tp !== null ? a.tp : p.tpRoe;
   const same = (x: number | null, y: number | null) => (x === null || y === null ? x === y : Math.abs(x - y) < 1e-9);
   if (same(sl, p.slRoe) && same(tp, p.tpRoe)) return;
   st.act({ type: 'stops', market, sl, tp });

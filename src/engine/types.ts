@@ -110,6 +110,10 @@ export interface Position {
   /** 한 번 버티기(B1, U-47): 이미 한 번 버텼다 · 오소리가 대신 넣어 준 돈(정리할 때 먼저 돌려준다) */
   held?: boolean;
   buf?: number;
+  /** 고비 보상(나무 R, U-50): 이 포지션이 보상을 받은 가장 높은 고비(ROE %) */
+  popBest?: number;
+  /** 따라가는 손절(나무 C1, U-50): 손절이 한 번이라도 따라 올라왔다 */
+  trailed?: boolean;
 }
 
 /** 끝난 마지막 포지션(손실이면 우선)의 기록. 엔딩 조건 `lev`·`dir`... 이 읽는다. */

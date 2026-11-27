@@ -9,7 +9,11 @@ import type { WinTier } from './tension';
 /** 이긴 판이 터지는 화면(U-48 → U-49: 어느 탭에서든). market = 닫힌 종목 */
 export interface Burst { k: number; tier: WinTier; pnl: number; margin: number; streak: number; lev: number; market: string; dir: 1 | -1; name: string; how: 'tp' | 'close' | 'sl' }
 /** 들고 있는 동안의 고비 팝(+50%, 두 배!, 살았다! …): 어느 탭에서든 뜬다(U-49) */
-export interface Pop { k: number; text: string; cls: string; market: string }
+export interface Pop { k: number; text: string; cls: string; market: string; /** 둘째 줄(나무가 한 일, U-50: 고비 보상 +n, 따라가는 손절) */ sub?: string }
+/** 나무가 방금 판에 한 일(U-50): 거래소 머리의 「나무」 칩이 반짝이고 한 줄이 잠깐 뜬다 */
+export interface TreePing { k: number; id: string; text: string }
+/** 한 번 버티기(나무 B1)가 잡은 순간(U-50): 화면 가득 금빛 숨 */
+export interface Wind { k: number; market: string; amount: number; name: string }
 
 /** 탭 셋(U-29·U-30): 지도 · 집(가운데) · 거래소. 'phone' 은 거래소 탭의 내부 이름(중고폰 속 FRX 앱). */
 export type Tab = 'lot' | 'phone' | 'map';
@@ -91,6 +95,10 @@ interface P {
   burst: Burst | null;
   /** 고비 팝(U-49: 집에서도) */
   pops: Pop[];
+  treePing: TreePing | null;
+  wind: Wind | null;
+  /** 첫 실전 한 판(U-50, 첫 생): 남은 시도(0 = 끝났다). 이긴 판이 터지면 끝 */
+  firstTry: number;
   /** 엄마 이야기의 단서를 마지막으로 보여 준 정산 번호(한 번 들를 때 하나만) */
   clueAt: number;
   /** 자리를 비운 사이 보고서(돌아왔을 때 한 장, away.ts) */
@@ -124,7 +132,7 @@ const fresh = () => ({
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
   think: null as P['think'], away: null as P['away'], clueAt: -1,
   dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
-  beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[],
+  beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[], treePing: null as TreePing | null, wind: null as Wind | null, firstTry: 3,
   rolled: 0, rolledKey: null as number | null, rolledTaps: 0, claimWinRun: 0, claimLossRun: 0, claimRunSum: 0, pointTab: null as Tab | null, forceTrade: false,
 });
 
@@ -144,6 +152,6 @@ export const useProto = create<P>((set) => ({
   // 다음 생: 사무소 가는 길은 이미 안다(지도는 열린 채). 폰과 거래소는 다시 빌려야 받는다.
   resetLife: (gen, first) => set(first
     ? { ...fresh(), visited: { lot: true }, everUnlocked: { lot: true }, seen: {}, gen }
-    : { ...fresh(), tutorial: 'done' as const, visited: { lot: true, map: true }, everUnlocked: { lot: true, map: true },
+    : { ...fresh(), firstTry: 0, tutorial: 'done' as const, visited: { lot: true, map: true }, everUnlocked: { lot: true, map: true },
         seen: Object.fromEntries(KNOWN_AFTER_FIRST_LIFE.map((k) => [k, true])), gen }),
 }));

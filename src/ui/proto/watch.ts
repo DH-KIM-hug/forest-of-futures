@@ -30,7 +30,7 @@ import { ownedCoins, lenderDebtTotal, interestDue, totalDebt } from '../../engin
 import { settle } from '../../engine/settlement';
 import { clone } from '../../engine/game';
 import { fx } from './fx';
-import { pushPop } from './popBus';
+import { pushPop, treePing } from './popBus';
 import { play, later } from './audio';
 import { closeBack, exitFee, roePct } from '../../engine/futures';
 import { exitFeeMul, feeEventLeft, openingEvent, feeRate } from '../../engine/skilltree';
@@ -82,6 +82,8 @@ export function loudNoteLine(now = Date.now()): string | null {
   return `[도토리일보] 지난 하루 가장 큰 1분 변동: ${top.loudHour}시 무렵 ${top.name} ${top.loud1m!.toFixed(2)}%. ${left === 0 ? '지금이 그 시각.' : `같은 시각까지 ${spanText(left)}.`}`;
 }
 const openSaid = new Set<string>();
+/** 따라가는 손절(U-50): 포지션마다 마지막으로 팝을 띄운 손절(ROE %) */
+const trailShown: Record<string, number> = {};
 
 export function say(text: string, ms = 3000): void {
   useProto.getState().patch({ toast: text });
@@ -593,6 +595,12 @@ export function startWatch(): void {
           winSound(tierB.lv);
           if (P0.tab !== 'phone') { const c0 = claim(prev).total; cheerOn(pnl, c0 > 0 ? pnl / c0 : 0); later(420, () => play('hamster_cheer')); }
         }
+        // 첫 실전 한 판(U-50, 첫 생): 이긴 판이 터지면 끝, 진 판이면 한 번 덜 남는다
+        if (!tut && useProto.getState().firstTry > 0) {
+          const P1 = useProto.getState();
+          if (tierB && pnl > 0) { P1.patch({ firstTry: 0 }); later(3000, () => say('[FRX 숲거래소] 첫 실전 익절 축하드려요 ♥ 다음 판도 기다릴게요.', 5000)); }
+          else if (pnl < 0) P1.patch({ firstTry: P1.firstTry - 1 });
+        }
         if (autoOut && !tierB) { play(pnl > 0 ? 'close_profit' : 'close_loss'); say(`[FRX 숲거래소] ${marketById[lc.market]?.name ?? lc.market} ${p.dir === 1 ? '롱' : '숏'} ${p.lev}배 ${endKind === 'tp' ? '익절' : '손절'} ${pnl >= 0 ? '+' : '−'}${comma(Math.abs(Math.round(pnl)))}`, 5000); }
         // 튜토리얼 거래는 승률·인증서·반응에 넣지 않는다
         if (!tut) {
@@ -672,7 +680,26 @@ export function startWatch(): void {
       // U-47: 처음부터 50배(계좌를 연 순간), 발도장을 찍으면 그 자리에서 200배. 찍은 뒤에는 한 줄만
       // 한 번 버티기(나무 B1): 청산가에 닿은 순간 오소리가 대신 넣었다
       const lh = run.stats.lastHold as { market: string; tick: number; amount: number } | undefined, plh = prev.run.stats.lastHold as typeof lh;
-      if (lh && (!plh || plh.tick !== lh.tick || plh.market !== lh.market)) { pushPop('오소리가 잡았다!', 'saved', lh.market, () => play('saved_phew')); say(`오소리 대부: 한 번은 잡아 드렸어요. ${marketById[lh.market]?.name ?? lh.market} 증거금 +${comma(lh.amount)}, 정리할 때 돌려주세요.`, 5500); }
+      if (lh && (!plh || plh.tick !== lh.tick || plh.market !== lh.market)) {
+        // U-50: 두 번째 숨 — 화면 가득 금빛(SecondWind), 심장이 한 박 멈췄다가 다시 뛴다
+        const P0 = useProto.getState();
+        P0.patch({ wind: { k: (P0.wind?.k ?? 0) + 1, market: lh.market, amount: lh.amount, name: marketById[lh.market]?.name ?? lh.market } });
+        play('paw_stamp'); later(220, () => play('saved_phew'));
+        later(900, () => pushPop('오소리가 잡았다!', 'saved', lh.market, undefined, `한 번 버티기 +${comma(lh.amount)}`));
+        treePing('B1', `한 번 버티기 +${comma(lh.amount)}`);
+        later(2300, () => say(`오소리 대부: 한 번은 잡아 드렸어요. ${marketById[lh.market]?.name ?? lh.market} 증거금 +${comma(lh.amount)}, 정리할 때 돌려주세요.`, 5500));
+      }
+      // 따라가는 손절(나무 C1, U-50): 손절이 본전 위로 처음 올라온 순간, 그 뒤로는 20%p 를 더 올라올 때마다 팝
+      const lt = run.stats.lastTrail as { market: string; tick: number; sl: number; first: boolean } | undefined, plt = prev.run.stats.lastTrail as typeof lt;
+      if (lt && (!plt || plt.tick !== lt.tick || plt.market !== lt.market || plt.sl !== lt.sl)) {
+        const key = lt.market + ':' + (run.positions[lt.market]?.openTick ?? -1);
+        const shown = trailShown[key] ?? -Infinity;
+        if (lt.first || lt.sl - shown >= 20) {
+          trailShown[key] = lt.sl;
+          pushPop(lt.first ? '본전 잠금' : `손절 +${lt.sl}%`, lt.first ? 'saved' : 'up', lt.market, () => play(lt.first ? 'saved_phew' : 'milestone_up'), `따라가는 손절 +${lt.sl}%`);
+          treePing('C1', `따라가는 손절 +${lt.sl}%`);
+        }
+      }
       if (run.futures.waiver && !prev.run.futures.waiver) later(400, () => say('[FRX 숲거래소] 위험 고지 확인서 접수. 이번 생은 200배까지 주문할 수 있습니다.', 4500));
     }
     // ── 이야기 사건 ──

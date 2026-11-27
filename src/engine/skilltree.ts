@@ -176,6 +176,31 @@ export function winBonus(run: RunState, lev: number, pnl: number): number {
 }
 export const effectiveLevCaps = (g: GameState): LevCapStep[] => effectiveLevCapsRun(g.run);
 
+// ── R 고비 보상 · C1 따라가는 손절(U-50: 나무가 판의 손맛을 바꾼다) ─────────────
+interface PopMeta { base: number; cap: number; at: number[] }
+interface TrailMeta { start: number; gap: number; floor: number }
+const popMeta = (): PopMeta => (skillMeta as unknown as { popBonus: PopMeta }).popBonus;
+export const trailMeta = (): TrailMeta => (skillMeta as unknown as { trail: TrailMeta }).trail;
+/** 고비 보상의 몫(넣은 돈에 곱한다): 뿌리 R 이 켜진 생만. Lv1 = base, 그 뒤 cap 에 다가간다(닿지 않는다). 없으면 0 */
+export function popRateAt(lv: number): number {
+  if (lv <= 0) return 0;
+  const m = popMeta();
+  return m.base + m.cap * (1 - Math.pow(skillMeta.decay, lv - 1));
+}
+export const popBonusRate = (run: RunState): number => popRateAt(run.skill?.R ?? 0);
+export const popRateCap = (): number => popMeta().base + popMeta().cap;
+export const popBonusAt = (): number[] => popMeta().at;
+/** 이 판이 고비 하나를 넘을 때 받는 보상(도토리). 없으면 0 */
+export const popBonusAmt = (run: RunState, margin0: number): number => Math.floor(margin0 * popBonusRate(run) + 1e-9);
+/** 따라가는 손절(C1): 지금 손절(ROE %), 가장 높았던 ROE, 지금 ROE → 새 손절. 올릴 것이 없으면 null */
+export function trailStop(run: RunState, sl: number | null, peak: number, roe: number): number | null {
+  if (!hasRun(run, 'C1') || sl === null) return null;
+  const t = trailMeta();
+  if (peak < t.start) return null;
+  const want = Math.min(Math.max(t.floor, Math.floor(peak - t.gap + 1e-6)), Math.floor(roe + 1e-6) - 1);
+  return want > sl ? want : null;
+}
+
 /** C1 손절 습관: 새 포지션의 기본 손절(ROE %). 없으면 null. */
 export const defaultSl = (g: GameState): number | null => (hasRun(g.run, 'C1') ? (skillMeta.defaultSlRoe as number) : null);
 

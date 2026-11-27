@@ -1069,3 +1069,22 @@
 
 /* U-49: 좁은 폰(380px 아래)에서는 포지션 줄의 「청산까지」 글자를 빼고 숫자와 게이지만(손익 숫자가 잘리지 않게) */
 @media (max-width: 380px) { .pr-pin .liq .lb { display: none; } .pr .pr-pin { gap: 6px; } }
+
+/* ── U-50: 나무의 레벨이 오른 순간 ── */
+.pr-tree .nd.lvup { z-index: 5; }
+.pr-tree .nd.lvup i { animation: lvPop .6s cubic-bezier(.2, 1.6, .4, 1) both; box-shadow: 0 0 0 4px #F3D774, 0 0 22px #F3D774; }
+.pr-tree .nd .lvf { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); z-index: 3; padding: 1px 7px; border-radius: 8px; border: 2px solid var(--o); background: linear-gradient(180deg, #FFF2B0, #F3C94A); font-family: var(--dsp); font-size: 13px; color: #6B4A10; white-space: nowrap; pointer-events: none; animation: lvRise 2.4s ease-out forwards; }
+.pr-tree .nd .spark { position: absolute; left: 50%; top: 19px; width: 0; height: 0; pointer-events: none; }
+.pr-tree .nd .spark u { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #F3C94A; border: 1.5px solid #8A6410; transform: rotate(var(--a)) translateY(0); animation: lvSpark .7s ease-out forwards; }
+.pr-tree .tr-info small.just { color: #7A5410; background: #FFF2B0; border-radius: 6px; padding: 1px 4px; animation: lvGlow 1.6s ease-out both; }
+.pr-tree .tr-info small.lvnote { color: #2F4A22; font-weight: 800; animation: fadeIn .3s both; }
+@keyframes lvPop { 0% { transform: scale(.6); } 55% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes lvRise { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.7); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.15); } 25% { transform: translate(-50%, 0) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -16px); } }
+@keyframes lvSpark { 0% { transform: rotate(var(--a)) translateY(0) scale(1); opacity: 1; } 100% { transform: rotate(var(--a)) translateY(-38px) scale(.3); opacity: 0; } }
+@keyframes lvGlow { 0% { background: #F3C94A; } 100% { background: #FFF2B0; } }
+@media (prefers-reduced-motion: reduce) { .pr-tree .nd.lvup i, .pr-tree .nd .lvf, .pr-tree .tr-info small.just { animation-name: fadeIn !important; } }
+/* 지도 위의 작은 주인공(U-50): 내 집 팻말 왼쪽 아래 */
+.pr-vmap .mhero { position: absolute; z-index: 2; width: 30px; height: auto; transform: translate(-150%, -30%); pointer-events: none; filter: drop-shadow(0 2px 0 rgba(40, 40, 20, .35)); }
+.pr-vmap .mhero.hop { animation: mapHop .45s ease-in-out 4; }
+@keyframes mapHop { 0%, 100% { transform: translate(-150%, -30%); } 50% { transform: translate(-150%, -62%); } }
+@media (prefers-reduced-motion: reduce) { .pr-vmap .mhero.hop { animation: none; } }

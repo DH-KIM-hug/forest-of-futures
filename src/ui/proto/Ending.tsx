@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { endingCardModel } from '../vm/records';
 import { comma } from '../../engine/util';
 import { lifeNo } from './model';
 import { rebirthOverride } from './dev';
 import { sprite, RETIRE_PHOTO, type SpriteId } from './sprites';
-import { activeLevels, treeView, type NodeView } from '../../engine/skilltree';
+import { activeLevels, popRateAt, popRateCap, treeView, type NodeView } from '../../engine/skilltree';
+import { flyIcons, reduced } from './fx';
+import { later } from './audio';
 import { nodeOdds, treeOddsLine } from './odds';
 import { endingById, skillById, skillPathEndings } from '../../engine/data';
 import { act1Text } from '../../engine/act1';
@@ -100,6 +102,8 @@ const tailFmt = (id: string, x: number): string =>
   id === 'A3a' ? `+${Math.round(x)}초` : id === 'B2' ? `−${(x * 100).toFixed(2)}%p` : id === 'B3b' || id === 'B3a' ? `${(x * 100).toFixed(1)}%` : id === 'C4' ? `+${(x * 100).toFixed(1)}%p` : `−${(x * 100).toFixed(1)}%`;
 /** 노드 효과 한 줄: 지금 → 다음 */
 function effectText(v: NodeView): string {
+  // 뿌리(U-50): 고비 보상이 먼저(판에서 보이는 것), 수수료 꼬리는 뒤에
+  if (v.id === 'R') return `고비 보상 넣은 돈의 ${v.level > 0 ? pct(popRateAt(v.level)) : '없음'} → ${pct(popRateAt(v.level + 1))} (상한 ${pct(popRateCap())}). ${v.tail ? `10배 이하 수수료 ${v.level > 0 ? tailFmt(v.id, v.tail.now) : '0'}${v.tail.next !== null ? ` → ${tailFmt(v.id, v.tail.next)}` : ''}` : ''}`;
   if (v.tail) return `${v.tail.text} ${v.level > 0 ? `지금 ${tailFmt(v.id, v.tail.now)}` : '열면'}${v.tail.next !== null ? ` → ${tailFmt(v.id, v.tail.next)}` : ''}`;
   if (v.kind !== 'scaled') return v.level > 0 ? '열림' : '';
   const what = v.id === 'C2' ? '청산 때 돌려받는 증거금' : v.id === 'B1' ? '청산 직전 대신 넣어 주는 증거금' : '거래 수수료';
@@ -125,11 +129,26 @@ function SkillTree() {
   const seenEnd = (id: string) => !!g.family.ledger[id];
   const active = activeLevels(g);
   const od = nodeOdds(active, cur.id, cur.level);
-  const buy = () => { const r = act({ type: 'treeBuy', id: cur.id }); if (r.ok) { play('new_equipment'); setMsg(null); } else { play('insufficient'); setMsg(r.msg ?? '살 수 없다'); } };
+  /** 레벨이 오른 순간(U-50): 열매가 터지고, 황금이 날아가 박히고, "Lv2 → Lv3"이 솟고, 효과 줄이 금빛으로 바뀐다 */
+  const [up, setUp] = useState<{ k: number; id: string; from: number; to: number; was: string } | null>(null);
+  const goldRef = useRef<HTMLSpanElement>(null);
+  const buy = () => {
+    const from = cur.level, was = effectText(cur);
+    const fromRect = goldRef.current?.getBoundingClientRect() ?? null;
+    const r = act({ type: 'treeBuy', id: cur.id });
+    if (!r.ok) { play('insufficient'); setMsg(r.msg ?? '살 수 없다'); return; }
+    setMsg(null);
+    const id = cur.id;
+    const toEl = document.querySelector(`[data-node="${id}"] i`);
+    flyIcons(`<img src="${sprite('goldcoin')!.src}" width="20" height="20" alt="" style="border-radius:50%">`, fromRect, toEl?.getBoundingClientRect() ?? null, Math.min(6, 2 + from), { size: 20 });
+    play('new_equipment');
+    later(reduced() ? 0 : 520, () => { setUp((u) => ({ k: (u?.k ?? 0) + 1, id, from, to: from + 1, was })); play(from === 0 ? 'win_fanfare' : 'milestone_up'); if (from > 0) later(160, () => play('goal_complete')); });
+  };
+  useEffect(() => { if (!up) return; const t = window.setTimeout(() => setUp(null), 2600); return () => window.clearTimeout(t); }, [up?.k]);
   const pick = () => { const r = act({ type: 'treePick', id: cur.id }); if (r.ok) play('ui_tap'); };
   return (
     <section className="pr-tree" data-tree aria-label="스킬트리">
-      <div className="tr-h"><b>거래의 나무</b><span className="gold" data-gold={gold}><img className="coin art" src={sprite('goldcoin')!.src} alt="" />{comma(gold)}개</span></div>
+      <div className="tr-h"><b>거래의 나무</b><span className="gold" data-gold={gold} ref={goldRef}><img className="coin art" src={sprite('goldcoin')!.src} alt="" />{comma(gold)}개</span></div>
       <p className="tr-odds" data-tree-odds>{treeOddsLine(active)}</p>
       <div className="tr-paths">{PATHS.map((p) => <span key={p.id} className={'p-' + p.id}><b>{p.name}</b><small>{p.sub}</small></span>)}</div>
       <div className="tr-box">
@@ -138,12 +157,14 @@ function SkillTree() {
         </svg>
         {nodes.map((v) => {
           const p = posOf(v);
-          const cls = 'nd p-' + v.path + (v.level > 0 ? ' own' : '') + (v.canBuy ? ' can' : '') + (v.level > 0 && !v.picked ? ' off' : '') + (v.id === sel ? ' sel' : '');
+          const cls = 'nd p-' + v.path + (v.level > 0 ? ' own' : '') + (v.canBuy ? ' can' : '') + (v.level > 0 && !v.picked ? ' off' : '') + (v.id === sel ? ' sel' : '') + (up?.id === v.id ? ' lvup' : '');
           return (
             <button key={v.id} className={cls} data-node={v.id} data-level={v.level} style={{ left: `${p.x}%`, top: `${p.y}%` }} onClick={() => { setSel(v.id); setMsg(null); setHint(null); play('ui_tap'); }}
               aria-label={`${v.name}${v.level > 0 ? ` 레벨 ${v.level}` : ' 잠김'}`}>
-              <i>{v.level > 0 ? (v.kind === 'scaled' || v.tail ? v.level : '✓\uFE0E') : v.cost ?? ''}</i>
+              <i key={up?.id === v.id ? 'u' + up.k : 'n'}>{v.level > 0 ? (v.kind === 'scaled' || v.tail ? v.level : '✓\uFE0E') : v.cost ?? ''}</i>
               <em>{v.name}</em>
+              {up?.id === v.id && <span key={'f' + up.k} className="lvf" aria-hidden="true">{up.from === 0 ? '열림!' : `Lv${up.from} → ${up.to}`}</span>}
+              {up?.id === v.id && !reduced() && <span key={'s' + up.k} className="spark" aria-hidden="true">{Array.from({ length: 8 }, (_, j) => <u key={j} style={{ ['--a' as string]: `${j * 45}deg` }} />)}</span>}
             </button>
           );
         })}
@@ -152,7 +173,8 @@ function SkillTree() {
         <div className="l">
           <b>{cur.name}{cur.level > 0 && (cur.kind === 'scaled' || cur.tail) ? ` Lv${cur.level}` : ''}</b>
           <p>{cur.desc}</p>
-          {effectText(cur) && (cur.kind === 'scaled' || cur.tail) && <small data-effect>{effectText(cur)}</small>}
+          {effectText(cur) && (cur.kind === 'scaled' || cur.tail) && <small key={up?.id === cur.id ? 'e' + up.k : 'e'} className={up?.id === cur.id ? 'just' : ''} data-effect>{effectText(cur)}</small>}
+          {up?.id === cur.id && <small className="lvnote" data-lvup={up.to} role="status">{up.from === 0 ? '다음 생부터 판에서 켜진다.' : `Lv${up.to}. 다음 생의 판이 이만큼 달라진다.`}</small>}
           {/* 이 노드가 예시 한 판(5만 200배, 익절 · 손절 ±15,500)을 얼마나 바꾸는가(U-42 ④): 수수료가 기울인 승률을 지금 → 다음 레벨로. 시세는 그대로다 */}
           {od && cur.cost !== null && <small className={'odds' + ((od.next.p ?? 0) < (od.now.p ?? 0) ? ' worse' : '')} data-odds={cur.id}>{od.text}</small>}
           {cur.level > 0 && !cur.picked && <small>짝 가지가 켜져 있다. 한 생에 하나만.</small>}

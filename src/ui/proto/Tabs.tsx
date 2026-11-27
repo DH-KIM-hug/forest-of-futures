@@ -148,6 +148,7 @@ function VillageMap({ known, onPick }: { known: readonly string[]; onPick: (id: 
   const waiting = useProto((s) => s.waiting);
   const img = sprite('village2')!;
   const run = g.run;
+  const cheer = useProto((s) => !!s.burst && s.burst.pnl > 0);
   return (
     <div className="pr-vmap" data-art="village2" style={{ aspectRatio: `${img.w} / ${Math.round(img.h * MAP_CROP.h)}` }}>
       <img src={img.src} alt="" draggable={false} style={{ top: `${(-MAP_CROP.top / MAP_CROP.h) * 100}%` }} />
@@ -165,6 +166,8 @@ function VillageMap({ known, onPick }: { known: readonly string[]; onPick: (id: 
           </button>
         );
       })}
+      {/* 지도 위의 주인공(U-50): 내 집 팻말 옆에 작게. 집에 없을 때 터진 판의 도토리가 여기서 머리의 숫자로 날아가고, 이긴 판이면 뛴다 */}
+      {(() => { const hp = MAP_SPOTS.home; const art = sprite(cheer ? 'heroHappy' : 'hero'); return art ? <img id="pr-map-hero" className={'mhero' + (cheer ? ' hop' : '')} data-map-hero={cheer ? 'hop' : 'idle'} src={art.src} alt="" draggable={false} style={{ left: `${hp.x * 100}%`, top: `${((hp.y - MAP_CROP.top) / MAP_CROP.h) * 100}%` }} /> : null; })()}
       <RankSign />
     </div>
   );

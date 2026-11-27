@@ -16,7 +16,8 @@ import { claim } from './model';
 import { useOpenPositions } from './Lot';
 import { coinLogo } from './coins';
 import { play, later } from './audio';
-import { pushPop } from './popBus';
+import { pushPop, treePing } from './popBus';
+import { popBonusAmt } from '../../engine/skilltree';
 
 /** 0 → v 로 ms 동안 굴러 오른다(처음엔 빠르게, 끝에서 느리게) */
 function useRollFromZero(v: number, ms: number): number {
@@ -77,9 +78,14 @@ export function HomeBurst() {
   useEffect(() => {
     if (!burst || tab === 'phone' || shown.current === burst.k) return;
     shown.current = burst.k;
-    const hero = document.getElementById('pr-hero')?.getBoundingClientRect() ?? null;
     const n = Math.min(12, 4 + burst.tier.lv * 2);
-    later(350, () => flyAcorns(hero, n));
+    // 집이면 주인공에게서, 지도면 지도 위의 작은 주인공(내 집 팻말 옆)에게서(U-50). 화면 밖이면 터진 상자에서
+    later(350, () => {
+      const el = document.getElementById('pr-hero') ?? document.getElementById('pr-map-hero');
+      let r = el?.getBoundingClientRect() ?? null;
+      if (r && (r.bottom < 40 || r.top > window.innerHeight - 40)) r = null;
+      flyAcorns(r ?? document.querySelector('.pr-burst .core')?.getBoundingClientRect() ?? null, n);
+    });
   }, [burst?.k, tab]);
   if (!burst || tab === 'phone') return null;
   return <WinBurst key={burst.k} {...burst} home onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />;
@@ -103,7 +109,14 @@ export function usePosPops(): void {
       const mk = (marks[p.market + ':' + raw.openTick] ??= { best: 0, claim: false, half: false, peakDanger: 0, saved: false });
       mk.peakDanger = Math.max(mk.peakDanger, dangerOf(p.liqDistPct, p.lev, maint));
       const ms = nextMilestone(mk.best, p.netRoe);
-      if (ms) { mk.best = ms.at; pushPop(ms.text, ms.at >= 100 ? 'gold' : 'up', p.market, () => { play('milestone_up'); if (ms.at >= 100) later(140, () => play('goal_complete')); }); continue; }
+      if (ms) {
+        mk.best = ms.at;
+        // 고비 보상(나무 R, U-50): 엔진이 이 고비에 보상을 얹었으면 팝 둘째 줄에 적고, 도토리가 팝에서 머리의 숫자로 날아간다
+        const bon = (raw.popBest ?? 0) >= ms.at ? popBonusAmt(g.run, raw.margin0) : 0;
+        pushPop(ms.text, ms.at >= 100 ? 'gold' : 'up', p.market, () => { play('milestone_up'); if (ms.at >= 100) later(140, () => play('goal_complete')); if (bon > 0) later(260, () => play('buy')); }, bon > 0 ? `고비 보상 +${comma(bon)}` : undefined);
+        if (bon > 0) { treePing('R', `고비 보상 +${comma(bon)}`); later(180, () => flyAcorns(document.querySelector('.pt-pops .pop:last-child')?.getBoundingClientRect() ?? null, 4)); }
+        continue;
+      }
       if (!mk.claim && cl > 0 && p.net >= cl) { mk.claim = true; pushPop(`이자 한 번 벌었다 +${comma(Math.round(cl))}`, 'up', p.market, () => play('buy')); continue; }
       // 청산 턱밑(들어간 거리의 70% 넘게 다가갔다)에서 본전 위로 돌아왔다: 한 번
       if (!mk.saved && mk.peakDanger >= 0.7 && p.net >= 0) { mk.saved = true; pushPop('살았다!', 'saved', p.market, () => play('saved_phew')); continue; }
@@ -120,7 +133,30 @@ export function HomePops() {
   if (tab === 'phone' || !pops.length) return null;
   return (
     <div className="pt-pops home-pops" aria-live="polite">
-      {pops.map((x) => <span key={x.k} className={'pop ' + x.cls} data-pop={x.cls}>{many && coinLogo(x.market) && <img src={coinLogo(x.market)!} alt="" draggable={false} />}{x.text}</span>)}
+      {pops.map((x) => <span key={x.k} className={'pop ' + x.cls + (x.sub ? ' has-sub' : '')} data-pop={x.cls}>{many && coinLogo(x.market) && <img src={coinLogo(x.market)!} alt="" draggable={false} />}{x.text}{x.sub && <small className="psub" data-pop-sub>{x.sub}</small>}</span>)}
+    </div>
+  );
+}
+
+/** 한 번 버티기(나무 B1)가 잡은 순간(U-50): 청산 도장이 찍힐 자리에 금빛 숨. 붉게 번지던 가장자리가 걷히고, "한 번 더 산다"가 찍히고, 오소리가 넣은 돈이 보인다.
+ *  시세 · 청산 공식은 그대로다(엔진의 holdOnce 가 한 일을 크게 보여 줄 뿐) */
+export function SecondWind() {
+  const w = useProto((s) => s.wind);
+  // 잡아 준 포지션이 끝내 닫혔으면(다음 틱에 청산 등) 바로 걷는다 — 청산 도장과 겹치지 않게
+  const alive = useGame((s) => !!w && !!s.g.run.positions[w.market]);
+  useEffect(() => { if (w && !alive) useProto.getState().patch({ wind: null }); }, [alive, w?.k]);
+  useEffect(() => {
+    if (!w) return;
+    const t = window.setTimeout(() => { if (useProto.getState().wind?.k === w.k) useProto.getState().patch({ wind: null }); }, 2200);
+    return () => window.clearTimeout(t);
+  }, [w?.k]);
+  if (!w) return null;
+  return (
+    <div key={w.k} className="pr-wind" data-wind={w.amount} role="status" aria-live="assertive" aria-label={`한 번 더 산다, 오소리 대부가 증거금 ${comma(w.amount)}을 넣었다`}>
+      <i className="ring" aria-hidden="true" />
+      <div className="stamp">한 번 더 산다</div>
+      <b className="amt">오소리 대부 +{comma(w.amount)}</b>
+      <p>{w.name} 청산가가 한 칸 물러났다. 정리할 때 돌려준다.</p>
     </div>
   );
 }

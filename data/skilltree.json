@@ -14,7 +14,7 @@
   "defaultSlRoe": -50,
   "momWheel": "DTC",
   "nodes": [
-    { "id": "R", "path": "R", "tier": 0, "name": "손에 익은 앱", "desc": "거래의 나무 첫 가지. 여기서 세 갈래가 열린다.", "openCost": 1, "kind": "binary", "requires": [], "tail": { "cap": 0.2, "text": "10배 이하 거래의 수수료가 준다(상한 −20%)." } },
+    { "id": "R", "path": "R", "tier": 0, "name": "손에 익은 앱", "desc": "거래의 나무 첫 가지. 들고 있는 판이 고비(+50%, 두 배 …)를 넘을 때마다 FRX 가 넣은 돈의 1%를 고비 보상으로 얹는다. 여기서 세 갈래가 열린다.", "openCost": 1, "kind": "binary", "requires": [], "tail": { "cap": 0.2, "text": "10배 이하 거래의 수수료가 준다(상한 −20%)." } },
     { "id": "A1", "path": "A", "tier": 1, "name": "단골 수수료", "desc": "거래 수수료가 준다(상한 −50%).", "openCost": 1, "kind": "scaled", "cap": 0.5, "requires": [ "R" ] },
     { "id": "A2", "path": "A", "tier": 2, "name": "한 손 정리", "desc": "포지션 정리가 한 번 누르기로 바뀐다. 집 화면의 포지션 줄에서도 바로 정리한다.", "openCost": 2, "kind": "binary", "requires": [ "A1" ], "tail": { "cap": 0.25, "text": "나올 때 수수료가 준다(상한 −25%)." } },
     { "id": "A3a", "path": "A", "tier": 3, "name": "초봉 차트", "desc": "차트를 30초 창으로 당겨 본다. 보이는 게 많아질 뿐, 맞히는 건 아니다.", "openCost": 3, "kind": "binary", "requires": [ "A2" ], "pair": "A3b", "tail": { "cap": 480, "text": "더 길게 보는 창이 생긴다(2분 + 상한 8분)." } },
@@ -25,7 +25,7 @@
     { "id": "B3a", "path": "B", "tier": 3, "name": "고배율 축하금", "desc": "100배 이상으로 이긴 판은 수익 인증서가 금박으로 번쩍이고, 오소리 대부가 축하금을 얹어 준다.", "openCost": 3, "kind": "binary", "requires": [ "B2" ], "pair": "B3b", "tail": { "cap": 0.1, "text": "축하금이 그 판 수익의 몇 %로 커진다(상한 10%)." } },
     { "id": "B3b", "path": "B", "tier": 3, "name": "물타기", "desc": "열린 포지션에 증거금만 더 넣는 단추. 청산가가 멀어지고, 걸린 돈이 커진다.", "openCost": 3, "kind": "binary", "requires": [ "B2" ], "pair": "B3a", "tail": { "cap": 0.2, "text": "물타기로 더 넣은 증거금은 청산돼도 일부 돌아온다(상한 20%)." } },
     { "id": "B4", "path": "B", "tier": 4, "name": "전설의 몰빵", "desc": "수익 인증서에 금테가 둘리고, 청산 도장이 특별판으로 바뀐다(꾸미기).", "openCost": 4, "kind": "binary", "requires": [ "B3a", "B3b" ], "tail": { "cap": 0.2, "text": "전부 걸기의 수수료가 준다(상한 −20%)." } },
-    { "id": "C1", "path": "C", "tier": 1, "name": "손절 습관", "desc": "새 포지션에 손절 −50%가 기본으로 붙는다(끌 수 있다).", "openCost": 1, "kind": "binary", "requires": [ "R" ], "tail": { "cap": 0.5, "text": "손절로 나올 때 수수료가 준다(상한 −50%)." } },
+    { "id": "C1", "path": "C", "tier": 1, "name": "손절 습관", "desc": "새 포지션에 손절 −50%가 기본으로 붙는다(끌 수 있다). 이익이 +30%를 넘으면 손절이 본전 위로 올라와 30%p 뒤를 따라간다.", "openCost": 1, "kind": "binary", "requires": [ "R" ], "tail": { "cap": 0.5, "text": "손절로 나올 때 수수료가 준다(상한 −50%)." } },
     { "id": "C2", "path": "C", "tier": 2, "name": "비상금 주머니", "desc": "강제 청산 때 넣은 증거금의 일부가 돌아온다(상한 30%). 보험료로 수수료율 +0.01%p.", "openCost": 2, "kind": "scaled", "cap": 0.3, "requires": [ "C1" ] },
     { "id": "C3a", "path": "C", "tier": 3, "name": "쪼개 넣기", "desc": "진입을 세 번으로 나눠 넣는 단추.", "openCost": 3, "kind": "binary", "requires": [ "C2" ], "pair": "C3b", "tail": { "cap": 0.3, "text": "추가 진입 수수료가 준다(상한 −30%)." } },
     { "id": "C3b", "path": "C", "tier": 3, "name": "하루 한도", "desc": "하루 손실 한도를 정하면, 넘는 순간 거래소가 잠긴다. 다음 아침에 풀린다.", "openCost": 3, "kind": "binary", "requires": [ "C2" ], "pair": "C3a", "tail": { "cap": 0.15, "text": "한도를 걸어 둔 동안 수수료가 준다(상한 −15%)." } },
@@ -37,5 +37,7 @@
     "B": ["END-151", "END-193", "END-184", "END-155"],
     "C": ["END-167", "END-191", "END-R01", "END-R03"]
   },
-  "bonusLev": 100
+  "bonusLev": 100,
+  "popBonus": { "_doc": "U-50 나무 R 고비 보상: 들고 있는 판의 손익(지금 닫으면 늘 돈, 수수료 포함)이 고비를 처음 넘을 때마다 넣은 돈(margin0) × (base + cap × (1 − decay^(레벨−1))). 시세는 그대로, 보상은 FRX 가 현금으로 얹는다(거래 손익과 따로).", "base": 0.01, "cap": 0.02, "at": [50, 100, 200, 300, 500, 1000] },
+  "trail": { "_doc": "U-50 나무 C1 따라가는 손절: 손절이 걸린 포지션의 가장 높은 ROE 가 start 를 넘으면 손절 = max(floor, 최고 − gap). 내려가지 않는다. 지금 ROE 보다 1%p 위로는 올리지 않는다(그 틱에 바로 닫혀 더 나은 값을 받지 않게).", "start": 30, "gap": 30, "floor": 5 }
 }

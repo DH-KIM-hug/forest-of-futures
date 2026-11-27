@@ -41,7 +41,7 @@ import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
 import { guideStep, allowedEl, type Guide } from './guided';
 import { nextTierCost } from '../../engine/equipment';
 import { EXTRA_WHEEL } from './model';
-import { HomeBurst, HomePops, usePosPops } from './Juice';
+import { HomeBurst, HomePops, SecondWind, usePosPops } from './Juice';
 import './proto.css';
 
 const TABS: { id: Tab; label: string; col: string }[] = [
@@ -347,7 +347,7 @@ export function ProtoApp() {
         fut: r.futures, pos: Object.values(r.positions).map((p) => ({ m: p.market, dir: p.dir, lev: p.lev, margin: p.margin0 })), debts: Object.fromEntries(Object.entries(r.debts).map(([k, v]) => [k, v.principal])), friend: r.friends.squirrel.debt,
         gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet,
         repaid: r.stats['repaid.shark1'] ?? 0, gold: g.family.gold ?? 0, skill: g.family.skill ?? {}, runSkill: r.skill ?? {}, seen: Object.keys(P.seen), marginCall: r.marginCall ?? null, liqs: r.stats.liqCount ?? 0, cause: r.bankruptcy?.cause ?? null, ending: g.pendingEnding?.title ?? null, endingId: g.pendingEnding?.id ?? null, tradeUi: useUI.getState().trade,
-        think: P.think?.text ?? null, forceTrade: P.forceTrade, pointTab: P.pointTab, toast: P.toast, rolled: P.rolled, rolledTaps: P.rolledTaps, claimWinRun: P.claimWinRun, claimLossRun: P.claimLossRun, cheer: P.cheer, tradeLife: P.tradeLife, claimWins: P.claimWins, paidLife: P.paidLife, dayNote: P.dayNote, day: Object.fromEntries(Object.keys(r.prices).map((k) => { const b = dayBars(k); return [k, [b.length, b[0]?.t ?? 0, b[b.length - 1]?.t ?? 0]]; })), posStops: Object.values(r.positions).map((p) => ({ m: p.market, sl: p.slRoe, tp: p.tpRoe, notional: p.notional, fees: p.feesPaid })), away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick };
+        think: P.think?.text ?? null, forceTrade: P.forceTrade, pointTab: P.pointTab, toast: P.toast, rolled: P.rolled, rolledTaps: P.rolledTaps, claimWinRun: P.claimWinRun, claimLossRun: P.claimLossRun, cheer: P.cheer, tradeLife: P.tradeLife, claimWins: P.claimWins, paidLife: P.paidLife, dayNote: P.dayNote, day: Object.fromEntries(Object.keys(r.prices).map((k) => { const b = dayBars(k); return [k, [b.length, b[0]?.t ?? 0, b[b.length - 1]?.t ?? 0]]; })), posStops: Object.values(r.positions).map((p) => ({ m: p.market, sl: p.slRoe, tp: p.tpRoe, notional: p.notional, fees: p.feesPaid })), away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick, burst: P.burst ? { k: P.burst.k, word: P.burst.tier.word, lv: P.burst.tier.lv, how: P.burst.how ?? null, pnl: Math.round(P.burst.pnl) } : null };
     };
   }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)
@@ -369,6 +369,7 @@ export function ProtoApp() {
       <TabBar />
       <CutIn />
       <LiqStamp onShake={shake} />
+      <SecondWind />
       <HomePops />
       <HomeBurst />
       <EndingFlow />

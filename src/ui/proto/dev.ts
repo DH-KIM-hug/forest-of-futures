@@ -125,7 +125,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   const P = useProto.getState();
   const un = { lot: true, phone: true, map: true } as const;
   const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'office'].map((k) => [k, true]));
-  P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done' });
+  P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done', firstTry: name === 'first' ? 3 : 0 });
   base.run.intro = false; // 장면 건너뛰기는 튜토리얼이 끝난 판이다(정산 60초)
   base.run.settleIn = balance.settlement.intervalSec;
   const ready = () => {
@@ -136,6 +136,30 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   };
   switch (name) {
     case 'ready': return ready();
+    // ── U-50 화면 확인용 ──
+    case 'first': {
+      // 튜토리얼이 막 끝난 첫 생(손에 10만, 실전 거래 0건): 「첫 실전 한 판」 카드
+      const g = ready();
+      g.run.futures.closedTrades = 0; g.run.cash = 100_000;
+      P.patch({ tab: 'phone', seen: { ...useProto.getState().seen, feeEventSms: true } });
+      return clone(g);
+    }
+    case 'wind': case 'trail': case 'popb': {
+      // 나무가 판에 한 일: wind = 한 번 버티기(B1)가 다음 틱에 잡는다, trail = 따라가는 손절(C1) + 고비 보상(R), popb = 고비 보상만
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: q.get('ptab') === 'lot' ? 'lot' : 'phone', seen: { ...seen, capitalSms: true, feeEventSms: true, flyNews: true } });
+      let g = midgame(base, { closed: 10, waiver: true, cash: 120_000, wheels: 2 });
+      g.run.skill = name === 'wind' ? { R: 1, B1: 10 } : name === 'trail' ? { R: 2, C1: 1 } : { R: 3 };
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 200, marginPct: 25, sl: name === 'trail' ? -50 : null, tp: null } });
+      const p = g.run.positions.DTC;
+      const px = g.run.prices.DTC;
+      // 진입가를 옮긴다: wind = 청산가 바로 아래(첫 틱에 닿는다), trail · popb = ROE +48% 쯤(조금만 오르면 +50% 고비)
+      p.entry = name === 'wind' ? px * 0.99 : px / (1 + 0.48 / p.lev);
+      // wind: 시세가 자리를 잡은 뒤(1.5초) 진입가를 청산가 바로 위로 옮기고, 잡아 준 다음 시계를 멈춘다(화면 확인용 — 연습 시세가 빨라 곧장 청산되는 것을 막는다)
+      if (name === 'wind') window.setTimeout(() => { const g2 = clone(useGame.getState().g); const p2 = g2.run.positions.DTC; if (p2) { p2.entry = g2.run.prices.DTC * (1 + 0.00405); useGame.getState().setGame(g2); window.setTimeout(() => useGame.getState().setSpeed(0), 2200); } }, 4000);
+      g.run.settleIn = Math.round(balance.settlement.intervalSec * 0.8);
+      g = clone(g);
+      return g;
+    }
     case 'pos': case 'near': case 'liq': {
       let g = ready();
       const px = g.run.prices.DTC;
@@ -309,7 +333,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       if (name === 'winhold') g.run.settleIn = Math.min(50, balance.settlement.intervalSec - 2);
       // U-49 화면 확인용: &proe=300 = 그 ROE 의 익절가를 넘어 있다(등급 확인), &ptab=lot = 집에서 닫힌다
       if (q.get('proe')) { const roe = +q.get('proe')!; p.tpRoe = roe; p.slRoe = null; plans.DTC = { tp: null, sl: null }; p.entry = px / (1 + (roe / 100 / p.lev) * 1.6); }
-      if (q.get('ptab') === 'lot') P.patch({ tab: 'lot' });
+      if (q.get('ptab') === 'lot' || q.get('ptab') === 'map') P.patch({ tab: q.get('ptab') as 'lot' | 'map' });
       g = clone(g);
       return g;
     }

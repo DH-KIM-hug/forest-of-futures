@@ -8,7 +8,7 @@ import { isNearLiq } from './model';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
-import { TUT, hamsterMath, claim } from './model';
+import { TUT, hamsterMath, claim, lifeNo } from './model';
 import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier } from './tension';
 import { closedMath, tradeNet, say as toast } from './watch';
 import { exitFee, fundingRateNow } from '../../engine/futures';
@@ -90,6 +90,10 @@ const Lock = ({ size = 13 }: { size?: number }) => (
     <path d="M4.2 6.4V4.6a2.8 2.8 0 0 1 5.6 0v1.8" fill="none" stroke="#4A4640" strokeWidth="1.8" strokeLinecap="round" />
     <rect x="2.6" y="6.2" width="8.8" height="6.2" rx="1.8" fill="#E8C24A" stroke="#4A4640" strokeWidth="1.6" />
   </svg>
+);
+/** 나무 칩의 잎사귀(U-50) */
+const Leaf = () => (
+  <svg className="leaf" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10.5C2 5 5.5 2 10.5 1.5C10.5 6.5 7.5 10 2 10.5Z" fill="#7FB069" stroke="#3E5B2E" strokeWidth="1.3" strokeLinejoin="round" /><path d="M2.4 10.1L7.6 4.6" stroke="#3E5B2E" strokeWidth="1.1" strokeLinecap="round" /></svg>
 );
 const Cross = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
@@ -291,6 +295,10 @@ export function ProtoTrade() {
   const burst = useProto((s0) => s0.burst);
   /** 들고 있는 동안 숫자 옆에 터지는 고비(U-48): +50%, 두 배!, 이자 한 번, 반 날아감, 살았다! — Juice.tsx usePosPops 가 모든 포지션을 본다(U-49) */
   const popsAll = useProto((s0) => s0.pops);
+  /** 나무가 방금 판에 한 일(U-50): 머리의 「나무」 칩이 2.4초 반짝이며 한 줄을 말한다 */
+  const ping = useProto((s0) => s0.treePing);
+  const [pingOn, setPingOn] = useState(false);
+  useEffect(() => { if (!ping) return; setPingOn(true); const t = window.setTimeout(() => setPingOn(false), 2400); return () => window.clearTimeout(t); }, [ping?.k]);
   /** 숫자가 한 틱에 오르내린 쪽(U-48): 손익 숫자가 그쪽 색으로 번쩍인다 */
   const [flash, setFlash] = useState<{ k: number; up: boolean } | null>(null);
   const lastNet = useRef<{ key: string; net: number } | null>(null);
@@ -582,7 +590,8 @@ export function ProtoTrade() {
     if (roe === null || !sctx || !(cl.total > 0)) return false;
     return Math.abs(Math.abs(netForRoe(roe, sctx, kind)) - k * cl.total) <= Math.max(3, cl.total * 0.02);
   };
-  const slTxt = stopLabel(curSl, sctx, 'sl');
+  // 따라가는 손절(나무 C1, U-50): 손절이 올라온 판이면 그렇다고 적는다
+  const slTxt = stopLabel(curSl, sctx, 'sl') + (rawPos?.trailed ? ' 따라감' : '');
   const tpTxt = stopLabel(curTp, sctx, 'tp');
   const pctOf = (v: number | null) => (v === null ? '' : `${v >= 0 ? '+' : '−'}${Math.abs(v) >= 100 ? Math.abs(v).toFixed(0) : Math.abs(v).toFixed(Math.abs(v) % 1 > 0.04 ? 1 : 0)}%`);
 
@@ -602,9 +611,9 @@ export function ProtoTrade() {
           {openN > 0 && <span className={'pt-sum ' + (openNet >= 0 ? 'up' : 'down')} data-possum={Math.round(openNet)} role="status" aria-label={`포지션 ${openN}개 합계 ${money(openNet)}`}><small>{openN}개</small>{money(openNet)}</span>}
           {/* 오픈 기념 수수료 무료(U-40): 거래소 머리에 늘 걸려 있다. 끝난 뒤에는 지금 수수료율 */}
           {feeChipH && <span className={'pt-fee' + (feeChipH.on ? ' on' : '') + (feeChipH.on && feeChipH.left <= 3 ? ' last' : '')} data-fee-event={feeChipH.left} role="status" aria-label={feeChipH.text}>{feeChipH.on ? '오픈 기념 무료' : feeChipH.text.replace('거래 ', '')}</span>}
-          {Object.keys(activeLevels(g)).length > 0 && <button className="pt-perk" data-perks onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 열린 가지">나무 {Object.keys(activeLevels(g)).length}</button>}
+          {Object.keys(activeLevels(g)).length > 0 && <button key={ping ? 'pk' + ping.k : 'pk'} className={'pt-perk' + (pingOn ? ' ping' : '')} data-perks data-ping={pingOn ? ping!.id : undefined} onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 열린 가지"><Leaf />나무 {Object.keys(activeLevels(g)).length}{pingOn && <span className="pk-say" aria-hidden="true">{ping!.text}</span>}</button>}
         </header>
-        {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' || id === 'B1' ? '(+' : '(−') : skillById[id]?.tail ? ` Lv${lv} (${id === 'A3a' ? `+${Math.round(tailRun(run, id))}초` : id === 'B2' ? `−${(tailRun(run, id) * 100).toFixed(2)}%p` : `${id === 'B3b' || id === 'C4' ? '+' : '−'}${(tailRun(run, id) * 100).toFixed(1)}%`})` : ''}</span>)}</div>}
+        {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{ping && <span className="last" data-ping-last>방금: {skillById[ping.id]?.name} {ping.text}</span>}{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' || id === 'B1' ? '(+' : '(−') : skillById[id]?.tail ? ` Lv${lv} (${id === 'A3a' ? `+${Math.round(tailRun(run, id))}초` : id === 'B2' ? `−${(tailRun(run, id) * 100).toFixed(2)}%p` : `${id === 'B3b' || id === 'C4' ? '+' : '−'}${(tailRun(run, id) * 100).toFixed(1)}%`})` : ''}</span>)}</div>}
         {body}
       </div>
     </div>
@@ -817,6 +826,25 @@ export function ProtoTrade() {
     </div>
   );
 
+  // ── 첫 실전 한 판(U-50, 첫 생): 튜토리얼이 끝나면 FRX 앱이 작은 판 하나를 맞춰 준다 — 가장 출렁이는 날다람쥐코인, 50배, 넣는 돈 25%, 익절 · 손절 = 이자 한 번.
+  // 누르면 주문 칸이 그대로 맞춰지고(배율 눈금 · 증거금 칩 · 출구가 그 값으로), 롱이나 숏은 손으로 누른다. 이긴 판이 터지거나 세 번 지면 사라진다. 이기는 확률은 그대로 반반이다 ──
+  const firstTry = useProto((s0) => s0.firstTry);
+  const FIRST = { market: (tabs.some((t) => t.id === 'FLY') ? 'FLY' : wild?.id ?? 'DTC') as string, lev: 50, pct: 25 };
+  const firstShow = tutSt === 'done' && firstTry > 0 && lifeNo(g) === 1 && !pos && !result && !prev.reason && cl.total > 0 && !sheet;
+  const firstSet = firstShow && market === FIRST.market && lev === FIRST.lev && !keepOn && tr.pct === FIRST.pct && tpK === 1 && slK === 1;
+  const firstGo = () => {
+    play('ui_tap');
+    setTrade({ market: FIRST.market, lev: FIRST.lev, pct: FIRST.pct, keep: false, tpK: 1, slK: 1, tp: null, sl: null });
+    if (marketById[FIRST.market].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[FIRST.market].name} 상장. 실체 없는 숲 밈코인, 값은 바람이 정한다.`, 6000); }
+  };
+  const firstCard = firstShow ? (
+    <div className={'pt-first' + (firstSet ? ' set' : '')} data-first={firstSet ? 'set' : 'ask'} data-hl="cond" role="status">
+      <div className="ft-t"><b>FRX 첫 실전</b><span>{marketById[FIRST.market].name} {FIRST.lev}배, {FIRST.pct}%</span></div>
+      <p>익절 <b className="up">+{comma(Math.round(cl.total))}</b> 손절 <b className="down">−{comma(Math.round(cl.total))}</b>{firstSet ? <>, 이제 롱이나 숏.</> : <>, 이자 한 번 치. 어느 쪽이 먼저 닿을지는 아무도 모른다.</>}</p>
+      {!firstSet && <button className="ft-go" data-first-go onClick={firstGo}>이대로 맞추기</button>}
+    </div>
+  ) : null;
+
   let lower: ReactNode;
   if (sheet === 'stops') {
     lower = (
@@ -882,7 +910,7 @@ export function ProtoTrade() {
                 <div className="sub" data-net><b>{money(netRoll)}</b>{share ? <i className="shr"> {share}</i> : ' 도토리'}</div>
                 <div className="why" data-poswhy>시세 <b className={pos.pnl >= 0 ? 'up' : 'down'}>{money(pos.pnl)}</b>  수수료 {feesNow > 0 ? <b className="down">−{comma(feesNow)}</b> : <b>0{evLeft > 0 ? ' (오픈 기념)' : ''}</b>}</div>
               </div>
-              {pops.length > 0 && <div className="pt-pops" aria-live="polite">{pops.map((x) => <span key={x.k} className={'pop ' + x.cls} data-pop={x.cls}>{x.text}</span>)}</div>}
+              {pops.length > 0 && <div className="pt-pops" aria-live="polite">{pops.map((x) => <span key={x.k} className={'pop ' + x.cls + (x.sub ? ' has-sub' : '')} data-pop={x.cls}>{x.text}{x.sub && <small className="psub" data-pop-sub>{x.sub}</small>}</span>)}</div>}
               <div className={'liq' + (call ? ' hot' : '')} data-hl="posLiq"><small>청산까지</small><b>{pos.dir === 1 ? '−' : '+'}{pos.liqDistPct.toFixed(1)}%</b></div>
             </div>
             <div className="gauge" aria-hidden="true">
@@ -913,7 +941,7 @@ export function ProtoTrade() {
         ) : null}
         {order}
         {/* 위험 고지 확인서는 막는 문이 아니라 한 장면이다(U-47): 50배 위의 칸을 처음 누르면 오소리 대부가 밀어 준다 */}
-        {(
+        {firstCard ?? (
         <div className="pt-condrow">
           <button className="pt-cond" data-hl="cond" onClick={() => setSheet('stops')}>
             <span className="vals">
@@ -924,7 +952,7 @@ export function ProtoTrade() {
         </div>
         )}
         {noteLine}
-        <div className="pt-orders" data-hl={pos ? undefined : 'orders'}>
+        <div className={'pt-orders' + (firstSet ? ' first-go' : '')} data-hl={pos ? undefined : 'orders'}>
           {pos ? (
             <>
               <button className={'pt-btn ' + (pos.dir === 1 ? 'long' : 'short') + (addOpen ? ' armadd' : '')} data-add={addOpen ? 'open' : 'shut'} disabled={!!prev.reason && addOpen} onClick={() => { if (!addOpen) { play('ui_tap'); setAddOpen(true); return; } setAddOpen(false); doAdd(); }}>

@@ -7,7 +7,7 @@ import { checkLiquidationWipeout } from './bankruptcy';
 import { bump } from './stats';
 import { logEvent, notify, josa } from './util';
 import { totalDebt } from './selectors';
-import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeEventLeft, feeRateRun, hasRun, holdBuffer, liqRefund, openingEvent, winBonus } from './skilltree';
+import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeEventLeft, feeRateRun, hasRun, holdBuffer, liqRefund, openingEvent, popBonusAmt, popBonusAt, trailStop, winBonus } from './skilltree';
 import type { Bar } from './feed/types';
 import type { Dir, GameState, LastPos, Position, Res, RunState } from './types';
 
@@ -344,6 +344,36 @@ function holdOnce(g: GameState, p: Position): boolean {
   return true;
 }
 
+/** 들고 있는 동안 나무가 하는 일(U-50). 시세 · 청산가는 그대로다.
+ *  R 고비 보상: 지금 닫으면 늘 돈(수수료 포함)의 비율이 고비를 처음 넘으면 FRX 가 넣은 돈의 몇 %를 현금으로 얹는다(포지션마다 고비당 한 번).
+ *  C1 따라가는 손절: 손절이 걸려 있고 가장 높았던 ROE 가 +30% 를 넘었으면 손절을 본전 위로, 그 뒤 30%p 뒤를 따라 올린다(내리지 않는다). */
+function treeRide(g: GameState, p: Position, price: number, roe: number): void {
+  const run = g.run;
+  if ((run.skill?.R ?? 0) > 0) {
+    const net = closeBack(p, price, exitFeeMul(run)) - p.margin0 - p.feesPaid;
+    const nr = (net / Math.max(1, p.margin0)) * 100;
+    let at = 0;
+    for (const a of popBonusAt()) if (a > (p.popBest ?? 0) && nr >= a) at = a;
+    if (at > 0) {
+      p.popBest = at;
+      const amt = popBonusAmt(run, p.margin0);
+      if (amt >= 1) {
+        run.cash += amt;
+        bump(run, 'popBonus', amt);
+        run.stats.lastPop = { market: p.market, tick: run.tick, at, amount: amt };
+        logEvent(run, 'popBonus', `${marketById[p.market].name} +${at}% 고비 보상`, amt);
+      }
+    }
+  }
+  const sl = trailStop(run, p.slRoe, p.peakRoe, roe);
+  if (sl !== null) {
+    const first = !p.trailed;
+    p.slRoe = sl;
+    p.trailed = true;
+    run.stats.lastTrail = { market: p.market, tick: run.tick, sl, first };
+  }
+}
+
 /** 한 틱: 시장이 열려 있을 때 포지션마다 청산 > 손절 > 익절 순으로 본다. 정지 중엔 얼린다. */
 export function processPrice(g: GameState, market: string, price: number): void {
   const run = g.run;
@@ -374,6 +404,7 @@ export function processPrice(g: GameState, market: string, price: number): void 
     run.marginCall = { market, tick: run.tick };
   }
   if (roe <= -80) p.roeLowSec += 1;
+  treeRide(g, p, price, roe);
   let hit = touched(p, price);
   if (hit === 'liq' && holdOnce(g, p)) hit = touched(p, price);
   if (hit === 'liq') finish(g, p, price, 'liq');
