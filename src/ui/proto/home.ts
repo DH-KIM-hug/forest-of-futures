@@ -50,6 +50,44 @@ export function heroSpotFor(slot: number): Pt {
   const [x, y] = WHEEL_SLOTS[slot];
   return [x > 700 ? x - 118 : x + 125, y > 1150 ? y + 12 : y + 58];
 }
+// ── 전선의 길(U-46 사용자: 회차 5b "전선이 주인공 발밑을 지나간다") ──
+const CU = Math.cos(Math.PI / 6), SU = 0.5;
+/** 전선이 지나면 안 되는 바닥: 바닥 밖 · 상자 둘(배경 그림에 그려져 있어 전선이 그 위로 그려진다) · 계단과 스탠드 */
+export function offFloor(x: number, y: number): boolean {
+  if (x < 40 || x > 960 || y < 700) return true;
+  if (y > (x < 330 ? 1165 : 1245)) return true; // 앞 테두리
+  if (x > 680 && x < 980 && y > 840 && y < 1110) return true; // 상자 둘
+  if (x < 330 && y < 770) return true; // 계단 · 스탠드
+  return false;
+}
+/** 발밑을 피할 것: 발 좌표와 반너비(집 그림 픽셀). 전선이 그 발 둘레의 바닥 띠를 지나면 밟고 선 것처럼 보인다(뒤로 지나면 몸이 가린다) */
+export interface Foot { p: Pt; w: number }
+/** 바닥에 놓인 전선의 길(U-46): 아이소 바닥의 두 축만 따라 a → b 로 간다. 꺾는 곳을 바꿔 가며(한 번 · 두 번) 사람 · 쳇바퀴의 발밑과 바닥 밖을 가장 덜 지나는 길을 고른다. 순수 함수 */
+export function cableRoute(a: Pt, b: Pt, feet: Foot[]): Pt[] {
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  const p = (dx / CU + dy / SU) / 2, q = (dy / SU - dx / CU) / 2; // u = (CU, SU) 쪽으로 p, v = (−CU, SU) 쪽으로 q
+  const U = (k: number): Pt => [k * CU, k * SU], V = (k: number): Pt => [-k * CU, k * SU];
+  const walk = (legs: Pt[]): Pt[] => { const out: Pt[] = [a]; let c = a; for (const l of legs) { if (Math.hypot(l[0], l[1]) < 1) continue; c = [c[0] + l[0], c[1] + l[1]]; out.push(c); } out[out.length - 1] = b; return out; };
+  const cands: Pt[][] = [];
+  for (let i = 0; i < 20; i++) { const t = i / 20; cands.push(walk([V(q * t), U(p), V(q * (1 - t))]), walk([U(p * t), V(q), U(p * (1 - t))])); }
+  const cost = (pl: Pt[]): number => {
+    let c = (pl.length - 2) * 0.5;
+    for (let i = 0; i + 1 < pl.length; i++) {
+      const [x0, y0] = pl[i], [x1, y1] = pl[i + 1];
+      const n = Math.max(2, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 3));
+      for (let k = 0; k <= n; k++) {
+        const x = x0 + ((x1 - x0) * k) / n, y = y0 + ((y1 - y0) * k) / n;
+        if (offFloor(x, y)) c += 2;
+        for (const f of feet) if (Math.abs(x - f.p[0]) < f.w && y > f.p[1] - 12 && y < f.p[1] + 20) c += 1; // 발 뒤로 조금 지나면 몸 · 받침이 가린다
+      }
+    }
+    return c;
+  };
+  let best = cands[0], bc = cost(best);
+  for (const pl of cands.slice(1)) { const c = cost(pl); if (c < bc - 1e-9) { best = pl; bc = c; } }
+  return best;
+}
+
 /** 쳇바퀴 굴리기 탭이 먹는 넉넉한 네모(엄마의 쳇바퀴 + 주인공): [x, y, w, h] */
 export const TAP_AREA: [number, number, number, number] = [310, 815, 380, 320];
 

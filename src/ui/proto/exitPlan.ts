@@ -8,7 +8,7 @@ import type { Position, RunState } from '../../engine/types';
 import { acornStops, type StopCtx } from './stops';
 
 /** 종목 → 도토리로 정한 출구(이만큼 따면 · 이만큼 잃으면, 없으면 null) */
-export const plans: Record<string, { tp: number | null; sl: number | null; /** 한 번 누르기로 건 출구(U-42) */ one?: boolean; /** 그 크기를 고른 까닭(stops.ts autoExit) */ by?: 'claim' | 'range' | 'flat' }> = {};
+export const plans: Record<string, { tp: number | null; sl: number | null }> = {};
 
 /** 열린 포지션의 출구 셈에 드는 숫자. 이미 낸 돈 = 들어갈 때 수수료 + 지금까지 증거금에서 빠진 펀딩비
  *  (회차 4 의 실시간 판에서 본 것: 펀딩비를 빼지 않으면 정산을 두 번 넘긴 "+7,750" 익절이 +7,563 으로 닫혔다) */

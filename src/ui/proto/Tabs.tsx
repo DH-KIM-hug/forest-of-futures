@@ -16,6 +16,7 @@ import { forecast } from '../../engine/settlement';
 import { ledgerRows, goldStamps, repaidOffice, repayBuys, STAMP_STEP } from './ledger';
 import { RowIcon } from './art';
 import { sprite, PLACE_ART, MAP_SPOTS } from './sprites';
+import { aliveStyle } from './alive';
 import { journeyOf } from './stops';
 import { claim } from './model';
 import { RankSign } from './RankingBoard';
@@ -28,7 +29,7 @@ function PlaceArt({ id }: { id: string }) {
   return (
     <div className={'plc-art a-' + id} data-art={a.scene} aria-hidden="true">
       <img className="bg" src={bg.src} alt="" draggable={false} />
-      {npc && <img className="npc" data-art={a.npc} src={npc.src} alt="" draggable={false} />}
+      {npc && <img className="npc al-html" data-art={a.npc} src={npc.src} alt="" draggable={false} style={aliveStyle('map-' + a.npc)} />}
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { equipAppraisalSum, houseValue, netWorth, ownedCoins, stage, totalDebt, 
 import { logEvent, notify } from './util';
 import { bump } from './stats';
 import { applyBirth, grantAward } from './skilltree';
+import { applyPostTutorial } from './act1Start';
 import type { Branch, CoinId, DebtId, Estate, GameState, HanCalc, Res, RunState } from './types';
 
 const INH = balance.inheritance;
@@ -355,6 +356,8 @@ export function startNextGeneration(g: GameState): Res {
   g.pendingEnding = null;
   g.estate = null;
   applyBirth(g); // 가문의 스킬트리 노드를 새 생에 켠다
+  // 1막: 튜토리얼이 끝난 자리에서 눈을 뜬다(U-46)
+  if ((balance as { act1?: unknown }).act1) applyPostTutorial(g);
   refreshShark2Open(g);
   run.peakNetWorth = netWorth(run);
   notify(run, '세월이 흘렀다. 우편함에 나뭇잎 통지서 한 장 — 상속 개시.', 'info', 'wire:inherit');

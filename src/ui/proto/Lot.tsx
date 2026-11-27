@@ -77,7 +77,7 @@ function TileBtn({ t, 'data-hl': hl, onAct }: { t: Tile; 'data-hl'?: 'tileFirst'
       </span>
       {t.action
         ? <span key={pop} className={'do' + (t.canAct ? ' on' : '') + (pop ? ' popped' : '')}><b>{t.btn}</b><small>{t.btnSub}</small></span>
-        : <span className="stt">{t.state === 'run' ? <><b key={hired} className={hired ? 'hired' : undefined}>{t.text}</b><small>알바가 돌린다</small></> : <small>{t.text}</small>}</span>}
+        : <span className="stt">{t.state === 'run' ? <><b key={hired} className={hired ? 'hired' : undefined}>{t.text}</b><small>{t.sub ?? '알바가 돌린다'}</small></> : <small>{t.text}</small>}</span>}
     </button>
   );
 }
@@ -177,9 +177,13 @@ export function Lot() {
   };
   const onToggle = () => { if (dragged.current) { dragged.current = false; return; } play('ui_tap'); setPanel(!useProto.getState().panelOpen); };
 
-  const idleSec = perSec(sum.idle), claimSec = perSec(sum.claim);
-  const ahead = idleSec >= claimSec;
-  const share = idleSec + claimSec > 0 ? Math.max(0.04, Math.min(0.96, idleSec / (idleSec + claimSec))) : 0.5;
+  // 들어오는 돈 = 1초마다 캐서 판 값(쳇바퀴 위의 "+n"과 같다), 나가는 돈 = 정산 때 걷는 것 전부(이자 + 생활비 + 일당) — U-46
+  const idleSec = perSec(sum.mined);
+  // 다음 정산까지 벌 돈 = 초당 × 남은 초(1초마다 실제로 들어오는 돈) — 손에 든 돈까지 더해 정산 때 낼 돈과 견준다
+  const earnLeft = idleSec * Math.max(0, run.settleIn);
+  const cashNow = run.cash;
+  const ahead = cashNow + earnLeft >= sum.due;
+  const share = earnLeft + sum.due > 0 ? Math.max(0.04, Math.min(0.96, (cashNow + earnLeft) / Math.max(1, cashNow + earnLeft + sum.due))) : 0.5;
   const left = mmss(Math.max(0, run.settleIn));
   const todo = cells.some((t) => t.action && t.canAct);
   const nextEmpty = cells.find((t) => t.state === 'empty')?.slot;
@@ -207,11 +211,12 @@ export function Lot() {
             {open ? (
               <>
                 <span className="cmp">
-                  <span className="in"><i className="chev">▼&#xFE0E;</i><small>버는 돈</small><b>초당 {rateTxt(idleSec)}</b></span>
+                  {/* 다음 정산까지 벌 돈(초당 × 남은 초) vs 정산 때 낼 돈(U-46): "이번 정산을 낼 수 있나"에 답한다 */}
+                  <span className="in"><i className="chev">▼&#xFE0E;</i><small>다음 정산까지 벌 돈</small><b>+{comma(Math.round(earnLeft))}</b><small className="x">초당 +{rateTxt(idleSec)} × {Math.max(0, run.settleIn)}초</small></span>
                   <span className="bar" role="img" aria-label={ahead ? '버는 돈이 더 많다' : '나가는 돈이 더 많다'}><i style={{ width: `${share * 100}%` }} /><u /></span>
-                  <span className="out"><small>나가는 돈</small><b>초당 {rateTxt(claimSec)}</b></span>
+                  <span className="out"><small>정산 때 낼 돈</small><b>−{comma(sum.due)}</b></span>
                 </span>
-                <span className="nx">정산까지 <b>{left}</b>, 그때 낼 돈 <b>{comma(sum.claim)}</b></span>
+                <span className="nx">정산까지 <b>{left}</b>{cashNow >= 1 ? <>, 손에 <b>{comma(Math.floor(cashNow))}</b></> : null}</span>
                 {/* 이번 생의 길(U-41): 낸 돈과 거래가 벌어 온 돈 */}
                 {(run.settleNo > 0 || closes > 0) && <span className="jr" data-journey="home">{jr.text}</span>}
               </>
@@ -219,8 +224,8 @@ export function Lot() {
               <span className="one">
                 <i className="chev">▲&#xFE0E;{todo && <u className="dot" />}</i>
                 {/* 초당 들어오는 돈 / 나가는 돈(U-43): 들어오는 것은 초록, 나가는 것은 빨강. 견줌 기호 대신 빗금 하나 */}
-                <b className="in">초당 +{rateTxt(idleSec)}</b><i className="cmpch" aria-label={ahead ? '버는 돈이 더 많다' : '나가는 돈이 더 많다'}>/</i><b className="out">−{rateTxt(claimSec)}</b>
-                <span className="tm">정산 {left}</span>
+                <b className="in">초당 +{rateTxt(idleSec)}</b><i className="cmpch" aria-hidden="true">/</i><b className="out">정산 때 −{comma(sum.due)}</b>
+                <span className="tm">{left}</span>
               </span>
             )}
           </button>

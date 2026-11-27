@@ -1,4 +1,5 @@
 // 시제품 전용 장면 건너뛰기: ?proto=1&pdev=<장면>. 기존 dev.ts 의 장면 조립을 재사용한다(엔진 규칙은 건드리지 않는다).
+import { applyPostTutorial } from '../../engine/act1Start';
 import { useGame, persistFlag } from '../../store/gameStore';
 import { buildScenario } from '../dev';
 import { useProto, type Tab } from './protoStore';
@@ -77,7 +78,8 @@ export function rebirthOverride(): void {
   run.settleIn = balance.settlement.intervalSec;
   g.run = run;
   g.family.traits = []; g.family.deepBlood = false; g.family.lenderRelations = {};
-  applyBirth(g); // 스킬트리: 지난 생까지 산 노드가 이번 생에 켜진다(뿌리 = 폰을 쥔 채 눈을 뜬다)
+  applyBirth(g); // 스킬트리: 지난 생까지 산 노드가 이번 생에 켜진다
+  applyPostTutorial(g); // U-46: 새 생은 첫 생의 튜토리얼이 끝난 자리에서(손에 10만 · 빚 50만 · 쳇바퀴 둘 · 알바 둘 · 폰)
   run.peakNetWorth = netWorth(run);
   st.setGame(g);
 }
@@ -261,7 +263,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       useUI.getState().setTrade({ lev: 200, pct: 50, tpK: q.get('pk') === '0' ? null : 1, slK: q.get('pk') === '0' ? null : 1 });
       if (name === 'acq') {
         // 조용한 장(U-42 화면 확인용): 지난 5분의 가장 큰 폭이 0.1% 쯤인 기록을 채우고 시계를 멈춘다 → 한 번 누르기가 "지난 5분 최대 폭 기준"으로 줄어든다
-        useUI.getState().setTrade({ tpK: null, slK: null, acAuto: q.get('pk') !== '0' });
+        useUI.getState().setTrade({ tpK: null, slK: null });
         const fill = () => { const px = useGame.getState().g.run.prices.DTC; const h = historyOf('DTC'); h.splice(0, h.length, ...Array.from({ length: 300 }, (_, i) => px * (1 + 0.0005 * Math.sin(i / 23) + 0.00012 * Math.sin(i / 3.1))), px); markLive('DTC'); };
         window.setTimeout(() => { useGame.getState().setSpeed(0); fill(); useGame.setState((st0) => ({ g: { ...st0.g } })); }, 1500);
       }

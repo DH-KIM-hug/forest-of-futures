@@ -1,7 +1,7 @@
 // 집 탭의 세상(U-33·U-34): 나무 밑동 집 그림(sprites.ts 'home') 한 장을 화면 너비에 맞춰 깔고, 그 위에 쳇바퀴·알바·주인공·손님을 그림 좌표로 얹는다.
 // 자리와 구도는 home.ts(WHEEL_SLOTS·homeCam). 좌표는 그림 픽셀(992×1586)로 적고, SVG 는 390 너비 단위로 그린다(선 굵기·글자 크기가 예전 그대로).
 // 접힌 판일 때 쳇바퀴(와 주인공)를 누르면 굴린다. 새 그림이 없는 것(알바·추심원·콜드월렛)은 예전 SVG 로 그린다.
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
 import { comma } from '../../engine/util';
@@ -12,8 +12,9 @@ import { sellFeeRate } from '../../engine/mining';
 import { houseDefs } from '../../engine/data';
 import { COLLECTOR_NAME } from './text';
 import { EXTRA_WHEEL } from './model';
-import { EMPTY_WHEEL_H, EMPTY_WHEEL_DY, EMPTY_WHEEL_FACE, HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, WHEEL_FACE as OLD_FACE, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, WALLET_SPOT, TAP_AREA, RIG_SPOT, RIG_H, RIG_ART, HOOP, heroSpotFor, assignSlots, homeCam, type Pt } from './home';
-import { HOME_BY_LEVEL, sprite, spriteOr, blinkOf, type SpriteId } from './sprites';
+import { EMPTY_WHEEL_H, EMPTY_WHEEL_DY, EMPTY_WHEEL_FACE, HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, WHEEL_FACE as OLD_FACE, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, WALLET_SPOT, TAP_AREA, RIG_SPOT, RIG_H, RIG_ART, HOOP, heroSpotFor, assignSlots, homeCam, cableRoute, type Foot, type Pt } from './home';
+import { HOME_BY_LEVEL, sprite, spriteOr, blinkOf, WALK_PAIR, STEPS_PER_SEC, STRIDE, type SpriteId } from './sprites';
+import { WalkFrames } from './WalkFrames';
 import { aliveStyle, useBlink } from './alive';
 import { rollTarget } from '../../engine/mining';
 import { reduced } from './fx';
@@ -113,12 +114,26 @@ export function floorCorner(a: Pt, b: Pt): Pt {
   return [a[0] + p * cu, a[1] + p * su];
 }
 
+/** 꺾인 길을 SVG 경로로: 꺾는 곳은 둥글게 */
+export function routePath(pl: Pt[], r = 6): string {
+  const f = (v: number) => v.toFixed(1);
+  let d = `M${f(pl[0][0])} ${f(pl[0][1])}`;
+  for (let i = 1; i < pl.length - 1; i++) {
+    const [px, py] = pl[i - 1], [cx, cy] = pl[i], [nx, ny] = pl[i + 1];
+    const l1 = Math.hypot(cx - px, cy - py) || 1, l2 = Math.hypot(nx - cx, ny - cy) || 1;
+    const k1 = Math.min(r, l1 / 2) / l1, k2 = Math.min(r, l2 / 2) / l2;
+    d += ` L${f(cx - (cx - px) * k1)} ${f(cy - (cy - py) * k1)} Q${f(cx)} ${f(cy)} ${f(cx + (nx - cx) * k2)} ${f(cy + (ny - cy) * k2)}`;
+  }
+  const e = pl[pl.length - 1];
+  return d + ` L${f(e[0])} ${f(e[1])}`;
+}
+
 /** 전선 한 가닥(바닥을 따라 살짝 처진다): 짙은 테 + 흐린 색. on 이면 전기 알갱이가 채굴기 쪽으로 흐른다 */
-function Cable({ from, to, on, hero, loose, sag = 14, hue = '#8A9A62' }: { from: Pt; to: Pt; on: boolean; hero?: boolean; /** 뽑혀서 바닥에 늘어져 있다(실려 간 쳇바퀴의 전선) */ loose?: boolean; sag?: number; hue?: string }) {
+function Cable({ from, to, on, hero, loose, sag = 14, hue = '#8A9A62', route }: { from: Pt; to: Pt; on: boolean; hero?: boolean; /** 뽑혀서 바닥에 늘어져 있다(실려 간 쳇바퀴의 전선) */ loose?: boolean; sag?: number; hue?: string; /** 바닥을 따라 꺾어 가는 길(cableRoute, SVG 단위). 있으면 그 길로 간다 */ route?: Pt[] }) {
   const mx = (from[0] + to[0]) / 2, my = (from[1] + to[1]) / 2 + sag;
   // 바닥에 놓인 전선: 아이소 바닥의 두 축(오른아래 30° · 왼아래 30°)을 따라 한 번 꺾여 간다. 꺾이는 곳은 둥글게, 중간에 살짝 늘어진다(손으로 깐 줄)
   const c = floorCorner(from, to);
-  const d = loose
+  const d = route && !loose ? routePath(route) : loose
     ? `M${to[0]} ${to[1]} Q${mx} ${my + 6} ${mx + (from[0] - mx) * 0.45} ${my + 10} q-6 5 2 9`
     : `M${from[0]} ${from[1]} C${(from[0] + (c[0] - from[0]) * 0.9).toFixed(1)} ${(from[1] + (c[1] - from[1]) * 0.9 + sag * 0.25).toFixed(1)} ${(c[0] + (to[0] - c[0]) * 0.25).toFixed(1)} ${(c[1] + (to[1] - c[1]) * 0.25 + sag * 0.2).toFixed(1)} ${to[0]} ${to[1]}`;
   return (
@@ -204,13 +219,16 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   const cheering = !!cheer && !near && !justLiq;
   // 걸음(U-43 사용자: "주인공 시선이 한쪽만 있어서 이상한데"): 서는 자리가 바뀌면 그쪽으로 미끄러지며 걷는 그림을 쓴다 — 멀어지면 등, 다가오면 앞, 옆으로는 옆 그림(왼쪽이면 뒤집는다)
   const prevSpot = useRef(spot);
-  const [walk, setWalk] = useState<{ dx: number; dy: number } | null>(null);
+  const [walk, setWalk] = useState<{ dx: number; dy: number; dur: number } | null>(null);
   useEffect(() => {
     const p = prevSpot.current;
     if (p[0] === spot[0] && p[1] === spot[1]) return;
     prevSpot.current = spot;
-    setWalk({ dx: spot[0] - p[0], dy: spot[1] - p[1] });
-    const t = window.setTimeout(() => setWalk(null), 720);
+    // 두 걸음 걷기(U-46): 거리 ÷ 보폭으로 걸음 수를 정하고, 그 걸음 수를 초당 5.5 걸음으로 걷는 시간만큼 미끄러진다(발이 바닥에서 미끄러지지 않게)
+    const steps = Math.max(2, Math.round((Math.hypot(spot[0] - p[0], spot[1] - p[1]) * K) / (hh * STRIDE)));
+    const dur = steps / STEPS_PER_SEC;
+    setWalk({ dx: spot[0] - p[0], dy: spot[1] - p[1], dur });
+    const t = window.setTimeout(() => setWalk(null), dur * 1000 + 40);
     return () => window.clearTimeout(t);
   }, [spot[0], spot[1]]);
   const phone = run.futures.open;
@@ -226,7 +244,8 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   const hScale = heroId === 'heroSad' ? 0.9 : heroId === 'heroHappy' ? 1.1 : 1;
   const hw = hh * hScale * (heroImg.w / heroImg.h);
   // 손익이 몸에 보인다(U-39 ①). 걷는 중에는 두 박자로 통통
-  const heroCls = walking ? ' walkbob' : near || mood === 'frozen' ? ' stare' : cheering ? ' hopjoy' : mood === 'pace' ? ' pace' : mood === 'hop' ? ' hopjoy' : mood === 'phone' ? ' phone' : ' al';
+  const cycling = walking && !!WALK_PAIR[heroId];
+  const heroCls = walking ? (cycling ? '' : ' walkbob') : near || mood === 'frozen' ? ' stare' : cheering ? ' hopjoy' : mood === 'pace' ? ' pace' : mood === 'hop' ? ' hopjoy' : mood === 'phone' ? ' phone' : ' al';
 
   const addFloat = (t: string, x: number, y: number, cls = '', to?: Pt) => {
     const id = ++idRef.current;
@@ -271,6 +290,19 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   const staffedN = wheels.filter((w) => w.kind === 'hamster').length;
   const sock = rigPoint(RIG_ART.socket);
   const cableFrom = (w: W): Pt => [w.foot[0] + (w.foot[0] < sock[0] ? 20 : -20), w.foot[1] - 4];
+  // 전선의 길(U-46): 주인공이 서는 곳 · 손님 자리 · 다른 쳇바퀴의 발밑과 상자를 피해 바닥의 두 축을 따라 꺾어 간다. 쳇바퀴가 놓이거나 알바가 바뀔 때만 다시 센다(주인공이 걸을 때마다 줄이 움직이지 않게)
+  const routeKey = wheels.map((w) => w.key + ':' + w.slot + (w.kind === 'hamster' ? 'h' : '')).join(',');
+  const routes = useMemo(() => {
+    const out: Record<string, Pt[]> = {};
+    const img = (p: Pt): Pt => [p[0] / K, p[1] / K];
+    const heroSpots: Pt[] = [HERO_SPOT, ...wheels.filter((w) => w.slot > 0 && w.kind !== 'hamster').map((w) => heroSpotFor(w.slot))];
+    for (const w of wheels) {
+      const feet: Foot[] = [...heroSpots.map((p) => ({ p, w: 45 })), { p: VISITOR_SPOT, w: 40 }, ...wheels.filter((o) => o.key !== w.key).map((o) => ({ p: WHEEL_SLOTS[o.slot], w: 80 }))];
+      out[w.key] = cableRoute(img(cableFrom(w)), img(sock), feet).map((p) => at(p));
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeKey]);
   // 실려 간 쳇바퀴의 전선: 잠깐 바닥에 늘어져 있다가 사라진다
   const prevWheels = useRef<Record<string, Pt>>({});
   const [loose, setLoose] = useState<{ id: number; from: Pt }[]>([]);
@@ -324,13 +356,16 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   }, [staffedN > 0]);
   // 알바를 부른 순간: 그 쳇바퀴 위에 "초당 +0 → +n"
   const prevStaffed = useRef<string[] | null>(null);
+  const prevGenW = useRef(g.family.generation);
   useEffect(() => {
     const now2 = wheels.filter((w) => w.kind === 'hamster').map((w) => w.key);
     const was = prevStaffed.current;
     prevStaffed.current = now2;
-    if (!was) return;
-    for (const k of now2) if (!was.includes(k)) { const w = wheels.find((x) => x.key === k)!; addFloat(`초당 +0 → +${rateTxt(perSec(hamsterMath(g).net))}`, Math.max(70, Math.min(320, w.foot[0])), w.foot[1] - HAM_WHEEL_H * K - 14, 'hire'); }
-  }, [wheels.filter((w) => w.kind === 'hamster').map((w) => w.key).join(',')]);
+    // 새 생이 알바 둘을 데리고 시작할 때(U-46)는 "알바를 들였다"가 아니다
+    const newLife = prevGenW.current !== g.family.generation; prevGenW.current = g.family.generation;
+    if (!was || newLife) return;
+    for (const k of now2) if (!was.includes(k)) { const w = wheels.find((x) => x.key === k)!; addFloat(`초당 +0 → +${rateTxt(perSec(hamsterMath(g).sold))}`, Math.max(70, Math.min(320, w.foot[0])), w.foot[1] - HAM_WHEEL_H * K - 14, 'hire'); }
+  }, [wheels.filter((w) => w.kind === 'hamster').map((w) => w.key).join(','), g.family.generation]);
 
   const items: Item[] = [];
   for (const w of wheels) items.push({ y: w.foot[1], key: w.key, node: <WheelAt foot={w.foot} id={w.slot === 0 ? 'pr-wheel1' : undefined} kind={w.kind} running={w.running} tagged={w.tagged} label={w.label} pop={w.pop} bump={w.slot === rideSlot && w.kind !== 'hamster' ? tapKey : 0} cheer={cheering} /> });
@@ -350,11 +385,13 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   // 주인공: 굴릴 수 있는 쳇바퀴 옆에 서 있다(없으면 엄마의 쳇바퀴 옆에서 폰을 본다). 자리가 바뀌면 걸어간다
   const [bx, by] = at(HERO_SPOT);
   if (!riding) items.push({ y: hy, key: 'hero', node: (
-    <g id="pr-hero" data-mood={near ? 'frozen' : mood} data-art={heroId} data-flip={flip ? '1' : '0'} data-slot={rideSlot} className="pr-herowalk" style={{ transform: `translate(${hx - bx}px, ${hy - by}px)` }}>
+    <g id="pr-hero" data-mood={near ? 'frozen' : mood} data-art={heroId} data-flip={flip ? '1' : '0'} data-slot={rideSlot} className="pr-herowalk" style={{ transform: `translate(${hx - bx}px, ${hy - by}px)`, transitionDuration: walk ? `${walk.dur.toFixed(2)}s` : undefined }}>
       <ellipse cx={bx + 1} cy={by - 1} rx={hw * 0.42} ry={4.5} fill="#5A3A1E" opacity={0.2} />
       <g transform={flip ? `translate(${2 * bx} 0) scale(-1 1)` : undefined}>
         <g className={'pa-hero' + heroCls} style={{ transformOrigin: `${bx}px ${by}px`, ...aliveStyle('hero') }}>
-          {heroId === 'hero' || heroId === 'heroEmpty'
+          {cycling
+            ? <WalkFrames id={heroId} x={bx - hw / 2} y={by - hh * hScale} w={hw} h={hh * hScale} period={2 / STEPS_PER_SEC} />
+            : heroId === 'hero' || heroId === 'heroEmpty'
             ? <BlinkImage id={heroId} x={bx - hw / 2} y={by - hh * hScale} w={hw} h={hh * hScale} />
             : <image href={heroImg.src} x={bx - hw / 2} y={by - hh * hScale} width={hw} height={hh * hScale} />}
         </g>
@@ -422,7 +459,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
           {spots}
           {/* 전선(U-43): 쳇바퀴마다 채굴기로 한 가닥, 채굴기에서 콜드월렛으로 한 가닥. 도는 쳇바퀴의 전선에는 전기가 흐른다. 바닥에 놓인 것이라 쳇바퀴 · 사람보다 먼저 그린다 */}
           <g className="pr-cables" data-hl="cables">
-            {wheels.map((w) => <Cable key={w.key} from={cableFrom(w)} to={sock} on={w.running} hero={w.kind === 'hero'} hue={w.tagged ? '#B8785A' : '#8A9A62'} />)}
+            {wheels.map((w) => <Cable key={w.key} from={cableFrom(w)} to={sock} on={w.running} hero={w.kind === 'hero'} hue={w.tagged ? '#B8785A' : '#8A9A62'} route={routes[w.key]} />)}
             {loose.map((l) => <Cable key={'l' + l.id} from={l.from} to={sock} on={false} loose />)}
             {(first || extras.length > 0) && <g className={'pr-cable out' + (anyRun ? ' on' : '')} data-cable-out={anyRun ? 'on' : 'idle'}>
               {(() => { const d = `M${out[0]} ${out[1]} Q${(out[0] + wdx) / 2 + 20} ${out[1] + 6} ${wdx - 26} ${wdy - 52} T${wdx - 9} ${wdy - 4}`; return <><path d={d} className="c-out" /><path d={d} className="c-in" style={{ stroke: anyRun ? '#C9A44C' : '#9A8F6E' }} /><path d={d} className="c-pulse" /></>; })()}

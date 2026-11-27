@@ -4,10 +4,10 @@
 import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
 
 const hash = (s: string): number => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
-/** 인물마다 다른 숨의 길이(2.2~3.2초)와 엇박, 고개를 까딱이는 긴 박자(7~13초). 같은 이름이면 늘 같은 값(순수) */
+/** 인물마다 다른 숨의 길이(1.3~1.8초, U-46)와 엇박, 고개를 까딱이는 긴 박자(7~13초). 같은 이름이면 늘 같은 값(순수) */
 export function aliveVars(seed: string): { dur: number; delay: number; tilt: number } {
   const a = hash(seed), b = hash(seed + '#'), c = hash(seed + '~');
-  return { dur: +(2.2 + a * 1.0).toFixed(2), delay: +(-b * 3).toFixed(2), tilt: +(7 + c * 6).toFixed(1) };
+  return { dur: +(1.3 + a * 0.5).toFixed(2), delay: +(-b * 3).toFixed(2), tilt: +(7 + c * 6).toFixed(1) }; // U-46: 숨 1.3~1.8초(머리가 보이게 내려앉는다)
 }
 export const aliveStyle = (seed: string): CSSProperties => { const v = aliveVars(seed); return { ['--al-dur' as string]: `${v.dur}s`, ['--al-delay' as string]: `${v.delay}s`, ['--al-tilt' as string]: `${v.tilt}s` }; };
 

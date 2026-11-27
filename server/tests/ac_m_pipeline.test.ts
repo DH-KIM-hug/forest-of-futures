@@ -101,7 +101,7 @@ describe('틱·봉 저장', () => {
     expect(b60.bars.length).toBeGreaterThanOrEqual(5 * 5);
     expect(b180.bars.length).toBeGreaterThanOrEqual(5);
     expect(b180.bars[0].avg60).toBeGreaterThan(0);
-    expect(markets.map((m) => m.id)).toEqual(['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']);
+    expect(markets.map((m) => m.id)).toEqual(['DTC', 'BTH', 'MDT', 'SMS', 'JQQ']);
     expect(Object.keys(store.ticksBetween(0, 1e9)[0].p).sort()).toEqual(['BTH', 'DTC', 'JQQ', 'MDT', 'SMS']);
   });
 });

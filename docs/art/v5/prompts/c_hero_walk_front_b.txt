@@ -1,0 +1,1 @@
+Redraw the reference character EXACTLY (same design, colours, outline, size, framing, camera angle and walking direction) as the OTHER step of the same walk cycle: the opposite foot is now lifted and forward and the other foot is planted; arms swing the opposite way; the body is at the same height. Everything else identical. Plain flat background, no text, no ground shadow.

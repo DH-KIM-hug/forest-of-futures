@@ -39,8 +39,9 @@ export const ledgerNote = (sec: number): string => `다음 수금 ${sec >= 60 &&
 // 이야기 대사(STORY) 사이사이에 설명 줄(T, guide.ts)이 끼어 있다. 설명 줄은 평생 한 번만 나오고, 본 뒤에는 이야기 줄만 남는다.
 export const STORY = {
   /** 1-2 첫 정산 직전: 추심원이 이자를 걷으러 왔는데 낼 돈이 없다 → 사무소로 오라고 한다(지도가 열린다) */
-  collectorCome: (o: { interest: number; cash: number; lend: number; again: boolean; reborn: boolean }, A: TipArgs): Line[] => [
-    L('collector', o.again ? `이자 ${n(o.interest)}, 또 왔어요오.` : o.reborn ? `처음 뵙네요오. 이자 ${n(o.interest)}, 걷으러 왔어요오.` : `이자 ${n(o.interest)}, 걷으러 왔어요오.`),
+  collectorCome: (o: { interest: number; living?: number; cash: number; lend: number; again: boolean; reborn: boolean }, A: TipArgs): Line[] => [
+    // 걷는 돈은 목표 막대 · 머리의 숫자와 같게(U-46): 이자에 생활비까지
+    L('collector', o.again ? `이자 ${n(o.interest)}${o.living ? `에 생활비 ${n(o.living)}` : ''}, 또 왔어요오.` : `${o.reborn ? '처음 뵙네요오. ' : ''}이자 ${n(o.interest)}${o.living ? `에 생활비 ${n(o.living)}` : ''}, 걷으러 왔어요오.`),
     L('collector', o.again ? '이번에도 모자라네요오. 한 번 더 밀리면 쳇바퀴 실어 가요오.' : o.cash < 1 ? '…손에 한 푼도 없으시네요오.' : `…손에 ${n(o.cash)}이네요오. 모자라요오.`, 'flat'),
     ...(o.again ? [] : [T('come.why', A)]),
     L('collector', `사무소로 오세요오. ${man(o.lend)} 빌려 드릴게요오. 이자는 거기서 받고요오.`, 'smile'),
@@ -56,7 +57,7 @@ export const STORY = {
     L('note', `추심원이 ${n(o.newInterest)} 적힌 수금 전표를 장부에 끼운다.`),
   ] : [
     L('boss', `어머님 일은 유감입니다. ${man(o.lend)}, 여기 있습니다.`, 'smile'),
-    L('boss', `어머님 빚 ${n(o.oldInterest)}에 새 돈 ${o.ratePct}%. 정산마다 ${n(o.newInterest)}입니다.`),
+    L('boss', `어머님 빚 이자 ${n(o.oldInterest)}에 새 돈 ${o.ratePct}%. 정산마다 ${n(o.newInterest)}입니다.`),
     L('note', `추심원이 ${n(o.newInterest)} 적힌 수금 전표를 장부에 끼운다.`),
     L('boss', '이건 저희 수금용 폰입니다. 알바도 이걸로 부르세요.', 'smile'),
     L('boss', 'FRX 앱도 깔아 뒀습니다. 거래 전표는 저희한테도 한 장씩 옵니다.', 'smile'),
@@ -71,7 +72,7 @@ export const STORY = {
   /** 다음 생의 첫 정산 */
   rebornSettle: (interest: number): Line[] => [
     L('collector', `이자 ${n(interest)}, 수금 완료요오.`),
-    L('collector', '장부는 그대로예요오. 이름만 또 바꿔 적었어요오.'),
+    L('collector', '장부는 그대로예요오. 이름만 바꿔 적었어요오.'),
   ],
   settleWin: (interest: number): Line[] => [L('collector', `이자 ${n(interest)}, 수금 완료요오.`, 'smile')],
   settleLose: (interest: number): Line[] => [L('collector', `이자 ${n(interest)}… 모자라네요오. 연체로 적을게요오.`, 'flat')],
@@ -87,7 +88,8 @@ export const STORY = {
     L('note', '주머니의 중고폰이 울린다.'),
     L('boss', '일꾼은 구하셨네요. 이제 폰에 깔아 둔 FRX 앱 한번 켜 보세요.', 'smile'),
     // 첫 거래 직전의 까닭(U-44): 알바로 이자는 메워도 원금은 그대로다
-    L('hero', repaid > 0 ? '…이번 정산에도 이만큼밖에 못 갚는다.' : '…이자는 낸다. 갚은 돈은 아직 0이다.'),
+    // 갚는 것은 사무소에서다(정산은 이자만 걷는다, U-46)
+    L('hero', repaid > 0 ? '…이자는 낸다. 사무소에 갚은 건 아직 조금이다.' : '…이자는 낸다. 갚은 돈은 아직 0이다.'),
   ],
   tutIntro: (margin: number, lev: number, A: TipArgs): Line[] => [
     L('boss', '폰은 잘 켜지죠? 그게 FRX 숲거래소 앱입니다.', 'smile'),
@@ -106,7 +108,7 @@ export const STORY = {
   /** 폰을 받은 뒤 첫 정산: 족제비가 알바와 쳇바퀴를 판다 */
   hamsterHint: (wage: number, A: TipArgs): Line[] => [
     L('weasel', '오소리 대부님이 보내셨어요~ 알바 햄스터 쓰시죠~', 'smile'),
-    L('weasel', `일당은 ${n(wage)}, 정산 때 주시면 돼요~`, 'smile'),
+    L('weasel', `일당은 ${n(wage)}, 정산 때마다 받아 갈게요~`, 'smile'),
     ...tips('hamster', A),
   ],
   /** 빌린 뒤 이자를 못 낸 첫 정산의 문자. room = 오소리에서 더 빌릴 수 있는 돈(0 이면 그렇다고 말한다, U-44) */
@@ -122,7 +124,7 @@ export const STORY = {
   /** 엄마 이야기의 단서(U-39 ⑫): 한 번에 하나, 지문 한 줄, 설명 없음. reason = 첫 금박 도장 · mirror = 갚다가 다시 빌린 때 · frame = 엄마 빚 줄에 처음 손이 닿은 때 */
   momClue: (k: 'reason' | 'mirror' | 'frame'): Line[] => [L('note',
     k === 'reason' ? '금박 도장 옆, 엄마의 장. 빌린 까닭을 적는 칸이 먹으로 지워져 있다.'
-    : k === 'mirror' ? '방금 적은 줄 위에 엄마의 줄이 있다. 10만까지 갚았다가, 다시 30만. 날짜는 한겨울이다.'
+    : k === 'mirror' ? '오소리 장부, 방금 적은 줄 위에 엄마의 줄이 있다. 10만까지 갚았다가, 다시 30만. 날짜는 한겨울이다.'
     : '오소리 대부가 서랍에서 액자를 꺼내 빈 못에 건다. 뒤집힌 채로.')],
   /** 모든 빚 0: 이 생을 닫을지 고른다(U-39 ⑧). 고르는 단추는 watch.ts 가 붙인다 */
   clear: (): Line[] => [
@@ -136,14 +138,15 @@ export const STORY = {
     L('weasel', '카탈로그 챙겨서 올게요~', 'smile'),
     L('hero', '…빚이 없으니까, 빌릴 수 있다.'),
   ],
-  reborn: (phone = false): Line[] => [L('hero', phone ? '…다시 그 오두막이다. 손에 리본 묶인 폰이 쥐여 있다.' : '…다시 그 오두막이다. 주머니에 리본이 있다.')],
+  // U-46: 새 생은 첫 생의 튜토리얼이 끝난 그 저녁에서 시작한다(폰 · 쳇바퀴 둘 · 알바 둘 · 손에 10만 · 빚 50만)
+  reborn: (): Line[] => [L('hero', '…다시 그 저녁이다. 리본 묶인 폰, 쳇바퀴 둘, 손에 100,000.')],
 
   // ── U-38: 세상이 반응한다. 아래 장면은 전부 실제로 일어난 일(엔진 값)에 붙는다 ──
   /** 빌린 뒤에 이자를 못 낸 정산: 연체가 무엇을 하는지 그 자리에서 말한다 */
   overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean; living?: number; locked?: number; livingCapital?: number }): Line[] => [
     L('collector', `이자 ${n(o.interest)}… 모자라네요오. ${o.nth <= 1 ? '연체로 적을게요오.' : `이번 생 ${o.nth}번째 연체예요오.`}`, 'flat'),
     // 돈이 없어서가 아니라 포지션에 묶여 있어서 못 낸 정산: 그렇다고 말해 준다(U-39 ①)
-    ...(o.locked && o.locked >= o.interest ? [L('collector', `돈은 있으시네요오. 거래소에 ${josa(n(o.locked), '이', '가')} 묶여 있어요오. 앱 속 돈은 제가 못 꺼내요오.`, 'flat')] : []),
+    ...(o.locked && o.locked >= o.interest ? [L('collector', `돈은 있으시네요오. 앱 속에 ${josa(n(o.locked), '이', '가')} 묶여 있어요오. 그 돈은 제가 못 꺼내요오.`, 'flat')] : []),
     L('collector', o.living ? `못 낸 이자하고 생활비 ${josa(n(o.living), '은', '는')} 원금에 얹었어요오.` : '못 낸 이자는 원금에 얹었어요오.', 'flat'),
     // 생활비를 숲속 캐피탈이 대신 냈다(그곳과 거래한 적 있는 생): 대납 영수증 한 장(U-44)
     ...(o.livingCapital ? [L('note', `영수증: 생활비 ${n(o.livingCapital)} 미납, 숲속 캐피탈 대납. 갚을 곳은 지도의 숲속 캐피탈.`)] : []),
@@ -182,7 +185,8 @@ export const STORY = {
   /** 금리 인상 속보: 이자가 얼마에서 얼마가 되는지 */
   rateHike: (o: { text: string; from: number; to: number; times: number; fixed?: number }): Line[] => [
     L('news', o.text),
-    L('collector', `다음 ${o.times}번은 이자가 ${n(o.from)}에서 ${n(o.to)}이에요오.`, 'flat'),
+    // 사건은 예고 다음 정산이 끝난 뒤부터 붙는다(engine events.ts decayEffects): 다음 한 번은 그대로다(U-46)
+    L('collector', `다음 정산은 ${n(o.from)} 그대로고요오, 그 뒤 ${o.times}번은 ${n(o.to)}이에요오.`, 'flat'),
     // 엄마 빚은 고정금리다: "어머님 때 이자 그대로"(U-39 ⑥)
     ...(o.fixed ? [L('collector', `어머님 빚 이자 ${n(o.fixed)}은 안 올라요오.`, 'flat')] : []),
   ],
@@ -190,13 +194,14 @@ export const STORY = {
   /** 진짜 시세로 거래를 시작할 때 오는 문자(생마다 한 번 — 새 생은 새 계좌다) */
   feeEventSms: (o: { left: number; reborn: boolean }): Line[] => [
     L('sms', `[FRX 숲거래소] 오픈 기념! 새 계좌는 정산 ${o.left}번 동안 거래 수수료 0%.`),
-    L('hero', o.reborn ? '…이번 생에도 새 계좌다. 공짜는 공짜다.' : '…공짜라는 말은 사무소에서도 들었다.'),
+    // 오소리 대부가 청산 뒤에 한 말("잃는 분이 더 많습니다. 덕분에 먹고살죠.")과 이어진다. 사무소에서 공짜라는 말은 아무도 안 했다(U-46)
+    L('hero', o.reborn ? '…이번 생에도 새 계좌다. 공짜는 공짜다.' : '…수수료가 공짜면, 저 앱은 뭘로 먹고사나.'),
   ],
   /** 이벤트가 끝난 정산: 얼마를 아꼈는지, 이제 얼마를 내는지(숫자는 전부 실제 값) */
   /** 한 판에 이자 한 번 치를 벌었다(U-41, 이번 생 처음): 오소리 대부 → 추심원 → 주인공. 숫자는 전부 그 거래와 지금 살림의 것 */
   winClaim: (o: { boss: string; pnl: number; claim: number; spins: number | null; stampLeft: number | null; momLeft: number }): Line[] => [
     L('boss', o.boss, 'smile'),
-    L('collector', `다음 정산 ${n(o.claim)}은 벌써 손에 있네요오.`),
+    L('collector', `다음 수금 ${n(o.claim)}은 벌써 손에 있네요오.`),
     L('hero', o.spins !== null && o.spins >= 2 ? `…+${n(o.pnl)}. 쳇바퀴 ${o.spins}정산치다.` : `…+${n(o.pnl)}. 한 판에 이자 한 번.`),
     ...(o.momLeft > 0 && o.stampLeft !== null ? [L('hero', `…금박 도장까지 ${n(o.stampLeft)}.`)] : []),
   ],
@@ -212,10 +217,11 @@ export const STORY = {
     L('collector', `두 판 연달아 잃으셨네요오. 합쳐서 −${n(o.sum)}이에요오.`, 'flat'),
     L('collector', o.spins !== null && o.spins >= 2 ? `쳇바퀴 한 대가 ${o.spins}정산 돌아야 하는 돈이에요오.` : '햄스터는 그냥 돌아요오.', 'flat'),
     L('boss', '쉬어 가셔도 됩니다. 장은 또 열려요. 이자는 그보다 먼저 오고요.', 'smile'),
+    // claim = 다음 정산에 나갈 돈 전부(이자 + 생활비 + 일당, U-46)
     L('hero', o.cash >= o.claim ? `…손에 ${n(o.cash)}. 다음 정산은 낼 수 있다.` : `…손에 ${n(o.cash)}. 다음 정산 ${n(o.claim)}에 모자란다.`),
   ],
   /** 포지션을 든 채 처음 정산을 넘겼다(U-41): 무슨 일이 있었는지 한 줄 */
-  carried: (o: { paid: number; funding: number }): string => `정산을 넘겼다. 손에서 −${n(o.paid)}, 포지션은 그대로${o.funding >= 1 ? `, 펀딩비 −${n(o.funding)}은 증거금에서` : ''}`,
+  carried: (o: { paid: number }): string => `정산을 넘겼다. 손에서 −${n(o.paid)}, 포지션은 그대로`, // U-46: 1막은 펀딩비가 없다
   feeEventEnd: (o: { ratePct: number; trades: number; saved: number; lev: number }): Line[] => [
     L('sms', `[FRX 숲거래소] 오픈 기념 이벤트가 끝났습니다. 지금부터 거래 수수료 ${o.ratePct}%.`),
     L('sms', o.trades > 0 ? `그동안 수수료 없이 ${o.trades}건. 정가였다면 ${n(o.saved)}을 내셨을 거예요. 감사합니다 ♥` : '그동안 한 건도 안 하셨네요. 저희가 다 아쉬워요 ♥'),
@@ -241,7 +247,8 @@ export const STORY = {
   ],
   // 뒷골목(독사 대부)
   viperSms: (): Line[] => [
-    L('sms', '낮에 가던 창구가 닫혔나. 급전, 서류 없음. 뒷골목 끝, 잘 닦인 문으로 오게.'),
+    // 오소리가 더는 안 빌려주고 연체가 났거나 캐피탈 한도까지 다 쓴 때 온다(U-46: 그 까닭에 맞춘 첫마디)
+    L('sms', '빌릴 데가 다 막혔나. 급전, 서류 없음. 뒷골목 끝, 잘 닦인 문으로 오게.'),
     L('hero', '…모르는 번호다.'),
   ],
   viperOffer: (o: { unit: number; got: number; ratePct: number }): Line[] => [

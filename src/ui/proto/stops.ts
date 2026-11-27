@@ -134,47 +134,7 @@ export function journeyOf(o: { tradeNet: number; claim: number; settles: number;
 }
 
 // ── U-42(회차 5): 장에 맞춘 출구 · 수수료가 기울인 승률 · 정산 빼고 전부 ─────────────────────────────
-/** 지난 기록에서 시세가 한쪽으로 간 폭 가운데, count 번 이상 나온 가장 큰 폭(%). count = 1 이면 "지난 n분에 실제로 본 가장 큰 움직임"이다.
- *  swingCount 와 같은 세는 법을 쓴다(그 폭으로 세면 count 번 이상 나온다). 기록이 1분이 안 되면 null. */
-export function maxSwing(hist: number[], count = 1): number | null {
-  if (hist.length < 60) return null;
-  // count = 1: 지난번에 센 적이 없으니 처음부터의 가장 낮은 값 · 가장 높은 값에서 잰 폭의 가장 큰 값이 그대로 답이다
-  let lo = 0, hi = 0, best = 0;
-  for (const v of hist) {
-    if (!(v > 0)) continue;
-    if (!(lo > 0)) { lo = hi = v; continue; }
-    if (v < lo) lo = v;
-    if (v > hi) hi = v;
-    best = Math.max(best, ((v - lo) / lo) * 100, ((hi - v) / hi) * 100);
-  }
-  if (count <= 1 || best <= 0) return best;
-  // count ≥ 2: 폭이 커질수록 횟수는 줄어든다 → 둘로 나눠 찾는다
-  let a = 0, b = best;
-  for (let i = 0; i < 24; i++) { const m = (a + b) / 2; if (swingCount(hist, m) >= count) a = m; else b = m; }
-  return a;
-}
-/** 한 번 누르기의 출구가 고르는 단위(도토리) */
-export const AUTO_STEP = 500;
-/** 지난 10분에 이만큼(번) 이상 나온 폭 가운데 가장 큰 것을 고른다. 1 = "지난 10분에 실제로 본 가장 큰 움직임"(U-42 ① 상위 결정) */
-export const AUTO_MIN_COUNT = 1;
-export interface AutoExit {
-  /** 걸 돈(익절 +net · 손절 −net) */ net: number;
-  /** claim = 이자 한 번 치(그 폭이 지난 10분에 나왔거나, 아직 잰 것이 없다) · range = 지난 10분의 가장 큰 폭에 맞춰 줄였다 · flat = 지난 10분의 폭으로는 걸 만한 돈이 안 된다(이자 한 번 치로 둔다) */
-  by: 'claim' | 'range' | 'flat';
-  /** 지난 10분의 가장 큰 폭(%). 아직 못 쟀으면 null */ seenPct: number | null;
-  /** 단추 아래의 까닭 한 줄 */ why: string;
-}
-/** 한 번 누르기의 출구(U-42 ①): 이자 한 번 치와 "지난 10분에 실제로 본 가장 큰 움직임으로 벌 수 있는 돈" 가운데 작은 쪽(500 단위로 내림).
- *  약속이 아니라 센 것이다 — 지난 10분에 한 번도 안 나온 폭에는 기본으로 걸지 않는다. 이자 한 번 치를 그대로 걸고 싶으면 시트의 칩으로 건다. */
-export function autoExit(c: StopCtx | null, claim: number, hist: number[]): AutoExit {
-  const seen = maxSwing(hist, AUTO_MIN_COUNT);
-  const mins = Math.max(1, Math.round(hist.length / 60));
-  if (!c || !(c.notional > 0) || seen === null) return { net: claim, by: 'claim', seenPct: seen, why: '익절과 손절을 한 번에' };
-  const can = Math.floor(netForRoe(seen * c.lev, c, 'tp') / AUTO_STEP) * AUTO_STEP;
-  if (can >= claim) return { net: claim, by: 'claim', seenPct: seen, why: `지난 ${mins}분에 나온 폭` };
-  if (can < Math.max(AUTO_STEP * 2, claim * 0.1)) return { net: claim, by: 'flat', seenPct: seen, why: `지난 ${mins}분엔 걸 만한 폭이 없었다` };
-  return { net: can, by: 'range', seenPct: seen, why: `지난 ${mins}분 최대 폭 기준` };
-}
+// 「이자 한 번 걸기」의 장에 맞춘 크기(maxSwing · autoExit, U-42 ①)는 뺐다(U-46 사용자: "이자 한 번 걸기는 제외").
 
 /** 수수료가 기울인 승률(U-42 ④): 익절까지의 폭 a, 손절까지의 폭 b 일 때, 오르내림이 반반인 시세가 익절에 먼저 닿을 몫 = b / (a + b).
  *  수수료가 0 이면 반반이고, 수수료가 붙으면 익절은 멀고 손절은 가깝다. 지난 사흘 반의 1분 봉으로 센 값과 1%p 안에서 맞는다(FUN_LOG 회차 5). 예측이 아니라 나눗셈이다. */

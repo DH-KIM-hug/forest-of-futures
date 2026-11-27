@@ -1,4 +1,4 @@
-// 나무의 수수료 노드가 실제로 무엇을 바꾸는가(U-42 ④, 회차 5): 오픈 기념이 끝난 뒤의 「이자 한 번 걸기」 한 판을 기준 삼아
+// 나무의 수수료 노드가 실제로 무엇을 바꾸는가(U-42 ④, 회차 5): 오픈 기념이 끝난 뒤의 예시 한 판(5만, 200배, 익절 · 손절 ±15,500)을 기준 삼아(U-46: 「이자 한 번 걸기」를 빼서 그 이름 대신 판 그대로 적는다)
 // "이 나무로는 익절 대 손절이 몇 대 몇인가 · 한 판에 평균 얼마를 잃는가"를 지금 레벨과 다음 레벨로 셈한다.
 // 순수 함수다. 시세는 건드리지 않는다 — 어떤 노드도 이길 확률을 바꾸지 않는다. 바뀌는 것은 수수료뿐이고, 수수료가 익절을 멀게 · 손절을 가깝게 만든 만큼이 돌아올 뿐이다.
 // 셈: 익절까지의 폭 a, 손절까지의 폭 b 에서 익절에 먼저 닿을 몫 = b / (a + b)(stops.ts fairOdds). 지난 사흘 반의 실제 1분 봉(다섯 종목)으로 센 값과 1%p 안에서 맞았다:
@@ -35,11 +35,11 @@ export function nodeOdds(active: Record<string, number>, id: string, ownLevel: n
   if (def.pair) { delete up[def.pair]; }
   const now = betOdds(cur), next = betOdds(up);
   if (now.p === null || next.p === null || (Math.abs(now.p - next.p) < 0.0005 && now.ev === next.ev)) return null;
-  return { now, next, text: `무료 기간이 끝나면 「이자 한 번 걸기」(5만, 200배)\n익절 확률 ${pc(now.p)} → ${pc(next.p)}\n한 판 평균 ${ev(now.ev)} → ${ev(next.ev)}` };
+  return { now, next, text: `무료 기간이 끝나면, 5만 200배, 익절과 손절을 ±${REF_BET.claim.toLocaleString('ko-KR')}에 걸면\n익절 확률 ${pc(now.p)} → ${pc(next.p)}\n한 판 평균 ${ev(now.ev)} → ${ev(next.ev)}` };
 }
 /** 나무 머리의 한 줄: 지금 나무로 기준 판을 걸면 */
 export function treeOddsLine(active: Record<string, number>): string {
   const o = betOdds(active), bare = betOdds({});
   const w = o.p === null ? null : Math.round(o.p * 100);
-  return `무료 기간이 끝나면 수수료 ${o.ratePct.toFixed(o.ratePct < 0.01 ? 4 : 3).replace(/0+$/, '').replace(/\.$/, '')}%. 「이자 한 번 걸기」(5만, 200배)는 익절 ${w ?? '–'} : 손절 ${w === null ? '–' : 100 - w}${bare.p !== null && o.p !== null && o.p - bare.p >= 0.005 ? ` (나무 없이는 ${Math.round(bare.p * 100)} : ${100 - Math.round(bare.p * 100)})` : ''}`;
+  return `무료 기간이 끝나면 수수료 ${o.ratePct.toFixed(o.ratePct < 0.01 ? 4 : 3).replace(/0+$/, '').replace(/\.$/, '')}%. 5만 200배, 익절과 손절을 ±${REF_BET.claim.toLocaleString('ko-KR')}에 걸면 익절 ${w ?? '–'} : 손절 ${w === null ? '–' : 100 - w}${bare.p !== null && o.p !== null && o.p - bare.p >= 0.005 ? ` (나무 없이는 ${Math.round(bare.p * 100)} : ${100 - Math.round(bare.p * 100)})` : ''}`;
 }

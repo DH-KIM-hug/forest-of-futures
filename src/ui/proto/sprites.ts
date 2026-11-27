@@ -50,6 +50,10 @@ import iMinerFan1 from './img/v5/i_miner_fan1.webp';
 import iMinerFan2 from './img/v5/i_miner_fan2.webp';
 import cHeroWalkBack from './img/v5/c_hero_walk_back.webp';
 import cHeroWalkFront from './img/v5/c_hero_walk_front.webp';
+// 걷기 둘째 걸음(U-46: 반대 발, mkweb_art6.py 가 첫 걸음과 같은 판 · 같은 크기로 맞춘다)
+import cHeroWalkBackB from './img/v5/c_hero_walk_back_b.webp';
+import cHeroWalkFrontB from './img/v5/c_hero_walk_front_b.webp';
+import cHeroWalkEmptyB from './img/v5/c_hero_walk_empty_b.webp';
 import cHamsterDrum from './img/v5/c_hamster_wheel_drum.webp';
 import cHamsterRunner from './img/v5/c_hamster_wheel_runner.webp';
 import cHeroDrum from './img/v5/c_hero_wheel_drum.webp';
@@ -82,6 +86,7 @@ export type SpriteId =
   | 'heroFrozen' //   주인공: 굳었다(청산이 흔들리는 폭 안 · 청산 임박)
   | 'endRetire1' | 'endRetire2' | 'endRetire3' | 'endRetire4' // 은퇴 엔딩 넷의 사진(END-R01~R04)
   | 'miner' | 'minerFan1' | 'minerFan2' // 채굴기(쳇바퀴의 전기로 코인을 캔다)와 그 잎 날개 둘(돌린다)
+  | 'heroWalkBackB' | 'heroWalkFrontB' | 'heroWalkEmptyB' // 걷기 둘째 걸음(U-46)
   | 'heroWalkBack' | 'heroWalkFront' //   주인공: 멀어지며 걷는다(등) · 다가오며 걷는다(앞). 빈손
   | 'hamsterDrum' | 'hamsterRunner' | 'heroDrum' | 'heroRunner' // 쳇바퀴 두 겹: 쳇바퀴(달리는 이를 지운 것) / 달리는 이 — 같은 크기의 판이라 겹치면 원래 그림
   | 'village2'; //    지도 바탕: 빈터 다섯(조합 · 사무소 · 캐피탈 · 집 · 뒷골목)이 떨어져 있어 누를 수 있다
@@ -136,6 +141,9 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   minerFan2: { src: iMinerFan2, w: 40, h: 40 },
   heroWalkBack: { src: cHeroWalkBack, w: 198, h: 300 },
   heroWalkFront: { src: cHeroWalkFront, w: 229, h: 300 },
+  heroWalkBackB: { src: cHeroWalkBackB, w: 198, h: 300 },
+  heroWalkFrontB: { src: cHeroWalkFrontB, w: 229, h: 300 },
+  heroWalkEmptyB: { src: cHeroWalkEmptyB, w: 243, h: 300 },
   hamsterDrum: { src: cHamsterDrum, w: 264, h: 300 },
   hamsterRunner: { src: cHamsterRunner, w: 264, h: 300 },
   heroDrum: { src: cHeroDrum, w: 271, h: 300 },
@@ -169,3 +177,15 @@ const BLINK_FILES = import.meta.glob('./img/v5/blink_*.webp', { eager: true, imp
 const BLINK_STEM: Partial<Record<SpriteId, string>> = { hero: 'hero_phone', heroEmpty: 'c_hero_empty', cCollector: 'c_collector', cWeasel: 'c_weasel', cRaccoon: 'c_raccoon', cOwl: 'c_owl' };
 /** 그 그림의 눈 감은 겹(없으면 null) */
 export const blinkOf = (id: SpriteId): string | null => { const st = BLINK_STEM[id]; return st ? BLINK_FILES[`./img/v5/blink_${st}.webp`] ?? null : null; };
+
+/** 걷기 두 걸음(U-46 사용자: "걷는 거 또 한 발로 걷네…"): 첫 걸음 그림 → 반대 발 그림. 둘째 걸음이 없는 그림은 null(폰을 든 옆걸음) */
+export const WALK_PAIR: Partial<Record<SpriteId, SpriteId>> = { heroWalkBack: 'heroWalkBackB', heroWalkFront: 'heroWalkFrontB', heroWalkEmpty: 'heroWalkEmptyB' };
+/** 걸음 빠르기: 초당 걸음 수(5~6). 한 걸음에 미끄러지는 거리 = 키의 STRIDE 배 — 거리에 맞춰 걸음 수를 정해 발이 미끄러지지 않게 한다 */
+export const STEPS_PER_SEC = 5.5;
+export const STRIDE = 0.3;
+/** 글라이드(거리 dist, 키 h, 걸리는 초 dur)에 맞는 한 쌍(두 걸음)의 길이(초). 걸음 수는 거리 ÷ 보폭을 반올림(적어도 2), 빠르기는 4~7 걸음/초 안 */
+export function walkPeriod(dist: number, h: number, dur: number): number {
+  const steps = Math.max(2, Math.round(dist / Math.max(1, h * STRIDE)));
+  const rate = Math.min(7, Math.max(4, steps / Math.max(0.1, dur)));
+  return 2 / rate;
+}

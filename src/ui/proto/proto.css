@@ -387,7 +387,7 @@
 
 .pr-pro { position: absolute; inset: 0; z-index: 60; overflow: hidden; background: #2E2B27; cursor: pointer; animation: fadeIn .3s ease-out; user-select: none; -webkit-user-select: none; }
 .pp-stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; animation: fadeIn .45s ease-out; }
-.pp-walk { transition: transform .7s cubic-bezier(.45, 0, .3, 1); }
+.pp-walk { transition: transform .7s linear; } /* U-46: 걷는 빠르기는 고르게(발이 미끄러지지 않게, 시간은 걸음 수로 정한다) */
 .pp-finger { animation: ppFinger 1.1s ease-in-out infinite; pointer-events: none; }
 .pp-box { cursor: pointer; transform-box: fill-box; }
 .pp-box.done { opacity: .55; }
@@ -882,13 +882,18 @@
 .pr-rig.on .rig-fan { animation: rigFan .5s linear infinite; }
 @keyframes rigFan { to { transform: rotate(360deg); } }
 /* 주인공이 자리를 옮긴다: 미끄러지며 두 박자로 통통 */
-.pr-herowalk { transition: transform .68s cubic-bezier(.45, 0, .3, 1); }
+.pr-herowalk { transition: transform .68s linear; } /* U-46: 시간은 걸음 수로(World.tsx) */
 .pa-hero.walkbob { animation: walkBob .34s ease-in-out infinite; }
 @keyframes walkBob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-3px) rotate(2deg); } }
-/* 살아 있는 인물: 발을 축으로 숨 쉬고(인물마다 길이와 엇박이 다르다), 가끔 고개를 까딱인다 */
-.pa-hero.al, .pa-npc.al, .al-html { animation: alBreath var(--al-dur, 2.6s) ease-in-out var(--al-delay, 0s) infinite; }
+/* 살아 있는 인물(U-46 사용자: "전혀 티가 안 나요. 머리가 움직여야 되지 않나요?"): 발은 그대로, 온몸이 발을 축으로 눌렸다 펴져 머리가 눈에 띄게 내려앉았다 오른다
+   (세로 1 → 0.955, 가로 1 → 1.02, 아래에서 잠깐 멈춘다). 몇 번에 한 번 발을 축으로 ±1.5° 기운다(alTilt). 인물마다 길이(1.3~1.8초) · 엇박이 다르다 */
+.pa-hero.al, .pa-npc.al, .al-html { animation: alBreath var(--al-dur, 1.5s) ease-in-out var(--al-delay, 0s) infinite, alTilt var(--al-tilt, 9s) ease-in-out var(--al-delay, 0s) infinite; animation-composition: replace, add; }
+@keyframes alTilt { 0%, 78%, 100% { rotate: 0deg; } 84% { rotate: 1.5deg; } 90% { rotate: -1.2deg; } 95% { rotate: 0.4deg; } }
 .pa-npc { transform-box: fill-box; transform-origin: 50% 100%; }
-@keyframes alBreath { 0%, 100% { transform: scale(1, 1) rotate(0); } 46% { transform: scale(.99, 1.025) rotate(0); } 58% { transform: scale(.992, 1.02) rotate(var(--al-lean, 0deg)); } }
+@keyframes alBreath { 0%, 100% { transform: scale(1, 1); } 42%, 58% { transform: scale(1.02, .955); } }
+/* 컷인의 반신: 아래 가장자리를 축으로, 조금 작게 */
+.al-html { animation-name: alBreathBust, alTilt; }
+@keyframes alBreathBust { 0%, 100% { transform: scale(1, 1); } 42%, 58% { transform: scale(1.012, .972); } }
 .al-html { transform-origin: 50% 100%; display: inline-block; }
 /* 기다리는 추심원: 장부를 톡톡(몸이 짧게 두 번 끄덕) · 이자를 받은 추심원: 한 번 끄덕 */
 .pa-npc.taps { animation: alBreath var(--al-dur, 2.6s) ease-in-out infinite, npcTaps 3.4s ease-in-out infinite; animation-composition: add; }
@@ -955,7 +960,7 @@
 .pr-cutin .blinkbox { position: relative; display: block; }
 .pr-cutin .blinkbox img { display: block; width: 100%; height: auto; }
 .pr-cutin .blinkbox img.blink { position: absolute; left: 0; top: 0; }
-.al-html.headbob { animation: alBreath var(--al-dur, 2.6s) ease-in-out var(--al-delay, 0s) infinite, headBob 5.5s ease-in-out infinite; animation-composition: add; }
+.al-html.headbob { animation: alBreathBust var(--al-dur, 1.5s) ease-in-out var(--al-delay, 0s) infinite, headBob 5.5s ease-in-out infinite; animation-composition: add; }
 @keyframes headBob { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-1.6deg); } 60% { transform: rotate(1.2deg); } }
 /* U-43: 접힌 한 줄은 "초당 +들어옴 / −나감" — 늘 초록 / 빨강. 나가는 쪽이 크면 그 숫자가 굵게 흔들린다. 견줌 막대는 움직여 바뀐다. 칸의 초당은 크게 */
 .pr-strip .one .in, .pr-strip.short .one .in, .pr-strip.ok .one .in { color: #2E6E4C; font-size: 17px; }
@@ -978,3 +983,33 @@
 .pa-float.inc.travel { transform-box: fill-box; transform-origin: 50% 50%; }
 .od-d i { transition: transform 70ms ease-out; }
 .pr-hud .ps .hireburst { top: -1px; right: calc(100% + 6px); margin-top: 0; }
+/* U-46: 접힌 판의 견줌 — 다음 정산까지 벌 돈(초당 × 남은 초) 아래 작은 셈 줄, 정산 막대의 「정산 때 −Y」 */
+.pr-strip .cmp > .in small.x { font-size: 10.5px; font-weight: 600; opacity: .8; }
+.settle span b.dn { font-weight: 400; color: var(--red-ink); }
+.pr-strip .one .tm { margin-left: 8px; }
+/* U-46: 컷인이 떠 있으면 화면 어디를 눌러도 넘어간다(카드 · 고르는 단추 · 건너뛰기는 그 위) */
+.pr .pr-cutin .pr-tapall { position: absolute; inset: 0; z-index: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; min-width: 0; min-height: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pr-cutin { cursor: pointer; }
+.pr-cutin .bustbox, .pr-cutin .say, .pr-cutin .stamp { pointer-events: none; }
+.pr-cutin .say .pick, .pr-cutin .say button { pointer-events: auto; }
+.pr .pr-cutin .pr-skipall { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top) + 10px); right: 10px; min-width: 0; min-height: 30px; padding: 0 12px; border-radius: 15px; background: rgba(255, 248, 228, .92); border: 2px solid var(--o); font-size: 12.5px; font-weight: 800; color: var(--sub); box-shadow: none; cursor: pointer; }
+.pr .pr-cutin .pr-skipall.low { top: auto; bottom: calc(env(safe-area-inset-bottom) + 84px); }
+.pr-notice { cursor: pointer; }
+.pr-notice .box { cursor: default; }
+.pr-cutin .meta { flex-wrap: wrap; row-gap: 2px; }
+.pr-cutin .meta .parts { flex-basis: 100%; }
+.pr-hud .settle { cursor: pointer; }
+/* U-46 두 걸음 걷기: 반 쌍마다 그림이 바뀌고(발이 닿는 때), 닿을 때 내려앉고 지나갈 때 뜬다 */
+.pa-walkcyc { animation: wcBob var(--wp, .36s) ease-in-out infinite; }
+.pa-walkcyc .wf.a { animation: wcA var(--wp, .36s) linear infinite; }
+.pa-walkcyc .wf.b { opacity: 0; animation: wcB var(--wp, .36s) linear infinite; }
+@keyframes wcA { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes wcB { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes wcBob { 0%, 50%, 100% { transform: translateY(var(--wb, 1px)); } 25%, 75% { transform: translateY(calc(var(--wb, 1px) * -1.4)); } }
+@media (prefers-reduced-motion: reduce) { .pa-walkcyc, .pa-walkcyc .wf.a, .pa-walkcyc .wf.b { animation: none !important; } .pa-walkcyc .wf.b { opacity: 0 !important; } }
+/* U-46 이끄는 길(guided.ts): 첫 생의 튜토리얼 동안 열린 한 가지(g-ok)만 또렷하고, 나머지 단추 · 칸 · 탭 · 가게는 흐리게(눌러도 아무 일 없다) */
+.pr[data-guided] :is(.pr-hud, .pr-main, .pr-tabs) :is(button, [role="button"], .pr-tile, .pr-card.plc, .pt-chip, .pt-ct):not(.g-ok):not(.g-ok *):not([data-always]):not(.pr-wheel-hit) { opacity: .42; filter: saturate(.5); }
+.pr[data-guided] .g-ok { opacity: 1; filter: none; }
+.g-pulse { animation: gPulse .6s ease-out; }
+@keyframes gPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 212, 90, .95); transform: scale(1); } 40% { transform: scale(1.06); } 100% { box-shadow: 0 0 0 14px rgba(255, 212, 90, 0); transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .g-pulse { animation: none; outline: 3px solid #FFD45A; } }

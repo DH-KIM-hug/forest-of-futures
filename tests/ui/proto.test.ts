@@ -45,10 +45,12 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     expect(interestDue(g, 'shark1')).toBe(8500);
     const hm = hamsterMath(g);
     expect(hm).toEqual({ sold: 6467, wage: 1600, net: 4867 });
-    expect(tiles(g)[0]).toMatchObject({ state: 'idle', action: 'hire', btn: '알바 부르기', btnSub: '일당 1,600', canAct: true, locked: false });
+    expect(tiles(g)[0]).toMatchObject({ state: 'idle', action: 'hire', btn: '알바 부르기', btnSub: '정산 때 일당 1,600', canAct: true, locked: false });
     expect(A(g, { type: 'hire', coin: 'DTC' }).ok).toBe(true);
     expect(tiles(g)[0]).toMatchObject({ state: 'run', net: 4867, action: null });
-    expect(tiles(g)[0].text).toBe(`초당 +${(4867 / balance.settlement.intervalSec).toFixed(1)}`);
+    // U-46: 칸은 1초에 캐서 판 돈(쳇바퀴 위에 떠서 채굴기로 가는 숫자와 같다). 일당은 정산 때 나간다고 작은 줄에
+    expect(tiles(g)[0].text).toBe(`초당 +${(6467 / balance.settlement.intervalSec).toFixed(1)}`);
+    expect(tiles(g)[0].sub).toBe('일당 1,600은 정산 때');
     expect(tiles(g)[1]).toMatchObject({ state: 'empty', action: 'place', canAct: true });
     expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' }).ok).toBe(true);
     const uid = g.run.equipment[0].uid;
@@ -63,7 +65,7 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     t = tiles(g, { [uid]: 3 });
     expect(t[3]).toMatchObject({ state: 'run', action: null });
     expect(t[1].btnSub).toBe('50,000'); // 두 번째도 같은 값
-    expect(homeSummary(g)).toMatchObject({ idle: 9735, hamsters: 2, claim: 9500 });
+    expect(homeSummary(g)).toMatchObject({ idle: 9735, hamsters: 2, claim: 9500, mined: 12935, wages: 3200, due: 12700 }); // U-46: 접힌 한 줄 = 들어오는 돈(캐서 판 값) / 정산 때 나가는 돈 전부
     // 초당 환산은 지금 정산 간격을 쓴다
     expect(perSec(9735)).toBeCloseTo(9735 / balance.settlement.intervalSec, 9);
   });

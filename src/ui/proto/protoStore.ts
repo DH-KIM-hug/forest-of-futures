@@ -19,7 +19,7 @@ export interface Choice { id: string; label: string; sub?: string; primary?: boo
 export interface Scene {
   id: string;
   lines: Line[];
-  settle?: { net: number; interest: number; win: boolean; no: number };
+  settle?: { net: number; interest: number; win: boolean; no: number; /** 이번 정산에 나간 것(U-46: 일당이 언제 나가는지 보이게) */ other?: number; living?: number; wages?: number; hamsters?: number; mined?: number };
   unlock?: Tab;
   /** 한 줄짜리 정산 컷인은 가만두면 사라진다(ms) */
   auto?: number;

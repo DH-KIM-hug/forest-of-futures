@@ -3,7 +3,8 @@
 // 엄마의 죽음은 보여 주지 않는다. 새 그림은 만들지 않고 시제품 부품(art.tsx)으로 그린다. 숫자는 엔진 값.
 import { useEffect, useRef, useState } from 'react';
 import { O, Acorn } from './art';
-import { sprite, spriteOr, blinkOf, type SpriteId } from './sprites';
+import { sprite, spriteOr, blinkOf, STEPS_PER_SEC, STRIDE, type SpriteId } from './sprites';
+import { WalkFrames } from './WalkFrames';
 import { HOME_IMG, WHEEL_SLOTS, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, EMPTY_WHEEL_H, EMPTY_WHEEL_DY, RIG_SPOT, RIG_H, RIG_ART } from './home';
 import { aliveStyle, useBlink, talkBob } from './alive';
 import { play, playTap } from './audio';
@@ -25,6 +26,10 @@ const INTEREST = Math.ceil(Object.entries(DEBTS).reduce((a, [id, p]) => a + p * 
 const TAP: number = balance.mining.tapBase;
 /** 걸어가는 길(무대 단위)과 그 자리의 크기: 길 아래에서 문 앞 계단까지 */
 const WALK: [number, number, number][] = [[172, 648, 1], [178, 548, 0.86], [184, 462, 0.74]];
+/** 걸음(U-46): walk 번째 자리로 가는 데 몇 걸음, 몇 초. 보폭 = 그 자리 키의 STRIDE 배(멀어질수록 작아진다) — 발이 미끄러지지 않게 걸음 수로 시간을 정한다 */
+const HERO_PRO_H = 72;
+const walkSteps = (n: number): number => { const [x0, y0, k0] = WALK[Math.max(0, n - 1)], [x1, y1, k1] = WALK[Math.min(n, 2)]; return Math.max(2, Math.round(Math.hypot(x1 - x0, y1 - y0) / (HERO_PRO_H * ((k0 + k1) / 2) * STRIDE))); };
+const walkDur = (n: number): number => walkSteps(n) / STEPS_PER_SEC;
 const TALK = prologueTalk({ debt: DEBT_TOTAL, interest: INTEREST });
 
 const Finger = ({ x, y }: { x: number; y: number }) => (
@@ -90,6 +95,7 @@ function HomeRoom() {
 export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boolean }) {
   const [step, setStep] = useState<Step>('p1');
   const [walk, setWalk] = useState(0);
+  const [moving, setMoving] = useState(false);
   const [card, setCard] = useState<0 | 1 | 2>(0); // 리본 카드: 0 없음, 1 발견, 2 주머니에
   const [ribbon, setRibbon] = useState(false);
   const [talk, setTalk] = useState(0);
@@ -114,6 +120,8 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
       play('collector_steps', { vol: 0.5 });
       const n = walk + 1;
       setWalk(n);
+      // 걷는 동안만 두 걸음을 번갈아 끼운다(U-46): 글라이드 시간 = 걸음 수 ÷ 초당 걸음
+      setMoving(true); after(walkDur(n) * 1000, () => setMoving(false));
       if (n >= 2) go('p2', 900); else hold(600);
     } else if (step === 'p3' && !ledger) {
       if (sp.typing) { sp.finish(); return; }
@@ -152,11 +160,13 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             {/* 해 질 녘, 엄마가 살던 나무 밑동 집. 문 옆에 붉은 딱지 */}
             <image data-art="prologue" href={outside.src} x={-30} y={-100} width={450} height={800} preserveAspectRatio="xMidYMid slice" />
             {walk >= 1 && <circle className="pp-stamp" cx={318} cy={318} r={30} fill="none" stroke="#fff" strokeWidth={3} strokeDasharray="5 7" strokeLinecap="round" style={{ transformOrigin: '318px 318px' }} />}
-            <g className="pp-walk" style={{ transform: `translate(${hx}px, ${hy}px) scale(${hk})` }}>
+            <g className="pp-walk" style={{ transform: `translate(${hx}px, ${hy}px) scale(${hk})`, transitionDuration: `${walkDur(Math.max(1, walk)).toFixed(2)}s` }} data-moving={moving ? '1' : ''}>
               <ellipse cx={0} cy={2} rx={24} ry={6} fill="#000" opacity={0.18} />
               {/* 폰은 아직 없다. 집 쪽(화면 안쪽)으로 걸어 들어가니 등이 보인다(U-43 사용자: "처음 집 갈 때 뒤돌며 걷는 것 같음"). 문 앞에 멈춰서도 집을 본다 */}
-              <g key={walk} className={walk < 2 ? 'pp-step' : 'pa-npc al'} style={{ transformOrigin: '0px 0px', ...aliveStyle('hero-pro') }}>
-                <image data-art="heroWalkBack" data-face="back" href={backImg.src} x={-36 * (backImg.w / backImg.h)} y={-72} width={72 * (backImg.w / backImg.h)} height={72} />
+              <g className={moving ? '' : 'pa-npc al'} style={{ transformOrigin: '0px 0px', ...aliveStyle('hero-pro') }} data-face="back">
+                {moving
+                  ? <WalkFrames id="heroWalkBack" x={-36 * (backImg.w / backImg.h)} y={-72} w={72 * (backImg.w / backImg.h)} h={72} period={2 / STEPS_PER_SEC} />
+                  : <image data-art="heroWalkBack" href={backImg.src} x={-36 * (backImg.w / backImg.h)} y={-72} width={72 * (backImg.w / backImg.h)} height={72} />}
               </g>
             </g>
           </g>

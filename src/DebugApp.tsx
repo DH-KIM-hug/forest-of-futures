@@ -117,7 +117,7 @@ export default function DebugApp() {
       )}
       {run.futures.open && (
         <div>
-          {['DTC', 'BTH', 'SMS', 'MDT', 'JQQ'].map((m) => (
+          {['DTC', 'BTH', 'MDT', 'SMS', 'JQQ'].map((m) => (
             <div key={m}>
               {m} {run.prices[m].toFixed(2)}{' '}
               <button style={btn} onClick={() => act({ type: 'open', market: m, dir: 1, lev: 10, marginPct: 25 })}>롱 10x</button>

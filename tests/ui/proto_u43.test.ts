@@ -50,7 +50,7 @@ describe('U-43 살아 있는 인물', () => {
   it('숨은 2.2~3.2초, 인물마다 다르고 같은 이름이면 같다', () => {
     const names = ['hero', 'collector', 'boss', 'weasel', 'owl', 'raccoon', 'viper'];
     const vs = names.map(aliveVars);
-    expect(vs.every((v) => v.dur >= 2.2 && v.dur <= 3.2)).toBe(true);
+    expect(vs.every((v) => v.dur >= 1.3 && v.dur <= 1.8)).toBe(true); // U-46: 머리가 보이게 내려앉는 숨
     expect(new Set(vs.map((v) => v.dur + ':' + v.delay)).size).toBe(names.length);
     expect(aliveVars('hero')).toEqual(aliveVars('hero'));
   });

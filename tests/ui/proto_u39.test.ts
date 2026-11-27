@@ -31,7 +31,7 @@ describe('오소리 장부: 엄마 빚은 고정금리 (U-39 ⑥)', () => {
     expect(fixedInterestNow(g)).toBe(4500);
     expect(interestAfterHike(g, 2)).toBe(24500);
     const lines = STORY.rateHike({ text: '속보', from: 14500, to: 24500, times: 2, fixed: 4500 });
-    expect(lines[1].text).toContain('14,500에서 24,500');
+    expect(lines[1].text).toContain('14,500 그대로고요오, 그 뒤 2번은 24,500'); // U-46
     expect(lines[2].text).toBe('어머님 빚 이자 4,500은 안 올라요오.');
     expect(STORY.rateHike({ text: '속보', from: 2000, to: 4000, times: 2, fixed: 0 })).toHaveLength(2); // U-44: 월급 농담은 뺐다. 엄마 빚을 다 갚은 뒤에는 그 줄이 없다
   });
@@ -99,7 +99,7 @@ describe('새 대사 (U-39)', () => {
     const base = { interest: 14500, nth: 1, tagged: false, seized: false, nothingLeft: false };
     expect(STORY.overdue(base)).toHaveLength(3);
     const locked = STORY.overdue({ ...base, locked: 96583 });
-    expect(locked[1].text).toBe('돈은 있으시네요오. 거래소에 96,583이 묶여 있어요오. 앱 속 돈은 제가 못 꺼내요오.');
+    expect(locked[1].text).toBe('돈은 있으시네요오. 앱 속에 96,583이 묶여 있어요오. 그 돈은 제가 못 꺼내요오.') // U-46: 거래소는 폰의 앱;
     expect(STORY.overdue({ ...base, locked: 3000 })).toHaveLength(3); // 묶인 돈이 이자보다 작으면 그 줄이 없다
     expect(STORY.overdue({ ...base, locked: 168209 })[1].text).toContain('168,209가 묶여'); // 조사
     const living = STORY.overdue({ ...base, living: 1000 });

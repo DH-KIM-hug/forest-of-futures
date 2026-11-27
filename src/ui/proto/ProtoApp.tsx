@@ -3,7 +3,7 @@ import '@fontsource/jua/latin-400.css';
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Tab } from './protoStore';
-import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo, hamsterMath } from './model';
+import { homeSummary, currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo, hamsterMath } from './model';
 import { tensionOf } from './tension';
 import { awayMoney } from './away';
 import { liveHistoryOf } from '../priceHistory';
@@ -38,6 +38,9 @@ import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
 import { pdev } from './config';
 import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
+import { guideStep, allowedEl, type Guide } from './guided';
+import { nextTierCost } from '../../engine/equipment';
+import { EXTRA_WHEEL } from './model';
 import './proto.css';
 
 const TABS: { id: Tab; label: string; col: string }[] = [
@@ -89,15 +92,20 @@ function Hud() {
   // 알바를 들인 순간(U-43 사용자: "알바 고용하고 하면 초당 얼마 버는지 시각화 제대로 좀"): 초당 칩 옆에 "초당 +0 → +n"(알바 한 마리가 1초에 남기는 돈 = 캐서 판 돈 − 일당, 판의 칸과 같은 엔진 값)
   const staffedN = (run.coinWheels.DTC?.staffed ? 1 : 0) + run.equipment.filter((u) => u.staffed).length;
   const prevStaffed = useRef(staffedN);
+  const prevGen = useRef(g.family.generation);
   const [hire, setHire] = useState<{ k: number; t: string } | null>(null);
   useEffect(() => {
     const was = prevStaffed.current;
     prevStaffed.current = staffedN;
-    if (staffedN <= was) return;
-    setHire((h) => ({ k: (h?.k ?? 0) + 1, t: `초당 +0 → +${rateTxt(perSec(hamsterMath(g).net))}` }));
+    // 새 생이 알바 둘을 데리고 시작할 때(U-46)는 "알바를 들였다"가 아니다
+    const newLife = prevGen.current !== g.family.generation; prevGen.current = g.family.generation;
+    if (newLife || staffedN <= was) return;
+    // 초당 칩은 들어오는 돈만 센다(U-46): 알바 한 마리만큼 오른다
+    const one = perSec(hamsterMath(g).sold);
+    setHire((h) => ({ k: (h?.k ?? 0) + 1, t: `초당 +${rateTxt(one * was)} → +${rateTxt(one * staffedN)}` }));
     const t = window.setTimeout(() => setHire(null), 2400);
     return () => window.clearTimeout(t);
-  }, [staffedN]);
+  }, [staffedN, g.family.generation]);
   return (
     <header className={'pr-hud' + (lot ? ' over' : '') + (tab === 'phone' ? ' tight' : '')}>
       <div className="r1">
@@ -108,12 +116,13 @@ function Hud() {
         <DevBar />
         <div className="acorn">
           <div className="n" data-hl="acorn"><Money value={run.cash} perSec={perSec(fc.mined)} /><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
-          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 {ps >= 0 ? '+' : '−'}{rateTxt(perSec(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i>{hire && <b key={hire.k} className="hireburst" data-hireburst>{hire.t}</b>}</button>
+          {/* 초당 칩(U-46 사용자: "초당 −275란 말 이상하네… 정산은 20초마다니까"): 1초마다 실제로 들어오는 돈만. 나가는 돈은 정산 때 한 번에 — 정산 막대 옆 「정산 때 −Y」. 한 정산에 버는 돈이 낼 돈에 못 미치면 붉게 */}
+          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 +{rateTxt(perSec(homeSummary(g).mined))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i>{hire && <b key={hire.k} className="hireburst" data-hireburst>{hire.t}</b>}</button>
           {hasWheel && <button className="walbtn" data-hl="wallet" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
         </div>
       </div>
       {brk && (
-        <div className="brk" role="status"><i>초당</i> 알바 채굴 <b className="up">+{sec(fc.mined)}</b> 일당 <b className="dn">−{sec(fc.wages)}</b> 이자 <b className="dn">−{sec(fc.interest)}</b> 생활비 <b className="dn">−{sec(fc.living)}</b> = <b className={fc.net >= 0 ? 'up' : 'dn'}>{fc.net >= 0 ? '+' : '−'}{sec(Math.abs(fc.net))}</b><br /><i>정산 때 걷는 돈</i> 이자 {rd(fc.interest)} + 생활비 {rd(fc.living)} + 일당 {rd(fc.wages)}</div>
+        <div className="brk" role="status"><i>초당</i> 알바 채굴 <b className="up">+{sec(fc.mined)}</b><br /><i>정산 때</i> 이자 {rd(fc.interest)} + 생활비 {rd(fc.living)}{fc.wages > 0 ? <> + 일당 {staffedN}마리 {rd(fc.wages)}</> : null} = <b className="dn">−{rd(fc.interest + fc.living + fc.wages)}</b></div>
       )}
       {lot && (
         <>
@@ -122,8 +131,9 @@ function Hud() {
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
             <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{ghost !== null ? <i className="gsub gh">{ghost >= 1 ? '갚으면 도장' : `손에 +${comma(spare)}`}</i> : goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
-          <div key={'s' + run.settleNo} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
-            <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '추심원이 기다린다' : '정산'}</span><em>{mmss(left)}</em>
+          {/* 정산 막대를 누르면 「정산 때 −Y」가 이자 · 생활비 · 일당으로 펴진다(U-46) */}
+          <div key={'s' + run.settleNo} onClick={() => setBrk((b) => !b)} role="button" aria-expanded={brk} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
+            <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '추심원이 기다린다' : <>정산 때 <b className="dn" data-due>−{rd(fc.interest + fc.living + fc.wages)}</b></>}</span><em>{mmss(left)}</em>
           </div>
         </>
       )}
@@ -213,15 +223,21 @@ function DevBar() {
   );
 }
 
+/** 알림 장의 바깥(어두운 자리)을 눌러도 닫힌다(U-46): 뜬 지 0.6초 안의 탭은 받지 않는다(연타하던 손가락이 닫아 버리지 않게) */
+let noticeAt = 0;
+const backdropOk = (): boolean => performance.now() - noticeAt > 600;
+function useNoticeShown(on: boolean): void { useEffect(() => { if (on) noticeAt = performance.now(); }, [on]); }
+
 /** 자리를 비운 사이(U-39 ④): 돌아왔을 때 한 장. 엔진이 따라잡은 기록(포지션은 전부, 정산은 2번까지)을 그대로 읽는다. */
 function AwayNote() {
   const a = useProto((s) => s.away);
   const scene = useProto((s) => s.scenes.length > 0);
   const over = useGame((s) => s.g.run.over);
+  useNoticeShown(!!a && !scene && !over);
   if (!a || scene || over) return null;
   const close = () => { useProto.getState().patch({ away: null }); useGame.setState((s) => ({ net: { ...s.net, away: null } })); };
   return (
-    <div className="pr-notice pr-away" role="dialog" aria-label="자리를 비운 사이" data-away>
+    <div className="pr-notice pr-away" role="dialog" aria-label="자리를 비운 사이" data-away onClick={(e) => { if (e.target === e.currentTarget && backdropOk()) close(); }}>
       <div className="box">
         <h3>{a.title}</h3>
         {a.note && <p className="col"><b>추심원의 쪽지</b>「{a.note}」</p>}
@@ -239,27 +255,36 @@ function AwayNote() {
   );
 }
 
-/** 첫 주문 전표의 뒷면(U-31 → U-44): 튜토리얼 끝을 게임 밖 알림 대신 세상 안의 전표로 말한다. 방금 그 시세는 짜 둔 재생 기록이었고, 다음 주문부터는 실제 시세다. */
+/** 첫 주문 전표의 뒷면(U-31 → U-44): 튜토리얼 끝을 게임 밖 알림 대신 세상 안의 전표로 말한다. 방금 그 시세는 체험용으로 짜 둔 것이었고, 다음 주문부터는 실제 시세다. */
 function TutorialNotice() {
   const on = useProto((s) => s.tutorial === 'notice');
   const scene = useProto((s) => s.scenes.length > 0);
   const net = useGame((s) => s.net);
+  useNoticeShown(on && !scene);
   if (!on || scene) return null;
   const live = net.source === 'hl' && !net.fallback;
-  const t = new Date();
-  const hhmmss = [t.getHours(), t.getMinutes(), t.getSeconds()].map((x) => String(x).padStart(2, '0')).join(':');
   return (
-    <div className="pr-notice" role="dialog" aria-label="첫 주문 전표 뒷면" data-notice>
+    <div className="pr-notice" role="dialog" aria-label="첫 주문 전표 뒷면" data-notice onClick={(e) => { if (e.target === e.currentTarget && backdropOk()) tutorialEnd(); }}>
       <div className="box rcpt">
         <h3>첫 주문 전표 <small>뒷면</small></h3>
-        <p>시세 원본: <b>첫 주문용으로 짜 둔 재생 기록</b></p>
-        <p>롱을 고르면 하락, 숏을 고르면 상승</p>
-        <i className="rstamp" aria-hidden="true">재생 종료</i>
-        <p className="sub">{live ? <>다음 주문부터 실제 시세<br />마지막 수신 {hhmmss}</> : <>다음 주문부터 연습 시세<br />실제 시세가 들어오지 않는다</>}</p>
+        {/* U-46 사용자: "재생 종료라는 말은 대체 뭐임." — 쉬운 말로 그대로 적는다 */}
+        <p><b>첫 주문은 체험용 시세였습니다.</b></p>
+        <p>롱을 누르면 내리고, 숏을 누르면 오르게 짜여 있었습니다.</p>
+        <i className="rstamp" aria-hidden="true">체험용</i>
+        <p className="sub">{live ? <>다음 주문부터 실제 시세로 움직입니다.</> : <>다음 주문부터 연습 시세로 움직입니다.<br />실제 시세가 들어오지 않고 있습니다.</>}</p>
         <button className="buy on wide" data-notice-ok onClick={tutorialEnd}><span>전표를 넣는다</span></button>
       </div>
     </div>
   );
+}
+
+/** 이끄는 길(U-46, guided.ts): 지금 걸음. 첫 생의 튜토리얼이 끝나면 null */
+function useGuide(): Guide | null {
+  const g = useGame((s) => s.g);
+  const P = { prologue: useProto((s) => s.prologue), tutorial: useProto((s) => s.tutorial), tab: useProto((s) => s.tab), waiting: useProto((s) => s.waiting), loanTaken: useProto((s) => s.loanTaken), forceTrade: useProto((s) => s.forceTrade), panelOpen: useProto((s) => s.panelOpen) };
+  const r = g.run;
+  const extras = r.equipment.filter((u) => u.tier === EXTRA_WHEEL);
+  return guideStep({ life: lifeNo(g), ...P, momStaffed: !!r.coinWheels.DTC?.staffed, extras: extras.length, extrasStaffed: extras.filter((u) => u.staffed).length, canPlace: r.cash >= nextTierCost(r, EXTRA_WHEEL) });
 }
 
 export function ProtoApp() {
@@ -274,6 +299,37 @@ export function ProtoApp() {
   useAudioDirector(dark || tense);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); startRanking(); }, []);
+  // 이끄는 길(U-46): 열린 한 가지 말고는 눌러도 아무 일이 없다(그 대신 열린 쪽이 한 번 반짝인다). 누르기 · 끌기 · 클릭을 잡는 쪽(capture)에서 막는다
+  const guide = useGuide();
+  const guideRef = useRef<Guide | null>(guide);
+  guideRef.current = guide;
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    let pulseT: number | undefined;
+    const block = (e: Event) => {
+      const gd = guideRef.current;
+      if (!gd || allowedEl(e.target as Element, gd)) return;
+      e.stopPropagation(); e.preventDefault();
+      if (e.type !== 'click') return;
+      for (const t of Array.from(el.querySelectorAll(gd.allow.join(',')))) { t.classList.remove('g-pulse'); void (t as HTMLElement).offsetWidth; t.classList.add('g-pulse'); }
+      window.clearTimeout(pulseT);
+      pulseT = window.setTimeout(() => el.querySelectorAll('.g-pulse').forEach((t) => t.classList.remove('g-pulse')), 700);
+      if (gd.step === 'phone' && useProto.getState().forceTrade) say(FORCE_NUDGE);
+    };
+    const kinds = ['pointerdown', 'pointerup', 'click'] as const;
+    for (const k of kinds) el.addEventListener(k, block, { capture: true });
+    return () => { for (const k of kinds) el.removeEventListener(k, block, { capture: true }); };
+  }, []);
+  // 열린 것에 표시(g-ok): 흐리게 하는 규칙에서 빠진다
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const mark = () => { el.querySelectorAll('.g-ok').forEach((t) => t.classList.remove('g-ok')); const gd = guideRef.current; if (gd) el.querySelectorAll(gd.allow.join(',')).forEach((t) => t.classList.add('g-ok')); };
+    mark();
+    const t = window.setInterval(mark, 250);
+    return () => window.clearInterval(t);
+  }, []);
   // 자동 플레이 검증용 읽기 전용 창(&e2e=1): 상태를 읽기만 한다. 바꾸는 길은 없다.
   useEffect(() => {
     if (!/[?&]e2e=1/.test(window.location.search)) return;
@@ -292,13 +348,14 @@ export function ProtoApp() {
     { duration: 480, easing: 'linear' },
   );
   return (
-    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab}>
+    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab} data-guided={guide?.step ?? undefined}>
       <Hud />
       <main className="pr-main">
         {tab === 'lot' && <Lot />}
         {tab === 'map' && <MapTab />}
         {tab === 'phone' && <PhoneTab />}
-        {toast && <div className="pr-toast" role="status">{toast}</div>}
+        {/* 거래소에서는 알림이 차트 안의 말 자리로 간다(PhoneLane, U-46) — 종목 줄을 덮지 않게 */}
+        {toast && tab !== 'phone' && <div className="pr-toast" role="status">{toast}</div>}
       </main>
       <TabBar />
       <CutIn />

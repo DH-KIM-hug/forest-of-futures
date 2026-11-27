@@ -54,7 +54,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
   });
 
   it('markets.json: 5종목, 실제 종목 이름이 없다(서버 설정에만)', () => {
-    expect(D.marketDefs.map((m) => m.id)).toEqual(['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']);
+    expect(D.marketDefs.map((m) => m.id)).toEqual(['DTC', 'BTH', 'MDT', 'SMS', 'JQQ']);
     expect(D.marketById.DTC.startPrice).toBe(68000);
     expect(D.marketById.JQQ.minable).toBe(false);
     const txt = readFileSync(join(dataDir, 'markets.json'), 'utf8');

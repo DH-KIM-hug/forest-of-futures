@@ -11,10 +11,10 @@ import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
 import { TUT, hamsterMath, claim } from './model';
 import { tensionOf, orderOdds, claimShare, squeezeOf } from './tension';
 import { closedMath, tradeNet, say as toast } from './watch';
-import { exitFee } from '../../engine/futures';
+import { exitFee, fundingRateNow } from '../../engine/futures';
 import { exitFeeMul } from '../../engine/skilltree';
 import { recentRange } from './tension';
-import { Think } from './Think';
+import { PhoneLane } from './Think';
 import { forecast, miningLeftShare } from '../../engine/settlement';
 import { rollTarget } from '../../engine/mining';
 import { sellFeeRate } from '../../engine/mining';
@@ -32,7 +32,7 @@ import { price } from '../../engine/selectors';
 import type { Position } from '../../engine/types';
 import { historyOf, liveHistoryOf, markLive } from '../priceHistory';
 import { coinLogo } from './coins';
-import { acornStops, autoExit, carryOf, chipCount, keepDueMargin, netForRoe, orderCtx, planLine, stopLabel, swingCount, swingText as swingCountText, type StopCtx } from './stops';
+import { acornStops, carryOf, chipCount, keepDueMargin, netForRoe, orderCtx, planLine, stopLabel, swingCount, swingText as swingCountText, type StopCtx } from './stops';
 import { rollWheel, rolledFor } from './roll';
 import { dayNoteOpen } from './daynote';
 import { ctxOfPosition, plans, reapplyPlan } from './exitPlan';
@@ -189,6 +189,7 @@ export function PChart({ market, hist, pos, win = 120, band = null, foot = null,
         </svg>
         {n >= 1 && <i className="dot" style={{ left: `${X(n - 1)}%`, top: `${Y(last)}%` }} />}
         {n < 12 && <span className="warm">시세를 모으는 중…</span>}
+        <PhoneLane />
       </div>
       <div className="axis" aria-hidden="true">
         {lims && <span className="lim" style={{ top: 2 }}>{fmtPrice(market, hi)}</span>}
@@ -379,13 +380,8 @@ export function ProtoTrade() {
   const sctx: StopCtx | null = rawPos
     ? ctxOfPosition(run, rawPos)
     : prev.margin >= 1 ? orderCtx({ margin: prev.margin, lev, feeRate: feeRate(g, lev, { allIn: pct >= 100 }), maint, exitMul: exitFeeMul(run), exitMulSl: exitFeeMul(run, 'sl') }) : null;
-  // 한 번 누르기(U-42 ①): 이자 한 번 치와 "지난 10분에 실제로 본 가장 큰 움직임으로 벌 수 있는 돈" 가운데 작은 쪽을 스스로 고른다(들어갈 때까지 장을 따라간다)
-  const auto = autoExit(sctx, cl.total, hist);
-  const acAuto = !pos && !!tr.acAuto && cl.total > 0;
-  const autoK = cl.total > 0 ? auto.net / cl.total : 1;
-  const tpK = acAuto ? autoK : tr.tpK ?? null, slK = acAuto ? autoK : tr.slK ?? null;
-  /** 한 번 누르기를 떠나 칩 · % 로 고를 때: 지금 걸려 있던 값을 그대로 남긴다 */
-  const leaveAuto = (): { acAuto?: boolean; tpK?: number | null; slK?: number | null } => (acAuto ? { acAuto: false, tpK, slK } : {});
+  // 「이자 한 번 걸기」(한 번 누르기 출구, U-41 · U-42 ①)는 뺐다(U-46 사용자: "이자 한 번 걸기는 제외"). 출구는 시트에서 % 나 도토리로 건다
+  const tpK = tr.tpK ?? null, slK = tr.slK ?? null;
   const acOrder = !pos && sctx ? acornStops(sctx, tpK !== null ? tpK * cl.total : null, slK !== null ? slK * cl.total : null) : null;
   /** 다음 진입에 걸릴 출구(ROE %): 도토리로 정한 것이 있으면 그것이 먼저다 */
   const ordSl = slK !== null ? acOrder?.sl ?? null : tr.sl;
@@ -406,7 +402,8 @@ export function ProtoTrade() {
       manual.current = false;
       setArm(false);
       setSheet(null);
-      const sv = savedFees(was.p, fees, liq);
+      // 첫 주문(튜토리얼)은 오픈 기념 문자가 오기 전이다: 아낀 수수료를 「오픈 기념」으로 적지 않는다(U-46)
+      const sv = useProto.getState().tutorial === 'run' ? { saved: 0, by: null } : savedFees(was.p, fees, liq);
       setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net), saved: sv.saved, savedBy: sv.by, rolled: Object.keys(run.positions).length === 0 ? Math.round(rolledFor(was.p.openTick)) : 0 }));
       window.clearTimeout(resT.current);
       resT.current = window.setTimeout(() => setResult(null), 5200);
@@ -437,7 +434,7 @@ export function ProtoTrade() {
       window.setTimeout(() => toast(`오소리 대부: 그 익절 폭(${acOrder.tpMove!.toFixed(2)}%)은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 한 번도 안 나왔습니다. 정산은 그동안에도 와요.`, 7000), 1200);
     }
     // 도토리로 건 출구: 실제로 들어간 크기(쪼개 넣기면 셋 가운데 하나)에 맞춰 다시 건다
-    if (tpK !== null || slK !== null) { plan.current[market] = { tp: tpK !== null ? tpK * cl.total : null, sl: slK !== null ? slK * cl.total : null, one: acAuto, by: acAuto ? auto.by : undefined }; reapply(); }
+    if (tpK !== null || slK !== null) { plan.current[market] = { tp: tpK !== null ? tpK * cl.total : null, sl: slK !== null ? slK * cl.total : null }; reapply(); }
     else delete plan.current[market];
     if (part > 0) {
       splitT.current.forEach((t) => window.clearTimeout(t));
@@ -520,7 +517,7 @@ export function ProtoTrade() {
   /** % 로 고르기(예전 그대로): 고른 쪽의 도토리 출구는 풀린다 */
   const setRoe = (kind: 'sl' | 'tp', v: number | null) => {
     if (pos) { const pl = plan.current[market]; if (pl) pl[kind] = null; applyPos(kind === 'sl' ? v : pos.slRoe, kind === 'tp' ? v : pos.tpRoe); }
-    else setTrade(kind === 'sl' ? { ...leaveAuto(), sl: v, slK: null } : { ...leaveAuto(), tp: v, tpK: null });
+    else setTrade(kind === 'sl' ? { sl: v, slK: null } : { tp: v, tpK: null });
   };
   const slWhyText = (why: 'liq' | 'fee' | null, amt: number) => (why === 'liq' ? `손절 −${comma(Math.round(amt))}보다 청산이 먼저 온다. 증거금이 그보다 작다.` : `수수료만으로 이미 −${comma(Math.round(amt))}를 넘는다.`);
   /** 도토리로 고르기: k = 다음 정산 청구액(이자 + 생활비)의 몇 배. null = 없음 */
@@ -530,9 +527,9 @@ export function ProtoTrade() {
     const a = acornStops(sctx, kind === 'tp' ? amt : null, kind === 'sl' ? amt : null);
     if (kind === 'sl' && amt !== null && a.sl === null) { say(slWhyText(a.slWhy, amt)); return false; }
     if (pos) {
-      plan.current[market] = { ...(plan.current[market] ?? { tp: null, sl: null }), [kind]: amt, one: false };
+      plan.current[market] = { ...(plan.current[market] ?? { tp: null, sl: null }), [kind]: amt };
       applyPos(kind === 'sl' ? a.sl : pos.slRoe, kind === 'tp' ? a.tp : pos.tpRoe);
-    } else setTrade(kind === 'sl' ? { ...leaveAuto(), slK: k, sl: null } : { ...leaveAuto(), tpK: k, tp: null });
+    } else setTrade(kind === 'sl' ? { slK: k, sl: null } : { tpK: k, tp: null });
     return true;
   };
   /** 지금 걸린 출구가 "이자 k번 치"인가(포지션이면 건 값을 도토리로 되읽어 견준다) */
@@ -541,28 +538,6 @@ export function ProtoTrade() {
     const roe = kind === 'sl' ? pos.slRoe : pos.tpRoe;
     if (roe === null || !sctx || !(cl.total > 0)) return false;
     return Math.abs(Math.abs(netForRoe(roe, sctx, kind)) - k * cl.total) <= Math.max(3, cl.total * 0.02);
-  };
-  // 한 번 누르기로 걸려 있는가: 포지션이면 그 출구의 기억(exitPlan.ts)이나 "이자 한 번 치"로 되읽히는 값, 주문 전이면 acAuto(또는 칩으로 고른 이자 한 번 · 한 번)
-  const plNow = pos ? plan.current[market] : null;
-  const claimBoth = acIs('tp', 1) && acIs('sl', 1);
-  const acOn = pos ? curTp !== null && curSl !== null && (!!plNow?.one || claimBoth) : acAuto ? (acOrder?.sl ?? null) !== null : claimBoth;
-  const acTpOnly = !acOn && (pos ? curTp !== null && curSl === null && (!!plNow?.one || acIs('tp', 1)) : acAuto ? true : acIs('tp', 1) && slK === null);
-  /** 걸린(걸릴) 크기를 고른 까닭 */
-  const acBy: 'claim' | 'range' | 'flat' = pos ? (plNow?.one ? plNow.by ?? 'claim' : acOn || acTpOnly ? 'claim' : auto.by) : acAuto || !(acOn || acTpOnly) ? auto.by : 'claim';
-  /** 단추에 적는 크기: 걸려 있으면 건 돈, 아니면 지금 누르면 걸릴 돈 */
-  const acNet = pos && plNow?.one && plNow.tp !== null ? plNow.tp : auto.net;
-  /** 한 번 누르기: 익절 = 손절 = 장에 맞춘 크기(이자 한 번 치를 넘지 않는다). 다시 누르면 푼다. 손절을 못 걸면(청산이 먼저) 익절만 걸고 까닭을 말한다 */
-  const toggleClaim = () => {
-    play('ui_tap');
-    if (acOn || acTpOnly) { if (pos) { delete plan.current[market]; applyPos(null, null); } else setTrade({ acAuto: false, tpK: null, slK: null, tp: null, sl: null }); return; }
-    const a = sctx ? acornStops(sctx, auto.net, auto.net) : null;
-    if (pos && sctx && a) {
-      plan.current[market] = { tp: auto.net, sl: a.sl !== null ? auto.net : null, one: true, by: auto.by };
-      applyPos(a.sl, a.tp);
-    } else setTrade({ acAuto: true, tpK: null, slK: null, tp: null, sl: null });
-    if (a && a.sl === null) say(slWhyText(a.slWhy, auto.net));
-    else if (auto.by === 'range' && auto.seenPct !== null) say(`지난 ${Math.max(1, Math.round(hist.length / 60))}분 가장 큰 폭 ${auto.seenPct.toFixed(2)}%만큼 건다(±${comma(auto.net)}).`, false);
-    else if (auto.by === 'flat') say(`지난 ${Math.max(1, Math.round(hist.length / 60))}분엔 걸 만한 폭이 없었다. 한동안 안 닿을 수 있다.`, false);
   };
   const slTxt = stopLabel(curSl, sctx, 'sl');
   const tpTxt = stopLabel(curTp, sctx, 'tp');
@@ -617,8 +592,8 @@ export function ProtoTrade() {
       })}
     </div></>
   );
-  // 첫 주문(튜토리얼)의 시세는 짜 둔 재생 기록이다: 그동안 시세 줄의 꼬리표가 그렇다고 적고, 전표가 닫히면 다시 실제 시세의 시간표로 돌아간다(U-44)
-  const feedTag = tutSt === 'run' ? '재생 기록' : tutSt === 'lost' || tutSt === 'notice' ? '재생 종료' : null;
+  // 첫 주문(튜토리얼)의 시세 줄에는 따로 꼬리표를 달지 않는다(U-46 사용자: "재생 종료라는 말은 대체 뭐임."): 주문 줄 위의 「첫 주문 전표」가 말하고, 끝난 뒤 전표 뒷면이 쉬운 말로 밝힌다
+  const feedTag: string | null = null;
   const quote = (
     <div className="pt-quote">
       <div className="px"><i className="qn">{marketById[market].name}</i><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
@@ -702,7 +677,7 @@ export function ProtoTrade() {
   const acRow = (kind: 'tp' | 'sl') => (
     <div className={'pt-acrow ' + kind} role="radiogroup" aria-label={kind === 'tp' ? '익절을 도토리로' : '손절을 도토리로'}>
       <span className="lb">{kind === 'tp' ? '익절' : '손절'}<small>{kind === 'tp' ? tpTxt : slTxt}</small></span>
-      <button role="radio" aria-checked={(kind === 'tp' ? curTp : curSl) === null} className={'pt-chip' + ((kind === 'tp' ? curTp : curSl) === null ? ' on' : '')} data-ak={kind + '0'} onClick={() => { if (pos) { const pl = plan.current[market]; if (pl) pl[kind] = null; applyPos(kind === 'sl' ? null : pos.slRoe, kind === 'tp' ? null : pos.tpRoe); } else setTrade(kind === 'sl' ? { ...leaveAuto(), slK: null, sl: null } : { ...leaveAuto(), tpK: null, tp: null }); }}><b>없음</b></button>
+      <button role="radio" aria-checked={(kind === 'tp' ? curTp : curSl) === null} className={'pt-chip' + ((kind === 'tp' ? curTp : curSl) === null ? ' on' : '')} data-ak={kind + '0'} onClick={() => { if (pos) { const pl = plan.current[market]; if (pl) pl[kind] = null; applyPos(kind === 'sl' ? null : pos.slRoe, kind === 'tp' ? null : pos.tpRoe); } else setTrade(kind === 'sl' ? { slK: null, sl: null } : { tpK: null, tp: null }); }}><b>없음</b></button>
       {AK[kind].map((k) => {
         // 그 폭이 지난 몇 분에 실제로 몇 번 나왔는가(칩마다): 조용한 장에서는 작은 출구를, 시끄러운 장에서는 큰 출구를 고를 수 있게
         const a = sctx ? acornStops(sctx, kind === 'tp' ? k * cl.total : null, kind === 'sl' ? k * cl.total : null) : null;
@@ -740,7 +715,7 @@ export function ProtoTrade() {
   // 도토리로 건 출구가 있으면 그 줄이 "이자까지" 줄을 대신한다. 그 폭이 지난 몇 분에 실제로 몇 번 나왔는지도 센다(약속이 아니라 센 것)
   const planTxt = !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist }) : null;
   const oddsSwing = odds ? swingCountText(hist, odds.needPct) : null;
-  const carry = pos && rawPos ? carryOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, notional: rawPos.notional, fundingRate: balance.trading.fundingRate as number }) : null;
+  const carry = pos && rawPos ? carryOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, notional: rawPos.notional, fundingRate: fundingRateNow()}) : null;
   const noteLine = note && <div key={note.k} className={'pt-note' + (note.bad ? ' bad' : '')} role="status">{note.text}</div>;
 
   // 주문 조건은 늘 펼쳐져 있다: 배율 눈금자(포지션이 없을 때) + 증거금 칩 + 위험 한 줄. 롱·숏을 누르면 바로 들어간다.
@@ -796,7 +771,7 @@ export function ProtoTrade() {
           <div className="sh-title"><b>출구</b><span>{pos ? `${m.name} ${pos.dirText} ${pos.lev}배` : '다음 진입에 걸린다'}</span></div>
           <button className="pt-x" aria-label="출구 닫기" onClick={() => setSheet(null)}><Cross /></button>
         </div>
-        {cl.total > 0 && <>{acRow('tp')}{acRow('sl')}<p className="pt-acnote" data-acnote>이자 한 번 = 다음 정산에 낼 {comma(cl.total)}.{hist.length >= 60 ? ` 「n번」은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 그 폭이 나온 횟수.` : ''}</p></>}
+        {cl.total > 0 && <>{acRow('tp')}{acRow('sl')}<p className="pt-acnote" data-acnote>이자 한 번 = 다음 수금(이자 + 생활비) {comma(cl.total)}.{hist.length >= 60 ? ` 「n번」은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 그 폭이 나온 횟수.` : ''}</p></>}
         {stops}
         {sk.dayLimit && (
           <div className="pt-stops day" data-daylimit>
@@ -870,7 +845,6 @@ export function ProtoTrade() {
             </div>
             )}
             </div>
-            <Think cls="fx" />
           </div>
         ) : null}
         {order}
@@ -881,17 +855,9 @@ export function ProtoTrade() {
         </button>
         ) : (
         <div className="pt-condrow">
-          {/* 한 번 누르기(U-41): 익절 = 이자 한 번 치, 손절 = 이자 한 번 치. 건 뒤에는 그 숫자가 단추에 남는다 */}
-          {tutSt === 'done' && cl.total > 0 && (
-            <button className={'pt-ac' + (acOn || acTpOnly ? ' on' : '')} data-acorn={acOn ? 'on' : acTpOnly ? 'tp' : 'off'} data-acby={acBy} data-acnet={Math.round(auto.net)} aria-pressed={acOn || acTpOnly} onClick={toggleClaim}>
-              {/* 장에 맞춰 줄였으면 "출구 걸기 ±n"과 그 까닭(지난 10분 최대 폭 기준), 이자 한 번 치 그대로면 예전 글 그대로 */}
-              <b>{acBy === 'range' ? `${acOn ? '출구 걸림' : acTpOnly ? '익절만 걸림' : '출구 걸기'} ±${comma(Math.round(acNet))}` : acOn ? '이자 한 번 걸림' : acTpOnly ? '익절만 걸림' : '이자 한 번 걸기'}</b>
-              <small data-acwhy={acBy}>{acBy === 'range' ? `지난 ${Math.max(1, Math.round(hist.length / 60))}분 최대 폭 기준` : <>{acOn ? `${tpTxt} / ${slTxt}` : acTpOnly ? tpTxt : `±${comma(auto.net)}`}{acBy === 'flat' && !(acOn || acTpOnly) ? <i> 걸 만한 폭이 없었다</i> : null}</>}</small>
-            </button>
-          )}
           <button className="pt-cond" data-hl="cond" onClick={() => setSheet('stops')}>
             <span className="vals">
-              {acOn || acTpOnly ? <span>출구</span> : curSl === null && curTp === null ? <span>출구 없음</span> : <><span className={curSl !== null ? 'set' : ''}>손절 {slTxt}</span><span className={curTp !== null ? 'set' : ''}>익절 {tpTxt}</span></>}
+              {curSl === null && curTp === null ? <span>출구 없음</span> : <><span className={curSl !== null ? 'set' : ''}>손절 {slTxt}</span><span className={curTp !== null ? 'set' : ''}>익절 {tpTxt}</span></>}
             </span>
             <span className="more">바꾸기<Chev size={11} /></span>
           </button>

@@ -6,7 +6,7 @@ import { ledgerRows, ledgerGoal, ledgerBeat, goldStamps, interestCut, repaidOffi
 import { STORY, WHO_NAME } from '../../src/ui/proto/text';
 import { VOICES, voiceOf } from '../../src/ui/proto/babble';
 import { balance, endingById, endings, skillMeta } from '../../src/engine/data';
-import { act1Coherent } from '../../src/engine/endings';
+import { act1Coherent, act1Unreachable } from '../../src/engine/endings';
 import { clone } from '../../src/engine/game';
 import { interestDue } from '../../src/engine/selectors';
 import { friendsOn } from '../../src/engine/friends';
@@ -169,7 +169,7 @@ describe('새 인물과 규칙', () => {
     ];
     for (const l of all) { expect(Object.keys(WHO_NAME)).toContain(l.who); expect(l.text.length).toBeGreaterThan(3); }
     expect(STORY.viperOffer({ unit: 200000, got: 120000, ratePct: 8 })[1].text).toBe('20만을 적고, 12만을 드리지. 나머지는 선이자일세.');
-    expect(STORY.rateHike({ text: 'x', from: 14500, to: 29000, times: 2 })[1].text).toContain('14,500에서 29,000');
+    expect(STORY.rateHike({ text: 'x', from: 14500, to: 29000, times: 2 })[1].text).toContain('다음 정산은 14,500 그대로고요오, 그 뒤 2번은 29,000') // U-46: 사건은 예고 다음 정산이 끝난 뒤부터;
   });
   it('1막 시제품은 친구 규칙을 끈다: 뒷골목 두 번째 대출에 연락처를 묻지 않고, 연체해도 절교가 없다', () => {
     const g = fresh();
@@ -199,10 +199,12 @@ describe('새 인물과 규칙', () => {
     expect(act1Coherent(e, g)).toBe(true);
     expect(e.title + e.line).not.toMatch(/독사|친구|절교|조합|세무서/);
     // 독사에게 빌린 생에는 독사 엔딩이 다시 후보가 된다
-    const viper = endings.find((x) => /독사/.test(x.title + x.line) && !/친구|절교|추천인|세대|가문|유산/.test(x.title + x.line))!;
-    expect(act1Coherent(viper, g)).toBe(false);
     g.run.stats['borrow.shark2'] = 1;
-    expect(act1Coherent(viper, g)).toBe(true);
+    const viper = endings.find((x) => /독사/.test(x.title + x.line) && act1Coherent(x, g))!; // U-46: 1막에 없는 장치를 조건으로 건 엔딩(act1Unreachable)은 늘 빠진다
+    expect(viper).toBeDefined();
+    expect(act1Unreachable(viper)).toBe(false);
+    g.run.stats['borrow.shark2'] = 0;
+    expect(act1Coherent(viper, g)).toBe(false);
   });
   it('조사: 받침에 맞게 붙인다', () => {
     expect(josa('보조 쳇바퀴', '이', '가')).toBe('보조 쳇바퀴가');

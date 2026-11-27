@@ -146,14 +146,20 @@ describe('정산을 넘겨 들고 있기 (U-41)', () => {
     expect(p).toBeDefined();
     expect(p.notional).toBe(before.notional);
     expect(p.entry).toBe(before.entry);
-    expect(before.margin - p.margin).toBe(100); // 명목 1,000만의 0.001%
-    expect(STORY.carried({ paid: 6_100, funding: 100 })).toBe('정산을 넘겼다. 손에서 −6,100, 포지션은 그대로, 펀딩비 −100은 증거금에서');
+    expect(before.margin - p.margin).toBe(0); // U-46: 1막은 펀딩비가 없다(사용자: 펀딩비까지 하면 어렵고, 대신 거래세를 낮추는 방안)
+    act1(false);
+    const h = trader(200_000);
+    A(h, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 50_000 });
+    const m0 = h.run.positions.DTC.margin; tickN(h, h.run.settleIn);
+    expect(m0 - h.run.positions.DTC.margin).toBe(100); // 1막 밖(엔진 기본): 명목 1,000만의 0.001%
+    expect(STORY.carried({ paid: 6_100 })).toBe('정산을 넘겼다. 손에서 −6,100, 포지션은 그대로');
   });
 });
 
 describe('펀딩비까지 넣은 출구 (U-41: 실시간 판에서 +7,750 익절이 +7,563 으로 닫혔다)', () => {
   it('정산을 두 번 넘긴 뒤 다시 건 익절은 펀딩비를 빼고도 그 돈이 된다. 다시 걸지 않으면 펀딩비만큼 모자란다', () => {
-    act1(true);
+    act1(false); // U-46: 1막은 펀딩비가 없다 — 이 셈은 엔진 기본(1막 밖)에서 본다
+    const fee0 = (balance.trading as { feeRate: number }).feeRate; (balance.trading as { feeRate: number }).feeRate = 0; // 예전 판(오픈 기념 중 수수료 0)과 같게
     for (const redo of [true, false]) {
       const g = trader(400_000);
       const cash0 = g.run.cash;
@@ -175,6 +181,7 @@ describe('펀딩비까지 넣은 출구 (U-41: 실시간 판에서 +7,750 익절
       if (redo) { expect(net).toBeGreaterThanOrEqual(15_500); expect(net).toBeLessThan(15_506); }
       else { expect(net).toBeLessThan(15_500); expect(net).toBeGreaterThan(15_290); }
     }
+    (balance.trading as { feeRate: number }).feeRate = fee0;
   });
 });
 

@@ -68,8 +68,10 @@ export interface Tile {
   tagged: boolean;
   /** 알바가 돌릴 때 정산마다 남는 돈(판 값 − 일당). 알바가 없으면 null */
   net: number | null;
-  /** 상태 한 줄(단추가 없을 때 보인다): "초당 +25.9", 잠겼으면 짧은 까닭 */
+  /** 상태 한 줄(단추가 없을 때 보인다): "초당 +35.9"(알바가 1초에 캐서 판 돈 — 쳇바퀴 위에 떠서 채굴기로 가는 숫자와 같다, U-46), 잠겼으면 짧은 까닭 */
   text: string;
+  /** 도는 칸의 작은 줄: 일당은 정산 때 나간다 */
+  sub?: string;
   /** 지금은 할 수 없는 칸(흐리게): 폰이 없다, 엄마의 쳇바퀴부터 … */
   locked: boolean;
   action: 'hire' | 'place' | 'rebuy' | null;
@@ -103,9 +105,9 @@ export function tiles(g: GameState, prefs: Record<string, number> = {}): Tile[] 
   const run = g.run;
   const hm = hamsterMath(g);
   const phone = run.futures.open;
-  const running = { state: 'run' as const, net: hm.net, text: `초당 +${secOf(hm.net)}`, locked: false, action: null, btn: '', btnSub: '', canAct: false };
+  const running = { state: 'run' as const, net: hm.net, text: `초당 +${secOf(hm.sold)}`, sub: `일당 ${n(hm.wage)}은 정산 때`, locked: false, action: null, btn: '', btnSub: '', canAct: false };
   const idle = () => phone
-    ? { state: 'idle' as const, net: null, text: '알바 없음', locked: false, action: 'hire' as const, btn: '알바 부르기', btnSub: `일당 ${n(hm.wage)}`, canAct: true }
+    ? { state: 'idle' as const, net: null, text: '알바 없음', locked: false, action: 'hire' as const, btn: '알바 부르기', btnSub: `정산 때 일당 ${n(hm.wage)}`, canAct: true }
     : { state: 'idle' as const, net: null, text: '폰이 없다', locked: true, action: null, btn: '', btnSub: '', canAct: false };
   const out: Tile[] = [];
   const w = run.coinWheels[WHEEL_COIN];
@@ -129,13 +131,15 @@ export function tiles(g: GameState, prefs: Record<string, number> = {}): Tile[] 
 }
 
 /** 집 한 줄 요약: 알바들이 정산마다 남기는 돈과 걷어 가는 돈 */
-export function homeSummary(g: GameState): { idle: number; claim: number; hamsters: number } {
+export function homeSummary(g: GameState): { idle: number; claim: number; hamsters: number; mined: number; wages: number; due: number } {
   const run = g.run;
   const fee = 1 - sellFeeRate(run);
   let sold = 0, wages = 0;
   for (const c of ownedCoins(run)) if (run.coinWheels[c].on && run.coinWheels[c].staffed) { sold += staffedWheelGross(c) * fee; wages += laborWage(); }
   for (const u of run.equipment) if (isActive(run, u)) { sold += equipGross(g, u) * fee; wages += tierWage(u.tier); }
-  return { idle: Math.floor(sold - wages), claim: claim(g).total, hamsters: staffedCount(g) };
+  // 화면의 접힌 한 줄(U-46): 초록 = 1초마다 들어오는 돈(캐서 판 값), 빨강 = 정산 때 나가는 돈 전부(이자 + 생활비 + 일당). idle = 일당을 뗀 값(예전 셈, 견줌은 같다)
+  const c = claim(g).total;
+  return { idle: Math.floor(sold - wages), claim: c, hamsters: staffedCount(g), mined: Math.floor(sold), wages: Math.round(wages), due: c + Math.round(wages) };
 }
 
 /** 정산당 순수입(HUD 에는 초당으로 바꿔 보여 준다): 알바가 캐는 값 − 일당 − 이자 − 생활비. 탭은 들어가지 않는다. */

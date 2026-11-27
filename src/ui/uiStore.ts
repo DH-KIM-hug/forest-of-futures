@@ -23,8 +23,8 @@ interface UI {
   shake: number;
   /** tpK · slK = 도토리로 건 출구(다음 정산 청구액의 몇 배를 따면/잃으면 나온다, U-41). 걸려 있으면 ROE(sl · tp)보다 먼저다 */
   trade: { market: string; lev: number | null; pct: number; sl: number | null; tp: number | null; tpK?: number | null; slK?: number | null;
-    /** acAuto = 한 번 누르기로 건 출구(장에 맞춰 스스로 크기를 고른다, U-42) · keep = 증거금 「정산 빼고 전부」(다음 정산에 낼 돈은 손에 남긴다, U-42) */
-    acAuto?: boolean; keep?: boolean };
+    /** keep = 증거금 「정산 빼고 전부」(다음 정산에 낼 돈은 손에 남긴다, U-42) */
+    keep?: boolean };
   awayDismissed: number;
   awayAt: number;
   prologue: boolean;

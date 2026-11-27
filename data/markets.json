@@ -21,15 +21,6 @@
       "color": "#7A5BB5"
     },
     {
-      "id": "SMS",
-      "name": "삼솔전자",
-      "startPrice": 78.5,
-      "decimals": 2,
-      "tradable": true,
-      "minable": true,
-      "color": "#3F7CC4"
-    },
-    {
       "id": "MDT",
       "name": "멍도토",
       "startPrice": 210.0,
@@ -37,6 +28,15 @@
       "tradable": true,
       "minable": true,
       "color": "#E0B52E"
+    },
+    {
+      "id": "SMS",
+      "name": "삼솔전자",
+      "startPrice": 78.5,
+      "decimals": 2,
+      "tradable": true,
+      "minable": true,
+      "color": "#3F7CC4"
     },
     {
       "id": "JQQ",

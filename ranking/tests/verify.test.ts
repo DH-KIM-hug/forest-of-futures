@@ -38,6 +38,10 @@ describe('랭킹 제출 검사', () => {
     // −300,000 + 15,500 + 10 × 53,000 = 245,500
     expect(checkLifeAgainstCandles(life, 245000, () => cs)).toBeNull();
     expect(checkLifeAgainstCandles(life, 246000, () => cs)).toMatch(/tooHigh/);
+    // U-46: 둘째 생부터는 튜토리얼이 끝난 자리(손에 10만, 빚 50만)에서 시작한다 → 상한도 −40만에서
+    const reborn = { ...life, lifeNo: 2 };
+    expect(checkLifeAgainstCandles(reborn, 145000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(reborn, 146000, () => cs)).toMatch(/tooHigh/);
     // 이긴 거래를 부풀리면 그 거래에서 걸린다
     const fake = { ...life, trades: [trade({ roe: 900, pnl: 450000 })] };
     expect(checkLifeAgainstCandles(fake, 600000, () => cs)).toMatch(/trade:roeTooHigh/);

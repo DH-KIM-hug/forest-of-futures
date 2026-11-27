@@ -353,9 +353,13 @@ export function processPrice(g: GameState, market: string, price: number): void 
 }
 
 /** 정산 3단계: 열린 포지션마다 명목의 0.001% 를 증거금에서 뺀다. 뺀 뒤 증거금 + 손익 <= 명목 × 0.1% 이면 청산. */
+/** 정산마다의 펀딩비율. 1막 시제품(balance.act1)은 0 — U-46 사용자: "펀딩비까지 하면 어렵고, 대신 거래세를 낮추는 방안"(한쪽만 내는 진짜 펀딩이 아니라 늘 같은 몫을 걷던 것이라 헷갈렸다) */
+export const fundingRateNow = (): number => ((balance as { act1?: unknown }).act1 ? 0 : (T.fundingRate as number));
 export function applyFundingOne(g: GameState, p: Position): void {
   const run = g.run;
-  const f = ceilS(p.notional * T.fundingRate);
+  const rate = fundingRateNow();
+  if (!(rate > 0)) return;
+  const f = ceilS(p.notional * rate);
   p.margin -= f;
   p.fundingPaid += f;
   bump(run, 'fundingPaid', f);

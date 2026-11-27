@@ -113,9 +113,9 @@
   "trading": {
     "feeRate": 0.0004,
     "openingEvent": {
-      "_doc": "FRX 숲거래소 오픈 기념(U-40, 1막 시제품 balance.act1 에서만 켜진다): 생마다 처음 freeSettlements 번의 정산 동안 거래 수수료 0, 끝나면 afterFeeRate. 시세는 건드리지 않는다.",
+      "_doc": "FRX 숲거래소 오픈 기념(U-40, 1막 시제품 balance.act1 에서만 켜진다): 생마다 처음 freeSettlements 번의 정산 동안 거래 수수료 0, 끝나면 afterFeeRate(U-46: 0.02% → 0.01%, 사용자: 펀딩비까지 하면 어렵고, 대신 거래세를 낮추는 방안). 1막은 펀딩비가 없다(futures.ts fundingRateNow). 시세는 건드리지 않는다.",
       "freeSettlements": 20,
-      "afterFeeRate": 0.0002
+      "afterFeeRate": 0.0001
     },
     "maintenanceRate": 0.001,
     "fundingRate": 1e-05,

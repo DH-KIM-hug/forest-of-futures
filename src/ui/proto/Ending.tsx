@@ -65,7 +65,7 @@ export function EndingFlow() {
         <img src={sprite('hero')!.src} alt="" width={42} height={56} />
         <div>
           <h2>다시 눈을 뜬다</h2>
-          <p>{retired ? '빚을 다 갚고 며칠 뒤, 그 오두막에서 눈을 떴다. 엄마 장부에 다시 30만이 적혀 있다.' : '다시 그 오두막, 그날이다. 엄마 장부에 30만이 그대로 있다.'}</p>
+          <p>{retired ? '빚을 다 갚고 며칠 뒤, 그 오두막에서 눈을 떴다. 첫 주문을 날린 그날 저녁이다. 오소리 장부에 다시 50만.' : '다시 그 오두막, 첫 주문을 날린 그날 저녁이다. 오소리 장부에 50만.'}</p>
         </div>
       </div>
       <div className="award" data-award={e.gold ?? 0}>
@@ -153,7 +153,7 @@ function SkillTree() {
           <b>{cur.name}{cur.level > 0 && (cur.kind === 'scaled' || cur.tail) ? ` Lv${cur.level}` : ''}</b>
           <p>{cur.desc}</p>
           {effectText(cur) && (cur.kind === 'scaled' || cur.tail) && <small data-effect>{effectText(cur)}</small>}
-          {/* 이 노드가 「이자 한 번 걸기」 한 판을 얼마나 바꾸는가(U-42 ④): 수수료가 기울인 승률을 지금 → 다음 레벨로. 시세는 그대로다 */}
+          {/* 이 노드가 예시 한 판(5만 200배, 익절 · 손절 ±15,500)을 얼마나 바꾸는가(U-42 ④): 수수료가 기울인 승률을 지금 → 다음 레벨로. 시세는 그대로다 */}
           {od && cur.cost !== null && <small className={'odds' + ((od.next.p ?? 0) < (od.now.p ?? 0) ? ' worse' : '')} data-odds={cur.id}>{od.text}</small>}
           {cur.level > 0 && !cur.picked && <small>짝 가지가 켜져 있다. 한 생에 하나만.</small>}
           {msg && <small className="bad">{msg}</small>}

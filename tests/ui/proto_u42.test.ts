@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { A, bare, openFutures } from '../engine/helpers';
 import { balance, skillById } from '../../src/engine/data';
 import { forecast } from '../../src/engine/settlement';
-import { acornStops, autoExit, fairOdds, keepDueMargin, maxSwing, oddsText, orderCtx, planLine, swingCount, AUTO_MIN_COUNT, AUTO_STEP } from '../../src/ui/proto/stops';
+import { acornStops, fairOdds, keepDueMargin, oddsText, orderCtx, planLine, swingCount } from '../../src/ui/proto/stops';
 import { betOdds, nodeOdds, treeOddsLine, REF_BET } from '../../src/ui/proto/odds';
 import { opensInMin, opensInText, openHeadsUp, spanText, untilHourMin } from '../../src/ui/proto/market';
 import { repayBuys, interestCut, STAMP_STEP } from '../../src/ui/proto/ledger';
@@ -18,62 +18,10 @@ const ctx = (fee = 0) => orderCtx({ margin: 50_000, lev: 200, feeRate: fee, main
 /** 초 단위 기록: 가운데 값 100 둘레를 amp(%) 만큼 오가는 물결 */
 const wave = (n: number, ampPct: number, period = 120) => Array.from({ length: n }, (_, i) => 100 * (1 + (ampPct / 100) * Math.sin((i / period) * 2 * Math.PI)));
 
-describe('지난 n분에 실제로 본 가장 큰 움직임 (U-42 ①)', () => {
-  it('기록이 1분이 안 되면 null, 있으면 "그 폭으로 세면 한 번 이상 나오는 가장 큰 폭"', () => {
-    expect(maxSwing(wave(40, 0.1))).toBeNull();
-    const h = wave(600, 0.05); // 위아래 0.05% → 고저 폭 약 0.1%
-    const m = maxSwing(h)!;
-    expect(m).toBeGreaterThan(0.095); expect(m).toBeLessThan(0.105);
-    expect(swingCount(h, m * 0.999)).toBeGreaterThanOrEqual(1);
-    expect(swingCount(h, m * 1.01)).toBe(0);
-  });
-  it('두 번 이상 나온 폭은 한 번 나온 폭보다 크지 않다(센 그대로)', () => {
-    const h = [...wave(300, 0.02), ...wave(300, 0.08)];
-    const one = maxSwing(h, 1)!, two = maxSwing(h, 2)!;
-    expect(two).toBeLessThanOrEqual(one);
-    expect(swingCount(h, two * 0.999)).toBeGreaterThanOrEqual(2);
-  });
-});
-
-describe('한 번 누르기의 출구가 장에 맞춘다 (U-42 ①)', () => {
-  const claim = 15_500;
-  it('상위 결정 그대로: 기준은 "한 번 이상 나온 가장 큰 폭"이고 500 단위로 내린다', () => { expect(AUTO_MIN_COUNT).toBe(1); expect(AUTO_STEP).toBe(500); });
-  it('시끄러운 장(지난 10분에 이자 한 번 폭이 나왔다): 이자 한 번 치 그대로', () => {
-    const a = autoExit(ctx(), claim, wave(600, 0.12)); // 고저 0.24% > 0.155%
-    expect(a).toMatchObject({ net: claim, by: 'claim' });
-    expect(a.why).toContain('지난 10분에 나온 폭');
-  });
-  it('조용한 장(가장 큰 폭 0.1%): 그 폭으로 벌 수 있는 돈으로 줄인다 — 이자 한 번 치보다 작고, 그 폭은 지난 기록에 실제로 있었다', () => {
-    const h = wave(600, 0.05);
-    const a = autoExit(ctx(), claim, h);
-    expect(a.by).toBe('range');
-    expect(a.net).toBeLessThan(claim); expect(a.net % AUTO_STEP).toBe(0);
-    expect(a.net).toBeGreaterThanOrEqual(9_500); expect(a.net).toBeLessThanOrEqual(10_000); // 0.1% × 명목 1,000만 = 10,000
-    expect(a.why).toBe('지난 10분 최대 폭 기준');
-    const st = acornStops(ctx(), a.net, a.net);
-    expect(swingCount(h, st.tpMove!)).toBeGreaterThanOrEqual(1); // 걸린 익절 폭이 지난 10분에 한 번은 나왔다
-    expect(st.sl).not.toBeNull(); // 손절도 같은 크기로 걸린다(대칭, U-42 ②)
-    expect(Math.abs(st.slMove!)).toBeCloseTo(st.tpMove!, 3);
-  });
-  it('죽은 장(폭이 거의 없다): 걸 만한 돈이 안 되면 이자 한 번 치로 두고 그렇다고 말한다', () => {
-    const a = autoExit(ctx(), claim, wave(600, 0.004));
-    expect(a).toMatchObject({ net: claim, by: 'flat' });
-    expect(a.why).toContain('걸 만한 폭이 없었다');
-  });
-  it('수수료가 있으면 같은 폭으로 벌 수 있는 돈이 수수료만큼 준다', () => {
-    const h = wave(600, 0.07); // 고저 0.14% → 수수료 0: 14,000 / 0.02%: 14,000 − 4,000
-    const free = autoExit(ctx(0), claim, h), paid = autoExit(ctx(0.0002), claim, h);
-    expect(free.by).toBe('range'); expect(paid.by).toBe('range');
-    expect(free.net - paid.net).toBeGreaterThanOrEqual(3_500); expect(free.net - paid.net).toBeLessThanOrEqual(4_500);
-  });
-  it('아직 잰 것이 없으면(기록 1분 미만 · 주문 판이 비었다) 이자 한 번 치', () => {
-    expect(autoExit(ctx(), claim, wave(30, 0.01)).by).toBe('claim');
-    expect(autoExit(null, claim, wave(600, 0.01))).toMatchObject({ net: claim, by: 'claim' });
-  });
-});
+// U-46: 「이자 한 번 걸기」(장에 맞춘 출구, U-42 ①)를 게임에서 뺐다 — 그 시험(maxSwing · autoExit)도 뺐다
 
 describe('수수료가 기울인 승률 (U-42 ④)', () => {
-  it('수수료 0 이면 반반(덧말 없음), 0.02% 면 37 대 63 — 주문 줄에 적힌다', () => {
+  it('수수료 0 이면 반반(덧말 없음), 0.02% 면 37 대 63 — 주문 줄에 적힌다(셈 자체의 시험: U-46 뒤 1막의 수수료는 0.01%)', () => {
     const free = acornStops(ctx(0), 15_500, 15_500), paid = acornStops(ctx(0.0002), 15_500, 15_500);
     expect(fairOdds(free)!).toBeCloseTo(0.5, 2);
     expect(oddsText(fairOdds(free))).toBeNull();
@@ -82,18 +30,20 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     expect(planLine({ tpNet: 15_500, slNet: 15_500, st: paid, hist: [] })).toContain('수수료 탓에 익절 37 : 손절 63');
     expect(planLine({ tpNet: 15_500, slNet: 15_500, st: free, hist: [] })).not.toContain('수수료 탓');
   });
-  it('나무: 노드 없이 37.1% · 판당 −4,000. 단골 수수료 Lv1 → 38.1% · −3,700. 지난 사흘 반의 봉으로 센 값(36.8~38.8%)과 맞는다', () => {
+  it('나무: 0.02% 에서 노드 없이 37.1% · 판당 −4,000, 단골 수수료 Lv1 → 38.1% · −3,700(봉으로 센 값 36.8~38.8%). U-46 의 0.01% 에서는 43.5% · −2,000 → 44.0% · −1,850(봉 43.4~44.2%)', () => {
     const bare0 = betOdds({}, 0.0002);
     expect(bare0.p! * 100).toBeCloseTo(37.1, 1); expect(bare0.ev).toBe(-4000); expect(bare0.ratePct).toBeCloseTo(0.02, 6);
     const a1 = betOdds({ R: 1, A1: 1 }, 0.0002);
     expect(a1.p! * 100).toBeCloseTo(38.1, 1); expect(a1.ev).toBe(-3700);
     expect(betOdds({}, 0).p!).toBeCloseTo(0.5, 3);
+    const b1 = betOdds({}, 0.0001), b2 = betOdds({ R: 1, A1: 1 }, 0.0001);
+    expect(b1.p! * 100).toBeCloseTo(43.5, 1); expect(b1.ev).toBe(-2000); expect(b2.p! * 100).toBeCloseTo(44.0, 1); expect(b2.ev).toBe(-1850);
   });
   it('노드 설명: 수수료 노드는 지금 → 다음 승률을 적고, 그 판을 안 바꾸는 노드는 적지 않는다. 어떤 노드도 반반을 넘기지 못한다', () => {
     act1(true);
     const own = { R: 1 };
     const a1 = nodeOdds(own, 'A1', 0)!;
-    expect(a1.text).toMatch(/익절 확률 37\.1% → 38\.1%\n한 판 평균 −4,000 → −3,700/);
+    expect(a1.text).toMatch(/익절 확률 43\.5% → 44\.0%\n한 판 평균 −2,000 → −1,850/); // U-46: 끝난 뒤 수수료 0.01%
     expect(nodeOdds(own, 'B1', 0)!.next.p!).toBeGreaterThan(a1.now.p!);
     for (const id of ['R', 'A3a', 'B2', 'B4', 'C3a', 'C4']) expect(nodeOdds(own, id, id === 'R' ? 1 : 0)).toBeNull();
     // 비상금 주머니는 보험료(+0.01%p)만큼 이 판을 더 기울인다 — 그것도 적는다
@@ -102,8 +52,8 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     // 전부 100레벨씩 올려도 반반에는 못 미친다(수수료는 0이 되지 않는다)
     const all = Object.fromEntries(Object.keys(skillById).filter((k) => k !== 'C2' && k !== 'A3a' && k !== 'B3b' && k !== 'C3a').map((k) => [k, 100]));
     expect(betOdds(all).p!).toBeLessThan(0.5);
-    expect(treeOddsLine(own)).toMatch(/수수료 0\.02%\. 「이자 한 번 걸기」\(5만, 200배\)는 익절 37 : 손절 63/);
-    expect(treeOddsLine({ R: 1, A1: 5, B1: 5 })).toMatch(/익절 42 : 손절 58 \(나무 없이는 37 : 63\)/);
+    expect(treeOddsLine(own)).toMatch(/수수료 0\.01%\. 5만 200배, 익절과 손절을 ±15,500에 걸면 익절 44 : 손절 56/); // U-46: 「이자 한 번 걸기」 이름 없이 · 0.01%
+    expect(treeOddsLine({ R: 1, A1: 5, B1: 5 })).toMatch(/익절 46 : 손절 54 \(나무 없이는 44 : 56\)/);
     expect(REF_BET).toMatchObject({ margin: 50_000, lev: 200, claim: 15_500 });
   });
 });

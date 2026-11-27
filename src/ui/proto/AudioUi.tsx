@@ -76,7 +76,7 @@ export function SoundBtn() {
   const label = !p.unlocked ? '탭하면 소리' : p.music && p.sfx ? '소리 켬' : !p.music && p.sfx ? '효과음만' : p.music ? '음악만' : '소리 끔';
   const on = p.unlocked && (p.music || p.sfx);
   return (
-    <button className={'pr-snd' + (on ? ' on' : '')} onClick={next} aria-label={`소리 설정: ${label}`}>
+    <button className={'pr-snd' + (on ? ' on' : '')} data-always onClick={next} aria-label={`소리 설정: ${label}`}>
       <Speaker waves={on} x={!on} />
       <small>{label}</small>
     </button>

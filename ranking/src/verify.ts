@@ -109,7 +109,9 @@ export function checkTradeAgainstCandles(d: TradeDetail, candles: Candle[]): str
 }
 
 export const LIFE = {
-  start: -300_000, // 엄마 빚 30만, 현금 0
+  start: -300_000, // 첫 생: 엄마 빚 30만, 현금 0
+  /** 둘째 생부터(U-46): 첫 생의 튜토리얼이 끝난 자리에서 시작한다 — 손에 10만, 빚 50만 */
+  rebornStart: -400_000,
   mineMaxPerSettle: 50_000, // 쳇바퀴 6대 × 6,500 + 최대 탭(12회/초 × 180초 × 2) + 여유
   eventMaxPerSettle: 3_000, // 마을 사건(지원금 등) 평균 상한
   maxTrades: 300,
@@ -139,7 +141,8 @@ export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf:
     if (why) return `trade:${why}`;
     wins += t.pnl;
   }
-  const bound = LIFE.start + wins + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
+  const start = d.lifeNo >= 2 ? LIFE.rebornStart : LIFE.start;
+  const bound = start + wins + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
   if (value > bound) return `tooHigh(${Math.round(value)} > ${Math.round(bound)})`;
   return null;
 }

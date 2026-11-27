@@ -61,7 +61,7 @@ export function tradeReaction(t: TradeEnd, c: TradeCtx): Reaction | null {
   if (c.tinyStreak >= 3 && c.feesLife >= 1) { const r = R('feeBleed', 'collector', [`수수료만 ${n(c.feesLife)} 내셨어요오.`]); if (r) return r; }
   if (t.pnl > 0 && t.pnl >= claim * 0.1) { const r = R('firstWin', 'boss', ['거 보세요. 쳇바퀴보다 빠르죠?']); if (r) return r; }
   if (t.pnl < 0 && -t.pnl >= claim * 0.1) { const r = R('firstLoss', 'collector', ['…그냥 지나가다 들렀어요오.']); if (r) return r; }
-  if (c.tinyStreak >= 3 && c.feesLife < 1) { const r = R('flatFree', 'boss', ['세 판째 본전이시네요. 안 움직이는 코인에 거셨어요.']); if (r) return r; }
+  if (c.tinyStreak >= 3 && c.feesLife < 1) { const r = R('flatFree', 'boss', ['세 판째 본전이시네요. 수수료가 공짜라 다행이죠.']); if (r) return r; }
   if (c.winStreak === 3) return R('win3', 'hero', ['…감 잡았다. 이번엔 진짜다.']);
   if (c.lossStreak === 3) return R('loss3', 'hero', ['…다음엔 딴다. 다음엔.']);
   return null;

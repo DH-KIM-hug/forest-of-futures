@@ -94,7 +94,9 @@ export function applyBirth(g: GameState): void {
   run.skill = activeLevels(g);
   run.marginCall = null;
   run.dayLossLimit = null;
-  if (hasRun(run, 'R') && !run.futures.open) {
+  // R(손에 익은 앱)은 이제 나무의 첫 가지일 뿐이다(U-46): 1막의 새 생은 튜토리얼이 끝난 자리에서 폰을 쥔 채 눈을 뜨므로(act1Start.ts) 폰을 주는 효과가 겹친다.
+  // 1막 밖(2막 이후 데이터)에서는 예전처럼 계좌를 연다
+  if (hasRun(run, 'R') && !run.futures.open && !(balance as { act1?: unknown }).act1) {
     run.futures.open = true;
     run.futures.openedAtSettle = run.settleNo;
     logEvent(run, 'open_account', '손에 익은 앱: 선물 계좌가 처음부터 열려 있다');
