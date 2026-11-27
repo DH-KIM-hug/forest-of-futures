@@ -88,6 +88,7 @@ export interface HoldSnap {
   /** 들고 있는 사이 지나간 정산 수 */ settles: number;
   /** 다음 정산에 낼 돈이 포지션에 묶여 있다(그리고 정산이 1분 안이다) */ squeezed?: boolean;
   /** 이 포지션에 낸 수수료(0 이면 오픈 기념 무료 — "수수료만 냈다"는 말은 거짓이 된다) */ feesPaid?: number;
+  /** 이 판을 들고 있는 동안 쳇바퀴를 굴려 번 돈(U-42) */ rolled?: number;
 }
 /** 같은 열쇠의 줄을 포지션마다 번갈아 쓴다(U-40): nth = 이번 생에 연 포지션 순번. 첫 줄은 회차 2 의 줄 그대로다. */
 const rot = (nth: number, ...v: string[]): string => v[((nth % v.length) + v.length) % v.length];
@@ -105,6 +106,7 @@ export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): H
     ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `…아까는 +${n(s.peakPnl)}이었다. 아까 닫을 걸.`, `…+${n(s.peakPnl)}까지 갔었다. 그때 손가락이 안 움직였다.`) : null)
     ?? (s.roe <= -50 ? B('half', '…넣은 돈의 절반이 녹았다.', '…절반 남았다. 절반이면 아직… 아니다.') : null)
     ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '…본전이다. 본전이면 나가야 하는데.', '…돌아왔다. 여기서 나가면 아무 일도 없던 거다.') : null)
+    ?? ((s.rolled ?? 0) >= claim * 0.05 ? B('rolled', `…굴린 것만 ${n(s.rolled!)}. 다음 정산의 ${Math.round((s.rolled! / claim) * 100)}%다. 눈은 폰에, 발은 쳇바퀴에.`, `…기다리는 동안 굴려 번 것이 ${n(s.rolled!)}. 이건 폰 속 숫자가 아니라 진짜 도토리다.`) : null)
     ?? (s.settles >= 1 ? B('settled', '…정산이 한 번 지나갔다. 아직 들고 있다.', '…추심원이 다녀갔다. 포지션은 그대로다.') : null)
     ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakPnl < claim * 0.1
       ? (free ? B('flat', '…안 움직인다. 수수료가 공짜라 잃은 것도 없다. 번 것도 없다.', '…차트가 누워 있다. 공짜로 구경 중이다.', '…아무 일도 없다. 다른 코인은 움직이나.')

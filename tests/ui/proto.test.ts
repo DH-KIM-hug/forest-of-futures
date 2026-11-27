@@ -44,11 +44,11 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     A(g, { type: 'openAccount', sponsor: true });
     expect(interestDue(g, 'shark1')).toBe(8500);
     const hm = hamsterMath(g);
-    expect(hm).toEqual({ sold: 6467, wage: 1800, net: 4667 });
-    expect(tiles(g)[0]).toMatchObject({ state: 'idle', action: 'hire', btn: '알바 부르기', btnSub: '일당 1,800', canAct: true, locked: false });
+    expect(hm).toEqual({ sold: 6467, wage: 1600, net: 4867 });
+    expect(tiles(g)[0]).toMatchObject({ state: 'idle', action: 'hire', btn: '알바 부르기', btnSub: '일당 1,600', canAct: true, locked: false });
     expect(A(g, { type: 'hire', coin: 'DTC' }).ok).toBe(true);
-    expect(tiles(g)[0]).toMatchObject({ state: 'run', net: 4667, action: null });
-    expect(tiles(g)[0].text).toBe(`초당 +${(4667 / balance.settlement.intervalSec).toFixed(1)}`);
+    expect(tiles(g)[0]).toMatchObject({ state: 'run', net: 4867, action: null });
+    expect(tiles(g)[0].text).toBe(`초당 +${(4867 / balance.settlement.intervalSec).toFixed(1)}`);
     expect(tiles(g)[1]).toMatchObject({ state: 'empty', action: 'place', canAct: true });
     expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' }).ok).toBe(true);
     const uid = g.run.equipment[0].uid;
@@ -63,9 +63,9 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     t = tiles(g, { [uid]: 3 });
     expect(t[3]).toMatchObject({ state: 'run', action: null });
     expect(t[1].btnSub).toBe('50,000'); // 두 번째도 같은 값
-    expect(homeSummary(g)).toMatchObject({ idle: 9335, hamsters: 2, claim: 9500 });
+    expect(homeSummary(g)).toMatchObject({ idle: 9735, hamsters: 2, claim: 9500 });
     // 초당 환산은 지금 정산 간격을 쓴다
-    expect(perSec(9335)).toBeCloseTo(9335 / balance.settlement.intervalSec, 9);
+    expect(perSec(9735)).toBeCloseTo(9735 / balance.settlement.intervalSec, 9);
   });
   it('쳇바퀴가 실려 가면 그 칸이 [다시 사기]가 되고, 빈 자리는 엄마 쳇바퀴부터라고 잠긴다', () => {
     const g = fresh();

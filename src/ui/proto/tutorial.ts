@@ -9,6 +9,8 @@ import { STORY } from './text';
 import { clone } from '../../engine/game';
 import { processPrice } from '../../engine/futures';
 import { balance } from '../../engine/data';
+import { marginFromPct } from '../../engine/futures';
+import { feeRate } from '../../engine/skilltree';
 import { nextBorrowRate } from '../../engine/selectors';
 import { pushOne, dropLast } from '../priceHistory';
 import { play } from './audio';
@@ -20,10 +22,11 @@ export function tutorialIntro(): void {
   if (P.tutorial !== 'await' || P.seen.tutIntro) return;
   P.pushScene({ id: 'tutIntro', lines: STORY.tutIntro(tutorialMargin(), TUT.lev, tipArgs(useGame.getState().g)) });
 }
-/** 거는 돈: 정해 둔 3만, 가진 돈이 모자라면 그 4분의 3. 최소 증거금도 안 되면 0(튜토리얼을 건너뛴다). */
+/** 거는 돈(U-43 사용자: "걍 전재산 넣으면 되잖아"): 가진 돈 전부(들어갈 때 수수료를 낼 만큼은 뺀다). 최소 증거금도 안 되면 0(튜토리얼을 건너뛴다).
+ *  청산되면 손에 0 이 남고, 오소리의 두 번째 10만(6%)이 그다음 걸음이 된다. */
 export function tutorialMargin(): number {
-  const cash = useGame.getState().g.run.cash;
-  const m = Math.min(TUT.margin, Math.floor(cash * 0.75));
+  const g = useGame.getState().g;
+  const m = marginFromPct(g.run.cash, TUT.lev, 100, feeRate(g, TUT.lev, { allIn: true }));
   return m >= (balance.trading.minMargin as number) ? m : 0;
 }
 
@@ -36,7 +39,7 @@ export function tutorialOpen(dir: 1 | -1): boolean {
   if (!r.ok) { say(r.msg ?? '들어갈 수 없습니다'); return false; }
   play(dir === 1 ? 'order_long' : 'order_short');
   st.setSpeed(0);
-  useProto.getState().patch({ tutorial: 'run' });
+  useProto.getState().patch({ tutorial: 'run', forceTrade: false, pointTab: null });
   const real = useGame.getState().g.run.prices[TUT.market];
   let k = 0;
   const timer = window.setInterval(() => {
@@ -63,6 +66,8 @@ function finish(real: number, steps: number, margin: number): void {
   dropLast(TUT.market, steps);
   const g2 = clone(useGame.getState().g);
   g2.run.prices[TUT.market] = real;
+  // 전부 걸었다: 손에 남은 것은 1 도토리도 안 되는 끝자리뿐이다(쳇바퀴가 1초씩 넣은 돈의 소수점). 0 으로 적는다
+  if (g2.run.cash < 1) g2.run.cash = 0;
   st.setGame(g2);
   const lend = officeOffer(g2).lend;
   useProto.getState().patch({ tutorial: 'lost' });

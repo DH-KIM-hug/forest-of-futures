@@ -63,12 +63,12 @@
       "name": "보조 쳇바퀴",
       "cost": 50000,
       "grossPerSettle": 6500,
-      "netPerSec": 26.11,
+      "netPerSec": 27.22,
       "needHouse": 0,
       "bankCollateral": false,
       "seenAs": "빈자리에 쳇바퀴가 한 대 놓인다. 알바가 없으면 안 돈다",
       "maxUnits": 5,
-      "wage": 1800
+      "wage": 1600
     },
     {
       "id": "helper",

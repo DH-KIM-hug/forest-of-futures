@@ -12,7 +12,8 @@ import { interestDue, lenderLimit, nextBorrowRate } from '../../engine/selectors
 import type { LenderId } from '../../engine/types';
 import { ProtoTrade } from './Trade';
 import { PLACE, STORY } from './text';
-import { ledgerRows, goldStamps, repaidOffice, STAMP_STEP } from './ledger';
+import { forecast } from '../../engine/settlement';
+import { ledgerRows, goldStamps, repaidOffice, repayBuys, STAMP_STEP } from './ledger';
 import { RowIcon } from './art';
 import { sprite, PLACE_ART, MAP_SPOTS } from './sprites';
 import { journeyOf } from './stops';
@@ -75,7 +76,10 @@ export function MapTab() {
     // 숲속 캐피탈에서 처음 빌렸다: 창구 너구리가 조건을 말한다(한도가 왜 그 숫자인지, 밀리면 어떻게 되는지)
     if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: Math.round(lenderById.capital.rate * 100) }) });
   };
-  const doPay = (id: LenderId, mult: 1 | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족합니다' : r.msg ?? '안 된다'); };
+  const doPay = (id: LenderId, mult: number | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족합니다' : r.msg ?? '안 된다'); };
+  const fcN = forecast(g);
+  const dueNext = fcN.interest + fcN.living + fcN.wages;
+  const keepPay = repayBuys(g, dueNext);
   const total = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + run.debts[id].principal, 0);
   return (
     <div className="pr-pane">
@@ -118,6 +122,10 @@ export function MapTab() {
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-pay={id} data-hl={id === 'shark1' ? 'pay' : undefined} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-payall={id} onClick={() => doPay(id, 'all')}><span>전부</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
             </div>
+            {/* 정산 빼고 갚기(U-42): 다음 정산에 낼 돈은 손에 남기고 갚는다. [전부]는 그 돈까지 갚아 버린다 — 둘의 차이가 단추에 보인다 */}
+            {id === 'shark1' && loanTaken && keepPay && keepPay.amount > payAmt && keepPay.amount < Math.min(d.principal, Math.floor(run.cash)) && (
+              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>다음 정산에 낼 {comma(Math.round(dueNext))}은 남긴다 · 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 ? ` · 금박 도장 +${keepPay.stamps}` : ''}</small></button>
+            )}
             {/* 빚을 다 갚은 생은 여기서 닫을 수 있다(U-39 ⑧): 은퇴 = 엔딩 카드 → 환생 */}
             {id === 'shark1' && canRetireAct1(g) && (
               <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>빚 0 · 이 생을 닫는다 · 황금 +{treeAward(run)}</small></button>

@@ -3,16 +3,18 @@ import '@fontsource/jua/latin-400.css';
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Tab } from './protoStore';
-import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo } from './model';
+import { currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo, hamsterMath } from './model';
 import { tensionOf } from './tension';
 import { awayMoney } from './away';
 import { liveHistoryOf } from '../priceHistory';
-import { startWatch, SAVINGS_STEPS, savingsStep } from './watch';
+import { startWatch, SAVINGS_STEPS, savingsStep, say } from './watch';
+import { FORCE_NUDGE } from './roll';
 import { startHistory } from '../priceHistory';
 import { Lot, useOpenPositions } from './Lot';
 import { MapTab, PhoneTab } from './Tabs';
 import { EndingFlow } from './Ending';
 import { CutIn } from './CutIn';
+import { Money } from './Money';
 import { Prologue, prologueSeen } from './Prologue';
 import { endPrologue } from './dev';
 import { ProfitPrompt } from './ProfitPrompt';
@@ -75,15 +77,6 @@ function Hud() {
   const ghost = lg && spare >= 1000 ? Math.min(1, (lg.cur + spare) / lg.need) : null;
   const goalEnd = sv >= SAVINGS_STEPS.length ? '도토리 100만 · 사무소에서 언제든 이 생을 닫을 수 있다' : otherDebt > 0 ? `오소리 장부는 깨끗하다 · 다른 빚 ${comma(otherDebt)} (지도)` : '빚 0 · 장부가 깨끗하다';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
-  const cash = useCountUp(run.cash);
-  void 0;
-  // 숫자가 오르면 통, 내리면 움찔
-  const prevCash = useRef(run.cash);
-  const [bump, setBump] = useState<{ k: number; dir: 'up' | 'down' }>({ k: 0, dir: 'up' });
-  useEffect(() => {
-    if (run.cash !== prevCash.current) setBump((b) => ({ k: b.k + 1, dir: run.cash > prevCash.current ? 'up' : 'down' }));
-    prevCash.current = run.cash;
-  }, [run.cash]);
   const lot = tab === 'lot';
   const [brk, setBrk] = useState(() => pdev === 'wallet' && /pbrk=1/.test(window.location.search));
   const fc = forecast(g);
@@ -91,8 +84,20 @@ function Hud() {
   const sec = (n: number) => rateTxt(perSec(n));
   const hasWheel = ownedCoins(run).length > 0;
   const rate = run.effects.find((e) => e.type === 'rateMultiplier') ?? null;
+  // 알바를 들인 순간(U-43 사용자: "알바 고용하고 하면 초당 얼마 버는지 시각화 제대로 좀"): 초당 칩 옆에 "초당 +0 → +n"(알바 한 마리가 1초에 남기는 돈 = 캐서 판 돈 − 일당, 판의 칸과 같은 엔진 값)
+  const staffedN = (run.coinWheels.DTC?.staffed ? 1 : 0) + run.equipment.filter((u) => u.staffed).length;
+  const prevStaffed = useRef(staffedN);
+  const [hire, setHire] = useState<{ k: number; t: string } | null>(null);
+  useEffect(() => {
+    const was = prevStaffed.current;
+    prevStaffed.current = staffedN;
+    if (staffedN <= was) return;
+    setHire((h) => ({ k: (h?.k ?? 0) + 1, t: `초당 +0 → +${rateTxt(perSec(hamsterMath(g).net))}` }));
+    const t = window.setTimeout(() => setHire(null), 2400);
+    return () => window.clearTimeout(t);
+  }, [staffedN]);
   return (
-    <header className={'pr-hud' + (lot ? ' over' : '')}>
+    <header className={'pr-hud' + (lot ? ' over' : '') + (tab === 'phone' ? ' tight' : '')}>
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
@@ -100,8 +105,8 @@ function Hud() {
         </div>
         <DevBar />
         <div className="acorn">
-          <div className="n" data-hl="acorn"><span key={bump.k} className={bump.k ? 'v n-' + bump.dir : 'v'}>{comma(cash)}</span><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
-          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 {ps >= 0 ? '+' : '−'}{rateTxt(perSec(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i></button>
+          <div className="n" data-hl="acorn"><Money value={run.cash} perSec={perSec(fc.mined)} /><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
+          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 {ps >= 0 ? '+' : '−'}{rateTxt(perSec(ps))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i>{hire && <b key={hire.k} className="hireburst" data-hireburst>{hire.t}</b>}</button>
           {hasWheel && <button className="walbtn" data-hl="wallet" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
         </div>
       </div>
@@ -134,6 +139,8 @@ function TabBar() {
   const cheer = useProto((s) => !!s.cheer);
   const pos = useOpenPositions();
   const [shake, setShake] = useState<string | null>(null);
+  const point = useProto((s) => s.pointTab);
+  const force = useProto((s) => s.forceTrade);
   const open = (id: Tab) => id === 'lot' || !!un[id];
   const near = pos.find((p) => isNearLiq(p));
   const overdue = DEBT_IDS.some((id) => g.run.debts[id].overdue > 0);
@@ -156,8 +163,8 @@ function TabBar() {
         const on = tab === t.id;
         const b = ok ? badge(t.id) : null;
         return (
-          <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '')} aria-current={on ? 'page' : undefined}
-            onClick={() => { if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
+          <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '') + (point === t.id && ok && !on ? ' point' : '') + (force && t.id === 'map' ? ' dim' : '')} aria-current={on ? 'page' : undefined}
+            onClick={() => { if (ok && force && t.id === 'map') { say(FORCE_NUDGE); setShake(t.id); window.setTimeout(() => setShake(null), 400); return; } if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
             {on && <i className="base" />}
             <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? <RowIcon kind={t.id} size={t.id === 'lot' ? 44 : on ? 38 : 32} /> : '?'}</span>
             <small>{ok ? t.label : ''}</small>
@@ -271,7 +278,7 @@ export function ProtoApp() {
         fut: r.futures, pos: Object.values(r.positions).map((p) => ({ m: p.market, dir: p.dir, lev: p.lev, margin: p.margin0 })), debts: Object.fromEntries(Object.entries(r.debts).map(([k, v]) => [k, v.principal])), friend: r.friends.squirrel.debt,
         gen: g.family.generation, han: g.family.han, estate: g.estate?.step ?? null, lastClose: r.lastClose, tab: P.tab, unlocked: P.everUnlocked, scene: P.scenes[0]?.id ?? null, prologue: P.prologue, prices: r.prices, stamps: r.stats.stamps ?? 0, walletOn: P.wallet,
         repaid: r.stats['repaid.shark1'] ?? 0, gold: g.family.gold ?? 0, skill: g.family.skill ?? {}, runSkill: r.skill ?? {}, seen: Object.keys(P.seen), marginCall: r.marginCall ?? null, liqs: r.stats.liqCount ?? 0, cause: r.bankruptcy?.cause ?? null, ending: g.pendingEnding?.title ?? null, endingId: g.pendingEnding?.id ?? null, tradeUi: useUI.getState().trade,
-        think: P.think?.text ?? null, cheer: P.cheer, tradeLife: P.tradeLife, claimWins: P.claimWins, paidLife: P.paidLife, dayNote: P.dayNote, day: Object.fromEntries(Object.keys(r.prices).map((k) => { const b = dayBars(k); return [k, [b.length, b[0]?.t ?? 0, b[b.length - 1]?.t ?? 0]]; })), posStops: Object.values(r.positions).map((p) => ({ m: p.market, sl: p.slRoe, tp: p.tpRoe, notional: p.notional, fees: p.feesPaid })), away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick };
+        think: P.think?.text ?? null, forceTrade: P.forceTrade, pointTab: P.pointTab, toast: P.toast, rolled: P.rolled, rolledTaps: P.rolledTaps, claimWinRun: P.claimWinRun, claimLossRun: P.claimLossRun, cheer: P.cheer, tradeLife: P.tradeLife, claimWins: P.claimWins, paidLife: P.paidLife, dayNote: P.dayNote, day: Object.fromEntries(Object.keys(r.prices).map((k) => { const b = dayBars(k); return [k, [b.length, b[0]?.t ?? 0, b[b.length - 1]?.t ?? 0]]; })), posStops: Object.values(r.positions).map((p) => ({ m: p.market, sl: p.slRoe, tp: p.tpRoe, notional: p.notional, fees: p.feesPaid })), away: P.away, capOverdue: r.debts.capital.overdue, effects: r.effects.map((e) => e.type + ':' + e.multiplier + ':' + e.remaining), ledger: Object.keys(g.family.ledger), tick: r.tick };
     };
   }, []);
   // 흔들림: 감싸개만, 감쇠하는 사인 합(무작위 떨림 아님)

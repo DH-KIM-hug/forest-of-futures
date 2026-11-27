@@ -2,7 +2,7 @@
 import { balance, COINS, marketDefs, friendDefs, tipsData } from './data';
 import { createFriends } from './friends';
 import { initialRunStats } from './stats';
-import { settle, forecast } from './settlement';
+import { settle, forecast, creditMining } from './settlement';
 import { netWorth, walletValue } from './selectors';
 import { refreshShark2Open } from './loans';
 import { notify } from './util';
@@ -109,6 +109,7 @@ function tickMut(g: GameState, t: Tick): void {
   if (run.view.tab === 'trade' && Object.keys(run.positions).length) bump(run, 'watchSec', 1);
   const wv = walletValue(run);
   if (wv > run.walletPeakValue) run.walletPeakValue = wv;
+  creditMining(g, 1); // 캐는 값은 틱마다 1초어치씩 들어온다(U-43). 정산은 걷어 가기만 한다
   run.settleIn -= 1;
   if (run.settleIn <= 0) {
     run.settleIn = balance.settlement.intervalSec;

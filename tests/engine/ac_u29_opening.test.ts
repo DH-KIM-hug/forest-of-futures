@@ -1,6 +1,6 @@
 // U-29·U-30·U-31 새 시작: 줍기 없이 쳇바퀴에서. 현금 0, 엄마 빚 30만(오소리, 옛 이자 1.5%). 아무리 굴려도 첫 정산의 이자 + 생활비를 못 낸다.
 // 추심원의 권유(오소리 10만 더, 4%)를 받으면 그 돈에서 이자가 나가고 중고폰(선물 계좌)이 딸려 온다. 폰이 있어야 알바를 부른다.
-// 빌린 돈으로 보조 쳇바퀴(50,000 고정)를 놓고 알바(일당 1,800 고정)를 쓴다. 거절하면 연체 -> 딱지 -> 쳇바퀴 압류 -> 파산.
+// 빌린 돈으로 보조 쳇바퀴(50,000 고정)를 놓고 알바(일당 1,600 고정)를 쓴다. 거절하면 연체 -> 딱지 -> 쳇바퀴 압류 -> 파산.
 // 오소리의 두 번째 대출부터는 6%(U-31): 첫 대출 뒤에는 조금 남고, 거래로 잃고 한 번 더 빌리면 정산마다 모자란다.
 // 엔진 행동만 쓴다(tap · borrow · openAccount · buyEquip · hire · stamp · 틱). 현금을 쥐여 주는 곳은 '기준판'이라고 적었다.
 import { afterEach, describe, expect, it } from 'vitest';
@@ -13,6 +13,8 @@ import { affordableUpgrades } from '../../src/engine/upgrades';
 import { nextTierCost, tapValue, tierBlockReason } from '../../src/engine/equipment';
 import { seizeFor } from '../../src/engine/seizure';
 import type { GameState } from '../../src/engine/types';
+import { marginFromPct, processPrice } from '../../src/engine/futures';
+import { feeRate } from '../../src/engine/skilltree';
 
 const NORMAL = balance.settlement.intervalSec as number;
 const MAX_TAPS = balance.progression.maxTapsPerSec as number;
@@ -131,57 +133,69 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
     const w2 = g.run.equipment[0];
     expect(w2.staffed).toBe(false);
     expect(forecast(g).mined).toBe(0); // 알바가 없으면 놓아만 둔 쳇바퀴
-    expect(A(g, { type: 'hire', coin: 'DTC' })).toMatchObject({ ok: true, amount: 1800 });
-    expect(A(g, { type: 'hire', uid: w2.uid })).toMatchObject({ ok: true, amount: 1800 });
+    expect(A(g, { type: 'hire', coin: 'DTC' })).toMatchObject({ ok: true, amount: 1600 });
+    expect(A(g, { type: 'hire', uid: w2.uid })).toMatchObject({ ok: true, amount: 1600 });
     expect(A(g, { type: 'hire', uid: w2.uid })).toMatchObject({ ok: false, code: 'staffed' });
     const afterBuy = g.run.cash;
     return { g, afterLoan, afterBuy };
   }
-  /** 초당 3번으로 한 정산을 돈다. 탭으로 번 돈과 정산 뒤 현금 변화를 돌려준다. */
+  /** 한 정산을 돈다. 쳇바퀴 둘에 다 알바가 들어 있어 주인공은 굴릴 수 없다(U-43: 굴리기는 'staffed' 로 거절된다 → tapped 0).
+   *  캐는 값은 틱마다 조금씩 들어오고(U-43), 정산은 걷어 가기만 한다. sold = 그 구간에 캐서 판 돈 = 현금 변화 + 낸 돈 + 일당. */
   function oneSettle(g: GameState) {
     const c0 = g.run.cash;
+    const taps0 = (g.run.stats.laborTaps as number | undefined) ?? 0;
+    expect(A(g, { type: 'tap' })).toMatchObject({ ok: false, code: 'staffed' });
     grind(g, 3);
-    const tapped = g.run.cash - c0;
+    const tapped = (((g.run.stats.laborTaps as number | undefined) ?? 0) - taps0) * 2;
+    expect(tapped).toBe(0);
+    const mid = g.run.cash; // 정산 직전: 캐는 값이 벌써 거의 다 들어와 있다
     tickN(g, 1);
     const rep = g.run.lastSettlement!;
-    return { tapped, rep, delta: g.run.cash - c0, sold: g.run.cash - c0 - tapped + rep.paid + rep.wages };
+    const sold = g.run.cash - c0 + rep.paid + rep.wages;
+    expect(mid - c0).toBeGreaterThan(sold * 0.98); expect(mid - c0).toBeLessThanOrEqual(sold);
+    return { tapped, rep, delta: g.run.cash - c0, sold };
   }
 
-  it('d-A. 첫 대출 뒤(빚 40만): 보조 쳇바퀴 1대(50,000) + 알바 2마리 + 초당 3번이면 한 정산 수입이 이자 8,500 + 생활비 1,000 을 조금 넘고, 사고 난 직후 현금은 3만 이상', () => {
+  it('d-A. 첫 대출 뒤(빚 40만): 보조 쳇바퀴 1대(50,000) + 알바 2마리면(탭 없이, U-43) 한 정산 수입이 이자 8,500 + 생활비 1,000 을 조금 넘고, 사고 난 직후 현금은 3만 이상', () => {
     const { g, afterLoan, afterBuy } = phaseA();
     expect(afterLoan).toBe(Math.floor(540 * 2 * 0.995) + 100000 - 9500);
     expect(afterBuy).toBe(afterLoan - 50000); // 알바를 들이는 값은 없다
     expect(afterBuy).toBeGreaterThanOrEqual(30000);
-    expect(forecast(g)).toMatchObject({ mined: 13000, power: 0, wages: 3600, interest: 8500, living: 1000, net: -100 }); // 탭을 빼면 −100
+    expect(forecast(g)).toMatchObject({ mined: 13000, power: 0, wages: 3200, interest: 8500, living: 1000, net: 300 }); // 알바가 든 쳇바퀴는 내가 못 굴린다: 탭 없이 +300(바로 팔기 수수료를 떼면 +235)
     const r = oneSettle(g);
-    expect(r.rep).toMatchObject({ mined: 13000, wages: 3600, quit: 0, interest: 8500, living: 1000, unpaid: 0 });
+    expect(r.rep).toMatchObject({ mined: 13000, wages: 3200, quit: 0, interest: 8500, living: 1000, unpaid: 0 });
     expect(r.sold).toBeGreaterThanOrEqual(12934);
-    expect(r.sold).toBeLessThanOrEqual(12935); // 13,000 × 0.995
-    const income = r.sold - 3600 + r.tapped;
+    expect(r.sold).toBeLessThanOrEqual(12935); // 13,000 × 0.995 — 틱마다 나눠 들어와도 한 구간의 합은 예전과 같다(U-43)
+    { const r2 = oneSettle(g); expect(r2.rep.mined).toBeCloseTo(13000, 3); expect(r2.sold).toBeGreaterThanOrEqual(12934); expect(r2.sold).toBeLessThanOrEqual(12935); expect(r2.delta).toBe(r2.sold - 3200 - 9500); expect(r2.delta).toBeGreaterThanOrEqual(234); }
+    const income = r.sold - 3200 + r.tapped;
     expect(income).toBeGreaterThan(9500);
-    expect(income - 9500).toBeLessThan(2000); // '조금' 넘는다
+    expect(income - 9500).toBeLessThan(2000); // '조금' 넘는다(+235)
+    expect(income - 9500).toBeGreaterThanOrEqual(200);
     expect(r.delta).toBe(income - 9500);
-    console.log(`[d-A] 대출 직후 ${afterLoan} -> 보조 쳇바퀴 −50,000 = ${afterBuy}(≥ 30,000). 한 정산: 알바 2마리 ${r.sold} − 일당 3,600 + 탭 ${r.tapped} = ${income} > 이자 8,500 + 생활비 1,000 = 9,500 -> 정산당 +${r.delta} (초당 +${(r.delta / 180).toFixed(1)}), 현금 ${afterBuy} -> ${g.run.cash}`);
+    console.log(`[d-A] 대출 직후 ${afterLoan} -> 보조 쳇바퀴 −50,000 = ${afterBuy}(≥ 30,000). 한 정산: 알바 2마리 ${r.sold} − 일당 3,200 + 탭 ${r.tapped} = ${income} > 이자 8,500 + 생활비 1,000 = 9,500 -> 정산당 +${r.delta} (초당 +${(r.delta / 180).toFixed(1)}), 현금 ${afterBuy} -> ${g.run.cash}`);
   });
 
-  it('d-B. 거래로 3만을 잃고 한 번 더 빌리면(빚 50만 · 두 번째 10만은 6%): 이자 14,500 + 생활비 1,000 에 정산마다 모자라고, 빌린 돈은 N 번의 정산 뒤 바닥난다', () => {
+  it('d-B. 튜토리얼 거래에 전재산을 걸어 잃고(U-43) 한 번 더 빌리면(빚 50만 · 두 번째 10만은 6%): 손에 꼭 100,000. 이자 14,500 + 생활비 1,000 에 정산마다 모자라 15~25번의 정산 뒤 바닥난다', () => {
     const { g } = phaseA();
     oneSettle(g);
-    // 튜토리얼 거래(시제품 tutorial.ts 와 같은 식): 도토코인 10배 롱, 증거금 min(30,000, 현금의 4분의 3). 급락에 청산된다.
+    // 튜토리얼 거래(시제품 tutorial.ts 와 같은 식, U-43 사용자: "걍 전재산 넣으면 되잖아"): 도토코인 10배 롱, 증거금 = 가진 돈 전부(들어갈 때 수수료만큼 뺀다).
+    // 시제품은 그동안 시계를 멈추고 짜 둔 시세를 processPrice 로 먹인다(틱이 없으니 알바가 캔 돈도 그 사이엔 안 들어온다).
     const c0 = g.run.cash;
-    const margin = Math.min(30000, Math.floor(c0 * 0.75));
-    expect(margin).toBe(30000); // 현금 42,484 → 3만을 건다
+    const margin = marginFromPct(c0, 10, 100, feeRate(g, 10, { allIn: true }));
+    expect(margin).toBeGreaterThan(40000);
     const p0 = g.run.prices.DTC;
     expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin, sl: null, tp: null }).ok).toBe(true);
-    stepMut(g, { type: 'tick', tick: tickOf(g, { DTC: p0 * 0.85 }) });
+    processPrice(g, 'DTC', p0 * 0.85);
+    g.run.prices.DTC = p0;
     expect(Object.keys(g.run.positions)).toEqual([]);
     expect(g.run.lastClose).toMatchObject({ market: 'DTC', liq: true });
-    stepMut(g, { type: 'tick', tick: tickOf(g, { DTC: p0 }) }); // 시세는 제자리로
-    const lost = c0 - g.run.cash;
-    expect(lost).toBeGreaterThanOrEqual(margin);
+    expect(g.run.cash).toBeLessThan(1); // 남은 것은 1초씩 들어온 돈의 끝자리뿐
+    if (g.run.cash < 1) g.run.cash = 0; // tutorial.ts finish 와 같다
+    const lost = c0;
     expect(g.run.over).toBe(false);
     // 두 번째 대출
     expect(A(g, { type: 'borrow', lender: 'shark1' })).toMatchObject({ ok: true, amount: 100000 });
+    expect(g.run.cash).toBe(100000); // 손에 꼭 10만
     expect(g.run.debts.shark1).toMatchObject({ principal: 500000, inherited: 300000, tranches: [{ amount: 100000, rate: 0.06 }] });
     expect(interestDue(g, 'shark1')).toBe(14500); // 4,500 + 4,000 + 6,000
     expect(claimOf(g)).toBe(15500);
@@ -189,8 +203,8 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
     expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(false);
     const start = g.run.cash;
     const first = oneSettle(g);
-    expect(first.rep).toMatchObject({ interest: 14500, living: 1000, wages: 3600, quit: 0, unpaid: 0 });
-    const income = first.sold - 3600 + first.tapped;
+    expect(first.rep).toMatchObject({ interest: 14500, living: 1000, wages: 3200, quit: 0, unpaid: 0 });
+    const income = first.sold - 3200 + first.tapped;
     expect(income).toBeLessThan(15500);
     expect(first.delta).toBe(income - 15500);
     let n = 1;
@@ -200,9 +214,10 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
       if (r.rep.unpaid > 0 || r.rep.quit > 0) { why = r.rep.unpaid > 0 ? `이자·생활비 ${r.rep.unpaid} 미납` : `알바 ${r.rep.quit}마리 나감`; break; }
       n += 1;
     }
-    expect(n).toBeGreaterThanOrEqual(8);
-    expect(n).toBeLessThanOrEqual(30);
-    console.log(`[d-B] 청산으로 −${lost}(증거금 ${margin} + 수수료) -> 두 번째 대출 +100,000 = 현금 ${start}, 빚 500,000, 이자 14,500(4,500 + 4,000 + 6,000). 한 정산 수입 ${income}(첫 정산은 탭 ${first.tapped}) < 청구 15,500 -> 정산당 ${first.delta} (초당 ${(first.delta / 180).toFixed(1)}). 거래도 구입도 없이 초당 3번이면 N = ${n}번의 정산을 다 내고 ${n + 1}번째에 ${why} (약 ${((n + 1) * 3)}분)`);
+    // "살짝 조여짐"(U-31): 거래 없이 15~25번의 정산(45~75분)
+    expect(n).toBeGreaterThanOrEqual(15);
+    expect(n).toBeLessThanOrEqual(25);
+    console.log(`[d-B] 튜토리얼 거래에 전재산 ${margin}(현금 ${Math.round(lost)}) -> 청산, 손에 0 -> 두 번째 대출 +100,000 = 현금 ${start}, 빚 500,000, 이자 14,500(4,500 + 4,000 + 6,000). 한 정산 수입 ${income} < 청구 15,500 -> 정산당 ${first.delta} (초당 ${(first.delta / 180).toFixed(1)}). 거래도 구입도 없이 N = ${n}번의 정산을 다 내고 ${n + 1}번째에 ${why} (약 ${((n + 1) * 3)}분)`);
   });
 
   it('e. 값과 일당은 늘지 않는다: 보조 쳇바퀴 1~5대째 모두 50,000 · 6대째는 자리 없음 · 일당 한 마리 1,800. 일당을 못 주면 나가고, 압류된 쳇바퀴는 알바째 사라지고, 다시 부를 수 있다', () => {
@@ -220,25 +235,25 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
     expect(forecast(g).wages).toBe(0);
     expect(A(g, { type: 'hire', coin: 'DTC' }).ok).toBe(true);
     for (let i = 0; i < 5; i++) {
-      expect(forecast(g).wages).toBe(1800 * (i + 1)); // 한 마리마다 꼭 1,800
-      expect(A(g, { type: 'hire', uid: g.run.equipment[i].uid })).toMatchObject({ ok: true, amount: 1800 });
+      expect(forecast(g).wages).toBe(1600 * (i + 1)); // 한 마리마다 꼭 1,800
+      expect(A(g, { type: 'hire', uid: g.run.equipment[i].uid })).toMatchObject({ ok: true, amount: 1600 });
     }
     expect(g.run.cash).toBe(50000); // 들이는 값 없음
-    expect(forecast(g)).toMatchObject({ mined: 39000, wages: 10800, power: 0 });
+    expect(forecast(g)).toMatchObject({ mined: 39000, wages: 9600, power: 0 });
     // 코인을 팔지 않고 쌓는 채(바로 팔기 끔) 현금이 이자 + 생활비 + 일당 두 마리분뿐이면 넷이 나간다
     A(g, { type: 'autoSell', coin: 'DTC', on: false });
-    g.run.cash = 8500 + 1000 + 1800 * 2 + 100; // 기준판
+    g.run.cash = 8500 + 1000 + 1600 * 2 + 100; // 기준판
     tickN(g, g.run.settleIn);
-    expect(g.run.lastSettlement).toMatchObject({ mined: 39000, wages: 3600, quit: 4, unpaid: 0 });
+    expect(g.run.lastSettlement).toMatchObject({ mined: 39000, wages: 3200, quit: 4, unpaid: 0 });
     expect(g.run.cash).toBe(100);
     expect(g.run.stats.hamstersQuit).toBe(4);
     expect(totalDebt(g.run)).toBe(400000); // 못 준 일당은 빚으로 남지 않는다
     expect(g.run.coinWheels.DTC.staffed).toBe(true);
     expect(g.run.equipment.map((u) => u.staffed)).toEqual([true, false, false, false, false]);
-    expect(forecast(g)).toMatchObject({ mined: 13000, wages: 3600 }); // 빈 쳇바퀴는 돌지 않는다
+    expect(forecast(g)).toMatchObject({ mined: 13000, wages: 3200 }); // 빈 쳇바퀴는 돌지 않는다
     // 다시 부른다
     expect(A(g, { type: 'hire', uid: g.run.equipment[1].uid }).ok).toBe(true);
-    expect(forecast(g)).toMatchObject({ mined: 19500, wages: 5400 });
+    expect(forecast(g)).toMatchObject({ mined: 19500, wages: 4800 });
     // 압류: 지갑(쌓아 둔 코인) 다음에 싼 설비부터. 실려 간 보조 쳇바퀴는 알바째 사라진다
     g.run.wallet.DTC.qty = 0; // 기준판: 지갑을 비워 설비 차례로
     const first = g.run.equipment[0].uid;
@@ -248,9 +263,9 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
     expect(r.id).toBe(first); // 같은 단계면 잘 도는 것(알바가 붙은 것)부터 가져간다
     expect(g.run.equipment.some((u) => u.uid === first)).toBe(false);
     const staffedLeft = g.run.equipment.filter((u) => u.staffed).length + 1;
-    expect(forecast(g).wages).toBe(1800 * staffedLeft);
+    expect(forecast(g).wages).toBe(1600 * staffedLeft);
     expect(nextTierCost(g.run, 'wheel2')).toBe(50000); // 다시 사도 같은 값
-    console.log(`[e] 보조 쳇바퀴 5대 = 5 × 50,000 · 6대째 '놓을 자리가 없습니다' · 알바 6마리 일당 ${1800 * 6} (채굴 39,000) · 일당 2마리분만 있으면 4마리 나감(빚 0) · 압류 1대(−25,000, 실려 간 것: ${r.id}) 뒤 일당 ${forecast(g).wages}`);
+    console.log(`[e] 보조 쳇바퀴 5대 = 5 × 50,000 · 6대째 '놓을 자리가 없습니다' · 알바 6마리 일당 ${1600 * 6} (채굴 39,000) · 일당 2마리분만 있으면 4마리 나감(빚 0) · 압류 1대(−25,000, 실려 간 것: ${r.id}) 뒤 일당 ${forecast(g).wages}`);
   });
 
   for (const loans of [1, 2]) {
@@ -266,7 +281,7 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
       A(g, { type: 'hire', coin: 'DTC' });
       for (const u of g.run.equipment) A(g, { type: 'hire', uid: u.uid });
       expect(g.run.cash).toBe(0);
-      expect(forecast(g)).toMatchObject({ mined: 39000, wages: 10800, interest: interest0, living: 1000, net: 39000 - 10800 - interest0 - 1000 });
+      expect(forecast(g)).toMatchObject({ mined: 39000, wages: 9600, interest: interest0, living: 1000, net: 39000 - 9600 - interest0 - 1000 });
       const trail: string[] = [];
       let n = 0;
       while (totalDebt(g.run) > 0 && n < 200) {
@@ -280,7 +295,7 @@ describe('U-29·U-30·U-31 시작: 쳇바퀴 · 현금 0 · 오소리 30만 -> �
       expect(totalDebt(g.run)).toBe(0);
       expect(n).toBeGreaterThan(10);
       expect(n).toBeLessThan(40);
-      console.log(`[f] 꽉 찬 집, 빚 ${debt0}: 정산당 채굴 39,000 × 0.995 − 일당 10,800 − 생활비 1,000 − 이자(${interest0}부터 줄어듦). 빚 -> 0 까지 정산 N = ${n}회 (${n * 3}분, 탭·거래 없음). 남은 빚: ${trail.join(' -> ')}. 다 갚은 뒤 현금 ${g.run.cash}`);
+      console.log(`[f] 꽉 찬 집, 빚 ${debt0}: 정산당 채굴 39,000 × 0.995 − 일당 9,600 − 생활비 1,000 − 이자(${interest0}부터 줄어듦). 빚 -> 0 까지 정산 N = ${n}회 (${n * 3}분, 탭·거래 없음). 남은 빚: ${trail.join(' -> ')}. 다 갚은 뒤 현금 ${g.run.cash}`);
     });
   }
 

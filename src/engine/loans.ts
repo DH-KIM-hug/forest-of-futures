@@ -95,12 +95,14 @@ export function noteRepay(g: GameState, targetId: string, kind: 'lender' | 'frie
   if (b.kind === 'friend' && kind === 'lender') bump(run, 'refi.friend_to_lender', 1);
 }
 
-export type Mult = 1 | 10 | 'all';
+/** 갚는 크기: 도장 단위의 몇 배(1 이상의 정수) 또는 전부. 시제품의 「정산 빼고 갚기」(U-42)가 단위의 n 배를 넘긴다 */
+export type Mult = number | 'all';
 export function stampAmount(cash: number, principal: number, unit: number, mult: Mult): number {
   if (principal <= 0) return 0;
   if (mult === 'all') return Math.min(cash, principal);
   if (cash < Math.min(unit, principal)) return 0;
-  return Math.min(unit * mult, principal, cash);
+  if (!(mult >= 1)) return 0;
+  return Math.min(unit * Math.floor(mult), principal, cash);
 }
 
 export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {

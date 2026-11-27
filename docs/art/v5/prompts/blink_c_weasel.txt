@@ -1,0 +1,1 @@
+Redraw the reference character EXACTLY — identical pose, size, framing, outline, colours, clothing and props, pixel-for-pixel the same composition — with ONE change only: the eyes are CLOSED (each tiny dot eye becomes a short soft downward-curved line, as in a blink). Nothing else changes. Plain flat background, no text, no ground shadow.

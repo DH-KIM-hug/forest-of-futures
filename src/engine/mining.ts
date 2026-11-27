@@ -37,10 +37,21 @@ export function depositMined(g: GameState, coin: CoinId, valueRef: number): void
 }
 
 /** 쳇바퀴를 한 번 굴린다. 초당 12회까지만 인정(한 틱 = 1초). 쳇바퀴가 없으면(압류·판매) 캘 것이 없다. */
+/** 주인공이 굴릴 수 있는 쳇바퀴(U-43 사용자: "알바 고용하면 그때부터 탭은 안 되어야 하는데"): 쳇바퀴 한 대는 한 명이 돌린다 — 알바가 든 쳇바퀴는 주인공이 못 굴린다.
+ *  엄마의 쳇바퀴(타고 있는 종목의 쳇바퀴)에 알바가 없으면 'mom', 아니면 알바 없는 보조 쳇바퀴의 uid, 하나도 없으면 null. */
+export function rollTarget(run: RunState): string | null {
+  const coin = run.riding ?? ownedCoins(run)[0];
+  if (!coin) return null;
+  const w = run.coinWheels[coin];
+  if (w && w.on !== false && !w.staffed) return 'mom';
+  const u = run.equipment.find((x) => x.staffed === false && x.on && x.coin === coin);
+  return u ? u.uid : null;
+}
 export function tap(g: GameState): Res {
   const run = g.run;
   if (run.over) return { ok: false };
   if (stage(run) === 0) return { ok: false, code: 'nowheel', msg: '쳇바퀴가 없습니다.' };
+  if (rollTarget(run) === null) return { ok: false, code: 'staffed', msg: '쳇바퀴마다 알바가 돌리고 있습니다.' };
   if (run.tapsThisTick >= balance.progression.maxTapsPerSec) return { ok: false, code: 'rate' };
   run.tapsThisTick += 1;
   bump(run, 'laborTaps', 1);

@@ -8,6 +8,9 @@ import type { Line, Tab, Who } from './protoStore';
  *  panel 이 있으면 집 아래 판을 그 상태로 맞춘다(U-34: closed = 접힌 채 세상이 크게, open = 쳇바퀴 자리 칸이 펴진 채). */
 export const HL = {
   wheel: { tab: 'lot', panel: 'closed', label: '집 안의 쳇바퀴(누르면 구른다)' },
+  cables: { tab: 'lot', panel: 'closed', label: '쳇바퀴에서 채굴기로 가는 전선(U-43)' },
+  rig: { tab: 'lot', panel: 'closed', label: '채굴기(U-43)' },
+  walletDev: { tab: 'lot', panel: 'closed', label: '집 안의 콜드월렛 기기(U-43)' },
   acorn: { label: '가진 도토리 숫자' },
   settle: { tab: 'lot', panel: 'closed', label: '정산 막대' },
   goal: { tab: 'lot', panel: 'closed', label: '목표 막대' },
@@ -78,7 +81,9 @@ const t = (moment: Moment, who: Who, text: TipDef['text'], hl?: HlKey, mood?: Li
 export const TIPS = {
   // ── 집: 쳇바퀴가 무엇인가, 정산이 무엇인가 ──
   'home.tap': t('home', 'collector', () => '가기 전에 하나만요오. 여기를 누르면 쳇바퀴가 돌아요오.', 'wheel'),
-  'home.mine': t('home', 'collector', () => '돌면 전기가 생기고, 그 전기로 도토코인을 캐요오.', 'wheel'),
+  'home.cable': t('home', 'collector', () => '돌면 전기가 나요오. 이 전선을 타고 가요오.', 'cables'),
+  'home.mine': t('home', 'collector', () => '저 채굴기가 그 전기로 도토코인을 캐요오.', 'rig'),
+  'home.wallet': t('home', 'collector', () => '캔 코인은 옆의 콜드월렛으로 들어가요오.', 'walletDev'),
   'home.tiny': t('home', 'collector', (o) => `한 번 누르면 ${n(o.tap)}어치. 혼자 굴리면 그 정도예요오.`, 'wheel', 'flat'),
   'home.acorn': t('home', 'collector', () => '캔 코인은 바로 팔려서 도토리가 돼요오. 이게 가진 돈.', 'acorn'),
   'home.settle': t('home', 'collector', () => '이 막대가 다 차면 정산이에요오. 제가 걷으러 와요오.', 'settle'),
@@ -106,6 +111,8 @@ export const TIPS = {
   'settle.what': t('settle', 'collector', (o) => `생활비 ${n(o.living)}도 같이 걷었어요오. 막대가 차면 또 와요오.`, 'settle'),
   // ── 알바 햄스터 · 쳇바퀴 ──
   'ham.what': t('hamster', 'weasel', () => '햄스터가 쳇바퀴에 들어가면, 손을 떼도 혼자 돌아요~', 'tileFirst', 'smile'),
+  'ham.trickle': t('hamster', 'weasel', () => '햄스터가 캔 돈은 1초마다 들어와요~ 정산은 걷어 가기만 하고요~', 'acorn', 'smile'),
+  'ham.mine': t('hamster', 'weasel', () => '알바가 든 쳇바퀴는 사장님이 못 굴려요~ 한 대에 한 명이니까요~', 'tileFirst', 'smile'),
   'ham.quit': t('hamster', 'weasel', () => '대신 일당을 못 받으면 말없이 나가요~ 깔끔하죠~', 'tileFirst', 'smile'),
   'ham.wheel': t('hamster', 'weasel', (o) => `쳇바퀴는 한 대 ${n(o.wheel)}. 사 두면 사장님 재산이에요~`, 'tileEmpty', 'smile'),
   'ham.pair': t('hamster', 'weasel', () => '단, 쳇바퀴 한 대에 햄스터 한 마리. 빈 쳇바퀴는 안 돌아요~', 'grid', 'smile'),

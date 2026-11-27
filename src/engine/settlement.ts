@@ -17,7 +17,7 @@ import { lendersMeta } from './data';
 import { onTaxPaid } from './generation';
 import { refreshShark2Open } from './loans';
 import { comma, logEvent, notify } from './util';
-import type { CoinId, DebtId, GameState, PayId } from './types';
+import type { CoinId, DebtId, GameState, PayId, RunState } from './types';
 
 const PAY = balance.settlement.payOrder as PayId[];
 const LENDERS = ['shark2', 'shark1', 'capital', 'bank'] as const;
@@ -44,24 +44,44 @@ export function forecast(g: GameState) {
   return { mined, power, wages, interest, living, net: mined - power - wages - interest - living };
 }
 
+/** 캐는 값을 sec 초어치 넣는다(U-43 사용자: "알바로 버는 돈은 거의 0.1초당 올라가고, 정산은 20초당"): 켜진 설비 · 알바가 도는 쳇바퀴 · 관성 바퀴가 정산 한 번에 캐는 값 × sec ÷ 정산 간격.
+ *  가압류(딱지 30%)와 바로 팔기는 depositMined 가 그대로 한다. 엔진은 틱(1초)마다 1초어치를 넣는다. 화면은 그 사이를 0.1초 걸음으로 이어 보여 준다. */
+export function creditMining(g: GameState, sec: number): number {
+  const run = g.run;
+  if (!(sec > 0) || run.over) return 0;
+  const k = sec / balance.settlement.intervalSec;
+  const perCoin: Partial<Record<CoinId, number>> = {};
+  for (const u of run.equipment) if (isActive(run, u)) perCoin[u.coin] = (perCoin[u.coin] ?? 0) + equipGross(g, u);
+  for (const c of ownedCoins(run)) if (run.coinWheels[c].on) perCoin[c] = (perCoin[c] ?? 0) + spokesGross(g, c) + (wheelStaffed(run, c) ? staffedWheelGross(c) : 0);
+  let sum = 0;
+  for (const c of ownedCoins(run)) {
+    const v = (perCoin[c] ?? 0) * k;
+    if (v > 0) {
+      sum += v * (price(run, c) / refPrice(run, c));
+      depositMined(g, c, v);
+    }
+  }
+  run.stats.creditedSec = ((run.stats.creditedSec as number | undefined) ?? 0) + sec;
+  run.stats.minedCur = ((run.stats.minedCur as number | undefined) ?? 0) + sum;
+  return sum;
+}
+/** 이번 정산 구간에서 아직 안 들어온 캐는 값의 몫(0~1): 정산까지 남은 수입을 어림할 때 쓴다 */
+export const miningLeftShare = (run: RunState): number => Math.max(0, 1 - (((run.stats.creditedSec as number | undefined) ?? 0) / balance.settlement.intervalSec));
+
 export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void {
   const run = g.run;
   const st = run.stats;
   const rep = { settleNo: run.settleNo + 1, mined: 0, power: 0, interest: 0, living: 0, tax: 0, paid: 0, unpaid: 0, forcedSold: 0, wages: 0, quit: 0 };
-  const garnishedBefore = (st.garnished as number) ?? 0;
+  // 가압류는 캐는 돈이 틱마다 들어올 때도 떼인다(U-43): 이 정산 몫은 지난 정산이 끝난 때부터 센다
+  const garnishedBefore = (st.garnishedMark as number | undefined) ?? 0;
   const forcedBefore = (st.forcedSold as number) ?? 0;
 
-  // 1. 채굴: 켜진 설비와 관성 바퀴가 종목 지갑에 캔다(가압류 30% 먼저 뗌)
-  const perCoin: Partial<Record<CoinId, number>> = {};
-  for (const u of run.equipment) if (isActive(run, u)) perCoin[u.coin] = (perCoin[u.coin] ?? 0) + equipGross(g, u);
-  for (const c of ownedCoins(run)) if (run.coinWheels[c].on) perCoin[c] = (perCoin[c] ?? 0) + spokesGross(g, c) + (wheelStaffed(run, c) ? staffedWheelGross(c) : 0);
-  for (const c of ownedCoins(run)) {
-    const v = perCoin[c] ?? 0;
-    if (v > 0) {
-      rep.mined += v * (price(run, c) / refPrice(run, c));
-      depositMined(g, c, v);
-    }
-  }
+  // 1. 채굴: 캐는 값은 틱마다 조금씩 들어온다(creditMining, U-43). 정산은 이번 구간에 아직 안 들어온 나머지만 넣고(틱 없이 정산만 부르는 따라잡기 · 미리 보기는 구간 전체가 여기서 들어온다),
+  //    구간 동안 캔 값의 합을 보고서에 적는다. 한 구간의 합은 예전(정산 때 한꺼번에)과 같다.
+  creditMining(g, Math.max(0, balance.settlement.intervalSec - ((st.creditedSec as number | undefined) ?? 0)));
+  rep.mined = Math.round(((st.minedCur as number | undefined) ?? 0) * 1e6) / 1e6; // 틱마다 나눠 넣은 값의 합(끝자리 오차를 턴다)
+  st.creditedSec = 0;
+  st.minedCur = 0;
 
   // 2. 전기세: 그 종목 지갑의 코인에서 시가로(모자라면 평가액 큰 종목 순). 즉시 팔기 종목은 현금에서 낸다.
   let powerRemainder = 0;
@@ -243,6 +263,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   if (!trig.length && brokenCount(run) >= balance.bankruptcy.friendsBrokenLimit) trig.push({ lastLender: null, shortfall: sh });
   const gAdd = ((st.garnished as number) ?? 0) - garnishedBefore;
   (st.garnishBySettle as number[]).push(gAdd);
+  st.garnishedMark = (st.garnished as number) ?? 0;
   if ((st.garnishBySettle as number[]).length > 3) (st.garnishBySettle as number[]).shift();
   void forcedBefore;
   if (trig.length) declareBankruptcy(g, trig[0]);

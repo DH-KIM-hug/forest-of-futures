@@ -96,3 +96,22 @@ export function momClueDue(g: GameState, seen: Partial<Record<MomClue, boolean>>
   if (!seen.frame && momStart > 0 && (mom?.left ?? 0) < momStart && repaidOffice(g) > 0) return 'frame';
   return null;
 }
+
+/** 지금 갚으면 무엇을 사는가(U-42 ⑤: 이긴 장면의 [갚으러 간다] 단추에 적는다). keep = 손에 남길 돈(다음 정산에 낼 돈).
+ *  amount = 갚을 수 있는 돈(손에 든 돈 − keep, 남은 빚까지), cut = 정산마다 줄어드는 이자, stamps = 새로 찍히는 금박 도장, from → to = 다음 도장까지의 막대(%) */
+export interface RepayBuys { amount: number; /** 도장 단위의 몇 배(엔진 stamp 의 mult) */ mult: number; cut: number; stamps: number; from: number; to: number; text: string }
+export function repayBuys(g: GameState, keep: number): RepayBuys | null {
+  const left = g.run.debts.shark1.principal;
+  const unit = (lenderById.shark1 as { stampUnit: number }).stampUnit;
+  const free = Math.floor(g.run.cash - Math.max(0, keep));
+  // 갚는 돈은 도장 단위(1만)로 끊는다. 남은 빚이 그보다 적으면 남은 빚 전부
+  const mult = Math.floor(Math.min(free, left) / unit);
+  const amount = mult >= 1 ? mult * unit : left <= free && left > 0 ? left : 0;
+  if (!(amount > 0)) return null;
+  const cur = repaidOffice(g) % STAMP_STEP;
+  const stamps = Math.floor((cur + amount) / STAMP_STEP);
+  const from = Math.round((cur / STAMP_STEP) * 100), to = Math.round((((cur + amount) % STAMP_STEP) / STAMP_STEP) * 100);
+  const cut = interestCut(g, amount);
+  const nn = (x: number) => Math.round(x).toLocaleString('ko-KR');
+  return { amount, mult: Math.max(1, mult), cut, stamps, from, to, text: `${nn(amount)} 갚으면 이자 −${nn(cut)} · ${stamps > 0 ? `금박 도장 +${stamps}` : `도장 ${from}→${to}%`}` };
+}

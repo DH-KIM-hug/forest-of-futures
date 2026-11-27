@@ -13,7 +13,8 @@ import { hlPanel, hlSel, hlTab, markTip } from './guide';
 
 const TAB_LABEL: Record<string, string> = { map: '지도', phone: '거래소', lot: '집' };
 import heroFront from './img/hero_front.png';
-import { sprite, BUST_OF } from './sprites';
+import { sprite, BUST_OF, blinkOf } from './sprites';
+import { aliveStyle, talkBob, useBlink } from './alive';
 
 function Bust({ who, sceneId, phone }: { who: Who; smile: boolean; sceneId?: string; phone?: boolean }) {
   // 반신은 전부 새 그림이다(U-40, sprites.ts BUST_OF). 알바가 나가는 장면은 봇짐을 멘 햄스터가 같이 나온다.
@@ -23,7 +24,7 @@ function Bust({ who, sceneId, phone }: { who: Who; smile: boolean; sceneId?: str
   if (art) return <img className="bust" data-art={id} src={art.src} alt="" />;
   switch (who) {
     // 주인공 속마음: 폰을 받기 전에는 빈손
-    case 'hero': { const h = (phone ? sprite('hero') : sprite('heroEmpty')) ?? sprite('hero'); return h ? <img className="bust hero" data-art={phone ? 'hero' : 'heroEmpty'} src={h.src} alt="" /> : <img className="bust hero" src={heroFront} alt="" />; }
+    case 'hero': { const h = (phone ? sprite('hero') : sprite('heroEmpty')) ?? sprite('hero'); return h ? <HeroBust id={phone ? 'hero' : 'heroEmpty'} src={h.src} /> : <img className="bust hero" src={heroFront} alt="" />; }
     case 'news': return (
       <svg className="bust" viewBox="0 0 200 200" aria-hidden="true">
         <g transform="rotate(-5 100 110)">
@@ -43,6 +44,13 @@ function Bust({ who, sceneId, phone }: { who: Who; smile: boolean; sceneId?: str
     );
     default: return null;
   }
+}
+
+/** 주인공(온몸 그림): 눈 감은 겹을 같은 크기로 겹쳐 두고 가끔 깜빡인다(U-43) */
+function HeroBust({ id, src }: { id: 'hero' | 'heroEmpty'; src: string }) {
+  const ref = useBlink<HTMLImageElement>();
+  const b = blinkOf(id);
+  return <span className="bust hero blinkbox"><img data-art={id} src={src} alt="" />{b && <img ref={ref} className="blink" data-blink={id} src={b} alt="" style={{ opacity: 0 }} />}</span>;
 }
 
 interface Spot { x: number; y: number; w: number; h: number; H: number; W: number }
@@ -69,6 +77,9 @@ function CutInScene({ sc }: { sc: Scene }) {
   const last = i >= n - 1;
   // 말하는 줄은 한 글자씩 나오며 웅얼거린다(U-36). 지문·문자는 한 번에 뜬다. 첫 줄은 카드가 올라온 뒤에 시작한다.
   const sp = useSpeech(line.text, line.who, { id: i, delay: i === 0 ? 0.3 : 0.05 });
+  // 살아 있는 인물(U-43): 말하는 동안 음절마다 살짝 들썩인다(웅얼거림의 시간표를 그대로 따른다)
+  const bustRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => { if (sp.typing) talkBob(bustRef.current, line.text, sp.shown); }, [sp.shown]);
 
   useEffect(() => {
     play('cutin_whoosh');
@@ -118,7 +129,10 @@ function CutInScene({ sc }: { sc: Scene }) {
       const b = el.getBoundingClientRect();
       if (b.width < 2 || b.height < 2) { setSpot(null); return; }
       const x = Math.max(4, b.left - box.left - 5), y = Math.max(4, b.top - box.top - 5);
-      const w = Math.min(box.width - 4, b.right - box.left + 5) - x, h = Math.min(box.height - 4, b.bottom - box.top + 5) - y;
+      const w = Math.min(box.width - 4, b.right - box.left + 5) - x;
+      let h = Math.min(box.height - 4, b.bottom - box.top + 5) - y;
+      // 아주 큰 조각(U-43: 화면의 절반을 넘는 차트)은 대사 카드 자리 위까지만 비춘다 — 카드를 위로 올리면 그 조각의 머리를 덮는다
+      if (h > box.height * 0.4 && y < box.height - CARD_ZONE - 120) h = Math.min(h, box.height - CARD_ZONE - 8 - y);
       setSpot((o) => (o && Math.abs(o.x - x) < 0.5 && Math.abs(o.y - y) < 0.5 && Math.abs(o.w - w) < 0.5 && Math.abs(o.h - h) < 0.5 && o.H === box.height ? o : { x, y, w, h, H: box.height, W: box.width }));
     };
     measure();
@@ -146,7 +160,7 @@ function CutInScene({ sc }: { sc: Scene }) {
     <div ref={root} className={'pr-cutin who-' + line.who + (st && !st.win ? ' lose' : ' win') + (line.hl ? ' hl' : '') + (spot ? ' spot' : '') + (top ? ' top' : '')} onClick={next} role="dialog" aria-label="컷인 대화"
       data-scene={sc.id} data-line={i} data-typing={sp.typing ? '1' : ''} data-tip={line.tip ?? ''} data-spot={spot ? line.hl : ''}>
       {spot && <div className="pr-spot" style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }} aria-hidden="true"><i className={'arr ' + (top ? 'dn' : 'up')} /></div>}
-      <div key={line.who} className="bustbox"><Bust who={line.who} smile={smile} sceneId={sc.id} phone={phone} /></div>
+      <div key={line.who} className="bustbox"><span ref={bustRef} className={'al-html' + (line.who === 'boss' ? ' headbob' : '')} style={aliveStyle(line.who)} data-alive={line.who}><Bust who={line.who} smile={smile} sceneId={sc.id} phone={phone} /></span></div>
       {st && !st.win && <div className="stamp">연체</div>}
       <div className={'say' + (line.who === 'note' ? ' note' : '') + (line.who === 'sms' ? ' sms' : '')}>
         {WHO_NAME[line.who] && <div className="tag">{WHO_NAME[line.who]}</div>}
@@ -158,7 +172,7 @@ function CutInScene({ sc }: { sc: Scene }) {
         {n > 1 && <div className="dots" aria-label={`${i + 1}/${n}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
         {last && sc.unlock && !pick && <div className="unl">끝나면 {TAB_LABEL[sc.unlock]} 탭이 열린다</div>}
         {pick && (
-          <div className="pick">
+          <div className={'pick' + (pick.some((c) => c.primary) ? '' : ' even')}>
             {pick.map((c) => (
               <button key={c.id} className={'buy' + (c.primary ? ' on' : '')} data-choice={c.id} onClick={(e) => { e.stopPropagation(); choose(c.run); }}><span>{c.label}</span>{c.sub && <small>{c.sub}</small>}</button>
             ))}

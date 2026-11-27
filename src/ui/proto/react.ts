@@ -41,7 +41,7 @@ export function tradeReaction(t: TradeEnd, c: TradeCtx): Reaction | null {
   const claim = Math.max(1, c.claim);
   if (t.liq) {
     return (t.allIn && c.cashAfter < 1000 ? R('liqAllIn', 'boss', ['전부 거셨군요. 전부 가져갔습니다.', '돈이 필요하시면 사무소는 늘 열려 있습니다.'], true) : null)
-      ?? (t.fundedBy ? R('liqFunded', 'collector', [`빌린 돈이 ${held(t.heldSec)} 만에 거래소로 갔네요오.`, '이자는 그대로예요오.'], true) : null)
+      ?? (t.fundedBy ? R('liqFunded', 'collector', [`빌린 돈이 ${held(t.heldSec)} 만에 앱 속으로 사라졌네요오.`, '이자는 그대로예요오.'], true) : null)
       ?? (c.liqs === 3 ? R('liq3', 'collector', ['청산 세 번째네요오. 장부엔 안 적어요오. 그냥 세어 봤어요오.']) : null)
       ?? R('liqFirst', 'boss', [c.feeFree ? '청산이네요. 수수료는 공짜였는데, 증거금은 거래소가 가져갔고요.' : '청산이네요. 거래소는 수수료를 벌었고요.'])
       ?? (c.liqs % 2 ? R('liqA', 'collector', ['또 사라졌네요오. 이자는 안 사라져요오.'], false, false) : R('liqB', 'boss', ['다음엔 맞히시겠죠. 다들 그렇게 말해요.'], false, false));

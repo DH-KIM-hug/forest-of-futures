@@ -106,7 +106,7 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(g.run.wallet.BTH.qty).toBeGreaterThan(0);
   });
 
-  it('AC-v2-32 보조 쳇바퀴(도토코인, 알바 붙음): 6,500어치가 쌓이고 전기세는 없다. 일당 1,800 은 현금에서', () => {
+  it('AC-v2-32 보조 쳇바퀴(도토코인, 알바 붙음): 6,500어치가 쌓이고 전기세는 없다. 일당 1,600 은 현금에서', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'wheel2', 'DTC', 50000);
@@ -115,9 +115,9 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     settleOnce(g);
     expect(g.run.lastSettlement!.mined).toBeCloseTo(6500, 6);
     expect(g.run.lastSettlement!.power).toBe(0);
-    expect(g.run.lastSettlement!.wages).toBe(1800);
+    expect(g.run.lastSettlement!.wages).toBe(1600);
     expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(6500, 6);
-    expect(c0 - g.run.cash).toBe(6000 + 3000 + 1000 + 1800); // 이자(오소리 6,000 + 캐피탈 3,000) + 생활비 + 일당
+    expect(c0 - g.run.cash).toBe(6000 + 3000 + 1000 + 1600); // 이자(오소리 6,000 + 캐피탈 3,000) + 생활비 + 일당
   });
 
   it('AC-v2-32 알바가 없는 보조 쳇바퀴는 캐지 않고 일당도 없다', () => {

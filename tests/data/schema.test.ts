@@ -44,7 +44,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
     expect(b.assets.costGrowth).toBe(1);
     expect(b.assets.buyable).toEqual(['wheel2']);
     expect(b.assets.maxUnits).toBe(3);
-    expect(b.labor).toMatchObject({ wage: 1800, grossPerSettle: 6500 });
+    expect(b.labor).toMatchObject({ wage: 1600, grossPerSettle: 6500 });
     expect(b.seizure.garnishRate).toBe(0.3);
     expect(b.trading.leverageOptions).toEqual([1, 2, 5, 10, 25, 50, 100, 200]);
     expect(b.inheritance.minStartDebt).toBe(200000);
@@ -78,7 +78,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
     expect(w2.wage).toBe(D.balance.labor.wage);
     expect(w2.grossPerSettle).toBe(D.balance.labor.grossPerSettle);
     expect(w2.maxUnits).toBe(5);
-    expect(w2.netPerSec).toBeCloseTo((6500 - 1800) / 180, 2);
+    expect(w2.netPerSec).toBeCloseTo((6500 - 1600) / 180, 2);
     expect(D.tierDefs.filter((t) => t.wage != null).map((t) => t.id)).toEqual(['wheel2']);
     // 그 밖의 표의 초당 순수입 = grossPerSettle × (1 − 0.70) ÷ 180
     for (const t of D.tierDefs.filter((x) => x.wage == null)) expect(t.netPerSec).toBeCloseTo((t.grossPerSettle * 0.3) / 180, 2);

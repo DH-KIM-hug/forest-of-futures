@@ -5,7 +5,8 @@ import { comma } from '../../engine/util';
 import { lifeNo } from './model';
 import { rebirthOverride } from './dev';
 import { sprite, RETIRE_PHOTO, type SpriteId } from './sprites';
-import { treeView, type NodeView } from '../../engine/skilltree';
+import { activeLevels, treeView, type NodeView } from '../../engine/skilltree';
+import { nodeOdds, treeOddsLine } from './odds';
 import { endingById, skillById, skillPathEndings } from '../../engine/data';
 import { act1Text } from '../../engine/act1';
 import { play } from './audio';
@@ -120,11 +121,14 @@ function SkillTree() {
   // 이 길의 엔딩(U-39 ⑪): 봤으면 이름, 못 봤으면 ???? — 누르면 단서(본 것은 글)
   const pathEnds = cur.path === 'R' ? [] : ((skillPathEndings[cur.path] as string[] | undefined) ?? []).filter((id) => endingById[id]);
   const seenEnd = (id: string) => !!g.family.ledger[id];
+  const active = activeLevels(g);
+  const od = nodeOdds(active, cur.id, cur.level);
   const buy = () => { const r = act({ type: 'treeBuy', id: cur.id }); if (r.ok) { play('new_equipment'); setMsg(null); } else { play('insufficient'); setMsg(r.msg ?? '살 수 없다'); } };
   const pick = () => { const r = act({ type: 'treePick', id: cur.id }); if (r.ok) play('ui_tap'); };
   return (
     <section className="pr-tree" data-tree aria-label="스킬트리">
       <div className="tr-h"><b>거래의 나무</b><span className="gold" data-gold={gold}><img className="coin art" src={sprite('goldcoin')!.src} alt="" />{comma(gold)}개</span></div>
+      <p className="tr-odds" data-tree-odds>{treeOddsLine(active)}</p>
       <div className="tr-paths">{PATHS.map((p) => <span key={p.id} className={'p-' + p.id}><b>{p.name}</b><small>{p.sub}</small></span>)}</div>
       <div className="tr-box">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -147,6 +151,8 @@ function SkillTree() {
           <b>{cur.name}{cur.level > 0 && (cur.kind === 'scaled' || cur.tail) ? ` Lv${cur.level}` : ''}</b>
           <p>{cur.desc}</p>
           {effectText(cur) && (cur.kind === 'scaled' || cur.tail) && <small data-effect>{effectText(cur)}</small>}
+          {/* 이 노드가 「이자 한 번 걸기」 한 판을 얼마나 바꾸는가(U-42 ④): 수수료가 기울인 승률을 지금 → 다음 레벨로. 시세는 그대로다 */}
+          {od && cur.cost !== null && <small className={'odds' + ((od.next.p ?? 0) < (od.now.p ?? 0) ? ' worse' : '')} data-odds={cur.id}>{od.text}</small>}
           {cur.level > 0 && !cur.picked && <small>지금은 짝 노드가 켜져 있다. 한 생에 둘 중 하나만.</small>}
           {msg && <small className="bad">{msg}</small>}
         </div>

@@ -281,7 +281,6 @@
 .pt-bar .pt-perk { margin-left: auto; margin-right: 46px; padding: 2px 8px; border-radius: 9px; border: 2px solid var(--o); background: radial-gradient(circle at 35% 30%, #FFF2B0, #E8B93A 75%); font-family: var(--dsp); font-size: 12px; color: #6B4A10; }
 .pt-perks { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px; background: #FFF8DC; border-bottom: 2px solid var(--o); }
 .pt-perks span { padding: 1px 7px; border-radius: 8px; background: #fff; border: 1.5px solid rgba(74, 70, 64, .4); font-size: 11.5px; font-weight: 800; }
-.pt-meta .pt-zoom { margin-left: auto; padding: 1px 8px; border-radius: 8px; border: 2px solid var(--o); background: #fff; font-size: 11.5px; font-weight: 800; color: var(--o); }
 .pt-water { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 5px; padding: 5px 10px; border-radius: 10px; border: 2px solid var(--o); background: #FDEEE9; color: var(--o); text-align: left; }
 .pt-water b { font-family: var(--dsp); font-weight: 400; font-size: 14px; white-space: nowrap; } .pt-water span { font-size: 11.5px; font-weight: 700; color: var(--sub); }
 .pt-water.split { background: #EEF3DF; } .pt-water.split.on { background: #CFE0A8; }
@@ -406,9 +405,8 @@
 
 .pt-acrow .pt-chip small i { font-style: normal; color: var(--teal-ink); }
 .pt-acrow .pt-chip small { white-space: nowrap; font-size: 10.5px; letter-spacing: -.2px; }
-/* 낮은 화면(360×640): 결과 카드가 떠 있는 5초 동안은 차트와 시세 줄을 접어 롱 · 숏이 탭 줄 밑으로 밀리지 않게 한다. 포지션 화면의 단추도 2px 줄인다(U-41 에서 잰 것) */
+/* 낮은 화면(360×640): 결과 카드의 꼬리표 줄은 접는다. 차트는 그대로 둔다(주문 조건을 한 줄씩으로 줄여 자리가 난다 — 아래 "차트가 주인공") */
 @media (max-height: 720px) {
-  .pt:has(.pt-pl.res) .pt-chart, .pt:has(.pt-pl.res) .pt-quote { display: none; }
   .pt-pl.res .tags { display: none; }
   .pr .pt .pt-btn { min-height: 43px; }
 }
@@ -419,3 +417,210 @@
 }
 @media (max-height: 720px) { .pt-risk.add.bad { display: none; } }
 .pt-stops > .pt-step { min-width: 0; } .pt-step .v b { white-space: nowrap; }
+
+/* ── U-42(회차 5): 정산 빼고 전부 · 장에 맞춘 출구 단추 · 들고 있는 동안 쳇바퀴 굴리기 ── */
+.pt-mg.k5 { grid-template-columns: 1fr 1fr 1fr 1.25fr 1fr; gap: 5px; }
+.pt-chip.keep b { font-size: 14.5px; letter-spacing: -.3px; white-space: nowrap; }
+.pr .pt .pt-chip.keep { border-style: dashed; border-color: #C98A2B; background: #FFF8DC; }
+.pr .pt .pt-chip.keep.on { border-style: solid; border-color: var(--o); background: var(--mint); }
+.pr .pt .pt-chip.keep:disabled { opacity: .5; }
+/* 출구 단추: 이름 한 줄 + 숫자와 까닭 한 줄(가로로 길어지지 않게 두 줄로 쌓는다) */
+.pr .pt .pt-ac { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; padding: 2px 9px; max-width: 72%; }
+.pt-ac small { max-width: 100%; }
+.pt-ac small i { font-style: normal; font-weight: 700; opacity: .85; }
+/* 포지션 카드의 주인공 = 쳇바퀴 굴리기 단추 */
+.pr .pt .pt-roll { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; padding: 0 2px; margin: -2px 0 -2px -3px; background: none; border: 0; border-radius: 12px; min-width: 56px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.pt-roll .me { display: block; }
+.pt-roll .wh { position: absolute; left: -3px; bottom: 13px; width: 26px; height: 28px; pointer-events: none; }
+.pt-roll .wh img { width: 100%; height: 100%; object-fit: contain; }
+.pt-roll .wh.spin { animation: ptRollWh .32s ease-out; }
+.pt-roll small { font-size: 10.5px; font-weight: 800; line-height: 1.1; color: #8A5A16; background: #FFF3C4; border: 1.5px dashed #C98A2B; border-radius: 7px; padding: 1px 5px; white-space: nowrap; margin-top: -2px; }
+.pt-roll.on small { border-style: solid; color: var(--o); background: var(--mint); border-color: var(--o); }
+.pt-roll:active .me { transform: scale(.94, .9); }
+.pt-roll .gain { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font-family: var(--dsp); font-size: 14px; color: #8A5A16; white-space: nowrap; pointer-events: none; animation: ptRollGain .7s ease-out forwards; text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff; }
+@keyframes ptRollWh { 0% { transform: rotate(0) scale(1); } 40% { transform: rotate(-24deg) scale(1.18); } 100% { transform: rotate(0) scale(1); } }
+@keyframes ptRollGain { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -20px); } }
+@media (prefers-reduced-motion: reduce) { .pt-roll .wh.spin, .pt-roll .gain { animation: none; } .pt-roll .gain { display: none; } }
+.pt-pl .tags .rolled { background: #FFF3C4; border-color: #C98A2B; color: #7A4E12; }
+@media (max-height: 700px) { .pt-roll .wh { width: 22px; height: 24px; bottom: 12px; } .pr .pt .pt-roll { min-width: 48px; } .pr .pt .pt-ac { min-height: 32px; padding: 1px 8px; } .pt-ac b { font-size: 13px; } .pt-ac small { font-size: 10.5px; } }
+@media (max-width: 372px) { .pt-risk { font-size: 12px; letter-spacing: -.3px; } .pt-risk b { white-space: nowrap; } }
+
+/* ── 차트가 주인공(주인 요청: "선물 차트가 너무 작다") ─────────────────────────
+   차트 밖의 것을 전부 한 줄씩으로 줄이고, 남는 높이는 모두 차트가 가진다(.pt-chart 만 flex: 1).
+   앱 머리는 폰 위 테두리 안으로 들어간다. 계좌 개설 앱(.pt.pa)은 예전 틀 그대로 둔다. */
+.pt-wrap:has(> .pt:not(.pa)) { padding-top: 3px; }
+.pt:not(.pa) { gap: 3px; padding: 0 10px 4px; border-top-width: 19px; }
+.pt:not(.pa) > .pt-bar { position: absolute; left: 0; right: 0; top: -19px; height: 19px; margin: 0; padding: 0 58px 0 10px; gap: 5px; background: none; border: 0; border-radius: 0; color: #fff; }
+.pt:not(.pa) > .pt-bar .logo { width: 16px; height: 16px; border-radius: 6px; border-width: 1.5px; }
+.pt:not(.pa) > .pt-bar .logo svg { width: 11px; height: 11px; }
+.pt:not(.pa) > .pt-bar b { font-size: 13.5px; color: #fff; }
+.pt:not(.pa) > .pt-bar em { font-size: 10.5px; padding: 2px 5px; border-radius: 6px; background: #FFF8E4; color: var(--teal-ink); }
+.pt:not(.pa) > .pt-bar .pt-fee { line-height: 14px; background: #FFF8E4; }
+.pt:not(.pa) > .pt-bar .pt-fee.on { background: #FFF3C4; }
+.pr .pt:not(.pa) > .pt-bar .pt-perk { margin-right: 0; padding: 0 7px; font-size: 11px; line-height: 14px; }
+.pt:not(.pa) > .pt-charm { top: -24px; right: 26px; width: 23px; height: 30px; }
+.pt:not(.pa) > .pt-perks { margin: 0 -10px; padding: 4px 10px; }
+
+/* 종목: 한 줄(로고 + 이름) 아래에 출렁임 한 줄. 가장 출렁이는 종목은 그 자리에 "출렁"이 온다 */
+.pt-coins { gap: 4px; padding-top: 2px; }
+.pr .pt .pt-ct { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 0 2px; padding: 1px 0; border-radius: 10px; border-width: 2px; }
+.pt-ct .pt-coin { width: 14px; height: 14px; }
+.pt-ct .nm { font-size: 12px; line-height: 14px; letter-spacing: -.3px; }
+.pt-ct small.swg, .pt-ct .wild { grid-column: 1 / -1; justify-self: center; }
+.pt-ct small.swg { font-size: 9.5px; line-height: 10px; }
+.pt-ct .swg .bars { height: 8px; }
+.pt-ct .wild { position: static; transform: none; padding: 0 5px; font-size: 9px; line-height: 10px; border-width: 1.2px; }
+.pt-ct:has(.wild) small.swg { display: none; }
+.pr .pt .pt-ct.on { transform: none; --sh: 0 2px 0 rgba(74, 70, 64, .22); }
+.pr .pt .pt-ct.on:active { transform: scale(.96); }
+.pt-ct .pd { top: -5px; right: -3px; width: 11px; height: 11px; }
+
+/* 시세 줄 */
+.pt-quote { min-height: 24px; gap: 6px; }
+.pt-quote .px { gap: 6px; }
+.pt-quote .px b { font-size: 24px; }
+.pt-quote .px span { font-size: 14px; }
+.pt-quote .mood { padding: 1px 8px; border-radius: 10px; font-size: 13.5px; }
+.pt-quote .mood span { font-size: 11px; }
+.pt-quote .mood.m-sess { padding: 1px 8px; }
+.pt-quote .mood.m-sess b { font-size: 11.5px; line-height: 1.15; } .pt-quote .mood.m-sess small { font-size: 10px; line-height: 1.15; }
+.pt-quote .st-bad { font-size: 12px; line-height: 1.15; }
+
+/* 차트: 축 띠 맨 아래에 창 고르기(2분 · 5분 · 10분). 차트 안에는 아무것도 넣지 않는다 */
+.pt-chart { position: relative; grid-template-columns: minmax(0, 1fr) 86px; }
+.pt-chart .foot { position: absolute; right: 0; bottom: 0; width: 86px; padding-left: 6px; }
+.pt-chart .scr { position: absolute; left: 7px; right: 0; font-size: 10.5px; font-weight: 600; line-height: 13px; letter-spacing: -.3px; color: var(--sub); white-space: nowrap; overflow: hidden; }
+.pt-win { display: flex; flex-direction: column; gap: 2px; }
+.pt-win .seg { display: grid; grid-template-columns: repeat(3, 1fr); height: 24px; border-radius: 8px; border: 2px solid var(--o); background: #fff; overflow: hidden; }
+.pr .pt .pt-win .seg button { font-size: 11.5px; font-weight: 800; letter-spacing: -.3px; color: var(--sub); }
+.pr .pt .pt-win .seg button + button { border-left: 1.5px solid var(--hair); }
+.pr .pt .pt-win .seg button.thin { color: rgba(74, 70, 64, .42); }
+.pr .pt .pt-win .seg button.on { background: var(--o); color: #fff; }
+.pr .pt .pt-win .pt-zoom { height: 22px; padding: 0 4px; border-radius: 8px; border: 2px solid var(--o); background: #fff; font-size: 11px; font-weight: 800; letter-spacing: -.3px; color: var(--o); white-space: nowrap; }
+.pt-meta { margin-top: -2px; font-size: 11px; }
+
+/* 배율: 눈금자를 알약 한 줄로 */
+.pt-ruler { display: flex; gap: 3px; padding: 0; background: none; border-radius: 0; }
+.pt-ruler::before { display: none; }
+.pr .pt .pt-ruler .nt { flex: 1 1 0; flex-direction: row; align-items: center; justify-content: center; gap: 0; min-height: 28px; padding: 0; border-radius: 9px; background: var(--well); border: 2px solid var(--hair); }
+.pt-ruler .nt i { display: none; width: auto; height: auto; }
+.pt-ruler .nt i::before { display: none; }
+.pt-ruler .nt.locked i { display: flex; }
+.pt-ruler .nt b { font-size: 14px; line-height: 1; }
+.pr .pt .pt-ruler .nt.locked { background: #F6EFD8; border: 1.5px dashed #8a7f62; }
+.pt-ruler .nt.locked b { font-size: 12px; letter-spacing: -.3px; }
+.pr .pt .pt-ruler .nt.on { flex: 1.7 1 0; background: var(--orange); border: 2.5px solid var(--o); --sh: inset 0 -3px 0 var(--orange-lo); }
+.pr .pt .pt-ruler .nt.on.hot { background: var(--red); --sh: inset 0 -3px 0 var(--red-ink); }
+.pt-ruler .nt.on b { font-size: 15px; padding-bottom: 2px; }
+.pt-ruler .nt.on.hot b { color: #fff; }
+
+/* 증거금 칩 */
+.pt-order { gap: 3px; }
+.pt-mg.k5 { gap: 4px; }
+.pr .pt .pt-mg .pt-chip { min-height: 30px; border-radius: 10px; }
+.pt-mg .pt-chip b { font-size: 14.5px; line-height: 1.05; }
+.pt-mg .pt-chip small { font-size: 10px; line-height: 1.1; letter-spacing: -.2px; }
+.pt-mg .pt-chip.keep b { font-size: 12.5px; }
+
+/* 증거금 · 수수료 줄 + "이자까지" 줄: 한 덩이. 수수료가 없는 동안에는 접혀서 한 줄이고, 누르면 펼쳐진다 */
+.pt-info { position: relative; display: flex; flex-direction: column; gap: 1px; }
+.pt-info.tap { padding-right: 15px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pt-info.tap::after { content: ''; position: absolute; right: 4px; top: 1px; width: 6px; height: 6px; border-right: 2px solid var(--sub); border-bottom: 2px solid var(--sub); transform: rotate(45deg); transform-origin: 70% 70%; }
+.pt-info.tap[data-more='open']::after { transform: rotate(-135deg); }
+.pt-info.fold .pt-risk { display: none; }
+.pt-info.nofee:has(> .pt-risk.add:not(.bad)) { display: none; }
+.pt-risk { font-size: 11.5px; line-height: 1.2; }
+.pt-risk b { font-size: 13px; }
+.pt-odds, .pt-quiet { font-size: 11.5px; line-height: 1.25; letter-spacing: -.2px; }
+
+/* 출구 줄 · 주문 단추 */
+.pr .pt .pt-cond { min-height: 30px; }
+.pr .pt .pt-ac { min-height: 30px; padding: 1px 8px; }
+.pt-ac b { font-size: 13px; line-height: 1.1; } .pt-ac small { font-size: 10.5px; line-height: 1.1; }
+.pt-cond .vals { font-size: 12.5px; } .pt-cond .more { font-size: 14px; }
+.pr .pt .pt-waiver { min-height: 34px; padding: 2px 8px 2px 10px; }
+.pt-orders { gap: 10px; padding: 3px 3px 1px; }
+.pr .pt .pt-orders .pt-btn { min-height: 46px; padding: 2px 6px 6px; border-radius: 15px; }
+.pt-orders .pt-btn span { font-size: 20px; } .pt-orders .pt-btn small { font-size: 12px; }
+/* 들어가기 전의 롱 · 숏은 한 줄 단추(이름 옆에 "오른다 · n배"). 들고 있을 때의 추가 진입 · 정리하기는 두 줄 그대로 */
+.pr .pt .pt-orders[data-hl='orders'] .pt-btn { flex-direction: row; align-items: baseline; gap: 8px; min-height: 42px; padding: 0 6px 4px; }
+
+/* 포지션 카드 · 결과 카드: 촘촘하게 */
+.pt-pl:not(.res) { gap: 3px; padding: 4px 10px; }
+.pt-pl:not(.res) .roe { font-size: 32px; }
+.pt-pl .me, .pt-pl.res .me { height: 42px; }
+.pt-pl.res { padding-top: 4px; padding-bottom: 4px; } .pt-pl.res .roe { font-size: 32px; }
+.pt-note { padding: 4px 10px; font-size: 12px; line-height: 1.3; }
+
+@media (max-width: 372px) { .pt-coins .pt-coin { display: none; } .pt-chart { grid-template-columns: minmax(0, 1fr) 82px; } .pt-chart .foot { width: 82px; } }
+/* 낮은 화면(360×640): 머리는 없고(위 테두리만), 한 줄씩을 더 줄인다. "이자까지" 줄은 이제 여기서도 보인다(증거금 · 수수료 줄이 그 뒤에 접혀 있다) */
+@media (max-height: 720px) {
+  .pt:not(.pa) { gap: 3px; padding: 4px 10px 3px; border-top-width: 8px; }
+  .pr .pt .pt-ct { padding: 1px 0; }
+  .pt-quote { min-height: 22px; } .pt-quote .px b { font-size: 22px; }
+  .pt-chart .scr { display: none; }
+  .pr .pt .pt-ruler .nt { min-height: 26px; }
+  .pt-order { gap: 3px; }
+  .pr .pt .pt-mg .pt-chip { min-height: 26px; }
+  .pt-odds { display: block; }
+  .pt-info.fold:not(:has(.pt-odds)) .pt-risk { display: flex; }
+  .pt-info.tap:not(:has(.pt-odds))::after { display: none; }
+  .pr .pt .pt-cond, .pr .pt .pt-ac { min-height: 28px; }
+  .pr .pt .pt-orders .pt-btn { min-height: 43px; padding-bottom: 5px; } .pt-orders .pt-btn span { font-size: 19px; }
+  .pr .pt .pt-orders[data-hl='orders'] .pt-btn { min-height: 40px; padding-bottom: 4px; }
+  .pt-pl:not(.res) { padding: 3px 10px; } .pt-pl:not(.res) .roe { font-size: 28px; }
+  .pt-pl .me, .pt-pl.res .me { height: 36px; }
+  .pt-pl.res .roe { font-size: 30px; }
+}
+
+/* ── U-43 사용자: "선물 차트가 좀 크게 보여야 할 것 같음. 지금 너무 작아요." ──
+   차트가 거래소에서 가장 큰 것이다(390×844 에서 화면 높이의 45% 이상, 360×640 에서도 가장 큰 덩이). 위의 줄은 얇게, 아래의 주문은 한 덩이로:
+   종목 줄 = 로고 + 출렁임 칩 한 줄(이름은 시세 줄에) · 거래소 머리 얇게 · 포지션 카드는 눈금 막대 없이(청산까지 칸이 대신한다) · 단추 낮게.
+   앞의 여러 규칙(회차 1~5)이 겹쳐 있어 여기서 마지막으로 정한다. */
+.pr .pt .pt-bar { padding-top: 3px; padding-bottom: 3px; }
+.pr .pt .pt-bar .logo { width: 20px; height: 20px; border-radius: 7px; }
+.pr .pt .pt-bar b { font-size: 14.5px; }
+.pr .pt .pt-bar em { font-size: 11px; padding: 2px 6px; }
+.pr .pt .pt-coins { padding-top: 3px; gap: 4px; }
+.pr .pt .pt-ct { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 3px; min-height: 28px; padding: 2px 0; border-radius: 10px; border-width: 2px; }
+.pr .pt .pt-ct .pt-coin { display: block; width: 18px; height: 18px; }
+.pr .pt .pt-ct .nm { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.pr .pt .pt-ct small.swg { display: flex; grid-column: auto; font-size: 10.5px; line-height: 12px; }
+.pr .pt .pt-ct small.swg .bars { display: none; }
+.pr .pt .pt-ct .wild { bottom: -8px; }
+.pr .pt .pt-quote { min-height: 28px; }
+.pr .pt .pt-quote .px { gap: 6px; }
+.pr .pt .pt-quote .px b { font-size: 25px; }
+.pr .pt .pt-quote .px .qn { font-style: normal; font-family: var(--dsp); font-size: 14px; color: var(--sub); white-space: nowrap; }
+.pr .pt .pt-quote .px span { font-size: 14px; }
+.pr .pt .pt-quote .mood { font-size: 13.5px; padding: 2px 8px; }
+.pr .pt .pt-pl:not(.res) { gap: 3px; padding: 5px 10px; }
+.pr .pt .pt-pl:not(.res) .gauge { display: none; }
+.pr .pt .pt-pl:not(.res) .roe { font-size: 32px; }
+.pr .pt .pt-pl:not(.res) .sub { margin-top: 0; font-size: 12px; }
+.pr .pt .pt-pl:not(.res) .sub b { font-size: 15px; }
+.pr .pt .pt-pl:not(.res) .why { font-size: 11.5px; line-height: 1.25; }
+.pr .pt .pt-pl:not(.res) .liq { padding: 2px 8px; } .pr .pt .pt-pl:not(.res) .liq b { font-size: 19px; }
+.pr .pt .pt-pl .me { height: 40px; }
+.pr .pt .pt-orders .pt-btn { min-height: 44px; padding-top: 2px; padding-bottom: 4px; }
+.pr .pt .pt-orders .pt-btn span { font-size: 19px; }
+/* 차트를 누르면 크게(아래 덩이를 접는다) · 위의 단추로 돌아온다 */
+.pr .pt .pl-row2 { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; min-width: 0; }
+.pr .pt .pl-row2 .pt-tense { flex: 1 1 auto; min-width: 0; }
+.pr .pt .pl-row2 .fact { flex: 0 1 auto; margin-left: auto; font-size: 12px; gap: 0 4px; }
+.pr .pt .pl-row2 .fact span { margin-left: 4px; }
+.pr .pt .pl-row2 .pt-squeeze, .pr .pt .pl-row2 .pt-carry { flex: 1 1 100%; }
+.pr .pt .pt-pl:not(.res) .big:not(.more) .why { display: none; }
+.pr .pt { gap: 5px; }
+.pt.big .pt-order, .pt.big .pt-condrow, .pt.big .pt-pl .pt-tense, .pt.big .pt-pl .fact, .pt.big .pt-pl .why, .pt.big .pt-pl .pt-squeeze, .pt.big .pt-pl .pt-carry, .pt.big .pt-tut { display: none; }
+@media (max-height: 720px) {
+  .pr .pt .pt-quote { min-height: 24px; }
+  .pr .pt .pt-quote .px b { font-size: 21px; }
+  .pr .pt .pt-ct { min-height: 24px; }
+  .pr .pt .pt-pl:not(.res) .roe { font-size: 26px; }
+  .pr .pt .pt-pl .me { height: 34px; }
+  .pr .pt .pt-orders .pt-btn { min-height: 40px; }
+}
+@media (max-width: 372px) { .pr .pt .pt-ct small.swg { font-size: 9.5px; letter-spacing: -.4px; } .pr .pt .pt-quote .px .qn { font-size: 12.5px; } }
+.pt-unbig { flex: 0 0 auto; align-self: center; margin: 2px 0; padding: 6px 14px; border-radius: 12px; border: 2px solid var(--o); background: var(--card); font-family: var(--dsp); font-size: 14px; color: var(--o); }
+.pt .plot { cursor: zoom-in; } .pt.big .plot { cursor: zoom-out; }

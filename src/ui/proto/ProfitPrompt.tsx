@@ -13,11 +13,13 @@ export function ProfitPrompt() {
   const [thumb, setThumb] = useState<string | null>(null);
   const [note, setNote] = useState('');
   useEffect(() => { setStage('ask'); setThumb(null); setNote(''); }, [p]);
+  // 장면(이긴 판의 고르기 등)이 떠 있는 동안에는 기다린다(U-42): 고르는 단추 위에 겹쳐 뜨지 않게. 장면이 끝나면 그때부터 15초
+  const talking = useProto((s) => s.scenes.length > 0);
   useEffect(() => {
-    if (!p || stage !== 'ask') return;
+    if (!p || stage !== 'ask' || talking) return;
     const t = window.setTimeout(() => useProto.getState().patch({ profit: null }), 15000);
     return () => window.clearTimeout(t);
-  }, [p, stage]);
+  }, [p, stage, talking]);
   // 폰 탭에서는 차트 위에 얹는다(차트 아래 끝에 맞춰 위로 자란다): 배율·증거금·주문 단추를 가리지 않는다.
   const box = useRef<HTMLDivElement>(null);
   const tab = useProto((s) => s.tab);
@@ -30,7 +32,7 @@ export function ProfitPrompt() {
     el.style.top = 'auto';
     el.style.bottom = `${root.getBoundingClientRect().bottom - chart.getBoundingClientRect().bottom + 2}px`;
   });
-  if (!p) return null;
+  if (!p || talking) return null;
   const close = () => useProto.getState().patch({ profit: null });
   const save = async () => {
     setStage('busy');

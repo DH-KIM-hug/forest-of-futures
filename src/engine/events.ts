@@ -2,6 +2,7 @@
 import { eventDefs, eventsMeta, eventById } from './data';
 import { nextRandom } from './rng';
 import { netWorth } from './selectors';
+import { feeEventLeft } from './skilltree';
 import { notify } from './util';
 import type { GameState } from './types';
 
@@ -41,6 +42,8 @@ export function rollEvent(g: GameState): void {
     const cd = (e as { cooldownSettlements?: number }).cooldownSettlements ?? 0;
     const lastAt = run.stats[`eventAt.${e.id}`] as number | undefined;
     if (cd > 0 && lastAt !== undefined && run.settleNo - lastAt < cd) return false;
+    // 오픈 기념 수수료 무료가 남아 있는 동안에는 금리 인상이 오지 않는다(U-42: 걸어 둔 「이자 한 번」이 한 번에 멀어지지 않게). 예고가 있으니 이벤트가 끝난 정산부터 뽑힌다
+    if ((e as { notDuringFeeEvent?: boolean }).notDuringFeeEvent && feeEventLeft(run) > 0) return false;
     return true;
   });
   if (!pool.length) return;

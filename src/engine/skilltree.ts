@@ -124,18 +124,29 @@ export interface FeeCtx { /** 가진 돈을 전부 건다 */ allIn?: boolean; /*
 /** 거래 수수료율 = 기본 × (1 − A1) × (1 − A4) × (50배 이상이면 1 − B1) × 꼬리들 + C2 보험료. 0 이 되지 않는다.
  *  꼬리(U-39 ⑨): R = 10배 이하 · B3a = 200배 · B4 = 전부 걸기 · A3b = 뒤집어 들어감 · C3b = 하루 한도를 걸어 둔 동안. */
 export function feeRateRun(run: RunState, lev: number, ctx: FeeCtx = {}): number {
-  let r = baseFeeRate(run);
-  r *= 1 - effectRun(run, 'A1');
-  r *= 1 - effectRun(run, 'A4');
-  if (lev >= (skillMeta.highLev as number)) r *= 1 - effectRun(run, 'B1');
-  if (lev <= 10) r *= 1 - tailRun(run, 'R');
-  if (lev >= 200) r *= 1 - tailRun(run, 'B3a');
-  if (ctx.allIn) r *= 1 - tailRun(run, 'B4');
-  if (ctx.flip) r *= 1 - tailRun(run, 'A3b');
-  if (run.dayLossLimit !== null && run.dayLossLimit !== undefined) r *= 1 - tailRun(run, 'C3b');
-  if (hasRun(run, 'C2')) r += skillMeta.premium.C2 as number;
+  return feeRateLevels(run.skill ?? {}, baseFeeRate(run), lev, { ...ctx, dayLimit: run.dayLossLimit !== null && run.dayLossLimit !== undefined });
+}
+/** 같은 셈을 노드 레벨만으로(순수): 나무 화면이 "이 노드를 열면 수수료가 얼마가 되는가"를 미리 셈할 때 쓴다(U-42). base = 할인 전의 수수료율 */
+export function feeRateLevels(skill: Record<string, number>, base: number, lev: number, ctx: FeeCtx & { dayLimit?: boolean } = {}): number {
+  const eff = (id: string) => (skillById[id] ? effectAt(skillById[id], skill[id] ?? 0) : 0);
+  const tail = (id: string) => (skillById[id] ? tailAt(skillById[id], skill[id] ?? 0) : 0);
+  let r = base;
+  r *= 1 - eff('A1');
+  r *= 1 - eff('A4');
+  if (lev >= (skillMeta.highLev as number)) r *= 1 - eff('B1');
+  if (lev <= 10) r *= 1 - tail('R');
+  if (lev >= 200) r *= 1 - tail('B3a');
+  if (ctx.allIn) r *= 1 - tail('B4');
+  if (ctx.flip) r *= 1 - tail('A3b');
+  if (ctx.dayLimit) r *= 1 - tail('C3b');
+  if ((skill.C2 ?? 0) > 0) r += skillMeta.premium.C2 as number;
   return r;
 }
+/** 나올 때 수수료에 곱하는 값을 노드 레벨만으로(순수) */
+export const exitFeeMulLevels = (skill: Record<string, number>, kind: 'close' | 'sl' | 'tp' = 'close'): number => {
+  const tail = (id: string) => (skillById[id] ? tailAt(skillById[id], skill[id] ?? 0) : 0);
+  return (1 - tail('A2')) * (kind === 'sl' ? 1 - tail('C1') : 1);
+};
 export const feeRate = (g: GameState, lev: number, ctx: FeeCtx = {}): number => feeRateRun(g.run, lev, ctx);
 /** 나올 때 수수료에 곱하는 값: A2 = 어떤 정리든, C1 = 손절로 나올 때. 0 이 되지 않는다. */
 export const exitFeeMul = (run: RunState, kind: 'close' | 'sl' | 'tp' = 'close'): number => (1 - tailRun(run, 'A2')) * (kind === 'sl' ? 1 - tailRun(run, 'C1') : 1);

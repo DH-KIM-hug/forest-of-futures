@@ -44,6 +44,16 @@ import eRetire2 from './img/v5/e_retire2.webp';
 import eRetire3 from './img/v5/e_retire3.webp';
 import eRetire4 from './img/v5/e_retire4.webp';
 import mVillage2 from './img/v5/m_village2.webp';
+// 회차 5b 그림(U-43): docs/art/v5/mkweb_art5.py — 채굴기, 걷는 주인공(뒤 · 앞), 쳇바퀴 두 겹(쳇바퀴 / 달리는 이), 채굴기의 잎 날개
+import iMiner from './img/v5/i_miner.webp';
+import iMinerFan1 from './img/v5/i_miner_fan1.webp';
+import iMinerFan2 from './img/v5/i_miner_fan2.webp';
+import cHeroWalkBack from './img/v5/c_hero_walk_back.webp';
+import cHeroWalkFront from './img/v5/c_hero_walk_front.webp';
+import cHamsterDrum from './img/v5/c_hamster_wheel_drum.webp';
+import cHamsterRunner from './img/v5/c_hamster_wheel_runner.webp';
+import cHeroDrum from './img/v5/c_hero_wheel_drum.webp';
+import cHeroRunner from './img/v5/c_hero_wheel_runner.webp';
 
 export type SpriteId =
   | 'home' //      집 그림(바닥 전체). 집 단계별 그림이 생기면 HOME_BY_LEVEL 에
@@ -71,6 +81,9 @@ export type SpriteId =
   | 'heroWalkEmpty' // 주인공: 빈손으로 걷는다(프롤로그)
   | 'heroFrozen' //   주인공: 굳었다(청산이 흔들리는 폭 안 · 청산 임박)
   | 'endRetire1' | 'endRetire2' | 'endRetire3' | 'endRetire4' // 은퇴 엔딩 넷의 사진(END-R01~R04)
+  | 'miner' | 'minerFan1' | 'minerFan2' // 채굴기(쳇바퀴의 전기로 코인을 캔다)와 그 잎 날개 둘(돌린다)
+  | 'heroWalkBack' | 'heroWalkFront' //   주인공: 멀어지며 걷는다(등) · 다가오며 걷는다(앞). 빈손
+  | 'hamsterDrum' | 'hamsterRunner' | 'heroDrum' | 'heroRunner' // 쳇바퀴 두 겹: 쳇바퀴(달리는 이를 지운 것) / 달리는 이 — 같은 크기의 판이라 겹치면 원래 그림
   | 'village2'; //    지도 바탕: 빈터 다섯(조합 · 사무소 · 캐피탈 · 집 · 뒷골목)이 떨어져 있어 누를 수 있다
 
 /** src = 파일, w·h = 그림 비율(가로/세로를 재는 데만 쓴다) */
@@ -118,6 +131,15 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   endRetire3: { src: eRetire3, w: 640, h: 640 },
   endRetire4: { src: eRetire4, w: 640, h: 640 },
   village2: { src: mVillage2, w: 780, h: 1385 },
+  miner: { src: iMiner, w: 261, h: 300 },
+  minerFan1: { src: iMinerFan1, w: 40, h: 40 },
+  minerFan2: { src: iMinerFan2, w: 40, h: 40 },
+  heroWalkBack: { src: cHeroWalkBack, w: 198, h: 300 },
+  heroWalkFront: { src: cHeroWalkFront, w: 229, h: 300 },
+  hamsterDrum: { src: cHamsterDrum, w: 264, h: 300 },
+  hamsterRunner: { src: cHamsterRunner, w: 264, h: 300 },
+  heroDrum: { src: cHeroDrum, w: 271, h: 300 },
+  heroRunner: { src: cHeroRunner, w: 271, h: 300 },
 };
 /** 컷인에 나오는 사람 → 반신 그림 */
 export const BUST_OF: Partial<Record<string, SpriteId>> = { collector: 'collector', boss: 'boss', weasel: 'weasel', raccoon: 'raccoon', owl: 'owl', viper: 'viper' };
@@ -141,3 +163,9 @@ export const RETIRE_PHOTO: Record<string, SpriteId> = { 'END-R01': 'endRetire1',
 export const MAP_SPOTS: Record<string, { x: number; y: number }> = {
   bank: { x: 0.47, y: 0.215 }, shark1: { x: 0.44, y: 0.455 }, capital: { x: 0.82, y: 0.575 }, home: { x: 0.19, y: 0.755 }, shark2: { x: 0.885, y: 0.105 },
 };
+
+// ── 눈 감은 그림(U-43): 눈 뜬 그림 위에 겹쳐 잠깐 보인다(눈 둘레만 든 그림이라 바꿔 껴도 테두리가 안 떤다). 파일이 있는 것만 깜빡인다 ──
+const BLINK_FILES = import.meta.glob('./img/v5/blink_*.webp', { eager: true, import: 'default' }) as Record<string, string>;
+const BLINK_STEM: Partial<Record<SpriteId, string>> = { hero: 'hero_phone', heroEmpty: 'c_hero_empty', cCollector: 'c_collector', cWeasel: 'c_weasel', cRaccoon: 'c_raccoon', cOwl: 'c_owl' };
+/** 그 그림의 눈 감은 겹(없으면 null) */
+export const blinkOf = (id: SpriteId): string | null => { const st = BLINK_STEM[id]; return st ? BLINK_FILES[`./img/v5/blink_${st}.webp`] ?? null : null; };

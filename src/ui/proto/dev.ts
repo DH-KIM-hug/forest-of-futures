@@ -16,6 +16,7 @@ import { retireAct1 } from '../../engine/act1Retire';
 import type { Bar } from '../../engine/feed/types';
 import type { GameState } from '../../engine/types';
 import { useUI } from '../uiStore';
+import { historyOf, markLive } from '../priceHistory';
 import { forecast } from '../../engine/settlement';
 import { exitFee } from '../../engine/futures';
 import { acornStops } from './stops';
@@ -252,15 +253,21 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       return midgame(base);
     }
     // ── U-41 화면 확인용 ──
-    case 'ac': case 'post': {
+    case 'ac': case 'post': case 'acq': {
       // 출구를 도토리로: 200배가 열린 살림에서 주문 판(ac = 오픈 기념 중, post = 이벤트가 끝난 뒤의 생 — 수수료 0.02%)
       P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'phone', seen: { ...seen, capitalSms: true, feeEventSms: true, dayNoteHint: true } });
       const g = midgame(base, { closed: 10, waiver: true, cash: 110_000 });
       if (name === 'post') g.run.settleNo = 22;
       useUI.getState().setTrade({ lev: 200, pct: 50, tpK: q.get('pk') === '0' ? null : 1, slK: q.get('pk') === '0' ? null : 1 });
+      if (name === 'acq') {
+        // 조용한 장(U-42 화면 확인용): 지난 5분의 가장 큰 폭이 0.1% 쯤인 기록을 채우고 시계를 멈춘다 → 한 번 누르기가 "지난 5분 최대 폭 기준"으로 줄어든다
+        useUI.getState().setTrade({ tpK: null, slK: null, acAuto: q.get('pk') !== '0' });
+        const fill = () => { const px = useGame.getState().g.run.prices.DTC; const h = historyOf('DTC'); h.splice(0, h.length, ...Array.from({ length: 300 }, (_, i) => px * (1 + 0.0005 * Math.sin(i / 23) + 0.00012 * Math.sin(i / 3.1))), px); markLive('DTC'); };
+        window.setTimeout(() => { useGame.getState().setSpeed(0); fill(); useGame.setState((st0) => ({ g: { ...st0.g } })); }, 1500);
+      }
       return clone(g);
     }
-    case 'win': case 'winhold': {
+    case 'win': case 'winhold': case 'winrun': case 'lossrun': {
       // 한 판에 이자 한 번 치: 200배 절반에 익절 = 이자 한 번 치를 걸어 둔 포지션. win = 다음 틱에 익절가를 넘어 있다(엔진이 익절로 닫는다 → 장면 · 집의 잔치). winhold = 아직 들고 있다(정산이 가깝다)
       P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: 'phone', seen: { ...seen, capitalSms: true, feeEventSms: true, dayNoteHint: true }, tradeLife: 4_200, closes: 6, wins: 4, paidLife: 24_400 });
       let g = midgame(base, { closed: 10, waiver: true, cash: 120_000, wheels: 2 });
@@ -274,7 +281,11 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       p.tpRoe = st.tp; p.slRoe = st.sl;
       const px = g.run.prices.DTC;
       // 진입가를 옮긴다(화면 확인용): win = 이미 익절가를 넉넉히 넘었다(익절 폭의 세 배 — 연습 시세의 첫 틱이 내려도 익절로 닫힌다. 닫히는 값은 익절가라 손익은 같다), winhold = 익절까지 7할
-      p.entry = px / (1 + ((st.tp ?? 0) / 100 / p.lev) * (name === 'win' ? 3 : 0.7));
+      // winrun = 이미 한 판에 이자를 번 생의 두 번째 익절(연달아 딴 장면) · lossrun = 이미 이자 한 번 치를 잃은 생의 두 번째 손절(연달아 잃은 장면, U-42)
+      if (name === 'winrun') P.patch({ claimWins: 1, claimWinRun: 1, claimRunSum: due, tradeLife: 4_200 + due, seen: { ...useProto.getState().seen, winClaim1: true } });
+      if (name === 'lossrun') P.patch({ claimLossRun: 1, claimRunSum: -due, tradeLife: 4_200 - due, lossStreak: 1 });
+      if (name === 'lossrun') { p.tpRoe = null; plans.DTC = { tp: null, sl: due }; } // 손절만 남긴다: 연습 시세의 첫 틱이 크게 올라도 익절로 닫히지 않게
+      p.entry = name === 'lossrun' ? px / (1 + ((st.sl ?? 0) / 100 / p.lev) * 2.2) : px / (1 + ((st.tp ?? 0) / 100 / p.lev) * (name === 'winhold' ? 0.7 : 3));
       if (name === 'winhold') g.run.settleIn = Math.min(50, balance.settlement.intervalSec - 2);
       g = clone(g);
       return g;

@@ -89,6 +89,14 @@ interface P {
   tradeLife: number; claimWins: number; paidLife: number;
   /** 방금 크게 땄다: 집이 잠깐 들썩인다(알바가 뛰고 쳇바퀴에 불이 켜진다). at = 그때(ms), amount = 딴 돈, worth = 이자 몇 번 치 */
   cheer: { at: number; amount: number; worth: number } | null;
+  /** 포지션을 든 채 쳇바퀴를 굴려 번 돈(U-42): rolledKey = 그 판의 열쇠(가장 먼저 연 포지션의 틱), rolled = 번 돈, rolledTaps = 굴린 횟수 */
+  rolled: number; rolledKey: number | null; rolledTaps: number;
+  /** 이자 한 번 치를 연달아 딴 · 잃은 판 수(본전치기는 끊지 않는다)와 그 합(U-42: 연달아 이긴 · 진 판의 장면) */
+  claimWinRun: number; claimLossRun: number; claimRunSum: number;
+  /** 아래 탭 하나를 잠깐 가리킨다(U-43: 알바가 쳇바퀴를 다 돌리면 주인공은 폰을 본다) */
+  pointTab: Tab | null;
+  /** 중고폰이 울렸다(U-43): 튜토리얼 거래를 걸 때까지 거래소 탭(폰의 앱)만 열 수 있다(지도 · 집의 할 일은 잠기고 정산 시계가 멈춘다) */
+  forceTrade: boolean;
   setPanel: (open: boolean) => void;
   setTab: (t: Tab) => void;
   patch: (p: Partial<P>) => void;
@@ -104,6 +112,7 @@ const fresh = () => ({
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
   think: null as P['think'], away: null as P['away'], clueAt: -1,
   dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
+  rolled: 0, rolledKey: null as number | null, rolledTaps: 0, claimWinRun: 0, claimLossRun: 0, claimRunSum: 0, pointTab: null as Tab | null, forceTrade: false,
 });
 
 export const useProto = create<P>((set) => ({

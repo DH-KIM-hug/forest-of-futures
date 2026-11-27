@@ -4,7 +4,7 @@ import { useProto } from './protoStore';
 import { marketDefs } from '../../engine/data';
 import { useUI } from '../uiStore';
 import { cell, dayBars, dayNote, dayNoteOpen } from './daynote';
-import { sessionOf, SESSIONS } from './market';
+import { sessionOf, SESSIONS, opensInText } from './market';
 import { recentRange } from './tension';
 import { liveHistoryOf } from '../priceHistory';
 import { Coin } from './Trade';
@@ -36,7 +36,7 @@ export function DayNoteSheet() {
                 <span className="nm"><Coin id={r.id} size={18} />{r.name}</span>
                 <span className={cls(r.h1)}>{cell(r.h1)}</span><span className={cls(r.h6)}>{cell(r.h6)}</span><span className={cls(r.h24)}>{cell(r.h24)}</span>
                 <span className="now">{r.now1m === null ? '–' : `${r.now1m.toFixed(2)}%`}{r.ratio !== null && <small className={r.ratio >= 1.6 ? 'hot' : r.ratio < 0.6 ? 'cold' : ''}>평소의 {r.ratio.toFixed(1)}배</small>}</span>
-                {(r.loudHour !== null || ss?.badge) && <small className="loud">{ss?.badge && <i>{ss.badge === '휴장?' ? '휴장인 듯' : ss.badge}</i>}{r.loudHour !== null && `지난 하루 가장 시끄러웠던 때 ${r.loudHour}시대 · 1분 ${r.loud1m!.toFixed(2)}%`}</small>}
+                {(r.loudHour !== null || ss?.badge) && <small className="loud">{ss?.badge && <i data-note-opens={r.id}>{ss.badge === '휴장?' ? '휴장인 듯' : `${ss.badge}${opensInText(r.id, new Date(now)) ? ` · ${opensInText(r.id, new Date(now))}` : ''}`}</i>}{r.loudHour !== null && `지난 하루 가장 시끄러웠던 때 ${r.loudHour}시대 · 1분 ${r.loud1m!.toFixed(2)}%`}</small>}
               </button>
             );
           })}

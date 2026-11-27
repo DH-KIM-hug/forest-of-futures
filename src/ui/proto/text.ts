@@ -31,8 +31,9 @@ export const prologueTalk = (o: { debt: number; interest: number }): string[] =>
   `어머님이 저희한테 도토리 ${man(o.debt)}을 빌리셨어요오.`,
   '그 빚이 오늘부터 자제분 거예요오. 상속이라고 해요오.',
   `이자는 정산마다 ${n(o.interest)}. 어머님 때 이자 그대로예요오.`,
-  '저 쳇바퀴는 코인 캐는 기계예요오. 굴리면 도토코인이 나와요오.',
-  '어머님도 그걸로 이자 내셨어요오.',
+  '저 쳇바퀴를 굴리면 전기가 나요오. 전선 타고 저 기계로 가요오.',
+  '저 채굴기도 어머님 거예요오. 고물이라 안 가져갔어요오.',
+  '거기서 도토코인이 나와요오. 어머님도 그걸로 이자 내셨어요오.',
 ];
 /** 프롤로그 장부 카드 아래 한 줄 */
 export const LEDGER_NOTE = '빚은 갚을 돈이다. 쓸 수 있는 돈은 0. 가진 것은 쳇바퀴 하나.';
@@ -86,10 +87,16 @@ export const STORY = {
     ...(tagged ? [L('collector', '쳇바퀴엔 딱지 하나 붙이고 갈게요오. 캐는 것의 3할은 저희 거예요오.', 'flat')] : []),
   ],
   /** 튜토리얼 거래(U-31): 거래소가 무엇인지 화면을 짚어 가며 말한 뒤, 한번 걸어 보라고 한다 */
+  /** 알바를 다 들인 순간 중고폰이 울린다(U-43): 오소리 대부가 폰의 FRX 앱을 켜 보라고 한다(거래소는 앱이다 — 어디로 가는 곳이 아니다) */
+  phoneRing: (): Line[] => [
+    L('note', '주머니의 중고폰이 울린다.'),
+    L('boss', '일꾼은 구하셨네요. 이제 폰에 깔아 둔 FRX 앱 한번 켜 보세요.', 'smile'),
+  ],
   tutIntro: (margin: number, lev: number, A: TipArgs): Line[] => [
-    L('boss', '폰은 잘 켜지죠? 여기가 FRX 숲거래소입니다.', 'smile'),
+    L('boss', '폰은 잘 켜지죠? 그게 FRX 숲거래소 앱입니다.', 'smile'),
     ...tips('exchange', A),
-    L('boss', `처음이니까 ${man(margin)}만, ${lev}배로요. 롱이든 숏이든 한번 걸어 보세요.`, 'smile'),
+    L('boss', '처음이니까 크게 가 보세요.', 'smile'),
+    L('boss', `가진 것 전부 ${n(margin)}, ${lev}배로요. 롱이든 숏이든.`, 'smile'),
     L('boss', '쳇바퀴 백 날 굴리는 것보다 빨라요.', 'smile'),
   ],
   tutLost: (lost: number, lend: number, ratePct: number, A: TipArgs): Line[] => [
@@ -138,7 +145,7 @@ export const STORY = {
   overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean; living?: number; locked?: number }): Line[] => [
     L('collector', `이자 ${n(o.interest)}… 모자라네요오. ${o.nth <= 1 ? '연체로 적을게요오.' : `이번 생 ${o.nth}번째 연체예요오.`}`, 'flat'),
     // 돈이 없어서가 아니라 포지션에 묶여 있어서 못 낸 정산: 그렇다고 말해 준다(U-39 ①)
-    ...(o.locked && o.locked >= o.interest ? [L('collector', `돈은 있으시네요오. 거래소에 ${josa(n(o.locked), '이', '가')} 묶여 있어요오. 저는 거긴 못 들어가요오.`, 'flat')] : []),
+    ...(o.locked && o.locked >= o.interest ? [L('collector', `돈은 있으시네요오. 거래소에 ${josa(n(o.locked), '이', '가')} 묶여 있어요오. 앱 속 돈은 제가 못 꺼내요오.`, 'flat')] : []),
     L('collector', '못 낸 이자는 원금에 얹었어요오.', 'flat'),
     ...(o.living ? [L('collector', `생활비 ${n(o.living)}도 못 내셨네요오. 그것도 장부에 얹었어요오.`, 'flat')] : []),
     ...(o.tagged && !o.seized ? [L('collector', '쳇바퀴엔 딱지 붙였어요오. 캐는 것의 3할은 저희 거예요오.', 'flat')] : []),
@@ -194,6 +201,20 @@ export const STORY = {
     L('collector', `다음 정산 ${n(o.claim)}은 벌써 손에 있네요오. 저는 그래도 제시간에 와요오.`),
     L('hero', o.spins !== null && o.spins >= 2 ? `…+${n(o.pnl)}. 알바가 쳇바퀴를 ${o.spins}정산 돌려야 남는 돈이다.` : `…+${n(o.pnl)}. 한 판에 이자 한 번.`),
     ...(o.momLeft > 0 ? [L('hero', o.stampLeft !== null ? `…오소리 장부의 ${n(o.momLeft)}이 처음으로 작아 보였다. 금박 도장까지 ${n(o.stampLeft)}.` : `…오소리 장부의 ${n(o.momLeft)}이 처음으로 작아 보였다.`)] : []),
+  ],
+  /** U-42: 이자 한 번 치를 두 판 연달아 땄다(이번 생에 한 번). 엄마 이야기는 건드리지 않는다 — 빚이 어디서 왔는지는 아직 아무도 말하지 않는다 */
+  winRun: (o: { sum: number; stampPct: number | null }): Line[] => [
+    L('weasel', '두 판 연달아 이자를 버셨다면서요~ 햄스터들이 사장님이라고 불러요~ 일당은 그대로 주셔도 돼요~', 'smile'),
+    L('boss', `두 번 합쳐 +${n(o.sum)}.${o.stampPct !== null ? ` 장부로 치면 금박 도장 하나의 ${o.stampPct}%입니다.` : ''} 손님들이 제일 크게 거는 때가 딱 지금이에요.`, 'smile'),
+    L('collector', '저는 축하 안 해요오. 세 번째 판을 많이 봐서요오.', 'flat'),
+    L('hero', '…두 번이면 실력이다. …그렇게 생각한 순간부터가 위험하다.'),
+  ],
+  /** U-42: 이자 한 번 치를 두 판 연달아 잃었다(이번 생에 한 번) */
+  lossRun: (o: { sum: number; spins: number | null; cash: number; claim: number }): Line[] => [
+    L('collector', `이자 한 번 치를 두 판 연달아 잃으셨네요오. 합쳐서 −${n(o.sum)}이에요오.`, 'flat'),
+    L('collector', o.spins !== null && o.spins >= 2 ? `쳇바퀴 한 대가 ${o.spins}정산을 돌아야 하는 돈이에요오. 햄스터는 그런 거 몰라요오. 그냥 돌아요오.` : '햄스터는 그런 거 몰라요오. 그냥 돌아요오.', 'flat'),
+    L('boss', '쉬어 가셔도 됩니다. 장은 내일도 열려요. 이자도 내일 오고요.', 'smile'),
+    L('hero', o.cash >= o.claim ? `…손에 ${n(o.cash)}. 다음 정산은 낼 수 있다. 세 번째 판은 내가 정한다.` : `…손에 ${n(o.cash)}. 다음 정산 ${n(o.claim)}에 모자란다.`),
   ],
   /** 포지션을 든 채 처음 정산을 넘겼다(U-41): 무슨 일이 있었는지 한 줄 */
   carried: (o: { paid: number; funding: number }): string => `정산을 넘겼다: 손에서 −${n(o.paid)} · 포지션은 그대로${o.funding >= 1 ? ` · 펀딩비 −${n(o.funding)}(증거금에서)` : ''}`,

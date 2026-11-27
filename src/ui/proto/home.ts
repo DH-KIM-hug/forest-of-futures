@@ -37,6 +37,19 @@ export const HERO_H = Math.round(HOME_IMG.h * 0.07);
 export const VISITOR_SPOT: Pt = [700, 925];
 /** 콜드월렛 기기를 올려 둔 곳: 작은 상자 위 */
 export const WALLET_SPOT: Pt = [762, 990];
+/** 채굴기(U-43 사용자: "쳇바퀴가 채굴기에 연결이 안 되어 있네? 채굴기도 따로 없고"): 뒷벽 앞 가운데(계단 기둥과 문 사이). 쳇바퀴 자리 여섯 · 상자 · 스탠드 · 계단과 겹치지 않는다. 발밑 좌표와 키 */
+export const RIG_SPOT: Pt = [452, 772];
+export const RIG_H = 172;
+/** 채굴기 그림(261×300) 안의 자리(그림 칸): 전선이 꽂히는 곳 · 불빛 열두 개 · 잎 날개 둘 */
+export const RIG_ART = { w: 261, h: 300, socket: [247, 226] as Pt, out: [236, 150] as Pt, leds: [[61, 152], [72, 152], [83, 152], [95, 152], [106, 152], [117, 152], [60, 166], [72, 166], [83, 166], [94, 166], [106, 166], [117, 166]] as Pt[], fans: [[58, 215], [118, 223]] as Pt[], fanR: 20 };
+/** 쳇바퀴 그림 안의 앞 테(도는 테)의 타원: 그림 칸(가운데 · 반지름). 이 테를 따라 이음매가 돈다 */
+export const HOOP = { hamster: { cx: 154, cy: 148, rx: 91, ry: 110 }, hero: { cx: 154, cy: 141, rx: 95, ry: 113 } };
+/** 주인공이 서는 곳: 굴릴 수 있는 쳇바퀴(자리 slot) 옆. 굴릴 쳇바퀴가 없으면(-1) 엄마의 쳇바퀴 옆 그 자리 */
+export function heroSpotFor(slot: number): Pt {
+  if (slot <= 0) return HERO_SPOT;
+  const [x, y] = WHEEL_SLOTS[slot];
+  return [x > 700 ? x - 118 : x + 125, y > 1150 ? y + 12 : y + 58];
+}
 /** 쳇바퀴 굴리기 탭이 먹는 넉넉한 네모(엄마의 쳇바퀴 + 주인공): [x, y, w, h] */
 export const TAP_AREA: [number, number, number, number] = [310, 815, 380, 320];
 

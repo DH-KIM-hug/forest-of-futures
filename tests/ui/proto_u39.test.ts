@@ -99,7 +99,7 @@ describe('새 대사 (U-39)', () => {
     const base = { interest: 14500, nth: 1, tagged: false, seized: false, nothingLeft: false };
     expect(STORY.overdue(base)).toHaveLength(3);
     const locked = STORY.overdue({ ...base, locked: 96583 });
-    expect(locked[1].text).toBe('돈은 있으시네요오. 거래소에 96,583이 묶여 있어요오. 저는 거긴 못 들어가요오.');
+    expect(locked[1].text).toBe('돈은 있으시네요오. 거래소에 96,583이 묶여 있어요오. 앱 속 돈은 제가 못 꺼내요오.');
     expect(STORY.overdue({ ...base, locked: 3000 })).toHaveLength(3); // 묶인 돈이 이자보다 작으면 그 줄이 없다
     expect(STORY.overdue({ ...base, locked: 168209 })[1].text).toContain('168,209가 묶여'); // 조사
     const living = STORY.overdue({ ...base, living: 1000 });

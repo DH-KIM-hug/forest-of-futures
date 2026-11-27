@@ -97,3 +97,48 @@ export function feeEventChip(left: number, ratePct: number): { on: boolean; text
 }
 /** 이벤트 동안 수수료 없이 오간 크기(명목) → 끝난 뒤의 수수료율로 쳤다면 냈을 돈(들어갈 때 + 나올 때) */
 export const feeSaved = (eventNotional: number, afterRate: number): number => Math.round(eventNotional * afterRate * 2);
+
+// ── 본장까지 남은 시간(U-42, 회차 5): 달력으로 아는 것만 말한다(평일 개장 시각). 휴장일은 달력으로 모른다 ─────────
+/** 다음 본장 개장까지 남은 분(달력: 평일 · 그 시간대의 개장 시각). 지금 본장 중이면 0, 주식을 따라가지 않는 종목은 null */
+export function opensInMin(id: string, now: Date): number | null {
+  const s = SESSIONS[id];
+  if (!s) return null;
+  const c = wallClock(now, s.tz);
+  const open = s.open[0] * 60 + s.open[1], close = s.close[0] * 60 + s.close[1];
+  const weekday = (d: number) => d >= 1 && d <= 5;
+  if (weekday(c.day) && c.min >= open && c.min < close) return 0;
+  if (weekday(c.day) && c.min < open) return open - c.min;
+  // 오늘은 끝났다(또는 주말): 다음 평일의 개장 시각까지
+  let days = 1;
+  while (!weekday((c.day + days) % 7)) days++;
+  return days * 1440 - c.min + open;
+}
+/** "2시간 13분" · "41분" · "이틀 3시간" */
+export function spanText(min: number): string {
+  const m = Math.max(0, Math.round(min));
+  if (m >= 2880) return `${Math.floor(m / 1440)}일 ${Math.floor((m % 1440) / 60)}시간`;
+  if (m >= 60) return `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`;
+  return `${m}분`;
+}
+/** 시세 줄 · 조용한 장의 한 줄에 붙이는 글: "본장까지 2시간 13분". 본장 중이거나 주식을 따라가지 않으면 null */
+export function opensInText(id: string, now: Date): string | null {
+  const m = opensInMin(id, now);
+  return m === null || m <= 0 ? null : `본장까지 ${spanText(m)}`;
+}
+/** 개장을 미리 알리는 때(분 전). 달력으로 아는 것이라 "달력으로는"을 붙여 말한다 */
+export const OPEN_HEADS_UP = [30, 10, 1];
+/** 지금 알릴 것이 있는가: 남은 분이 문턱에 막 닿았으면 그 문턱. said = 이미 알린 열쇠("SMS:30@날짜") */
+export function openHeadsUp(id: string, now: Date, said: Set<string>): { min: number; key: string } | null {
+  const m = opensInMin(id, now);
+  if (m === null || m <= 0) return null;
+  const thr = OPEN_HEADS_UP.find((t) => m === t);
+  if (thr === undefined) return null;
+  const key = `${id}:${thr}@${Math.floor((now.getTime() + m * 60000) / 3600000)}`;
+  return said.has(key) ? null : { min: thr, key };
+}
+/** 어제 그 시(한국 시간)까지 남은 분: 지금이 그 시 안이면 0 */
+export function untilHourMin(hourKst: number, now: Date): number {
+  const k = wallClock(now, 'Asia/Seoul');
+  const d = hourKst * 60 - k.min;
+  return d <= 0 && d > -60 ? 0 : (d + 1440) % 1440;
+}

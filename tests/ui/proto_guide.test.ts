@@ -23,8 +23,8 @@ function playFront(): string[] {
 beforeEach(() => { resetGuide(); setGuideOff(false); P().resetLife(2, true); });
 
 describe('튜토리얼 대사 (U-32): 모든 줄이 풀린다', () => {
-  it('엔진 값이 그대로 끼워진다(쳇바퀴 한 번 2, 첫 청구 5,500, 일당 1,800, 쳇바퀴 50,000, 대출 10만, 빚 30만)', () => {
-    expect(ARGS).toEqual({ tap: 2, claim: 5500, living: 1000, wage: 1800, wheel: 50000, lend: 100000, debt: 300000, lev: 10 });
+  it('엔진 값이 그대로 끼워진다(쳇바퀴 한 번 2, 첫 청구 5,500, 일당 1,600, 쳇바퀴 50,000, 대출 10만, 빚 30만)', () => {
+    expect(ARGS).toEqual({ tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, debt: 300000, lev: 10 });
   });
   it('줄마다: 아는 사람이 말하고, 글이 비어 있지 않고, 숫자가 빠지지 않고, 폰 화면 두 줄(34자) 안에 든다', () => {
     expect(TIP_IDS.length).toBeGreaterThanOrEqual(40);
