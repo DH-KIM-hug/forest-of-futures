@@ -163,6 +163,22 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     if (!L.open[k]) L.open[k] = { entryTs: now, real: live, tutorial: tutNow !== 'done' };
     else if (!live) L.open[k].real = false; // 들고 있는 사이 연습 시세로 내려갔다
   }
+  // 반 익절(나무 A1, U-51): 나눠 닫은 몫은 같은 진입 시각의 거래 하나로 넣는다(서버의 재산 상한이 그 몫을 센다)
+  for (const p of Object.values(run.positions)) {
+    const pp = prev.run.positions[p.market];
+    const was = pp && pp.openTick === p.openTick ? pp.halfs?.length ?? 0 : 0;
+    const hs = p.halfs ?? [];
+    if (hs.length <= was) continue;
+    const meta = L.open[posKey(p.market, p.openTick)] ?? null;
+    for (const h of hs.slice(was)) {
+      const c: ClosedTrade = { market: p.market, dir: p.dir, lev: p.lev, margin0: h.margin, pnl: h.pnl, open: meta, exitTs: now, realAtExit: live, tutorialAtExit: tutNow === 'run' };
+      if (meta?.tutorial || tutNow === 'run') continue;
+      if (!eligible(c)) { if (h.pnl > 0) L.tainted = true; continue; }
+      const d = tradeDetail(c);
+      L.trades.push(d);
+      if (isWinningEntry(c)) { submit('roe', d.roe, d); submit('pnl', d.pnl, d); }
+    }
+  }
   // 닫힌 포지션
   for (const p of Object.values(prev.run.positions)) {
     const cur = run.positions[p.market];

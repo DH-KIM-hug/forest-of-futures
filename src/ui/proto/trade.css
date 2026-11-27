@@ -713,7 +713,14 @@
 @media (prefers-reduced-motion: reduce) { .pr-burst .core, .pr-burst .hop, .pr-burst .rays, .pt-pops .pop, .pt-pl .roe, .pt.edge .pt-pl, .pr .pt .pt-again { animation-name: fadeIn !important; } }
 @keyframes hopOut { to { opacity: 0; } }
 .pr .pt .pt-pl:not(.res) { z-index: 3; }
-.pt-pops { left: 50%; top: -34px; transform: translateX(-50%); align-items: center; }
+.pt-pops { left: 50%; top: auto; bottom: calc(100% + 6px); transform: translateX(-50%); align-items: center; }
+/* U-51: 팝은 줄을 서서 하나씩 뜬다(popBus POP_GAP). 새 팝이 아래(숫자 쪽)에 솟고 앞 팝은 위로 밀려 흐려진다 */
+.pt-pops:not(.home-pops) { gap: 12px; width: max-content; max-width: 340px; }
+/* 팝의 바탕이 글자를 다 덮게(왼쪽 50% 에 놓인 상자는 남은 폭이 절반뿐이라 바탕이 쪼그라들고 글자만 넘쳐 서로 겹쳐 보였다) */
+.pt-pops .pop { width: max-content; }
+.pt-pops:not(.home-pops) .pop.has-sub { flex-direction: column; gap: 1px; padding-bottom: 3px; }
+.pt-pops .pop:not(:last-child) { opacity: .78; filter: saturate(.85); }
+.pt-pops .pop.half { color: #7A4E12; background: linear-gradient(180deg, #FFF6C8, #F7D25E); font-size: 22px; border-color: #7A4E12; box-shadow: 0 0 0 3px #fff, 0 4px 0 rgba(122, 78, 18, .35); }
 
 /* U-49: 집이나 지도에서 터지는 상자(화면 전체, 장면보다 아래 · 청산 도장보다 아래) */
 .pr > .pr-burst.home { z-index: 24; border-radius: 0; }
@@ -761,3 +768,35 @@
 .pt-orders.first-go .pt-btn.short { animation-delay: .8s; }
 @keyframes ftNudge { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(-3px); } 90% { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .pt-first .ft-go, .pt-orders.first-go .pt-btn { animation: none; } }
+
+/* U-51 반 익절(나무 A1): 추가 진입 · 반 익절 · 정리하기 세 칸. 이익일 때 금빛으로 깨어난다 */
+.pt-orders:has(.half) { grid-template-columns: 1fr 0.9fr 1fr; gap: 8px; }
+.pt-orders:has(.half):has(.flip) { grid-template-columns: 1fr 48px 0.9fr 1fr; gap: 6px; }
+.pr .pt .pt-btn.half { --bg: #EFE8D6; --lo: #D9CDAE; color: #8a7f6a; }
+.pr .pt .pt-btn.half.on { --bg: #FFE27A; --lo: #C9A23A; color: #6B4510; animation: halfWake 1.8s ease-in-out infinite; }
+.pr .pt .pt-btn.half span { font-size: 18px; white-space: nowrap; }
+.pr .pt .pt-btn.half small { font-variant-numeric: tabular-nums; }
+@keyframes halfWake { 0%, 100% { box-shadow: var(--sh); } 50% { box-shadow: var(--sh), 0 0 0 7px rgba(255, 214, 90, .6); } }
+@media (prefers-reduced-motion: reduce) { .pr .pt .pt-btn.half.on { animation: none; } }
+
+/* U-51 느린 판: 평소대로면 오래 걸린다는 한 줄. 더 빠른 종목이 있으면 눌러서 간다 */
+.pr .pt .pt-slow { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; margin: 2px 0 0; padding: 3px 9px; border-radius: 10px; border: 1.5px dashed #B9A981; background: #FBF5E4; color: var(--sub); font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1.3; text-align: left; box-shadow: none; }
+.pr .pt .pt-slow span { flex: 1 1 auto; min-width: 0; }
+.pr .pt .pt-slow.go { border: 2px solid #7A55B0; background: #F1EAFB; color: #4B3373; }
+.pr .pt .pt-slow b { flex: none; padding: 1px 8px; border-radius: 8px; background: #7A55B0; color: #fff; font-size: 12px; white-space: nowrap; }
+.pr .pt .pl-row2 .pt-slow { margin: 0; flex: 1 1 auto; }
+
+/* U-51 이번 생 신기록 · FRX 회원 등급 */
+.pr-burst .chips .rec { background: #2F4A22; color: #FFE27A; border-color: #2F4A22; animation: recIn .5s .35s cubic-bezier(.34, 1.7, .5, 1) both; }
+@keyframes recIn { 0% { transform: scale(.2) rotate(-12deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.pr .pt .pt-bar .pt-rank { position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; padding: 1px 7px 3px; border-radius: 8px; border: 2px solid var(--o); background: #E8F1DC; color: #2F4A22; font-family: var(--dsp); font-style: normal; font-size: 13px; line-height: 1.05; white-space: nowrap; box-shadow: none; }
+.pr .pt .pt-bar .pt-rank i { display: block; width: 100%; height: 3px; margin-top: 2px; border-radius: 2px; background: rgba(47, 74, 34, .18); overflow: hidden; }
+.pr .pt .pt-bar .pt-rank i u { display: block; height: 100%; background: #4E8A3A; }
+.pr .pt .pt-bar .pt-rank.r2, .pr .pt .pt-bar .pt-rank.r3 { background: #FFF1C2; color: #7A4E12; }
+.pr .pt .pt-bar .pt-rank.r4, .pr .pt .pt-bar .pt-rank.r5, .pr .pt .pt-bar .pt-rank.rX { background: linear-gradient(180deg, #FFE98A, #F3C94A); color: #6B4510; }
+.pr .pt .pt-bar .pt-rank.up { animation: rankUp 1.1s cubic-bezier(.2, 1.6, .4, 1) 2; box-shadow: 0 0 0 4px rgba(255, 214, 90, .7); }
+@keyframes rankUp { 0% { transform: scale(1); } 25% { transform: scale(1.35) rotate(-4deg); } 55% { transform: scale(.95); } 100% { transform: none; } }
+.pr .pt .pt-bar .pt-rank .ru { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); z-index: 7; padding: 2px 9px; border-radius: 9px; background: #2F4A22; color: #FFE27A; font-size: 13px; white-space: nowrap; pointer-events: none; animation: fadeIn .2s both, pkSay 3s ease-in forwards; }
+@media (prefers-reduced-motion: reduce) { .pr .pt .pt-bar .pt-rank.up, .pr-burst .chips .rec { animation: none; } }
+.pr-burst .chips .rec.rk { background: linear-gradient(180deg, #FFE98A, #F3C94A); color: #6B4510; border-color: var(--o); animation-delay: .6s; }
+.pr .pt .pl-row3 { display: flex; margin-top: 4px; } .pr .pt .pl-row3 .pt-slow { margin: 0; padding: 2px 8px; font-size: 11.5px; }

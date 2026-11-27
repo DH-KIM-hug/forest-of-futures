@@ -126,6 +126,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   const un = { lot: true, phone: true, map: true } as const;
   const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'office'].map((k) => [k, true]));
   P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done', firstTry: name === 'first' ? 3 : 0 });
+  if (q.get('pstamps')) P.patch({ frxStamps: +q.get('pstamps')!, bestWin: q.get('pbest') ? +q.get('pbest')! : 0 }); // U-51 FRX 회원 등급 확인용
   base.run.intro = false; // 장면 건너뛰기는 튜토리얼이 끝난 판이다(정산 60초)
   base.run.settleIn = balance.settlement.intervalSec;
   const ready = () => {
@@ -143,6 +144,20 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       g.run.futures.closedTrades = 0; g.run.cash = 100_000;
       P.patch({ tab: 'phone', seen: { ...useProto.getState().seen, feeEventSms: true } });
       return clone(g);
+    }
+    // ── U-51 화면 확인용 ──
+    case 'half': {
+      // 반 익절(나무 A1): 50배 롱이 +40% 쯤 이익인 판. pauto=1 이면 3초 뒤 [반 익절]을 누른다
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: q.get('ptab') === 'lot' ? 'lot' : 'phone', seen: { ...seen, capitalSms: true, feeEventSms: true, flyNews: true } });
+      let g = midgame(base, { closed: 10, waiver: true, cash: 120_000, wheels: 2 });
+      g.run.skill = { R: 1, A1: 1 };
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 50, marginPct: 50, sl: null, tp: null } });
+      const p = g.run.positions.DTC;
+      p.entry = g.run.prices.DTC / (1 + 0.4 / p.lev);
+      g.run.settleIn = Math.round(balance.settlement.intervalSec * 0.8);
+      if (q.get('pauto') === '1') window.setTimeout(() => (document.querySelector('[data-half="on"]') as HTMLButtonElement | null)?.click(), 3000);
+      g = clone(g);
+      return g;
     }
     case 'wind': case 'trail': case 'popb': {
       // 나무가 판에 한 일: wind = 한 번 버티기(B1)가 다음 틱에 잡는다, trail = 따라가는 손절(C1) + 고비 보상(R), popb = 고비 보상만

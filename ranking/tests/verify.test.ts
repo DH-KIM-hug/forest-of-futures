@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { flyCandles } from '../../src/engine/feed/fly';
-import { checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, cleanName, maxFavorablePct, parseSubmit, type TradeDetail } from '../src/verify';
+import { LIFE, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, cleanName, maxFavorablePct, parseSubmit, popAllowance, type TradeDetail } from '../src/verify';
 
 const T0 = 1_800_000_000_000;
 const trade = (o: Partial<TradeDetail> = {}): TradeDetail => ({ market: 'DTC', dir: 1, lev: 200, margin: 50000, entryTs: T0, exitTs: T0 + 180_000, roe: 31, pnl: 15500, ...o });
@@ -37,12 +37,15 @@ describe('랭킹 제출 검사', () => {
     const life = { lifeNo: 1, settles: 30, peak: 0, trades: [win, lose] };
     expect(checkLifeShape(life, 200000, T0 + 300_000)).toBeNull();
     // U-47: 정산이 60초 → 정산당 상한 17,000 + 1,000. −300,000 + 15,500 × 1.1 + 30 × 18,000 = 257,050
-    expect(checkLifeAgainstCandles(life, 257000, () => cs)).toBeNull();
-    expect(checkLifeAgainstCandles(life, 258000, () => cs)).toMatch(/tooHigh/);
+    // (U-51: 진 거래의 고비 몫은 따로 본다 — 여기서는 진 거래의 봉을 주지 않는다)
+    const nopop = (t: TradeDetail) => (t.pnl > 0 ? cs : []);
+    expect(checkLifeAgainstCandles({ ...life, trades: [win] }, 257000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 257000, nopop)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 258000, nopop)).toMatch(/tooHigh/);
     // U-46: 둘째 생부터는 튜토리얼이 끝난 자리(손에 10만, 빚 50만)에서 시작한다 → 상한도 −40만에서
     const reborn = { ...life, lifeNo: 2 };
-    expect(checkLifeAgainstCandles(reborn, 157000, () => cs)).toBeNull();
-    expect(checkLifeAgainstCandles(reborn, 158000, () => cs)).toMatch(/tooHigh/);
+    expect(checkLifeAgainstCandles(reborn, 157000, nopop)).toBeNull();
+    expect(checkLifeAgainstCandles(reborn, 158000, nopop)).toMatch(/tooHigh/);
     // 이긴 거래를 부풀리면 그 거래에서 걸린다
     const fake = { ...life, trades: [trade({ roe: 900, pnl: 450000 })] };
     expect(checkLifeAgainstCandles(fake, 600000, () => cs)).toMatch(/trade:roeTooHigh/);
@@ -58,6 +61,33 @@ describe('랭킹 제출 검사', () => {
     const fake = { ...ok, roe: 50 * (fav + 1), pnl: (10000 * 50 * (fav + 1)) / 100 };
     expect(checkTradeAgainstCandles(fake, cs)).toMatch(/roeTooHigh/);
     expect(checkLifeShape({ lifeNo: 1, settles: 3, peak: 0, trades: [ok] }, 1000, x + 1000)).toBeNull();
+  });
+  it('U-51 고비 보상: 거래마다 봉으로 닿을 수 있던 고비 수 × 넣은 돈 × 3% 를 상한에 더한다(진 거래도)', () => {
+    // 200배 · 실제 폭 0.12% → 닿을 수 있는 ROE 200 × (0.12 + 0.15) = 54% → 고비 +50% 하나
+    const cs = [{ t: T0, h: 100.12, l: 100 }];
+    expect(popAllowance(trade(), cs)).toBeCloseTo(50000 * 0.03, 6);
+    // 폭 0.6% → 150% → +50%, 두 배 둘
+    expect(popAllowance(trade(), [{ t: T0, h: 100.6, l: 100 }])).toBeCloseTo(50000 * 0.03 * 2, 6);
+    // 10배 · 폭 0.12% → 2.7% → 고비 없음. 봉이 없으면 0
+    expect(popAllowance(trade({ lev: 10 }), cs)).toBe(0);
+    expect(popAllowance(trade(), [])).toBe(0);
+    const win = trade({ roe: 31, pnl: 15500 });
+    const lose = trade({ roe: -40, pnl: -20000 });
+    const life = { lifeNo: 1, settles: 30, peak: 0, trades: [win, lose] };
+    // −300,000 + 15,500 × 1.1 + (1,500 + 1,500) + 30 × 18,000 = 260,050 (진 거래도 +50% 를 지났을 수 있다)
+    expect(checkLifeAgainstCandles(life, 260000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 261000, () => cs)).toMatch(/tooHigh/);
+    // 진 거래의 봉을 못 받았으면 그 몫은 0(거절되지 않고 상한만 준다)
+    expect(checkLifeAgainstCandles(life, 258500, (t) => (t.pnl > 0 ? cs : []))).toBeNull();
+    expect(checkLifeAgainstCandles(life, 258600, (t) => (t.pnl > 0 ? cs : []))).toMatch(/tooHigh/);
+    // 한 생에서 실제로 받을 수 있는 최대(Lv 끝없이 = 3%)보다 넉넉하다: 고비 여섯을 다 넘긴 판
+    expect(LIFE.popAt.length * LIFE.popRateMax).toBeCloseTo(0.18, 6);
+  });
+  it('U-51 반 익절: 나눠 닫은 두 거래(같은 진입)의 고비 몫 합은 처음 넣은 돈 전부의 몫과 같다', () => {
+    const cs = [{ t: T0, h: 100.6, l: 100 }];
+    const half1 = trade({ margin: 25000, roe: 60, pnl: 15000, exitTs: T0 + 60_000 });
+    const half2 = trade({ margin: 25000, roe: 40, pnl: 10000 });
+    expect(popAllowance(half1, cs) + popAllowance(half2, cs)).toBeCloseTo(popAllowance(trade(), cs), 6);
   });
   it('제출 파싱: 기기 번호 형식', () => {
     expect(parseSubmit({ deviceId: 'abc', name: 'a', board: 'roe', value: 1, detail: {} }).ok).toBe(false);

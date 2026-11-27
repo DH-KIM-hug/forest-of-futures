@@ -114,6 +114,8 @@ export interface Position {
   popBest?: number;
   /** 따라가는 손절(나무 C1, U-50): 손절이 한 번이라도 따라 올라왔다 */
   trailed?: boolean;
+  /** 반 익절(나무 A1, U-51): 나눠 닫은 몫마다 그때의 증거금(넣은 돈) · 손익 · 틱 */
+  halfs?: { margin: number; pnl: number; tick: number }[];
 }
 
 /** 끝난 마지막 포지션(손실이면 우선)의 기록. 엔딩 조건 `lev`·`dir`... 이 읽는다. */

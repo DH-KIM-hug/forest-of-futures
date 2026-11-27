@@ -7,7 +7,7 @@ import type { AwayCard } from './away';
 import type { WinTier } from './tension';
 
 /** 이긴 판이 터지는 화면(U-48 → U-49: 어느 탭에서든). market = 닫힌 종목 */
-export interface Burst { k: number; tier: WinTier; pnl: number; margin: number; streak: number; lev: number; market: string; dir: 1 | -1; name: string; how: 'tp' | 'close' | 'sl' }
+export interface Burst { k: number; tier: WinTier; pnl: number; margin: number; streak: number; lev: number; market: string; dir: 1 | -1; name: string; how: 'tp' | 'close' | 'sl'; /** 이번 생 가장 크게 딴 판(U-51) */ record?: boolean; /** 이 판으로 오른 FRX 회원 등급(U-51) */ rankUp?: string }
 /** 들고 있는 동안의 고비 팝(+50%, 두 배!, 살았다! …): 어느 탭에서든 뜬다(U-49) */
 export interface Pop { k: number; text: string; cls: string; market: string; /** 둘째 줄(나무가 한 일, U-50: 고비 보상 +n, 따라가는 손절) */ sub?: string }
 /** 나무가 방금 판에 한 일(U-50): 거래소 머리의 「나무」 칩이 반짝이고 한 줄이 잠깐 뜬다 */
@@ -99,6 +99,8 @@ interface P {
   wind: Wind | null;
   /** 첫 실전 한 판(U-50, 첫 생): 남은 시도(0 = 끝났다). 이긴 판이 터지면 끝 */
   firstTry: number;
+  /** FRX 회원 등급(U-51): 이번 생의 거래 도장 · 이번 생 가장 크게 딴 돈 · 방금 오른 등급(머리 칩이 튄다) */
+  frxStamps: number; bestWin: number; rankUp: { k: number; r: number; name: string } | null;
   /** 엄마 이야기의 단서를 마지막으로 보여 준 정산 번호(한 번 들를 때 하나만) */
   clueAt: number;
   /** 자리를 비운 사이 보고서(돌아왔을 때 한 장, away.ts) */
@@ -132,7 +134,7 @@ const fresh = () => ({
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
   think: null as P['think'], away: null as P['away'], clueAt: -1,
   dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
-  beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[], treePing: null as TreePing | null, wind: null as Wind | null, firstTry: 3,
+  beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[], treePing: null as TreePing | null, wind: null as Wind | null, firstTry: 3, frxStamps: 0, bestWin: 0, rankUp: null as P['rankUp'],
   rolled: 0, rolledKey: null as number | null, rolledTaps: 0, claimWinRun: 0, claimLossRun: 0, claimRunSum: 0, pointTab: null as Tab | null, forceTrade: false,
 });
 

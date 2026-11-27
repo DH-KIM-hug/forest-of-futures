@@ -193,3 +193,24 @@ export function winTier(roe: number): WinTier {
   if (roe >= 15) return { lv: 1, word: '짭짤하다', rain: 9 };
   return { lv: 0, word: '', rain: 0 };
 }
+
+// ── 느린 판(U-51): 실제 시세의 조용한 종목에서 손 놓고 기다리지 않게 ──
+/** 시간(초) → "12분", "1.5시간", "하루 넘게" */
+export function waitText(sec: number): string {
+  if (sec >= 86400) return '하루 넘게';
+  if (sec >= 3600) return `${(sec / 3600).toFixed(1).replace(/\.0$/, '')}시간`;
+  return `${Math.max(1, Math.round(sec / 60))}분`;
+}
+/** 지금 판(또는 고른 판)이 목표까지 평소대로면 오래 걸리는가: 5분 넘게면 그렇다고 말하고, 지금 더 빨리 움직이는 종목이 있으면 그 이름과 1분 폭을 같이 적는다.
+ *  셈은 게이지와 같다(평소 1분 폭의 k배 ≈ k² 분). 약속이 아니라 눈대중이다 — 시세는 바꾸지 않고, 없는 출렁임을 말하지 않는다.
+ *  alt 는 지난 1분 폭이 지금 종목의 두 배 넘을 때만 적는다 */
+export const SLOW_SEC = 300;
+export function slowHint(o: { needPct: number; rangePct: number | null; goal: string; alt: { name: string; r: number } | null; ownR: number | null }): { sec: number; text: string; alt: boolean } | null {
+  const steps = stepsOf(o.needPct, o.rangePct);
+  if (steps === null || !(o.needPct > 0)) return null;
+  const sec = reachSecOf(steps);
+  if (sec < SLOW_SEC) return null;
+  const alt = !!o.alt && o.alt.r >= Math.max(RANGE_FLOOR, o.ownR ?? 0) * 2;
+  const head = `평소대로면 ${o.goal}까지 ${sec >= 86400 ? '하루 넘게 걸린다' : `${waitText(sec)}쯤`}`;
+  return { sec, alt, text: alt ? `${head}. 지금 빠른 곳은 ${o.alt!.name} (1분 ${o.alt!.r < 0.095 ? o.alt!.r.toFixed(2) : o.alt!.r.toFixed(1)}%)` : `${head}.` };
+}

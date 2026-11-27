@@ -94,9 +94,14 @@ export function flyIcons(html: string, from: DOMRect | null, to: DOMRect | null,
 }
 
 /** 숫자가 목표로 굴러간다(ease-out 350ms). 동작 줄이기면 바로 바뀐다. */
-export function useCountUp(v: number, ms = 380): number {
+export function useCountUp(v: number, ms = 380, snapKey: string | number = ''): number {
   const [d, setD] = useState(v);
   const cur = useRef(v);
+  const key = useRef(snapKey);
+  // snapKey 가 바뀌면 굴리지 않고 바로 그 값(U-51: 반 익절로 판 크기가 반이 된 순간 — 굴러 내려가는 동안 비율이 엉뚱하게 보이던 것)
+  const snap = key.current !== snapKey;
+  key.current = snapKey;
+  if (snap && cur.current !== v) { cur.current = v; if (d !== v) setD(v); }
   useEffect(() => {
     const from = cur.current;
     if (from === v) return;

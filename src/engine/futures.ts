@@ -315,6 +315,39 @@ export function closePosition(g: GameState, market: string): Res {
   return { ok: true };
 }
 
+/** 반 익절(나무 A1 단골 수수료의 도구, U-51): 이익 중인 포지션의 절반을 지금 값에 닫는다.
+ *  증거금 · 명목 · 들어갈 때 낸 수수료를 반으로 나눠, 닫는 쪽은 돈이 되어 손에 들어오고 남는 쪽은 같은 진입가로 계속 간다(증거금 ÷ 명목이 같아 청산가도 같다).
+ *  시세 · 청산 공식은 그대로다. 손에 들어온 돈 = 반쪽 증거금 + 반쪽 손익 − 그 몫의 나올 때 수수료 */
+export function halfClose(g: GameState, market: string): Res {
+  const run = g.run;
+  if (run.over) return { ok: false };
+  const p = run.positions[market];
+  if (!p) return refuse('none', '열린 포지션이 없습니다.');
+  if (!hasRun(run, 'A1')) return refuse('tree', '반 익절은 나무의 단골 수수료에서 열린다.');
+  if (run.marketStatus !== 'open') return refuse('status', '시세가 멈춘 동안에는 나눠 닫을 수 없습니다.');
+  if ((p.buf ?? 0) > 0) return refuse('held', '오소리가 대신 넣은 돈이 있는 판은 나눠 닫을 수 없습니다.');
+  const half: Position = { ...p, margin: p.margin / 2, margin0: p.margin0 / 2, notional: p.notional / 2, buf: 0 };
+  if (half.margin0 < T.minMargin) return refuse('min', '반으로 나누기엔 판이 작습니다.');
+  const price = run.prices[market];
+  const back = closeBack(half, price, exitFeeMul(run));
+  const feesIn = p.feesPaid / 2;
+  const pnl = back - half.margin0 - feesIn;
+  if (!(pnl > 0)) return refuse('loss', '이익이 날 때만 반 익절.');
+  run.cash += back;
+  p.margin -= half.margin;
+  p.margin0 -= half.margin0;
+  p.notional -= half.notional;
+  p.feesPaid -= feesIn;
+  if (p.marginAdded) p.marginAdded /= 2;
+  (p.halfs ??= []).push({ margin: half.margin0, pnl, tick: run.tick });
+  bump(run, 'halfTakes', 1);
+  bump(run, 'halfPnl', pnl);
+  run.stats.lastHalf = { market, tick: run.tick, pnl, back, n: p.halfs.length };
+  run.tradeLog.push({ n: run.tick, market, dir: p.dir, lev: p.lev, margin: half.margin, price, kind: 'half' });
+  logEvent(run, 'half', `${marketById[market].name} ${p.dir === 1 ? '롱' : '숏'} ${p.lev}배 반 익절`, pnl);
+  return { ok: true, amount: pnl };
+}
+
 function touched(p: Position, price: number): 'liq' | 'sl' | 'tp' | null {
   if (p.dir === 1 ? price <= liqPrice(p) : price >= liqPrice(p)) return 'liq';
   if (p.slRoe !== null) {

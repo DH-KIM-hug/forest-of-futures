@@ -10,7 +10,7 @@ import { buyUpgrade } from './upgrades';
 import type { CoinId, GameState, LenderId, DebtId, Res, Dir } from './types';
 import { eduPage, mockTrade, openAccount, signWaiver } from './progression';
 import { endIntro } from './pace';
-import { addMargin, addToPosition, closePosition, marginCallDone, openPosition, setStops } from './futures';
+import { addMargin, addToPosition, closePosition, halfClose, marginCallDone, openPosition, setStops } from './futures';
 import { buyNode, callLoanCut, pickNode, setDayLimit } from './skilltree';
 import { retireAct1 } from './act1Retire';
 import { buyTree, chooseBranch, estateNext, pawn, retire, startNextGeneration, type ChoiceBranch } from './generation';
@@ -64,6 +64,7 @@ export type Action =
   | { type: 'treeBuy'; id: string }
   | { type: 'treePick'; id: string }
   | { type: 'addMargin'; market: string; amount: number }
+  | { type: 'half'; market: string }
   | { type: 'marginCallDone' }
   | { type: 'setDayLimit'; value: number | null };
 
@@ -113,6 +114,7 @@ export function act(g: GameState, a: Action): Res {
     case 'treeBuy': return g.estate ? buyNode(g, a.id) : { ok: false, code: 'step', msg: '나무는 환생할 때만 키울 수 있습니다.' };
     case 'treePick': return g.estate ? pickNode(g, a.id) : { ok: false, code: 'step', msg: '나무는 환생할 때만 고를 수 있습니다.' };
     case 'addMargin': return addMargin(g, a.market, a.amount);
+    case 'half': return halfClose(g, a.market);
     case 'marginCallDone': return marginCallDone(g);
     case 'setDayLimit': return setDayLimit(g, a.value);
   }

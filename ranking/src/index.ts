@@ -85,10 +85,11 @@ export default {
         const d = s.detail as LifeDetail;
         why = checkLifeShape(d, s.value, now);
         if (!why) {
-          // 종목마다 봉을 한 번에 받는다(그 생의 첫 진입 ~ 마지막 정리, 최대 5,000봉 ≈ 3.5일)
+          // 종목마다 봉을 한 번에 받는다(그 생의 첫 진입 ~ 마지막 정리, 최대 5,000봉 ≈ 3.5일). 그보다 오래된 거래는 봉이 없어 고비 보상 몫이 0 이다
           const byMarket = new Map<string, Candle[]>();
-          for (const m of new Set(d.trades.filter((t) => t.pnl > 0).map((t) => t.market))) {
-            const ts = d.trades.filter((t) => t.market === m && t.pnl > 0);
+          // U-51: 진 거래의 봉도 받는다(고비 보상은 진 판에서도 받으니 상한에 그 몫을 셈한다)
+          for (const m of new Set(d.trades.map((t) => t.market))) {
+            const ts = d.trades.filter((t) => t.market === m);
             const from = Math.max(Math.min(...ts.map((t) => t.entryTs)), Math.max(...ts.map((t) => t.exitTs)) - 5000 * 60000);
             byMarket.set(m, await marketCandles(m, from, Math.max(...ts.map((t) => t.exitTs))));
           }

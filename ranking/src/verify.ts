@@ -121,8 +121,18 @@ export const LIFE = {
   eventMaxPerSettle: 1_000, // 마을 사건(지원금 등) 평균 상한
   /** 고배율 축하금(나무 B3a): 이긴 거래 수익의 최대 몫(현금에 따로 얹힌다) */
   winBonusMax: 0.1,
+  /** 고비 보상(나무 R, U-50): 들고 있는 판이 고비(+50%, 두 배 …)를 처음 넘을 때마다 넣은 돈의 몫(상한 1% + 2%). 진 판에서도 받는다 */
+  popRateMax: 0.03,
+  popAt: [50, 100, 200, 300, 500, 1000],
   maxTrades: 600,
 };
+
+/** 한 거래가 받을 수 있었던 고비 보상의 상한: 그 사이 봉으로 닿을 수 있었던 고비 수 × 넣은 돈 × 3%. 봉이 없으면 0(상한이 줄 뿐) */
+export function popAllowance(t: TradeDetail, candles: Candle[]): number {
+  if (!candles.length || !(t.margin > 0)) return 0;
+  const reach = t.lev * (maxFavorablePct(candles, t.dir) + LIMITS.slackPct);
+  return t.margin * LIFE.popRateMax * LIFE.popAt.filter((a) => a <= reach).length;
+}
 
 /** 한 생 재산: 모양 검사(시세 전). */
 export function checkLifeShape(d: LifeDetail, value: number, now: number): string | null {
@@ -139,17 +149,20 @@ export function checkLifeShape(d: LifeDetail, value: number, now: number): strin
   return null;
 }
 
-/** 이긴 거래마다 실제 봉으로 가능한지 보고, 재산 상한 = 시작 + 이긴 거래 합 + 정산 × (쳇바퀴 + 사건). */
+/** 이긴 거래마다 실제 봉으로 가능한지 보고, 재산 상한 = 시작 + 이긴 거래 합 × (1 + 축하금) + 거래마다 고비 보상 상한 + 정산 × (쳇바퀴 + 사건). */
 export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf: (t: TradeDetail) => Candle[]): string | null {
   let wins = 0;
+  let pops = 0;
   for (const t of d.trades) {
+    const cs = candlesOf(t);
+    pops += popAllowance(t, cs);
     if (t.pnl <= 0) continue;
-    const why = checkTradeAgainstCandles(t, candlesOf(t));
+    const why = checkTradeAgainstCandles(t, cs);
     if (why) return `trade:${why}`;
     wins += t.pnl;
   }
   const start = d.lifeNo >= 2 ? LIFE.rebornStart : LIFE.start;
-  const bound = start + wins * (1 + LIFE.winBonusMax) + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
+  const bound = start + wins * (1 + LIFE.winBonusMax) + pops + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
   if (value > bound) return `tooHigh(${Math.round(value)} > ${Math.round(bound)})`;
   return null;
 }

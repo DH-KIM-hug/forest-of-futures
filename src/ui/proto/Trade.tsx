@@ -9,7 +9,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefO
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
 import { TUT, hamsterMath, claim, lifeNo } from './model';
-import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier } from './tension';
+import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier, slowHint, typicalRange } from './tension';
 import { closedMath, tradeNet, say as toast } from './watch';
 import { exitFee, fundingRateNow } from '../../engine/futures';
 import { exitFeeMul } from '../../engine/skilltree';
@@ -47,6 +47,8 @@ import { Acorn } from './art';
 import { flyAcorns, reduced, useCountUp } from './fx';
 import { WinBurst } from './Juice';
 import { play, playTap, later } from './audio';
+import { pushPop, treePing } from './popBus';
+import { rankOf } from './frxRank';
 import { sprite } from './sprites';
 const heroFront = sprite('hero')!.src; // 포지션 카드의 주인공: 폰을 보는 새 그림(U-33)
 import './trade.css';
@@ -275,7 +277,7 @@ export function ProtoTrade() {
   const [result, setResult] = useState<Result | null>(null);
   const [entered, setEntered] = useState(0);
   // 스킬트리(거래의 나무)가 이번 생에 켜 준 도구들. 시세·청산 공식은 건드리지 않는다.
-  const sk = { oneTap: has(g, 'A2'), zoom: has(g, 'A3a'), flip: has(g, 'A3b'), water: has(g, 'B3b'), legend: has(g, 'B4'), split: has(g, 'C3a'), dayLimit: has(g, 'C3b') };
+  const sk = { half: has(g, 'A1'), oneTap: has(g, 'A2'), zoom: has(g, 'A3a'), flip: has(g, 'A3b'), water: has(g, 'B3b'), legend: has(g, 'B4'), split: has(g, 'C3a'), dayLimit: has(g, 'C3b') };
   /** 차트 창(초봉 차트 A3a): 0 = 2분, 1 = 초봉 30초, 2 = 긴 창(2분 + 꼬리) */
   const [zoom, setZoom] = useState(0);
   /** 차트에 보이는 시간(초): 2분 · 5분 · 10분. 기록은 초마다 한 값, 600개까지 */
@@ -298,6 +300,12 @@ export function ProtoTrade() {
   /** 나무가 방금 판에 한 일(U-50): 머리의 「나무」 칩이 2.4초 반짝이며 한 줄을 말한다 */
   const ping = useProto((s0) => s0.treePing);
   const [pingOn, setPingOn] = useState(false);
+  /** FRX 회원 등급(U-51): 이번 생의 거래 도장. 오른 순간 칩이 튄다(이긴 판의 상자가 지나간 뒤) */
+  const frxStamps = useProto((s0) => s0.frxStamps);
+  const rankUp = useProto((s0) => s0.rankUp);
+  const rk = rankOf(frxStamps);
+  const [rankUpOn, setRankUpOn] = useState(false);
+  useEffect(() => { if (!rankUp) return; const t0 = window.setTimeout(() => setRankUpOn(true), useProto.getState().burst ? 400 : 700); const t1 = window.setTimeout(() => setRankUpOn(false), (useProto.getState().burst ? 400 : 700) + 3200); return () => { window.clearTimeout(t0); window.clearTimeout(t1); }; }, [rankUp?.k]);
   useEffect(() => { if (!ping) return; setPingOn(true); const t = window.setTimeout(() => setPingOn(false), 2400); return () => window.clearTimeout(t); }, [ping?.k]);
   /** 숫자가 한 틱에 오르내린 쪽(U-48): 손익 숫자가 그쪽 색으로 번쩍인다 */
   const [flash, setFlash] = useState<{ k: number; up: boolean } | null>(null);
@@ -395,7 +403,7 @@ export function ProtoTrade() {
   const feesNow = pos && rawPos ? Math.round(rawPos.feesPaid + exitFee(rawPos, exitFeeMul(run))) : 0;
   // ── 손맛(U-48): 숫자는 굴러가고, 틱마다 오르내린 쪽으로 번쩍이고, 고비를 넘으면 옆에 터진다 ──
   const posKey = rawPos ? market + ':' + rawPos.openTick : '';
-  const netRoll = useCountUp(Math.round(netNow), 420);
+  const netRoll = useCountUp(Math.round(netNow), 420, posKey + ':' + (rawPos?.halfs?.length ?? 0));
   const roeShow = rawPos ? (netRoll / Math.max(1, rawPos.margin0)) * 100 : 0;
   const danger = pos ? dangerOf(pos.liqDistPct, pos.lev, balance.trading.maintenanceRate as number) : 0;
   useEffect(() => {
@@ -526,6 +534,19 @@ export function ProtoTrade() {
     if (!r.ok) { manual.current = false; say(r.msg ?? '정리할 수 없습니다'); }
     else if (r.code === 'reserved') { manual.current = false; say('시세 지연. 요청을 접수했어요. 시세가 돌아오면 정리해요.', false); }
   };
+  /** 반 익절(나무 A1, U-51): 이익 중인 포지션의 절반을 지금 닫는다. 돈은 바로 손에, 나머지 절반은 같은 진입가 · 같은 청산가로 계속 간다 */
+  const halfRef = useRef<HTMLButtonElement>(null);
+  const doHalf = () => {
+    if (!pos || !rawPos) return;
+    const left = rawPos.margin0 / 2;
+    const r = act({ type: 'half', market });
+    if (!r.ok) { say(r.msg ?? '나눠 닫을 수 없습니다'); play('insufficient'); return; }
+    const got = Math.round(r.amount ?? 0);
+    pushPop(`반 익절 +${comma(got)}`, 'half', market, () => { play('win_coins'); later(160, () => play('buy')); }, '나머지 반은 계속');
+    treePing('A1', `반 익절 +${comma(got)}`);
+    flyAcorns(halfRef.current?.getBoundingClientRect() ?? null, Math.min(8, 4 + Math.floor(got / 10000)));
+    swing(true);
+  };
   /** 반대 단추(A3b): 정리하고 같은 배율·같은 증거금 비율로 반대쪽에 들어간다(수수료는 두 번 낸다) */
   const doFlip = () => {
     if (!pos) return;
@@ -606,7 +627,14 @@ export function ProtoTrade() {
         <header className="pt-bar">
           <span className="logo"><Acorn size={17} /></span>
           <b>{EXCHANGE_NAME}</b>
-          <em>선물</em>
+          {/* FRX 회원 등급(U-51): 튜토리얼 뒤에는 「선물」 자리에. 누르면 도장과 다음 등급 */}
+          {tutSt === 'done' ? (
+            <button key={rankUp ? 'rk' + rankUp.k : 'rk'} className={'pt-rank r' + Math.min(rk.r, 5) + (rk.r > 5 ? ' rX' : '') + (rankUpOn ? ' up' : '')} data-rank={rk.r} aria-label={`FRX ${rk.name} 회원, 거래 도장 ${frxStamps}개, 다음 ${rk.next}까지 ${rk.need - rk.have}개`}
+              onClick={() => { play('ui_tap'); toast(`[FRX 숲거래소] ${rk.name} 회원, 거래 도장 ${frxStamps}개. ${rk.next}까지 ${rk.need - rk.have}개 더(판마다 1개, 터진 판은 더).`, 4500); }}>
+              {rk.name}<i aria-hidden="true"><u style={{ width: `${Math.round((rk.have / rk.need) * 100)}%` }} /></i>
+              {rankUpOn && <span className="ru" aria-hidden="true">{rk.name} 승급!</span>}
+            </button>
+          ) : <em>선물</em>}
           {/* 열린 포지션 전부의 손익(U-47): 지금 정리하면 늘거나 줄 돈의 합(수수료 포함) */}
           {openN > 0 && <span className={'pt-sum ' + (openNet >= 0 ? 'up' : 'down')} data-possum={Math.round(openNet)} role="status" aria-label={`포지션 ${openN}개 합계 ${money(openNet)}`}><small>{openN}개</small>{money(openNet)}</span>}
           {/* 오픈 기념 수수료 무료(U-40): 거래소 머리에 늘 걸려 있다. 끝난 뒤에는 지금 수수료율 */}
@@ -778,6 +806,19 @@ export function ProtoTrade() {
   const planTxt = !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist }) : null;
   const oddsSwing = odds ? swingCountText(hist, odds.needPct) : null;
   const carry = pos && rawPos ? carryOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, notional: rawPos.notional, fundingRate: fundingRateNow()}) : null;
+  const firstTry = useProto((s0) => s0.firstTry);
+  const firstShowEarly = tutSt === 'done' && firstTry > 0 && lifeNo(g) === 1 && !pos && !result && cl.total > 0 && !sheet;
+  // 느린 판(U-51): 평소대로면 목표까지 5분 넘게 걸리는 판이면 그렇다고, 지금 더 빨리 움직이는 종목이 있으면 그 이름을 — 손 놓고 기다리지 않게. 눌러서 그 종목으로 간다
+  const altM = wild && wild.id !== market ? { id: wild.id, name: marketById[wild.id].name, r: wild.r } : null;
+  const heldSec = rawPos ? run.tick - rawPos.openTick : 0;
+  const slow = tutSt !== 'done' || result ? null
+    : pos && rawPos ? (heldSec >= 30 && netRoe < 15 ? slowHint({ needPct: (15 - netRoe) / pos.lev, rangePct: typicalRange(liveHist), goal: '+15%', alt: altM, ownR: rangeOf(market) }) : null)
+    : odds && !odds.liqFirst && !prev.reason ? slowHint({ needPct: odds.needPct, rangePct: typicalRange(liveHist), goal: '이자 한 번', alt: altM, ownR: rangeOf(market) }) : null;
+  const slowLine = slow ? (
+    <button className={'pt-slow' + (slow.alt ? ' go' : '')} data-slow={Math.round(slow.sec)} disabled={!slow.alt} onClick={() => { if (!altM) return; play('ui_tap'); setTrade({ market: altM.id }); }}>
+      <span>{slow.text}</span>{slow.alt && <b>보러 가기 ›</b>}
+    </button>
+  ) : null;
   const noteLine = note && <div key={note.k} className={'pt-note' + (note.bad ? ' bad' : '')} role="status">{note.text}</div>;
 
   // 주문 조건은 늘 펼쳐져 있다: 배율 눈금자(포지션이 없을 때) + 증거금 칩 + 위험 한 줄. 롱·숏을 누르면 바로 들어간다.
@@ -823,12 +864,12 @@ export function ProtoTrade() {
         )}
       </div>
       {!pos && !prev.reason && tutSt === 'done' && sqOrder && <div className="pt-squeeze" data-squeeze="order">{sqOrder.text}</div>}
+      {!pos && !firstShowEarly && slowLine}
     </div>
   );
 
   // ── 첫 실전 한 판(U-50, 첫 생): 튜토리얼이 끝나면 FRX 앱이 작은 판 하나를 맞춰 준다 — 가장 출렁이는 날다람쥐코인, 50배, 넣는 돈 25%, 익절 · 손절 = 이자 한 번.
   // 누르면 주문 칸이 그대로 맞춰지고(배율 눈금 · 증거금 칩 · 출구가 그 값으로), 롱이나 숏은 손으로 누른다. 이긴 판이 터지거나 세 번 지면 사라진다. 이기는 확률은 그대로 반반이다 ──
-  const firstTry = useProto((s0) => s0.firstTry);
   const FIRST = { market: (tabs.some((t) => t.id === 'FLY') ? 'FLY' : wild?.id ?? 'DTC') as string, lev: 50, pct: 25 };
   const firstShow = tutSt === 'done' && firstTry > 0 && lifeNo(g) === 1 && !pos && !result && !prev.reason && cl.total > 0 && !sheet;
   const firstSet = firstShow && market === FIRST.market && lev === FIRST.lev && !keepOn && tr.pct === FIRST.pct && tpK === 1 && slK === 1;
@@ -937,6 +978,8 @@ export function ProtoTrade() {
             </div>
             )}
             </div>
+            {/* 느린 판(U-51): 들고 있는 판이 평소대로면 +15%까지 오래 걸리면 한 줄, 더 빠른 종목으로 가는 단추 */}
+            {slowLine && <div className="pl-row3">{slowLine}</div>}
           </div>
         ) : null}
         {order}
@@ -959,6 +1002,11 @@ export function ProtoTrade() {
                 <span><Tri up={pos.dir === 1} size={13} />{addOpen ? '추가로 넣기' : '추가 진입'}</span><small>{addOpen ? `+${comma(prev.margin)}` : '금액 고르기'}</small>
               </button>
               {sk.flip && <button className="pt-btn flip" data-flip onClick={doFlip}><span>⇅</span><small>뒤집기</small></button>}
+              {sk.half && (() => {
+                // 반 익절(U-51): 이익일 때만 눌린다. 자리는 늘 같다(손익이 오락가락해도 단추가 움직이지 않게)
+                const can = netNow > 0 && !!rawPos && rawPos.margin0 / 2 >= (balance.trading.minMargin as number) && !(rawPos.buf ?? 0) && run.marketStatus === 'open';
+                return <button ref={halfRef} className={'pt-btn half' + (can ? ' on' : '')} data-half={can ? 'on' : 'off'} disabled={!can} onClick={doHalf} aria-label={can ? `반 익절, 지금 +${comma(Math.round(netNow / 2))}` : '반 익절, 이익일 때'}><span>반 익절</span><small>{can ? `+${comma(Math.round(netNow / 2))}` : '이익일 때'}</small></button>;
+              })()}
               <button className={'pt-btn close' + (arm ? ' arm' : '') + (netNow >= 0 ? ' gain' : '')} data-hl="closeBtn" onClick={doClose}>
                 <span>{arm ? '한 번 더 누르면 정리' : '정리하기'}</span>
                 <small>{rawPos ? comma(Math.round(rawPos.margin0)) : ''} <b className={arm ? '' : netNow >= 0 ? 'up' : 'down'}>{money(netNow)}</b>{arm ? ' 확정' : ''}</small>

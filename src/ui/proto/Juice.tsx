@@ -33,7 +33,7 @@ function useRollFromZero(v: number, ms: number): number {
   return d;
 }
 
-export function WinBurst({ tier, pnl, margin, streak, lev, onDone, name, dir, how, market, home }: { tier: WinTier; pnl: number; margin: number; streak: number; lev: number; onDone: () => void; name?: string; dir?: 1 | -1; how?: 'tp' | 'close' | 'sl'; market?: string; home?: boolean }) {
+export function WinBurst({ tier, pnl, margin, streak, lev, onDone, name, dir, how, market, home, record, rankUp }: { tier: WinTier; pnl: number; margin: number; streak: number; lev: number; onDone: () => void; name?: string; dir?: 1 | -1; how?: 'tp' | 'close' | 'sl'; market?: string; home?: boolean; record?: boolean; rankUp?: string }) {
   const life = tier.lv >= 3 ? 3000 : tier.lv === 2 ? 2500 : 1800;
   useEffect(() => { const t = window.setTimeout(onDone, life); return () => window.clearTimeout(t); }, []);
   const shown = useRollFromZero(Math.round(pnl), tier.lv >= 3 ? 1100 : 800);
@@ -58,8 +58,10 @@ export function WinBurst({ tier, pnl, margin, streak, lev, onDone, name, dir, ho
         <b className="word">{tier.word}{tier.lv >= 3 ? '!' : ''}</b>
         <b className="money">+{comma(shown)}</b>
         <small className="cap">넣은 돈 {comma(Math.round(margin))} → {comma(Math.round(margin + pnl))} <em>{roe >= 100 ? `${(1 + roe / 100).toFixed(1)}배` : `+${roe.toFixed(0)}%`}</em></small>
-        {(streak >= 2 || lev >= 100) && (
+        {(streak >= 2 || lev >= 100 || record || rankUp) && (
           <span className="chips">
+            {record && <i className="rec" data-record>이번 생 신기록</i>}
+            {rankUp && <i className="rec rk" data-rankup>FRX {rankUp} 승급</i>}
             {streak >= 2 && <i className="streak" data-streak={streak}>{streak}연승</i>}
             {lev >= 100 && <i className="lev">{lev}배</i>}
           </span>
