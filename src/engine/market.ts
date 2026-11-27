@@ -30,7 +30,7 @@ export function closeBars(run: RunState): void {
     const avg = run.mkt.avg[m.id];
     const bar: SettleBar = {
       n: c.n, o: c.o, h: c.h, l: c.l, c: c.c, vol: c.vol / c.ticks, buy: c.buy / c.ticks,
-      jump: (c.h - c.l) / c.o > balance.trading.jumpSigma * avg.range180,
+      jump: (c.h - c.l) / c.o > balance.trading.jumpSigma * barRange(avg, c.ticks),
     };
     const arr = (run.mkt.bars[m.id] ??= []);
     arr.push(bar);
@@ -49,5 +49,7 @@ export function setAvg(run: RunState, avg: Record<string, { vol180: number; rang
 export function inJump(run: RunState, market: string): boolean {
   const c = run.mkt.cur[market];
   if (!c) return false;
-  return (c.h - c.l) / c.o > balance.trading.jumpSigma * run.mkt.avg[market].range180;
+  return (c.h - c.l) / c.o > balance.trading.jumpSigma * barRange(run.mkt.avg[market], Math.max(c.ticks, 20));
 }
+/** 길이 sec 초 봉의 평소 폭: 3분 폭(range180)을 √(sec/180) 로 줄이거나 늘린다(U-47: 정산 봉이 60초 · 튜토리얼 20초가 되었다). 시세의 성질이지 정산의 성질이 아니다 */
+export const barRange = (avg: { range180: number } | undefined, sec: number): number => (avg?.range180 ?? 0.0021) * Math.sqrt(Math.max(1, sec) / 180);

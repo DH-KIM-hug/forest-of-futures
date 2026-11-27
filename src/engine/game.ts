@@ -11,6 +11,7 @@ import { processPrice } from './futures';
 import { resolveTips } from './tips';
 import { bump } from './stats';
 import { act, type Action } from './actions';
+import { settleSec } from './pace';
 import type { FamilyState, GameState, RunState, Settings } from './types';
 import type { Tick } from './feed/types';
 
@@ -112,7 +113,7 @@ function tickMut(g: GameState, t: Tick): void {
   creditMining(g, 1); // 캐는 값은 틱마다 1초어치씩 들어온다(U-43). 정산은 걷어 가기만 한다
   run.settleIn -= 1;
   if (run.settleIn <= 0) {
-    run.settleIn = balance.settlement.intervalSec;
+    run.settleIn = settleSec(run);
     settle(g);
   }
 }

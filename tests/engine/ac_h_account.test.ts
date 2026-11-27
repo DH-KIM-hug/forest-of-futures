@@ -29,7 +29,7 @@ describe('B. 선물 계좌 개설과 배율 상한 (M2)', () => {
     expect(futuresGate(g).conditions[0].met).toBe(true);
   });
 
-  it('AC-v2-19 사전교육 3장 + 모의거래 1회 뒤 개설: 현금은 줄지 않고 단계 2, 상한 10, open_account. 모의거래 손익은 현금에 안 들어간다', () => {
+  it('AC-v2-19 사전교육 3장 + 모의거래 1회 뒤 개설: 현금은 줄지 않고 단계 2, 상한 50(U-47), open_account. 모의거래 손익은 현금에 안 들어간다', () => {
     const g = ready();
     expect(A(g, { type: 'openAccount' }).code).toBe('edu');
     const c0 = g.run.cash;
@@ -39,7 +39,7 @@ describe('B. 선물 계좌 개설과 배율 상한 (M2)', () => {
     expect(A(g, { type: 'openAccount' }).ok).toBe(true);
     expect(g.run.cash).toBe(c0);
     expect(stage(g.run)).toBe(2);
-    expect(g.run.futures.levCap).toBe(10);
+    expect(g.run.futures.levCap).toBe(50);
     expect(g.run.eventLog.some((e) => e.kind === 'open_account')).toBe(true);
   });
 
@@ -56,31 +56,23 @@ describe('B. 선물 계좌 개설과 배율 상한 (M2)', () => {
     expect(A(g, { type: 'openAccount' }).ok).toBe(true);
   });
 
-  it('AC-v2-21 개설 직후 25배 이상은 잠김, 끝난 거래 3건(청산 포함) 뒤 50배, 10건 + 확인서 도장 뒤 200배(waiver)', () => {
+  it('AC-v2-21(U-47) 개설 직후 50배까지 되고 100배는 잠김, 확인서에 발도장을 찍는 순간 200배(waiver). 끝난 거래 수는 보지 않는다', () => {
     const g = ready();
     learn(g);
     A(g, { type: 'openAccount' });
-    expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 25, margin: 1000 }).code).toBe('cap');
-    expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 1000 }).ok).toBe(true);
-    A(g, { type: 'close', market: 'DTC' });
-    A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 1000 });
-    A(g, { type: 'close', market: 'DTC' });
-    expect(levCapNow(g.run)).toBe(10);
-    // 청산도 끝난 거래로 센다
-    A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 1000 });
-    tickN(g, 1, { DTC: g.run.refPrice.DTC * 0.5 });
-    expect(g.run.positions.DTC).toBeUndefined();
-    expect(g.run.futures.closedTrades).toBe(3);
     expect(levCapNow(g.run)).toBe(50);
     expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 100, margin: 1000 }).code).toBe('cap');
-    g.run.futures.closedTrades = 9;
-    expect(waiverAvailable(g.run)).toBe(false);
-    expect(A(g, { type: 'signWaiver' }).ok).toBe(false);
-    g.run.futures.closedTrades = 10;
+    expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 50, margin: 1000 }).ok).toBe(true);
+    A(g, { type: 'close', market: 'DTC' });
+    expect(g.run.futures.closedTrades).toBe(1);
+    expect(levCapNow(g.run)).toBe(50); // 거래를 쌓아도 저절로 오르지 않는다
+    g.run.futures.closedTrades = 0; // 거래가 하나도 없어도 확인서는 받을 수 있다
     expect(waiverAvailable(g.run)).toBe(true);
-    expect(levCapNow(g.run)).toBe(50);
     expect(A(g, { type: 'signWaiver' }).ok).toBe(true);
     expect(levCapNow(g.run)).toBe(200);
+    expect(waiverAvailable(g.run)).toBe(false);
+    expect(A(g, { type: 'signWaiver' }).ok).toBe(false); // 생마다 한 번
+    expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 1000 }).ok).toBe(true);
     expect(g.run.eventLog.some((e) => e.kind === 'waiver')).toBe(true);
   });
 

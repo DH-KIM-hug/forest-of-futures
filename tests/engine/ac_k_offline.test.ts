@@ -12,20 +12,20 @@ function away(g: GameState) {
 }
 
 describe('J. 오프라인', () => {
-  it('AC-v2-92 단계 1, 포지션 없이 8시간: 경제는 정산 2회분만 처리되고 시간표는 한 번. idle 2단계면 4회분', () => {
+  it('AC-v2-92 단계 1, 포지션 없이 8시간: 경제는 정산 6회분만 처리되고(U-47: 2 -> 6) 시간표는 한 번. idle 2단계면 12회분', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     away(g);
     const rep = catchUp(g, flatBars(g, 480), 8 * 3600);
-    expect(rep.economySettlements).toBe(2);
-    expect(g.run.settleNo).toBe(2);
+    expect(rep.economySettlements).toBe(6);
+    expect(g.run.settleNo).toBe(6);
     expect(rep.awayHours).toBe(8);
     expect(rep.entries.length).toBeGreaterThanOrEqual(0);
     const h = bare();
     giveWheel(h, 'DTC');
     h.family.tree.idle = 2;
     away(h);
-    expect(catchUp(h, flatBars(h, 480), 8 * 3600).economySettlements).toBe(4);
+    expect(catchUp(h, flatBars(h, 480), 8 * 3600).economySettlements).toBe(12);
     const s = bare(); // 단계 0 은 0회
     away(s);
     expect(catchUp(s, flatBars(s, 480), 8 * 3600).economySettlements).toBe(0);
@@ -62,7 +62,7 @@ describe('J. 오프라인', () => {
     const repA = catchUp(a.g, flatBars(a.g, 300, (k, m) => (k === 50 && m === 'DTC' ? { h: a.tp + 1 } : undefined)), 5 * 3600);
     expect(a.g.run.positions.DTC).toBeUndefined();
     expect(repA.entries.some((e) => e.kind === 'tp')).toBe(true);
-    expect(a.g.run.cash - c0).toBe(10000 - 16 + 15000 - 40); // 증거금 - 펀딩비(50분, 16회) + 익절 이익 - 정리 수수료
+    expect(a.g.run.cash - c0).toBe(10000 - 50 + 15000 - 40); // 증거금 - 펀딩비(50분, 정산 50회 × 명목 10만 × 0.00033% = 0.33 올림 1) + 익절 이익 - 정리 수수료
     const b = mk({});
     const c1 = b.g.run.cash;
     const repB = catchUp(b.g, flatBars(b.g, 300, (k, m) => (k === 50 && m === 'DTC' ? { h: b.tp + 1, l: b.sl - 1 } : undefined)), 5 * 3600);
@@ -97,12 +97,12 @@ describe('J. 오프라인', () => {
     expect(g.run.debts.shark1.overdue).toBe(0);
   });
 
-  it('AC-v2-96 연체 위험이 없으면 상한(2회)까지 돈다', () => {
+  it('AC-v2-96 연체 위험이 없으면 상한(6회, U-47)까지 돈다', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     away(g);
-    expect(catchUp(g, flatBars(g, 480), 8 * 3600).economySettlements).toBe(2);
-    expect(g.run.cash).toBe(100000 - 2 * 10000);
+    expect(catchUp(g, flatBars(g, 480), 8 * 3600).economySettlements).toBe(6);
+    expect(g.run.cash).toBe(100000 - 6 * (1950 + 1005 + 330)); // 오소리 15만 × 1.3% + 캐피탈 15만 × 0.67% + 생활비
   });
 
   it('AC-v2-97 20초 끊겼다 붙으면 빈 20틱을 순서대로 재생하고, 청산가에 닿은 틱에서 청산된다', () => {
@@ -142,15 +142,15 @@ describe('J. 오프라인', () => {
       openFutures(g);
       noDebts(g);
       g.run.cash = 1e7;
-      A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 100000 }); // 명목 100만 -> 정산당 펀딩비 10
+      A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 100000 }); // 명목 100만 -> 정산당 펀딩비 3.3, 올려 4(U-47: 정산 60초)
       away(g);
       catchUp(g, flatBars(g, 60, (k): Partial<Bar> | undefined => (halted && k >= 10 && k < 40 ? { st: 'halted', l: 1 } : undefined)), 3600);
       return g;
     };
     const a = run(false);
     const b = run(true);
-    expect(a.run.positions.DTC.fundingPaid).toBe(20 * 10);
-    expect(b.run.positions.DTC.fundingPaid).toBe(10 * 10);
+    expect(a.run.positions.DTC.fundingPaid).toBe(60 * 4); // 1시간 = 정산 60번
+    expect(b.run.positions.DTC.fundingPaid).toBe(30 * 4); // 정지 30분은 건너뛴다
     expect(b.run.positions.DTC).toBeDefined(); // 정지 봉의 저가(1)는 무시
   });
 

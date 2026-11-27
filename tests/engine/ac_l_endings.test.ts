@@ -32,13 +32,13 @@ describe('L. 엔딩', () => {
     const g = bare();
     openFutures(g);
     noDebts(g);
-    g.run.debts.shark1.principal = 150000;
+    g.run.debts.shark1.principal = 400000; // 이자 5,200 이 청산 뒤 남은 현금보다 크게(U-47: 오소리 1.3%)
     g.run.cash = 100000;
-    // 직전 5정산 동안 크게 올랐다 -> 족제비 "올라갑니다"
-    const avg15 = g.run.mkt.avg.DTC.range180 * Math.sqrt(5);
+    // 직전 15정산(15분, U-47) 동안 크게 올랐다 -> 족제비 "올라갑니다". 15분 평소 폭 = 60초 봉 폭 × √15
+    const avg15 = g.run.mkt.avg.DTC.range180 * Math.sqrt(60 / 180) * Math.sqrt(15);
     let p = P;
-    for (let i = 0; i < 5; i++) {
-      const next = p * (1 + (avg15 * 1.5) / 5);
+    for (let i = 0; i < 15; i++) {
+      const next = p * (1 + (avg15 * 1.5) / 15);
       pushBar(g, 'DTC', { o: p, h: next, l: p, c: next });
       p = next;
     }
@@ -51,7 +51,7 @@ describe('L. 엔딩', () => {
     tickN(g, 1, { DTC: P * 0.5 }); // 청산. 현금 남은 것: 100000 − 95000 − 수수료 = 3,620
     expect(g.run.over).toBe(false);
     g.run.debts.shark1.overdue = 1;
-    settleOnce(g); // 현금 3,620 < 오소리 이자 6,000 -> 연체 한도, 압류할 것 없음
+    settleOnce(g); // 현금 3,620 < 오소리 이자 5,200(40만 × 1.3%, U-47) -> 연체 한도, 압류할 것 없음
     expect(g.run.over).toBe(true);
     expect(g.run.bankruptcy).toMatchObject({ cause: 'TIP', lastLender: 'shark1' });
     expect(g.run.lastPos!.tipSource).toBe('weasel');
@@ -63,7 +63,7 @@ describe('L. 엔딩', () => {
     const g = bare();
     openFutures(g);
     noDebts(g);
-    g.run.debts.shark1.principal = 150000;
+    g.run.debts.shark1.principal = 400000; // 이자 5,200 이 청산 뒤 남은 현금보다 크게(U-47: 오소리 1.3%)
     g.run.cash = 100000;
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 95000 });
     tickN(g, 1, { DTC: P * 0.5 });
@@ -173,7 +173,7 @@ describe('L. 엔딩', () => {
     const g = bare();
     openFutures(g);
     noDebts(g);
-    g.run.debts.shark1.principal = 150000;
+    g.run.debts.shark1.principal = 400000; // 이자 5,200 이 청산 뒤 남은 현금보다 크게(U-47: 오소리 1.3%)
     g.run.cash = 100000;
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 95000 });
     A(g, { type: 'add', market: 'DTC', margin: 1000 });

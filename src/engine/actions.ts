@@ -9,6 +9,7 @@ import { borrowFriend, stampFriend } from './friends';
 import { buyUpgrade } from './upgrades';
 import type { CoinId, GameState, LenderId, DebtId, Res, Dir } from './types';
 import { eduPage, mockTrade, openAccount, signWaiver } from './progression';
+import { endIntro } from './pace';
 import { addMargin, addToPosition, closePosition, marginCallDone, openPosition, setStops } from './futures';
 import { buyNode, callLoanCut, pickNode, setDayLimit } from './skilltree';
 import { retireAct1 } from './act1Retire';
@@ -20,6 +21,7 @@ export type Action =
   | { type: 'mockTrade' }
   | { type: 'openAccount'; sponsor?: boolean }
   | { type: 'signWaiver' }
+  | { type: 'endIntro' }
   | { type: 'open'; market: string; dir: Dir; lev: number; margin?: number; marginPct?: number; sl?: number | null; tp?: number | null; flip?: boolean }
   | { type: 'add'; market: string; margin?: number; marginPct?: number }
   | { type: 'close'; market: string }
@@ -71,6 +73,7 @@ export function act(g: GameState, a: Action): Res {
     case 'mockTrade': return mockTrade(g);
     case 'openAccount': return openAccount(g, a.sponsor ?? false);
     case 'signWaiver': return signWaiver(g);
+    case 'endIntro': return endIntro(g);
     case 'open': return openPosition(g, a);
     case 'add': return addToPosition(g, a);
     case 'close': return closePosition(g, a.market);

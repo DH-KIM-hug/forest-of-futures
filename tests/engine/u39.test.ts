@@ -42,11 +42,11 @@ describe('켜고 끄는 노드의 숫자 꼬리 (U-39 ⑨)', () => {
     g.family.skill = Object.fromEntries(skillNodes.map((n) => [n.id, 40]));
     for (const v of treeView(g)) { expect(v.cost, v.id).not.toBeNull(); if (v.kind === 'binary') expect(v.tail!.next!).toBeGreaterThan(v.tail!.now); }
   });
-  it('R = 10배 이하 · B3a = 200배 · B4 = 전부 걸기 · C3b = 한도를 걸어 둔 동안 · A3b = 뒤집어 들어갈 때의 수수료', () => {
+  it('R = 10배 이하 · B4 = 전부 걸기 · C3b = 한도를 걸어 둔 동안 · A3b = 뒤집어 들어갈 때의 수수료. B3a 는 수수료를 건드리지 않는다(U-47: 고배율 축하금)', () => {
     const g = trader({ R: 4, B3a: 2, B4: 3, C3b: 5, A3b: 1 });
     expect(feeRate(g, 10)).toBeCloseTo(T.feeRate * (1 - tail('R', 4)), 12);
     expect(feeRate(g, 25)).toBeCloseTo(T.feeRate, 12);
-    expect(feeRate(g, 200)).toBeCloseTo(T.feeRate * (1 - tail('B3a', 2)), 12);
+    expect(feeRate(g, 200)).toBeCloseTo(T.feeRate, 12); // U-47: B3a 는 이제 축하금, 200배 수수료 할인 없음
     expect(feeRate(g, 25, { allIn: true })).toBeCloseTo(T.feeRate * (1 - tail('B4', 3)), 12);
     expect(feeRate(g, 25, { flip: true })).toBeCloseTo(T.feeRate * (1 - tail('A3b', 1)), 12);
     g.run.dayLossLimit = 30000;
@@ -134,21 +134,29 @@ describe('켜고 끄는 노드의 숫자 꼬리 (U-39 ⑨)', () => {
     expect(g.run.debts.shark1.principal).toBe(d0 - r.value);
     expect(seizeRate(trader().run)).toBe(0.5);
   });
-  it('B2 = 마진콜 전화로 그 자리에서 빌리는 돈의 금리(오소리의 보통 금리 4% 아래로는 안 내려간다)', () => {
+  it('B2 = 마진콜 전화로 그 자리에서 빌리는 돈의 금리(오소리의 보통 금리 1.3% 아래로는 안 내려간다)', () => {
     const g = fresh();
-    g.family.skill = { R: 1, B1: 1, B2: 8 };
+    g.family.skill = { R: 1, B1: 1, B2: 2 };
     applyBirth(g);
-    A(g, { type: 'borrow', lender: 'shark1' }); // 처음 빌리는 돈 4%
-    expect(callLoanCut(g.run)).toBeCloseTo(tail('B2', 8), 12);
-    // 전화가 없으면 call 을 붙여도 보통 금리(두 번째부터 6%)
+    A(g, { type: 'borrow', lender: 'shark1' }); // 처음 빌리는 돈 1.3%
+    expect(callLoanCut(g.run)).toBeCloseTo(tail('B2', 2), 12);
+    // 전화가 없으면 call 을 붙여도 보통 금리(두 번째부터 2%)
     const h = JSON.parse(JSON.stringify(g)) as GameState;
     A(h, { type: 'borrow', lender: 'shark1', call: true });
-    expect(h.run.debts.shark1.tranches!.at(-1)!.rate).toBe(0.06);
+    expect(h.run.debts.shark1.tranches!.at(-1)!.rate).toBe(0.02);
     g.run.marginCall = { market: 'DTC', tick: g.run.tick };
     expect(A(g, { type: 'borrow', lender: 'shark1', call: true }).ok).toBe(true);
-    expect(g.run.debts.shark1.tranches!.at(-1)!.rate).toBeCloseTo(0.06 - tail('B2', 8), 12);
-    expect(g.run.debts.shark1.tranches!.at(-1)!.rate).toBeGreaterThan(0.04);
-    expect(0.06 - skillById.B2.tail!.cap).toBeCloseTo(0.04, 12); // 꼬리의 상한에서도 보통 금리와 같아질 뿐이다
+    expect(g.run.debts.shark1.tranches!.at(-1)!.rate).toBeCloseTo(0.02 - tail('B2', 2), 12);
+    expect(g.run.debts.shark1.tranches!.at(-1)!.rate).toBeGreaterThan(0.013);
+    // 꼬리가 커서 보통 금리 아래로 내려갈 몫이면 보통 금리(1.3%)에서 멈춘다: 따로 적힌 몫이 생기지 않는다
+    const k = fresh();
+    k.family.skill = { R: 1, B1: 1, B2: 20 };
+    applyBirth(k);
+    A(k, { type: 'borrow', lender: 'shark1' });
+    k.run.marginCall = { market: 'DTC', tick: k.run.tick };
+    expect(A(k, { type: 'borrow', lender: 'shark1', call: true }).ok).toBe(true);
+    expect(k.run.debts.shark1.tranches ?? []).toEqual([]);
+    expect(interestDue(k, 'shark1')).toBe(1500 + 2600); // 엄마 빚 1,500 + 새 20만 × 1.3%
   });
   it('A3a = 긴 창(2분 + 꼬리). 시세에는 닿지 않는다', () => {
     expect(longChartSec(trader().run)).toBe(120);
@@ -179,34 +187,34 @@ describe('켜고 끄는 노드의 숫자 꼬리 (U-39 ⑨)', () => {
 });
 
 describe('엄마 빚은 고정금리다 (U-39 ⑥)', () => {
-  it('금리 2배 사건에도 엄마 빚 이자 4,500 은 그대로: 14,500 → 24,500(29,000 이 아니다)', () => {
+  it('금리 2배 사건에도 엄마 빚 이자 1,500 은 그대로: 4,800 → 8,100(9,600 이 아니다)', () => {
     const g = fresh();
-    expect(interestDue(g, 'shark1')).toBe(4500);
-    expect(fixedInterest(g, 'shark1')).toBe(4500);
+    expect(interestDue(g, 'shark1')).toBe(1500);
+    expect(fixedInterest(g, 'shark1')).toBe(1500);
     A(g, { type: 'borrow', lender: 'shark1' });
     A(g, { type: 'borrow', lender: 'shark1' });
-    expect(interestDue(g, 'shark1')).toBe(14500);
+    expect(interestDue(g, 'shark1')).toBe(4800);
     g.run.effects.push({ id: 'rate_hike', type: 'rateMultiplier', multiplier: 2, remaining: 2 });
-    expect(interestDue(g, 'shark1')).toBe(4500 + (4000 + 6000) * 2);
-    expect(fixedInterest(g, 'shark1')).toBe(4500);
+    expect(interestDue(g, 'shark1')).toBe(1500 + (1300 + 2000) * 2);
+    expect(fixedInterest(g, 'shark1')).toBe(1500);
   });
   it('엄마 빚만 있는 생은 금리 인상이 지나가도 이자가 같다', () => {
     const g = fresh();
     g.run.effects.push({ id: 'rate_hike', type: 'rateMultiplier', multiplier: 2, remaining: 2 });
-    expect(interestDue(g, 'shark1')).toBe(4500);
+    expect(interestDue(g, 'shark1')).toBe(1500);
   });
   it('엄마 빚을 갚아 나가면 고정금리 몫도 준다. 다 갚으면 0', () => {
     const g = fresh();
     g.run.cash = 300000;
     A(g, { type: 'stamp', lender: 'shark1', mult: 10 });
-    expect(fixedInterest(g, 'shark1')).toBe(200000 * 0.015);
+    expect(fixedInterest(g, 'shark1')).toBe(200000 * 0.005);
     A(g, { type: 'stamp', lender: 'shark1', mult: 'all' });
     expect(fixedInterest(g, 'shark1')).toBe(0);
   });
   it('금리 상한이 없는 빚(본 게임의 보통 빚)은 전처럼 전부 두 배', () => {
     const g = bare();
     g.run.effects.push({ id: 'rate_hike', type: 'rateMultiplier', multiplier: 2, remaining: 2 });
-    expect(interestDue(g, 'shark1')).toBe(12000);
+    expect(interestDue(g, 'shark1')).toBe(3900); // 15만 × 1.3% × 2
     expect(fixedInterest(g, 'shark1')).toBe(0);
   });
 });
@@ -215,9 +223,9 @@ describe('1막: 못 낸 생활비는 아는 곳의 빚이 된다 (U-39 ③)', ()
   it('숲속 캐피탈과 거래한 적 없는 생: 오소리 장부에 얹힌다(만난 적 없는 캐피탈 빚이 생기지 않는다)', () => {
     act1(true);
     const g = fresh();
-    settleOnce(g); // 현금 0: 이자 4,500 과 생활비 1,000 을 못 낸다
+    settleOnce(g); // 현금 0: 이자 1,500 과 생활비 330 을 못 낸다
     expect(g.run.debts.capital.principal).toBe(0);
-    expect(g.run.debts.shark1.principal).toBe(300000 + 4500 + 1000);
+    expect(g.run.debts.shark1.principal).toBe(300000 + 1500 + 330);
     expect(g.run.eventLog.some((e) => e.kind === 'overdue:upkeep' && /오소리 장부/.test(e.text))).toBe(true);
     expect(g.run.eventLog.some((e) => /캐피탈/.test(e.text))).toBe(false);
   });
@@ -228,14 +236,14 @@ describe('1막: 못 낸 생활비는 아는 곳의 빚이 된다 (U-39 ③)', ()
     g.run.cash = 0;
     const c0 = g.run.debts.capital.principal;
     settleOnce(g);
-    expect(g.run.debts.capital.principal).toBeGreaterThanOrEqual(c0 + 1000);
+    expect(g.run.debts.capital.principal).toBeGreaterThanOrEqual(c0 + 330);
     expect(g.run.eventLog.some((e) => e.kind === 'overdue:upkeep' && /숲속 캐피탈 비상금/.test(e.text))).toBe(true);
   });
   it('본 게임(1막 표시 없음)은 그대로 캐피탈', () => {
     const g = fresh();
     settleOnce(g);
-    expect(g.run.debts.capital.principal).toBe(1000);
-    expect(g.run.debts.shark1.principal).toBe(304500);
+    expect(g.run.debts.capital.principal).toBe(330);
+    expect(g.run.debts.shark1.principal).toBe(301500);
   });
 });
 

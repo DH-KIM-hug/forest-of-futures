@@ -106,18 +106,18 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(g.run.wallet.BTH.qty).toBeGreaterThan(0);
   });
 
-  it('AC-v2-32 보조 쳇바퀴(도토코인, 알바 붙음): 6,500어치가 쌓이고 전기세는 없다. 일당 1,600 은 현금에서', () => {
+  it('AC-v2-32 보조 쳇바퀴(도토코인, 알바 붙음): 정산(60초)마다 2,170어치가 쌓이고 전기세는 없다. 일당 530 은 현금에서', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'wheel2', 'DTC', 50000);
     expect(equipPower(g, u)).toBe(0);
     const c0 = g.run.cash;
     settleOnce(g);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(6500, 6);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(2170, 6);
     expect(g.run.lastSettlement!.power).toBe(0);
-    expect(g.run.lastSettlement!.wages).toBe(1600);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(6500, 6);
-    expect(c0 - g.run.cash).toBe(6000 + 3000 + 1000 + 1600); // 이자(오소리 6,000 + 캐피탈 3,000) + 생활비 + 일당
+    expect(g.run.lastSettlement!.wages).toBe(530);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(2170, 6);
+    expect(c0 - g.run.cash).toBe(1950 + 1005 + 330 + 530); // 이자(오소리 1,950 + 캐피탈 1,005) + 생활비 + 일당
   });
 
   it('AC-v2-32 알바가 없는 보조 쳇바퀴는 캐지 않고 일당도 없다', () => {
@@ -129,33 +129,33 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(g.run.wallet.DTC.qty).toBe(0);
   });
 
-  it('AC-v2-33 보조 쳇바퀴를 멍도토에 붙이면 캔 값 6,500 × 1.3 = 8,450, 전기세 0', () => {
+  it('AC-v2-33 보조 쳇바퀴를 멍도토에 붙이면 캔 값 2,170 × 1.3 = 2,821, 전기세 0', () => {
     const g = bare();
     giveWheel(g, 'MDT');
     const u = giveEquip(g, 'wheel2', 'MDT', 50000);
-    expect(equipGross(g, u)).toBeCloseTo(8450, 9);
+    expect(equipGross(g, u)).toBeCloseTo(2821, 9);
     expect(equipPower(g, u)).toBe(0);
     settleOnce(g);
-    expect(walletValueOf(g.run, 'MDT')).toBeCloseTo(8450, 6);
+    expect(walletValueOf(g.run, 'MDT')).toBeCloseTo(2821, 6);
   });
 
-  it('AC-v2-33 전기를 쓰는 설비(알바 햄스터 단계, 물려받은 것): 14,700어치가 쌓이고 전기세 10,290어치가 빠져 순 4,410. 멍도토면 19,110 − 13,965', () => {
+  it('AC-v2-33 전기를 쓰는 설비(알바 햄스터 단계, 물려받은 것): 4,900어치가 쌓이고 전기세 3,430어치가 빠져 순 1,470. 멍도토면 6,370 − 4,655', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     giveEquip(g, 'helper', 'DTC', 60000);
     settleOnce(g);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(14700, 6);
-    expect(g.run.lastSettlement!.power).toBe(10290);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(4900, 6);
+    expect(g.run.lastSettlement!.power).toBe(3430);
     expect(g.run.lastSettlement!.wages).toBe(0);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(4410, 6);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(1470, 6);
     const h = bare();
     giveWheel(h, 'MDT');
     const u = giveEquip(h, 'helper', 'MDT', 60000);
-    expect(equipGross(h, u)).toBeCloseTo(19110, 9);
-    expect(equipPower(h, u)).toBe(13965);
+    expect(equipGross(h, u)).toBeCloseTo(6370, 9);
+    expect(equipPower(h, u)).toBe(4655);
   });
 
-  it('AC-v2-34 도토코인 -30%: 캔 값 10,290 = 전기세 10,290, 순 0 -> 역마진. 멍도토 -27% 도 역마진', () => {
+  it('AC-v2-34 도토코인 -30%: 캔 값 3,430 = 전기세 3,430, 순 0 -> 역마진. 멍도토 -27% 도 역마진', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'helper', 'DTC', 60000);
@@ -163,8 +163,8 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(equipNetNow(g, u)).toBeCloseTo(0, 6);
     expect(isReverseMargin(g, u)).toBe(true);
     settleOnce(g);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(10290, 6);
-    expect(g.run.lastSettlement!.power).toBe(10290);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(3430, 6);
+    expect(g.run.lastSettlement!.power).toBe(3430);
     expect(walletValue(g.run)).toBeCloseTo(0, 6);
     const h = bare();
     giveWheel(h, 'MDT');
@@ -216,9 +216,9 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     noDebts(g);
     giveWheel(g, 'DTC');
     giveEquip(g, 'helper', 'DTC', 60000);
-    setRatio(g, 'DTC', 0.5); // 캔 값은 시가 7,350 이라 전기세 10,290 에서 2,940 이 모자란다
+    setRatio(g, 'DTC', 0.5); // 캔 값은 시가 2,450 이라 전기세 3,430 에서 980 이 모자란다
     settleOnce(g);
-    expect(g.run.debts.capital.principal).toBeCloseTo(2940 + 1000, 6);
+    expect(g.run.debts.capital.principal).toBeCloseTo(980 + 330, 6);
     expect(g.run.debts.capital.overdue).toBe(0);
     expect(g.run.upkeepOverdue).toBe(0);
   });
@@ -233,20 +233,20 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     setRatio(g, 'DTC', 0.5);
     settleOnce(g);
     expect(g.run.upkeepOverdue).toBe(1);
-    expect(g.run.upkeepArrears).toBeCloseTo(2940 + 8000, 6);
+    expect(g.run.upkeepArrears).toBeCloseTo(980 + 2700, 6);
     expect(g.run.debts.capital.principal).toBe(0);
   });
 
-  it('AC-v2-38 현금 2,000, 청구 10,000, 지갑 50,000어치: 8,248어치가 급매되어 다 내고 연체 없음', () => {
+  it('AC-v2-38 현금 2,000, 청구 3,285(이자 1,950 + 1,005, 생활비 330), 지갑 50,000어치: 1,325어치가 급매되어 다 내고 연체 없음', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     giveCoinValue(g, 'DTC', 50000);
     g.run.cash = 2000;
     settleOnce(g);
-    expect(g.run.stats.forcedSold).toBe(8248);
+    expect(g.run.stats.forcedSold).toBe(1325); // 모자란 1,285 ÷ 0.97
     expect(g.run.cash).toBe(0);
     expect(Object.values(g.run.debts).every((d) => d.overdue === 0)).toBe(true);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(50000 - 8248, 4);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(50000 - 1325, 4);
   });
 
   it('AC-v2-39 캐피탈 한도 = 200,000 + 4,000 + 50,000, 지갑이 20% 내리면 지갑 몫 40,000', () => {
@@ -324,13 +324,13 @@ describe('C. 채굴·지갑·종목 쳇바퀴·설비', () => {
     expect(g.run.wallet.DTC.qty).toBe(0);
   });
 
-  it('AC-v2-44 도토코인 6,500 + 멍도토 14,700 × 1.3 = 19,110 이면 mineTopCoin MDT, mineConcentration 74', () => {
+  it('AC-v2-44 도토코인 2,170 + 멍도토 4,900 × 1.3 = 6,370 이면 mineTopCoin MDT, mineConcentration 74', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     giveWheel(g, 'MDT');
     giveEquip(g, 'wheel2', 'DTC', 50000);
     giveEquip(g, 'helper', 'MDT', 60000);
-    expect(mineConcentration(g)).toEqual({ pct: 74, coin: 'MDT' }); // 19,110 ÷ 25,610 = 74.6%
+    expect(mineConcentration(g)).toEqual({ pct: 74, coin: 'MDT' }); // 6,370 ÷ 8,540 = 74.6%
   });
 
   it('AC-v2-45(지갑 부분) 지갑 도토코인 100,000어치가 -5% 면 95,000 (숏 보험 쪽은 M2)', () => {

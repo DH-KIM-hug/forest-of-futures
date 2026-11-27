@@ -1,20 +1,20 @@
 {
   "version": 2,
-  "_doc": "게임 안 사건 4종. 금리 인상은 금리 상한이 붙은 물려받은 빚(고정금리: 엄마 빚 1.5%)에는 붙지 않는다(U-39). 시세를 움직이는 사건은 없다(시세는 실제 시장). announceBefore 는 효과가 시작되기 전 예고하는 정산 수. 시스템 문구는 사실만(권유 표현 금지). GDD_v2 3.12·4.7 quietSettlements = 세대의 첫 n번 정산에는 사건을 굴리지 않는다(U-29: 첫 이자·첫 대출의 숫자가 사건에 흔들리지 않게). cooldownSettlements = 지난번에 뽑힌 뒤 n번의 정산 동안 다시 뽑히지 않는다(U-42: 금리 인상 20번). notDuringFeeEvent = FRX 오픈 기념 수수료 무료가 남아 있는 동안에는 뽑히지 않는다(U-42).",
-  "rollProbPerSettlement": 0.35,
-  "quietSettlements": 3,
+  "_doc": "게임 안 사건 4종. 금리 인상은 금리 상한이 붙은 물려받은 빚(고정금리: 엄마 빚 1.5%)에는 붙지 않는다(U-39). 시세를 움직이는 사건은 없다(시세는 실제 시장). announceBefore 는 효과가 시작되기 전 예고하는 정산 수. 시스템 문구는 사실만(권유 표현 금지). GDD_v2 3.12·4.7 quietSettlements = 세대의 첫 n번 정산에는 사건을 굴리지 않는다(U-29: 첫 이자·첫 대출의 숫자가 사건에 흔들리지 않게). cooldownSettlements = 지난번에 뽑힌 뒤 n번의 정산 동안 다시 뽑히지 않는다(U-42: 금리 인상 60번). notDuringFeeEvent = FRX 오픈 기념 수수료 무료가 남아 있는 동안에는 뽑히지 않는다(U-42). U-47: 정산이 60초가 되어 굴리는 확률 0.35 → 0.13, 쉬는 기간 · 효과 길이는 3배.",
+  "rollProbPerSettlement": 0.13,
+  "quietSettlements": 9,
   "events": [
     {
       "id": "rate_hike",
       "weight": 10,
       "text": "숲속중앙조합, 기준금리 인상. 다음 정산이 지나면 이자율이 두 배입니다. 고정금리 빚은 그대로입니다.",
       "announceBefore": 1,
-      "cooldownSettlements": 20,
+      "cooldownSettlements": 60,
       "notDuringFeeEvent": true,
       "effect": {
         "type": "rateMultiplier",
         "value": 2,
-        "settlements": 2
+        "settlements": 6
       }
     },
     {
@@ -24,7 +24,7 @@
       "effect": {
         "type": "appraisalMultiplier",
         "value": 0.7,
-        "settlements": 5
+        "settlements": 15
       }
     },
     {
@@ -34,7 +34,7 @@
       "effect": {
         "type": "appraisalMultiplier",
         "value": 0.5,
-        "settlements": 3
+        "settlements": 9
       }
     },
     {

@@ -23,20 +23,22 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
 
   it('balance.json: 4.1 의 값 그대로', () => {
     const b = D.balance;
-    // U-29: 현금 0, 엄마 빚 30만은 전부 오소리 대부(물려받은 몫은 옛 이자 1.5%), 엄마의 도토코인 쳇바퀴 한 대(캐면 바로 팔기)
+    // U-29: 현금 0, 엄마 빚 30만은 전부 오소리 대부(물려받은 몫은 옛 이자 0.5%, U-47), 엄마의 도토코인 쳇바퀴 한 대(캐면 바로 팔기)
     expect(b.start).toMatchObject({ generation: 2, cash: 0, debts: { shark1: 300000 }, house: 0, wheels: ['DTC'], autoSell: true });
     expect(Object.keys(b.start.debts)).toEqual(['shark1']);
-    expect(b.start.inheritedRateCap).toEqual({ shark1: 0.015 });
-    expect(b.settlement.intervalSec).toBe(180);
-    expect(b.settlement.dayCycleSettlements).toBe(4);
+    expect(b.start.inheritedRateCap).toEqual({ shark1: 0.005 });
+    // U-47: 정산 한 번 = 60초(첫 생의 튜토리얼 동안은 20초), 하루 = 정산 12번
+    expect(b.settlement.intervalSec).toBe(60);
+    expect(b.settlement.introSec).toBe(20);
+    expect(b.settlement.dayCycleSettlements).toBe(12);
     expect(b.settlement.payOrder).toEqual(['shark2', 'shark1', 'capital', 'bank', 'tax', 'upkeep']);
-    expect(b.living.byHouse).toEqual([1000, 8000, 30000, 140000, 650000]);
+    expect(b.living.byHouse).toEqual([330, 2700, 10000, 47000, 217000]);
     // 줍기 단계와 첫 쳇바퀴 줍기 조건은 없어졌다(U-29)
     expect(b.progression.acornPerTap).toBeUndefined();
     expect(b.progression.firstWheelUnlockTaps).toBeUndefined();
     expect(b.progression.maxTapsPerSec).toBe(12);
     expect(b.progression.stage0OfflineSettlements).toBe(0);
-    expect(b.progression.futures.levCaps.map((c: any) => c.cap)).toEqual([10, 50, 200]);
+    expect(b.progression.futures.levCaps.map((c: any) => c.cap)).toEqual([50, 200]); // U-47: 계좌를 열면 50배, 확인서에 발도장을 찍으면 200배
     expect(b.mining.autoShare).toBe(0);
     // U-30: 탭은 고정값(레벨·배수 없음), 설비 값은 대수와 무관, 집에서 살 수 있는 것은 보조 쳇바퀴뿐, 알바는 일당제
     expect(b.mining.tapBase).toBe(2);
@@ -44,7 +46,7 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
     expect(b.assets.costGrowth).toBe(1);
     expect(b.assets.buyable).toEqual(['wheel2']);
     expect(b.assets.maxUnits).toBe(3);
-    expect(b.labor).toMatchObject({ wage: 1600, grossPerSettle: 6500 });
+    expect(b.labor).toMatchObject({ wage: 530, grossPerSettle: 2170 });
     expect(b.seizure.garnishRate).toBe(0.3);
     expect(b.trading.leverageOptions).toEqual([1, 2, 5, 10, 25, 50, 100, 200]);
     expect(b.inheritance.minStartDebt).toBe(200000);
@@ -53,13 +55,15 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
     for (const k of ['economy', 'humanPattern', 'policyReserve', 'regularPerGen']) expect(b[k]).toBeUndefined();
   });
 
-  it('markets.json: 5종목, 실제 종목 이름이 없다(서버 설정에만)', () => {
-    expect(D.marketDefs.map((m) => m.id)).toEqual(['DTC', 'BTH', 'MDT', 'SMS', 'JQQ']);
+  it('markets.json: 6종목(실제 시세 5개 + 날다람쥐코인), 실제 종목 이름이 없다(서버 설정에만)', () => {
+    expect(D.marketDefs.map((m) => m.id)).toEqual(['DTC', 'BTH', 'MDT', 'SMS', 'JQQ', 'FLY']);
+    // 날다람쥐코인(U-47): 실제 시장이 없는 숲 밈코인. 값은 시각의 함수라 난수 시세 설정이 없다
+    expect(D.marketById.FLY).toMatchObject({ startPrice: 100, decimals: 2, tradable: true, minable: false, synthetic: true });
     expect(D.marketById.DTC.startPrice).toBe(68000);
     expect(D.marketById.JQQ.minable).toBe(false);
     const txt = readFileSync(join(dataDir, 'markets.json'), 'utf8');
     expect(txt).not.toMatch(/BTC|ETH|SOL|DOGE|XRP|Hyperliquid|BTCUSDT/);
-    for (const m of D.marketDefs) expect(D.simFeedCfg.params[m.id]).toBeTruthy();
+    for (const m of D.marketDefs.filter((x) => !x.synthetic)) expect(D.simFeedCfg.params[m.id]).toBeTruthy();
   });
 
   it('equipment.json: 종목 쳇바퀴 4종과 설비 사다리 7단계가 3.3·3.4 표와 같다', () => {
@@ -70,18 +74,19 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
       ['wheel:SMS', 60000, 1.2, 0.86, 1.13],
     ]);
     expect(D.tierDefs.map((t) => [t.id, t.cost, t.grossPerSettle, t.needHouse])).toEqual([
-      ['wheel2', 50000, 6500, 0], ['helper', 60000, 14700, 0], ['row', 150000, 32250, 0], ['generator', 400000, 75000, 0],
-      ['shed', 1500000, 240000, 1], ['powerroom', 8000000, 1020000, 2], ['farm', 40000000, 3900000, 3],
+      // U-47: 정산이 60초가 되어 정산당 캐는 값은 1/3
+      ['wheel2', 50000, 2170, 0], ['helper', 60000, 4900, 0], ['row', 150000, 10750, 0], ['generator', 400000, 25000, 0],
+      ['shed', 1500000, 80000, 1], ['powerroom', 8000000, 340000, 2], ['farm', 40000000, 1300000, 3],
     ]);
     // 보조 쳇바퀴(U-30): 알바 한 마리가 돌린다. 숫자는 balance.labor 와 같고 전기세 대신 일당, 다섯 대까지(첫 쳇바퀴까지 여섯 대)
     const w2 = D.tierById.wheel2;
     expect(w2.wage).toBe(D.balance.labor.wage);
     expect(w2.grossPerSettle).toBe(D.balance.labor.grossPerSettle);
     expect(w2.maxUnits).toBe(5);
-    expect(w2.netPerSec).toBeCloseTo((6500 - 1600) / 180, 2);
+    expect(w2.netPerSec).toBeCloseTo((2170 - 530) / 60, 0); // 초당은 예전((6,500 − 1,600) ÷ 180)과 거의 같다
     expect(D.tierDefs.filter((t) => t.wage != null).map((t) => t.id)).toEqual(['wheel2']);
-    // 그 밖의 표의 초당 순수입 = grossPerSettle × (1 − 0.70) ÷ 180
-    for (const t of D.tierDefs.filter((x) => x.wage == null)) expect(t.netPerSec).toBeCloseTo((t.grossPerSettle * 0.3) / 180, 2);
+    // 그 밖의 표의 초당 순수입 = grossPerSettle × (1 − 0.70) ÷ 60(U-47)
+    for (const t of D.tierDefs.filter((x) => x.wage == null)) expect(t.netPerSec).toBeCloseTo((t.grossPerSettle * 0.3) / 60, 2);
     expect(D.tierDefs.filter((t) => t.bankCollateral).map((t) => t.id)).toEqual(['shed', 'powerroom', 'farm']);
   });
 
@@ -112,15 +117,15 @@ describe('M0 데이터 스키마 (GDD_v2 4장)', () => {
   });
 
   it('lenders/friends/housing/events/traits/heirlooms/tips 의 개수와 핵심 값', () => {
-    expect(D.lenderDefs.map((l) => [l.id, l.rate, l.maxOverdue])).toEqual([['bank', 0.01, 3], ['capital', 0.02, 3], ['shark1', 0.04, 2], ['shark2', 0.08, 2], ['tax', 0, 1]]);
+    expect(D.lenderDefs.map((l) => [l.id, l.rate, l.maxOverdue])).toEqual([['bank', 0.0033, 3], ['capital', 0.0067, 3], ['shark1', 0.013, 2], ['shark2', 0.027, 2], ['tax', 0, 1]]);
     expect(D.lenderById.shark2.upfront).toBe(0.4);
-    expect(D.lenderById.tax.deadlineSettlements).toBe(8);
+    expect(D.lenderById.tax.deadlineSettlements).toBe(24);
     expect(D.friendDefs).toHaveLength(5);
     expect(D.friendDefs.every((f) => f.tipRole)).toBe(true);
     expect(D.housePrice).toEqual([0, 500000, 2000000, 10000000, 50000000]);
     expect(D.houseDefs.every((h) => (h as any).upkeepPerSettlement === undefined)).toBe(true);
     expect(D.eventDefs.map((e) => e.id)).toEqual(['rate_hike', 'housing_slump', 'housing_crash', 'subsidy']);
-    expect(D.eventsMeta.rollProbPerSettlement).toBe(0.35);
+    expect(D.eventsMeta.rollProbPerSettlement).toBe(0.13);
     expect(D.traitDefs).toHaveLength(9);
     expect(D.heirloomDefs).toHaveLength(8);
     expect(D.tipsData.sources).toHaveLength(11);

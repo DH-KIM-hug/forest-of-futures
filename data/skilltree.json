@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "_doc": "영구 스킬트리: 거래 한 갈래(docs/gdd/SKILLTREE_TRADE.md, DECISIONS_LOG U-35 ④). 재화는 황금 실물 도토코인(family.gold): 그 생에 오소리에게 갚은 원금 award.per 마다 1개, 오소리 빚을 다 갚은 생은 +award.clearBonus. 값: 열기(Lv0→1) = openCost, Lv n→n+1 = ceil(openCost × levelMul^n). scaled 노드의 효과 = cap × (1 − decay^레벨), 레벨 상한 없음. binary 노드는 Lv1 에서 도구가 켜지고, 그 뒤 레벨은 숫자 꼬리(tail: 작은 비용 할인 등)를 키운다 — 꼬리 = tail.cap × (1 − decay^레벨), 레벨 상한 없음(U-39 ⑨). requires 는 그중 하나만 있으면 된다. pair 는 3단계의 짝(둘 다 살 수 있지만 한 생에 하나만 켜진다). 어떤 노드도 시세나 이길 확률을 바꾸지 않는다.",
+  "_doc": "영구 스킬트리: 거래 한 갈래(docs/gdd/SKILLTREE_TRADE.md, DECISIONS_LOG U-35 ④). 재화는 황금 실물 도토코인(family.gold): 그 생에 오소리에게 갚은 원금 award.per 마다 1개, 오소리 빚을 다 갚은 생은 +award.clearBonus. 값: 열기(Lv0→1) = openCost, Lv n→n+1 = ceil(openCost × levelMul^n). scaled 노드의 효과 = cap × (1 − decay^레벨), 레벨 상한 없음. binary 노드는 Lv1 에서 도구가 켜지고, 그 뒤 레벨은 숫자 꼬리(tail: 작은 비용 할인 등)를 키운다 — 꼬리 = tail.cap × (1 − decay^레벨), 레벨 상한 없음(U-39 ⑨). requires 는 그중 하나만 있으면 된다. pair 는 3단계의 짝(둘 다 살 수 있지만 한 생에 하나만 켜진다). 어떤 노드도 시세를 바꾸지 않는다. U-47: 처음부터 200배가 열려 배율을 여는 노드(B1 확인서 단골, B3a 200배 각서)가 뜻을 잃어, B1 = 한 번 버티기(포지션마다 한 번 청산가에서 버텨 주는 빌린 증거금), B3a = 고배율 축하금(100배 이상으로 이긴 판의 인증서 금박 + 수익의 몇 % 축하금)으로 바꿨다. 갈래 · 값 · 끝없는 레벨은 그대로.",
   "levelMul": 1.6,
   "decay": 0.85,
   "award": {
@@ -20,9 +20,9 @@
     { "id": "A3a", "path": "A", "tier": 3, "name": "초봉 차트", "desc": "차트를 30초 창으로 당겨 본다. 보이는 게 많아질 뿐, 맞히는 건 아니다.", "openCost": 3, "kind": "binary", "requires": [ "A2" ], "pair": "A3b", "tail": { "cap": 480, "text": "더 길게 보는 창이 생긴다(2분 + 상한 8분)." } },
     { "id": "A3b", "path": "A", "tier": 3, "name": "반대 단추", "desc": "롱↔숏 뒤집기를 한 번에(정리 + 반대 진입).", "openCost": 3, "kind": "binary", "requires": [ "A2" ], "pair": "A3a", "tail": { "cap": 0.4, "text": "뒤집어 들어간 포지션의 수수료가 준다(상한 −40%)." } },
     { "id": "A4", "path": "A", "tier": 4, "name": "VIP 창구", "desc": "거래 수수료가 더 준다(상한 −30% 추가).", "openCost": 4, "kind": "scaled", "cap": 0.3, "requires": [ "A3a", "A3b" ] },
-    { "id": "B1", "path": "B", "tier": 1, "name": "확인서 단골", "desc": "50배가 처음부터 열린다. 50배 이상 거래의 수수료가 준다(상한 −30%).", "openCost": 1, "kind": "scaled", "cap": 0.3, "requires": [ "R" ] },
-    { "id": "B2", "path": "B", "tier": 2, "name": "마진콜 전화", "desc": "청산이 가까워지면 한 번, 오소리 대부가 전화한다. 증거금을 더 넣으면 버틴다.", "openCost": 2, "kind": "binary", "requires": [ "B1" ], "tail": { "cap": 0.02, "text": "전화로 빌려 넣는 돈의 금리가 준다(상한 −2%p)." } },
-    { "id": "B3a", "path": "B", "tier": 3, "name": "200배 각서", "desc": "200배가 거래 10건 없이 확인서 도장만으로 열린다.", "openCost": 3, "kind": "binary", "requires": [ "B2" ], "pair": "B3b", "tail": { "cap": 0.2, "text": "200배 거래의 수수료가 준다(상한 −20%)." } },
+    { "id": "B1", "path": "B", "tier": 1, "name": "한 번 버티기", "desc": "포지션마다 한 번, 청산가에 닿는 순간 오소리 대부가 증거금의 일부를 대신 넣어 버텨 준다(상한 30%). 정리할 때 그만큼 돌려주고, 끝내 청산되면 오소리가 떼인다.", "openCost": 1, "kind": "scaled", "cap": 0.3, "requires": [ "R" ] },
+    { "id": "B2", "path": "B", "tier": 2, "name": "마진콜 전화", "desc": "청산이 가까워지면 한 번, 오소리 대부가 전화한다. 증거금을 더 넣으면 버틴다.", "openCost": 2, "kind": "binary", "requires": [ "B1" ], "tail": { "cap": 0.008, "text": "전화로 빌려 넣는 돈의 금리가 준다(상한 −0.8%p)." } },
+    { "id": "B3a", "path": "B", "tier": 3, "name": "고배율 축하금", "desc": "100배 이상으로 이긴 판은 수익 인증서가 금박으로 번쩍이고, 오소리 대부가 축하금을 얹어 준다.", "openCost": 3, "kind": "binary", "requires": [ "B2" ], "pair": "B3b", "tail": { "cap": 0.1, "text": "축하금이 그 판 수익의 몇 %로 커진다(상한 10%)." } },
     { "id": "B3b", "path": "B", "tier": 3, "name": "물타기", "desc": "열린 포지션에 증거금만 더 넣는 단추. 청산가가 멀어지고, 걸린 돈이 커진다.", "openCost": 3, "kind": "binary", "requires": [ "B2" ], "pair": "B3a", "tail": { "cap": 0.2, "text": "물타기로 더 넣은 증거금은 청산돼도 일부 돌아온다(상한 20%)." } },
     { "id": "B4", "path": "B", "tier": 4, "name": "전설의 몰빵", "desc": "수익 인증서에 금테가 둘리고, 청산 도장이 특별판으로 바뀐다(꾸미기).", "openCost": 4, "kind": "binary", "requires": [ "B3a", "B3b" ], "tail": { "cap": 0.2, "text": "전부 걸기의 수수료가 준다(상한 −20%)." } },
     { "id": "C1", "path": "C", "tier": 1, "name": "손절 습관", "desc": "새 포지션에 손절 −50%가 기본으로 붙는다(끌 수 있다).", "openCost": 1, "kind": "binary", "requires": [ "R" ], "tail": { "cap": 0.5, "text": "손절로 나올 때 수수료가 준다(상한 −50%)." } },
@@ -36,5 +36,6 @@
     "A": ["END-187", "END-172", "END-168"],
     "B": ["END-151", "END-193", "END-184", "END-155"],
     "C": ["END-167", "END-191", "END-R01", "END-R03"]
-  }
+  },
+  "bonusLev": 100
 }

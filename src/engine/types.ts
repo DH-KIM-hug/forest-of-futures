@@ -107,6 +107,9 @@ export interface Position {
   called?: boolean;
   /** 진입 뒤에 증거금만 더 넣은 돈(물타기 B3b · 마진콜 전화 B2). 물타기의 꼬리(청산 때 일부 환급)가 읽는다 */
   marginAdded?: number;
+  /** 한 번 버티기(B1, U-47): 이미 한 번 버텼다 · 오소리가 대신 넣어 준 돈(정리할 때 먼저 돌려준다) */
+  held?: boolean;
+  buf?: number;
 }
 
 /** 끝난 마지막 포지션(손실이면 우선)의 기록. 엔딩 조건 `lev`·`dir`... 이 읽는다. */
@@ -357,6 +360,8 @@ export interface RunState {
   marginCall: { market: string; tick: number } | null;
   /** 하루 손실 한도(C3b). null = 없음 */
   dayLossLimit: number | null;
+  /** 첫 생의 튜토리얼 동안: 정산 간격이 balance.settlement.introSec(U-47). 끝나면 false(pace.ts endIntro) */
+  intro?: boolean;
 }
 
 export interface PendingEnding {

@@ -5,15 +5,15 @@ import { tipsData, eventDefs } from '../../src/engine/data';
 import type { GameState } from '../../src/engine/types';
 
 const P = 68000;
-/** 도토코인에 직전 5회 고가 68,100 이하 + 방금 정산 종가가 그 위, 거래량 2.5배인 봉을 만든다. */
+/** 도토코인에 직전 15회(15분, U-47: 정산 봉 60초) 고가 68,100 이하 + 방금 정산 종가가 그 위, 거래량 2.5배인 봉을 만든다. */
 function breakoutBars(g: GameState, vol = 2.5) {
-  for (let i = 0; i < 5; i++) pushBar(g, 'DTC', { o: P, h: P + 100, l: P - 100, c: P + 20 * (i % 2) });
+  for (let i = 0; i < 15; i++) pushBar(g, 'DTC', { o: P, h: P + 100, l: P - 100, c: P + 20 * (i % 2) });
   pushBar(g, 'DTC', { o: P, h: P + 520, l: P - 10, c: P + 500, vol });
 }
 const tipsOf = (g: GameState, src: string) => g.run.recentTips.filter((t) => t.source === src);
 
 describe('I. 정보', () => {
-  it('AC-v2-87 종가가 그 전 5회 고가를 넘고 거래량이 평소의 2.5배면 wire_break, 같은 출처는 정산 5회 안에 다시 말하지 않는다', () => {
+  it('AC-v2-87 종가가 그 전 15회(15분) 고가를 넘고 거래량이 평소의 2.5배면 wire_break, 같은 출처는 정산 15회(15분) 안에 다시 말하지 않는다', () => {
     const g = bare();
     breakoutBars(g);
     runTips(g);
@@ -24,7 +24,7 @@ describe('I. 정보', () => {
     expect(n.text).toBe('도토코인, 15분 고가 갱신. 거래량 평소의 2.5배');
     expect(n.kind).toBe('wire');
     runTips(g);
-    g.run.settleNo += 4;
+    g.run.settleNo += 14;
     runTips(g);
     expect(tipsOf(g, 'wire_break')).toHaveLength(1);
     g.run.settleNo += 1;
@@ -68,11 +68,11 @@ describe('I. 정보', () => {
 
   it('AC-v2-89 곰 형이 "오른다"고 한 뒤 5분 안에 평소 5분 변동 폭만큼 먼저 내리면 말한 횟수 +1, 맞은 횟수 +0', () => {
     const g = bare();
-    // 직전 5정산 동안 크게 빠짐 -> 곰 형 "바닥이다"
-    const avg15 = g.run.mkt.avg.DTC.range180 * Math.sqrt(5);
+    // 직전 15정산(15분) 동안 크게 빠짐 -> 곰 형 "바닥이다". 15분 평소 폭 = 60초 봉 폭(range180 × √(60/180)) × √15
+    const avg15 = g.run.mkt.avg.DTC.range180 * Math.sqrt(60 / 180) * Math.sqrt(15);
     let p = P * 1.2;
-    for (let i = 0; i < 5; i++) {
-      const next = p * (1 - (avg15 * 2) / 5);
+    for (let i = 0; i < 15; i++) {
+      const next = p * (1 - (avg15 * 2) / 15);
       pushBar(g, 'DTC', { o: p, h: p, l: next, c: next });
       p = next;
     }

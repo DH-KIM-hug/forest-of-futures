@@ -123,8 +123,8 @@ export function baseFeeRate(run: RunState): number {
 
 // ── 효과 ────────────────────────────────────────────────────────────────
 export interface FeeCtx { /** 가진 돈을 전부 건다 */ allIn?: boolean; /** 반대 단추로 뒤집어 들어간다 */ flip?: boolean }
-/** 거래 수수료율 = 기본 × (1 − A1) × (1 − A4) × (50배 이상이면 1 − B1) × 꼬리들 + C2 보험료. 0 이 되지 않는다.
- *  꼬리(U-39 ⑨): R = 10배 이하 · B3a = 200배 · B4 = 전부 걸기 · A3b = 뒤집어 들어감 · C3b = 하루 한도를 걸어 둔 동안. */
+/** 거래 수수료율 = 기본 × (1 − A1) × (1 − A4) × 꼬리들 + C2 보험료. 0 이 되지 않는다.
+ *  꼬리(U-39 ⑨): R = 10배 이하 · B4 = 전부 걸기 · A3b = 뒤집어 들어감 · C3b = 하루 한도를 걸어 둔 동안. (U-47: B1 · B3a 는 수수료를 건드리지 않는다 — 한 번 버티기 · 고배율 축하금) */
 export function feeRateRun(run: RunState, lev: number, ctx: FeeCtx = {}): number {
   return feeRateLevels(run.skill ?? {}, baseFeeRate(run), lev, { ...ctx, dayLimit: run.dayLossLimit !== null && run.dayLossLimit !== undefined });
 }
@@ -135,9 +135,7 @@ export function feeRateLevels(skill: Record<string, number>, base: number, lev: 
   let r = base;
   r *= 1 - eff('A1');
   r *= 1 - eff('A4');
-  if (lev >= (skillMeta.highLev as number)) r *= 1 - eff('B1');
   if (lev <= 10) r *= 1 - tail('R');
-  if (lev >= 200) r *= 1 - tail('B3a');
   if (ctx.allIn) r *= 1 - tail('B4');
   if (ctx.flip) r *= 1 - tail('A3b');
   if (ctx.dayLimit) r *= 1 - tail('C3b');
@@ -162,14 +160,19 @@ export const seizeRate = (run: RunState): number => (balance.assets.auctionRate 
 export const longChartSec = (run: RunState): number => 120 + Math.round(tailRun(run, 'A3a'));
 
 export interface LevCapStep { cap: number; closedTrades?: number; waiver?: boolean }
-/** 배율 단계: B1 = 50배가 처음부터, B3a = 200배가 거래 수 없이 확인서만으로. */
+/** 배율 단계(U-47): 처음부터 50배, 위험 고지 확인서에 발도장을 찍는 순간 200배. 거래 수로 여는 단계는 없다(나무도 배율을 열지 않는다). */
 export function effectiveLevCapsRun(run: RunState): LevCapStep[] {
-  const base = balance.progression.futures.levCaps as LevCapStep[];
-  return base.map((c) => {
-    if (c.closedTrades === undefined) return c;
-    if (c.waiver) return hasRun(run, 'B3a') ? { ...c, closedTrades: 0 } : c;
-    return hasRun(run, 'B1') ? { ...c, closedTrades: 0 } : c;
-  });
+  void run;
+  return balance.progression.futures.levCaps as LevCapStep[];
+}
+
+// ── B1 한 번 버티기 · B3a 고배율 축하금(U-47) ───────────────────────────
+/** B1: 청산가에 처음 닿은 포지션에 오소리가 대신 넣어 주는 돈(넣은 증거금 × 효과). 없으면 0 */
+export const holdBuffer = (run: RunState, margin0: number): number => Math.floor(margin0 * effectRun(run, 'B1') + 1e-9);
+/** B3a: 100배 이상으로 이긴 판의 축하금(수익 × 꼬리). 없으면 0 */
+export function winBonus(run: RunState, lev: number, pnl: number): number {
+  if (!hasRun(run, 'B3a') || pnl <= 0 || lev < ((skillMeta as { bonusLev?: number }).bonusLev ?? 100)) return 0;
+  return Math.floor(pnl * tailRun(run, 'B3a') + 1e-9);
 }
 export const effectiveLevCaps = (g: GameState): LevCapStep[] => effectiveLevCapsRun(g.run);
 

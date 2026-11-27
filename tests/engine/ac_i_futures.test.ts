@@ -82,7 +82,7 @@ describe('H. 선물 거래', () => {
     expect(h.run.eventLog.some((e) => e.kind === 'sl')).toBe(true);
   });
 
-  it('AC-v2-83 100배 포지션(명목 1,000만)을 정산 160회 들면 펀딩비 합계 16,000', () => {
+  it('AC-v2-83 100배 포지션(명목 1,000만)을 8시간(정산 480회, U-47) 들면 펀딩비 합계 15,840(정산마다 33)', () => {
     const g = bare();
     openFutures(g);
     noDebts(g);
@@ -90,10 +90,10 @@ describe('H. 선물 거래', () => {
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 100, margin: 100000 });
     expect(g.run.positions.DTC.notional).toBe(10_000_000);
     g.run.cash = 100_000_000;
-    settleOnce(g, 160);
-    expect(g.run.stats.fundingPaid).toBe(16000);
-    expect(g.run.positions.DTC.fundingPaid).toBe(16000);
-    expect(g.run.positions.DTC.margin).toBe(100000 - 16000);
+    settleOnce(g, 480);
+    expect(g.run.stats.fundingPaid).toBe(15840);
+    expect(g.run.positions.DTC.fundingPaid).toBe(15840);
+    expect(g.run.positions.DTC.margin).toBe(100000 - 15840);
   });
 
   it('펀딩비를 뺀 뒤 증거금 + 손익 ≤ 명목 × 0.1% 면 청산(viaFunding)', () => {
@@ -131,12 +131,12 @@ describe('H. 선물 거래', () => {
     expect(p.margin0).toBe(20000);
   });
 
-  it('포지션은 최대 5개', () => {
+  it('포지션은 종목마다 하나, 거래할 수 있는 종목 수(6개, 날다람쥐코인 포함)까지', () => {
     const g = bare();
     openFutures(g);
     g.run.cash = 1e7;
-    for (const m of ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']) expect(A(g, { type: 'open', market: m, dir: 1, lev: 2, margin: 1000 }).ok).toBe(true);
-    expect(Object.keys(g.run.positions)).toHaveLength(5);
+    for (const m of ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ', 'FLY']) expect(A(g, { type: 'open', market: m, dir: 1, lev: 2, margin: 1000 }).ok).toBe(true);
+    expect(Object.keys(g.run.positions)).toHaveLength(6);
   });
 
   it('증거금 비율 선택: 100% 는 floor(현금 / (1 + 배율 × 0.04%))', () => {
@@ -169,11 +169,11 @@ describe('H. 선물 거래', () => {
     const k = longDtc(10, 10000);
     noDebts(k);
     k.run.cash = 1e9;
-    tickN(k, 180, {}, 'halted');
+    tickN(k, 60, {}, 'halted'); // 정산 한 번(60초)
     expect(k.run.settleNo).toBe(1);
     expect(k.run.positions.DTC.fundingPaid).toBe(0);
-    tickN(k, 180, {}, 'open');
-    expect(k.run.positions.DTC.fundingPaid).toBe(1);
+    tickN(k, 60, {}, 'open');
+    expect(k.run.positions.DTC.fundingPaid).toBe(1); // 명목 100,000 × 0.00033% = 0.33 -> 올려서 1
   });
 
   it('AC-v2-45 지갑 도토코인 100,000어치와 10배 숏(명목 100,000): −5% 면 지갑 95,000, 숏 평가익 +5,000, 숏으로 지킨 비율 100%', () => {

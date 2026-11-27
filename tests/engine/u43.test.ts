@@ -23,7 +23,7 @@ describe('U-43 캐는 돈은 1초마다', () => {
   it('정산 사이에도 틱마다 현금이 오르고, 한 정산 동안 들어온 합은 예전(정산 때 한꺼번에)과 같다', () => {
     const g = staffedHouse(2);
     const mined = forecast(g).mined;
-    expect(mined).toBe(6500 * 3);
+    expect(mined).toBe(2170 * 3); // 알바 쳇바퀴 한 대 정산(60초)당 2,170(U-47)
     const c0 = g.run.cash;
     const seen: number[] = [];
     for (let k = 0; k < I - 1; k++) { tickN(g, 1); seen.push(g.run.cash); }
@@ -45,10 +45,10 @@ describe('U-43 캐는 돈은 1초마다', () => {
   it('바로 팔기를 끄면 지갑의 코인도 1초마다 쌓이고, 한 구간의 합은 같다', () => {
     const g = staffedHouse(1, false);
     tickN(g, 30);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo((13000 * 30) / I, 6);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo((4340 * 30) / I, 6);
     tickN(g, g.run.settleIn);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(13000, 6);
-    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(13000, 6);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(4340, 6);
+    expect(walletValueOf(g.run, 'DTC')).toBeCloseTo(4340, 6);
   });
 
   it('정산은 걷어 가기만 한다: 정산 틱의 현금 변화 = 그 1초어치 − (이자 + 생활비 + 일당)', () => {
@@ -69,9 +69,9 @@ describe('U-43 캐는 돈은 1초마다', () => {
     const g = staffedHouse(2);
     g.run.coinWheels.DTC.tagBy = 'shark1';
     const p0 = g.run.debts.shark1.principal;
-    tickN(g, 60);
+    tickN(g, 30);
     const cut = p0 - g.run.debts.shark1.principal;
-    expect(cut).toBeGreaterThan(19500 * 60 / I * 0.3 - 3); // 1분 동안 이미 원금에서 깎였다
+    expect(cut).toBeGreaterThan(6510 * 30 / I * 0.3 - 3); // 30초 동안 이미 원금에서 깎였다(정산 전)
     tickN(g, g.run.settleIn);
     const rep = g.run.lastSettlement!;
     const gar = (g.run.stats.garnishBySettle as number[]).slice(-1)[0];
@@ -92,20 +92,20 @@ describe('U-43 캐는 돈은 1초마다', () => {
     g.run.equipment = g.run.equipment.filter((u) => u.uid !== uid); // 압류로 실려 갔다
     const c = g.run.cash;
     tickN(g, 10);
-    expect(g.run.cash - c).toBeGreaterThan((6500 * 0.995 * 10) / I - 2);
-    expect(g.run.cash - c).toBeLessThan((6500 * 0.995 * 10) / I + 2);
+    expect(g.run.cash - c).toBeGreaterThan((2170 * 0.995 * 10) / I - 2);
+    expect(g.run.cash - c).toBeLessThan((2170 * 0.995 * 10) / I + 2);
   });
 
-  it('따라잡기(정산만 부름)는 그 구간의 남은 몫만 넣는다: 틱 60번 + 정산 = 정산 한 번', () => {
+  it('따라잡기(정산만 부름)는 그 구간의 남은 몫만 넣는다: 틱 30번(정산 구간 60초의 절반) + 정산 = 정산 한 번', () => {
     const a = staffedHouse(2);
     const b = clone(a);
-    tickN(a, 60);
+    tickN(a, 30);
     settle(a);
     settle(b);
     expect(a.run.lastSettlement!.mined).toBeCloseTo(b.run.lastSettlement!.mined, 6);
     expect(Math.abs(a.run.cash - b.run.cash)).toBeLessThanOrEqual(2);
     settleOnce(a);
-    expect(a.run.lastSettlement!.mined).toBeCloseTo(19500, 6);
+    expect(a.run.lastSettlement!.mined).toBeCloseTo(6510, 6);
   });
 });
 

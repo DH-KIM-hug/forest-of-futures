@@ -81,18 +81,18 @@ describe('B. 진행 단계·첫 쳇바퀴(U-29: 줍기 없음, 쳇바퀴에서 �
     expect(wheelStatus(g, 'DTC').reason).toBe('현금 부족');
   });
 
-  it('AC-v2-13 초당 1.5회로 한 정산 동안 굴리면 270번 × 2 × 0.995 = 537 (이자 4,500 에 한참 못 미친다)', () => {
+  it('AC-v2-13 초당 1.5회로 한 정산(60초, U-47) 동안 굴리면 90번 × 2 × 0.995 = 179 (이자 1,500 에 한참 못 미친다)', () => {
     const g = fresh();
-    for (let s = 0; s < 179; s++) {
+    for (let s = 0; s < 59; s++) {
       tapN(g, s % 2 === 0 ? 2 : 1);
       tickN(g, 1);
     }
     tapN(g, 1);
-    // 179 초 * 1.5 = 268.5 -> 마지막 초의 1.5 를 채워 270
-    tapN(g, 270 - g.run.stats.laborTaps);
-    expect(g.run.stats.laborTaps).toBe(270);
-    expect(g.run.cash).toBe(Math.floor(270 * 2 * 0.995)); // 537
-    expect(g.run.minedValue).toBe(540);
+    // 59 초 * 1.5 = 88.5 -> 마지막 초의 1.5 를 채워 90
+    tapN(g, 90 - g.run.stats.laborTaps);
+    expect(g.run.stats.laborTaps).toBe(90);
+    expect(g.run.cash).toBe(Math.floor(90 * 2 * 0.995)); // 179
+    expect(g.run.minedValue).toBe(180);
   });
 
   it('AC-v2-14 쳇바퀴가 없는 판(단계 0)은 8시간 뒤 돌아와도 정산 0회(현금·빚 그대로)', () => {
@@ -104,22 +104,22 @@ describe('B. 진행 단계·첫 쳇바퀴(U-29: 줍기 없음, 쳇바퀴에서 �
     expect(g.run.settleNo).toBe(0);
   });
 
-  it('AC-v2-92(경제 부분) 단계 1 은 8시간 뒤 정산 2회분만, idle 2단계면 4회분', () => {
+  it('AC-v2-92(경제 부분) 단계 1 은 8시간 뒤 정산 6회분만(U-47: 2 -> 6), idle 2단계면 12회분', () => {
     const g = fresh();
     g.run.cash = 100000; // 연체 걱정이 없어야 상한까지 돈다
-    expect(offlineSettlementBudget(g)).toBe(2);
-    expect(economyCatchUp(g, 8 * 3600)).toBe(2);
-    expect(g.run.settleNo).toBe(2);
+    expect(offlineSettlementBudget(g)).toBe(6);
+    expect(economyCatchUp(g, 8 * 3600)).toBe(6);
+    expect(g.run.settleNo).toBe(6);
     const h = fresh();
     h.run.cash = 100000;
     h.family.tree.idle = 2;
-    expect(offlineSettlementBudget(h)).toBe(4);
-    expect(economyCatchUp(h, 8 * 3600)).toBe(4);
+    expect(offlineSettlementBudget(h)).toBe(12); // U-47: idle 단계마다 3번
+    expect(economyCatchUp(h, 8 * 3600)).toBe(12);
   });
 
   it('AC-v2-92(경제 부분) 시작한 그대로(현금 0) 떠나면 연체가 되는 정산 앞에서 멈춘다(0회)', () => {
     const g = fresh();
-    expect(offlineSettlementBudget(g)).toBe(2);
+    expect(offlineSettlementBudget(g)).toBe(6);
     expect(economyCatchUp(g, 8 * 3600)).toBe(0);
     expect(g.run.debts.shark1).toMatchObject({ principal: 300000, overdue: 0 });
   });
@@ -127,17 +127,17 @@ describe('B. 진행 단계·첫 쳇바퀴(U-29: 줍기 없음, 쳇바퀴에서 �
   it('AC-v2-15 빌리지 않고 초당 1.5회로 굴리기만 하면: 첫 정산 연체·딱지, 둘째 정산에 쳇바퀴 압류, 셋째 정산에 파산', () => {
     const g = fresh();
     const round = () => {
-      for (let t = 0; t < 180; t++) {
+      for (let t = 0; t < 60; t++) {
         for (let k = 0; k < (t % 2 === 0 ? 2 : 1); k++) stepMut(g, { type: 'action', action: { type: 'tap' } });
         tickN(g, 1);
       }
     };
     round();
-    // 번 537 은 전부 이자로. 못 낸 3,963 은 원금에, 생활비 1,000 은 캐피탈로
+    // 번 179 는 전부 이자로. 못 낸 1,321 은 원금에, 생활비 330 은 캐피탈로(U-47: 정산 60초)
     expect(g.run.settleNo).toBe(1);
     expect(g.run.cash).toBe(0);
-    expect(g.run.debts.shark1).toMatchObject({ principal: 300000 + 4500 - 537, overdue: 1 });
-    expect(g.run.debts.capital.principal).toBe(1000);
+    expect(g.run.debts.shark1).toMatchObject({ principal: 300000 + 1500 - 179, overdue: 1 });
+    expect(g.run.debts.capital.principal).toBe(330);
     expect(g.run.coinWheels.DTC.tagBy).toBe('shark1');
     round();
     expect(g.run.settleNo).toBe(2);

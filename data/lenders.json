@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "_doc": "채권처. rate 는 정산 1회당 이자율. limitByHouse 는 집 단계 0~4. ltv 는 조합(집 평가액 × ltv + 헛간 이상 설비 평가액 × collateralLtvBank). GDD_v2 3.5·4.6",
+  "_doc": "채권처. rate 는 정산 1회당 이자율. limitByHouse 는 집 단계 0~4. ltv 는 조합(집 평가액 × ltv + 헛간 이상 설비 평가액 × collateralLtvBank). GDD_v2 3.5·4.6 U-47: 정산이 60초가 되어 정산당 이자율을 1/3 로(조합 1% → 0.33%, 캐피탈 2% → 0.67%, 오소리 4% → 1.3%, 두 번째부터 6% → 2%, 독사 8% → 2.7%). 연체 한도(maxOverdue)는 수금원이 몇 번 찾아오는가라 그대로.",
   "lenders": [
     {
       "id": "bank",
       "name": "숲속중앙조합",
       "npc": "부엉이 지점장",
-      "rate": 0.01,
+      "rate": 0.0033,
       "maxOverdue": 3,
       "ltv": 0.8,
       "borrowUnit": 100000,
@@ -28,7 +28,7 @@
       "id": "capital",
       "name": "숲속 캐피탈",
       "npc": "창구 너구리",
-      "rate": 0.02,
+      "rate": 0.0067,
       "maxOverdue": 3,
       "limitByHouse": [
         200000,
@@ -52,7 +52,7 @@
       "id": "shark1",
       "name": "오소리 대부",
       "npc": "오소리 대부",
-      "rate": 0.04,
+      "rate": 0.013,
       "maxOverdue": 2,
       "limitByHouse": [
         500000,
@@ -65,19 +65,19 @@
       "stampUnit": 10000,
       "upfront": 0,
       "tagOrder": "cheapFirst",
-      "terms": "연대보증 포함. 이자 2회 연속 미납 시 담보물을 싼 것부터 가져갑니다. 같은 생에 두 번째로 빌리는 돈부터는 금리 6%.",
+      "terms": "연대보증 포함. 이자 2회 연속 미납 시 담보물을 싼 것부터 가져갑니다. 같은 생에 두 번째로 빌리는 돈부터는 금리 2%.",
       "lines": {
         "greet": "오셨어요. 필요하시면 말씀하세요.",
         "refuseLimit": "더는 못 드려요. 먼저 빌리신 것부터 좀 갚으셔야 돼요.",
         "dun": "이자가 아직입니다. 아시죠?"
       },
-      "repeatRate": 0.06
+      "repeatRate": 0.02
     },
     {
       "id": "shark2",
       "name": "뒷골목 독사 대부",
       "npc": "독사 대부",
-      "rate": 0.08,
+      "rate": 0.027,
       "maxOverdue": 2,
       "limitByHouse": [
         1000000,
@@ -106,7 +106,7 @@
       "maxOverdue": 1,
       "stampUnit": 10000,
       "upfront": 0,
-      "deadlineSettlements": 8,
+      "deadlineSettlements": 24,
       "tagOrder": "expensiveFirst",
       "terms": "상속세·증여세. 기한에 남은 만큼 비싼 설비부터 공매(구매가의 50%)하고, 그래도 남으면 캐피탈 빚으로 넘어갑니다.",
       "lines": {
@@ -125,28 +125,28 @@
     ]
   },
   "offers": {
-    "rollProbPerSettlement": 0.2,
+    "rollProbPerSettlement": 0.07,
     "list": [
       {
         "id": "promo",
         "by": "capital",
-        "cooldownSettlements": 5,
+        "cooldownSettlements": 15,
         "effect": {
           "type": "promoLoan",
           "lender": "capital",
           "amount": 50000,
-          "halfSettlements": 3,
-          "doubleSettlements": 3,
+          "halfSettlements": 9,
+          "doubleSettlements": 9,
           "halfMul": 0.5,
           "doubleMul": 2
         },
-        "text": "첫 3회 이자 반값 대출 5만",
+        "text": "첫 9회 이자 반값 대출 5만",
         "log": "offer:promo"
       },
       {
         "id": "waive",
         "by": "shark1",
-        "cooldownSettlements": 5,
+        "cooldownSettlements": 15,
         "effect": {
           "type": "waiveInterest",
           "lender": "shark1",
@@ -159,7 +159,7 @@
       {
         "id": "fake_waive",
         "by": "shark2",
-        "cooldownSettlements": 5,
+        "cooldownSettlements": 15,
         "effect": {
           "type": "waiveInterest",
           "lender": "shark2",
@@ -172,7 +172,7 @@
       {
         "id": "rollover",
         "by": "shark1",
-        "cooldownSettlements": 5,
+        "cooldownSettlements": 15,
         "effect": {
           "type": "rollover",
           "lenders": [
@@ -186,7 +186,7 @@
       {
         "id": "flyer",
         "by": "wire",
-        "cooldownSettlements": 5,
+        "cooldownSettlements": 15,
         "effect": {
           "type": "flyer"
         },

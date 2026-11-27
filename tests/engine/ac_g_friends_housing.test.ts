@@ -65,14 +65,14 @@ describe('G. 친구·집', () => {
     expect(g.run.bankruptcy!.cause).toBe('FRIEND');
   });
 
-  it('AC-v2-78 텐트, 현금 500,000 에서 오두막으로 이사: 현금 0, 생활비 8,000, 조합 한도 400,000, 마을 색감이 바뀐다', () => {
+  it('AC-v2-78 텐트, 현금 500,000 에서 오두막으로 이사: 현금 0, 생활비 2,700(U-47: 정산 60초), 조합 한도 400,000, 마을 색감이 바뀐다', () => {
     const g = bare();
     g.run.cash = 500000;
     const mood0 = houseDefs[g.run.house].villageMood;
     expect(A(g, { type: 'move', to: 1 }).ok).toBe(true);
     expect(g.run.cash).toBe(0);
-    expect(livingDue(g)).toBe(8000);
-    expect(balance.living.byHouse[1]).toBe(8000);
+    expect(livingDue(g)).toBe(2700);
+    expect(balance.living.byHouse[1]).toBe(2700);
     expect(lenderLimit(g, 'bank')).toBe(400000);
     expect(houseDefs[g.run.house].villageMood).not.toBe(mood0);
   });

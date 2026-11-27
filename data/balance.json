@@ -12,14 +12,14 @@
       "DTC"
     ],
     "autoSell": true,
-    "_doc": "시작(U-29·U-30): 현금 0. 엄마 빚 30만은 전부 오소리 대부 장부이고 옛 이자 1.5%(정산당 4,500)가 그대로 붙는다(inheritedRateCap: 물려받은 몫에만 금리 상한). 새로 빌리는 돈은 그 채권처 금리(오소리 4%). 엄마가 남긴 도토코인 쳇바퀴 한 대(캐면 바로 팔기 켜짐).",
+    "_doc": "시작(U-29·U-30): 현금 0. 엄마 빚 30만은 전부 오소리 대부 장부이고 옛 이자 0.5%(정산당 1,500)가 그대로 붙는다(inheritedRateCap: 물려받은 몫에만 금리 상한). 새로 빌리는 돈은 그 채권처 금리(오소리 1.3%). 엄마가 남긴 도토코인 쳇바퀴 한 대(캐면 바로 팔기 켜짐).",
     "inheritedRateCap": {
-      "shark1": 0.015
+      "shark1": 0.005
     }
   },
   "settlement": {
-    "intervalSec": 180,
-    "dayCycleSettlements": 4,
+    "intervalSec": 60,
+    "dayCycleSettlements": 12,
     "dayLabels": [
       "아침",
       "낮",
@@ -33,15 +33,17 @@
       "bank",
       "tax",
       "upkeep"
-    ]
+    ],
+    "introSec": 20,
+    "_doc": "U-47: 정산 한 번 = 60초(첫 생의 튜토리얼 동안은 introSec 20초). 정산 한 번에 오가는 돈(이자율 · 일당 · 캐는 값 · 생활비)은 180초 때의 1/3 이라 초당 흐름은 그대로다. 정산 횟수로 센 것(오픈 기념 · 금리 인상 쉬는 기간 등)은 3배로 늘려 실제 시간의 뜻을 지킨다. dayCycleSettlements 12 = 아침 · 낮 · 저녁 · 밤이 정산 세 번씩."
   },
   "living": {
     "byHouse": [
-      1000,
-      8000,
-      30000,
-      140000,
-      650000
+      330,
+      2700,
+      10000,
+      47000,
+      217000
     ],
     "upkeepMaxOverdue": 3
   },
@@ -54,18 +56,14 @@
       "mockTrades": 1,
       "levCaps": [
         {
-          "cap": 10
-        },
-        {
-          "cap": 50,
-          "closedTrades": 3
+          "cap": 50
         },
         {
           "cap": 200,
-          "closedTrades": 10,
           "waiver": true
         }
-      ]
+      ],
+      "_doc": "U-47: 처음부터 1~200배. 50배를 넘는 배율은 생마다 한 번 위험 고지 확인서에 발도장을 찍는 순간 바로 열린다(막는 문이 아니라 한 장면)."
     },
     "stage0OfflineSettlements": 0
   },
@@ -113,12 +111,12 @@
   "trading": {
     "feeRate": 0.0004,
     "openingEvent": {
-      "_doc": "FRX 숲거래소 오픈 기념(U-40, 1막 시제품 balance.act1 에서만 켜진다): 생마다 처음 freeSettlements 번의 정산 동안 거래 수수료 0, 끝나면 afterFeeRate(U-46: 0.02% → 0.01%, 사용자: 펀딩비까지 하면 어렵고, 대신 거래세를 낮추는 방안). 1막은 펀딩비가 없다(futures.ts fundingRateNow). 시세는 건드리지 않는다.",
-      "freeSettlements": 20,
+      "_doc": "FRX 숲거래소 오픈 기념(U-40, 1막 시제품 balance.act1 에서만 켜진다): 생마다 처음 freeSettlements 번의 정산(U-47: 20번 → 60번, 정산이 60초가 되어 실제 시간 1시간은 그대로) 동안 거래 수수료 0, 끝나면 afterFeeRate(U-46: 0.02% → 0.01%, 사용자: 펀딩비까지 하면 어렵고, 대신 거래세를 낮추는 방안). 1막은 펀딩비가 없다(futures.ts fundingRateNow). 시세는 건드리지 않는다.",
+      "freeSettlements": 60,
       "afterFeeRate": 0.0001
     },
     "maintenanceRate": 0.001,
-    "fundingRate": 1e-05,
+    "fundingRate": 3.3e-06,
     "minMargin": 1000,
     "wipeoutBelow": 1000,
     "maxNotional": 200000000,
@@ -161,7 +159,7 @@
   },
   "offline": {
     "replayMaxSec": 60,
-    "maxSettlements": 2,
+    "maxSettlements": 6,
     "protectFromOverdueBankruptcy": true,
     "barSec": 60
   },
@@ -176,14 +174,14 @@
     "guaranteeShareOfParentShark": 0.5,
     "simpleDebtCapBase": 300000,
     "simpleDebtCapMaxMul": 3,
-    "simpleRateCap": 0.04,
-    "graceSettlements": 3,
+    "simpleRateCap": 0.013,
+    "graceSettlements": 9,
     "simpleCash": 30000,
     "limitedCash": 70000,
     "renounceCash": 70000,
     "taxRate": 0.3,
     "taxDeduction": 300000,
-    "taxDeadlineSettlements": 8,
+    "taxDeadlineSettlements": 24,
     "grudge": {
       "limitMul": 0.5,
       "ratePlus": 0.01
@@ -252,8 +250,8 @@
     }
   },
   "labor": {
-    "_doc": "알바 햄스터(U-30): 구매가 없음. 쳇바퀴 한 대에 한 마리, 정산마다 grossPerSettle 어치를 캐고 일당 wage 를 받는다. 대수와 무관하게 고정. 일당을 못 받으면 나간다. 일당 1,800 → 1,600(U-43: 알바가 든 쳇바퀴는 주인공이 못 굴린다 — 탭 수입 없이도 첫 대출 뒤 쳇바퀴 둘 · 알바 둘이면 정산마다 조금 남게).",
-    "wage": 1600,
-    "grossPerSettle": 6500
+    "_doc": "알바 햄스터(U-30): 구매가 없음. 쳇바퀴 한 대에 한 마리, 정산마다 grossPerSettle 어치를 캐고 일당 wage 를 받는다. 대수와 무관하게 고정. 일당을 못 받으면 나간다. 일당 1,800 → 1,600(U-43: 알바가 든 쳇바퀴는 주인공이 못 굴린다 — 탭 수입 없이도 첫 대출 뒤 쳇바퀴 둘 · 알바 둘이면 정산마다 조금 남게). U-47: 정산이 60초가 되어 정산당 캐는 값 6,500 → 2,170, 일당 1,600 → 530(초당은 그대로).",
+    "wage": 530,
+    "grossPerSettle": 2170
   }
 }

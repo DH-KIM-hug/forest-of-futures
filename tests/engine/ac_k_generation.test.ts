@@ -194,20 +194,20 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(Object.keys(g.family.lenderRelations)).toEqual([]); // 빚을 다 갚았으니 떼인 곳 없음
   });
 
-  it('AC-v2-108 부모 남은 빚 캐피탈 20만·독사 80만(그중 30만은 연체 이자), 연속 단순승인 0: 승계 70만을 상한 30만에 맞춰 캐피탈 85,714·독사 214,286, 독사 금리 4%, 정산 1~3회 이자 0, 4회째부터 이자', () => {
+  it('AC-v2-108 부모 남은 빚 캐피탈 20만·독사 80만(그중 30만은 연체 이자), 연속 단순승인 0: 승계 70만을 상한 30만에 맞춰 캐피탈 85,714·독사 214,286, 독사 금리 상한 1.3%(U-47: 4% -> 1.3%, 독사 2.7% 를 반 아래로 누른다), 정산 1~9회 이자 0(U-47: 3 -> 9), 10회째부터 이자', () => {
     const g = parentWithDebts({ capital: 200000, shark2: 800000 });
     g.run.stats['capInt.shark2'] = 300000;
     g.run.cash = 0;
     bust(g);
     inherit(g, 'simple');
     const r = g.run;
-    expect(r.debts.capital).toMatchObject({ principal: 85714, inherited: 85714, graceLeft: 3 });
-    expect(r.debts.shark2).toMatchObject({ principal: 214286, inherited: 214286, rateCap: 0.04, graceLeft: 3 });
+    expect(r.debts.capital).toMatchObject({ principal: 85714, inherited: 85714, graceLeft: 9 });
+    expect(r.debts.shark2).toMatchObject({ principal: 214286, inherited: 214286, rateCap: 0.013, graceLeft: 9 });
     expect(interestDue(g, 'shark2')).toBe(0);
-    settleOnce(g, 3);
+    settleOnce(g, 9);
     expect(r.debts.shark2.graceLeft).toBe(0);
-    expect(r.debts.shark2.principal).toBe(214286); // 3회 동안 이자 없음
-    expect(interestDue(g, 'shark2')).toBe(Math.ceil(214286 * 0.04 * (g.family.lenderRelations.shark2 === 'grudge' ? 1 : 1)));
+    expect(r.debts.shark2.principal).toBe(214286); // 9회 동안 이자 없음
+    expect(interestDue(g, 'shark2')).toBe(Math.ceil(214286 * 0.013));
     expect(g.family.lenderRelations.shark2).toBe('tie');
   });
 
@@ -281,7 +281,7 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(r.house).toBe(1);
     expect(Object.keys(r.coinWheels)).toEqual(['DTC']);
     expect(r.debts.tax.principal).toBe(210000);
-    expect(r.taxDueIn).toBe(8);
+    expect(r.taxDueIn).toBe(24); // U-47: 기한 8 -> 24회(정산 60초)
     expect(Object.keys(g.family.ledger).length).toBe(ledgerBefore);
     expect(g.family.traits).toEqual(['silverspoon']);
     expect(g.family.retireStreak).toBe(1);
@@ -325,12 +325,12 @@ describe('K. 세대·가훈·가문 특성', () => {
     expect(h.run.equipment.map((u) => u.tier)).toEqual(['wheel2']);
   });
 
-  it('AC-v2-115 haggle 3: 오소리 이자율 4% × 0.97³. nerve 2: 계좌를 열 때 상한 200', () => {
+  it('AC-v2-115 haggle 3: 오소리 이자율 1.3% × 0.97³(U-47). nerve 2: 계좌를 열 때 상한 200', () => {
     const g = bare();
     g.family.tree = { haggle: 3, nerve: 2 };
     noDebts(g);
     g.run.debts.shark1.principal = 100000;
-    expect(interestDue(g, 'shark1')).toBe(Math.ceil(100000 * 0.04 * Math.pow(0.97, 3)));
+    expect(interestDue(g, 'shark1')).toBe(Math.ceil(100000 * 0.013 * Math.pow(0.97, 3)));
     g.run.minedValue = 50000;
     g.run.cash = 100000;
     giveWheel(g, 'DTC');

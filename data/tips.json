@@ -1,7 +1,7 @@
 {
   "version": 2,
   "_doc": "정보 출처 11종. 모든 규칙은 지나간 시세만 읽는다(정산 단위). kind=fact 의 문구(시스템)는 사실만 — 오른다/내린다/사라/팔아라 같은 권유 표현 금지. params 는 기준 수치(GDD_v2 3.11) — M2 에서 엔진이 쓴다. defaultAvg 는 서버 hello 의 avg 가 없을 때(가짜 시세·테스트) 쓰는 '평소' 값(σ√n×1.6, 고가-저가 폭). 여기서 wire_break/flow 는 방향이 있어 수첩에 센다(counted).",
-  "sourceCooldownSettlements": 5,
+  "sourceCooldownSettlements": 15,
   "followWindowSec": 20,
   "hitWindowSec": 300,
   "sources": [
@@ -11,7 +11,7 @@
       "kind": "fact",
       "rule": "breakout",
       "params": {
-        "lookbackSettles": 5,
+        "lookbackSettles": 15,
         "volMul": 2.5
       },
       "counted": true,
@@ -86,7 +86,7 @@
       "kind": "pitch",
       "rule": "mom5",
       "params": {
-        "settles": 5,
+        "settles": 15,
         "rangeMul": 1.5
       },
       "counted": true,
@@ -105,7 +105,7 @@
       "kind": "pitch",
       "rule": "chaseLong",
       "params": {
-        "settles": 5,
+        "settles": 15,
         "riseMul": 1.0
       },
       "counted": true,
@@ -123,7 +123,7 @@
       "kind": "pitch",
       "rule": "dipBuy",
       "params": {
-        "settles": 5,
+        "settles": 15,
         "dropMul": 1.5
       },
       "counted": true,
@@ -206,7 +206,7 @@
       }
     }
   ],
-  "barsKept": 40,
+  "barsKept": 120,
   "defaultAvg": {
     "DTC": {
       "vol180": 1.0,
@@ -232,11 +232,16 @@
       "vol180": 1.0,
       "range180": 0.008587,
       "range300s": 0.011085
+    },
+    "FLY": {
+      "vol180": 1.0,
+      "range180": 0.0225,
+      "range300s": 0.0317
     }
   },
   "entryNearHighLowPct": 0.1,
   "avgSettleMul": {
     "mom5": "sqrt",
-    "note": "15분(정산 5회) 기준 폭 = range180 × sqrt(5)"
+    "note": "U-47: 정산 봉은 60초. 봉 하나의 평소 폭 = range180 × sqrt(봉 초 ÷ 180), 15분(정산 15회) 기준 폭 = 그 값 × sqrt(15)"
   }
 }

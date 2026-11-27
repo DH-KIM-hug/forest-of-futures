@@ -12,7 +12,7 @@ import type { GameState } from '../../src/engine/types';
 const act1 = (on: boolean) => { if (on) (balance as { act1?: unknown }).act1 = { friends: false }; else delete (balance as { act1?: unknown }).act1; };
 afterEach(() => act1(false));
 
-/** 첫 생의 길 그대로(엔진 행동): 추심원 → 사무소 10만 → 첫 정산 → 알바 → 쳇바퀴 → 알바 → 전재산 10배 롱 → 짜 둔 시세로 청산 → 10만 더(6%) */
+/** 첫 생의 길 그대로(엔진 행동): 추심원 → 사무소 10만 → 첫 정산 → 알바 → 쳇바퀴 → 알바 → 전재산 10배 롱 → 짜 둔 시세로 청산 → 10만 더(2%, U-47 전 6%) */
 function firstLifeAfterTutorial(): GameState {
   const g = fresh();
   A(g, { type: 'borrow', lender: 'shark1' });
@@ -38,19 +38,19 @@ const view = (g: GameState) => ({
 });
 
 describe('새 생 = 튜토리얼이 끝난 자리 (U-46)', () => {
-  it('엔진 길로 만든 첫 생의 튜토리얼 끝과 같다: 손에 100,000 · 빚 50만(엄마 30만 + 4% 10만 + 6% 10만) · 이자 14,500 · 폰 · 쳇바퀴 둘에 알바 둘', () => {
+  it('엔진 길로 만든 첫 생의 튜토리얼 끝과 같다: 손에 100,000 · 빚 50만(엄마 30만 + 1.3% 10만 + 2% 10만) · 이자 4,800(U-47) · 폰 · 쳇바퀴 둘에 알바 둘', () => {
     act1(true);
     const a = firstLifeAfterTutorial();
     const b = fresh(); applyPostTutorial(b);
     expect(view(b)).toEqual(view(a));
-    expect(view(b)).toMatchObject({ cash: 100_000, debt: 500_000, interest: 14_500, phone: true, mom: true, extras: ['wheel2:staffed'] });
+    expect(view(b)).toMatchObject({ cash: 100_000, debt: 500_000, interest: 4_800, phone: true, mom: true, extras: ['wheel2:staffed'] });
   });
-  it('다른 것은 둘: 정산 시계와 오픈 기념(정산 20번)이 새로 시작한다. 튜토리얼의 청산은 기록에 없다', () => {
+  it('다른 것은 둘: 정산 시계와 오픈 기념(정산 60번, U-47)이 새로 시작한다. 튜토리얼의 청산은 기록에 없다', () => {
     act1(true);
     const a = firstLifeAfterTutorial();
     const b = fresh(); applyPostTutorial(b);
-    expect(feeEventLeft(b.run)).toBe(20);
-    expect(feeEventLeft(a.run)).toBe(19);
+    expect(feeEventLeft(b.run)).toBe(60);
+    expect(feeEventLeft(a.run)).toBe(59);
     expect(b.run.settleIn).toBe(balance.settlement.intervalSec);
     expect((b.run.stats.liqCount as number | undefined) ?? 0).toBe(0);
   });

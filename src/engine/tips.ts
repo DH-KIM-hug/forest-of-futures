@@ -6,6 +6,8 @@ import { tipKey } from './futures';
 import { logEvent, notify } from './util';
 import { bump } from './stats';
 import type { GameState, MarketAvg, SettleBar, TipRecord } from './types';
+import { barRange } from './market';
+import { settleSec } from './pace';
 
 interface Source {
   id: string; name: string; kind: 'fact' | 'pitch' | 'advice'; rule: string; params: Record<string, number>; counted: boolean;
@@ -21,12 +23,14 @@ function dirFor(src: Source, run: GameState['run'], market: string): { dir: 0 | 
   const bars = run.mkt.bars[market] ?? [];
   if (!bars.length) return null;
   const b = bars[bars.length - 1];
-  const prev = bars.slice(0, -1).slice(-5);
   const avg: MarketAvg = run.mkt.avg[market];
   const P = src.params;
-  const n5 = bars.slice(-(P.settles ?? 5));
+  const prev = bars.slice(0, -1).slice(-(P.lookbackSettles ?? 15));
+  const n5 = bars.slice(-(P.settles ?? 15));
   const move5 = n5.length ? (n5[n5.length - 1].c - n5[0].o) / n5[0].o : 0;
-  const avg15 = avg.range180 * Math.sqrt(P.settles ?? 5);
+  // 봉 하나의 평소 폭(U-47: 정산 봉이 60초다 — 3분 폭을 봉 길이로 줄인다). 15분(정산 15회) 폭 = 그 값 × √15
+  const one = barRange(avg, settleSec(run));
+  const avg15 = one * Math.sqrt(P.settles ?? 15);
   switch (src.rule) {
     case 'breakout': {
       if (prev.length < 1 || b.vol < P.volMul) return null;
@@ -42,11 +46,11 @@ function dirFor(src: Source, run: GameState['run'], market: string): { dir: 0 | 
       if (b.buy <= P.buyShareLow) return { dir: -1, vol: b.vol };
       return null;
     }
-    case 'vol': return rangeOf(b) >= P.rangeMul * avg.range180 ? { dir: 0 } : null;
-    case 'mom1': return Math.abs(moveOf(b)) > P.rangeMul * avg.range180 ? { dir: moveOf(b) > 0 ? 1 : -1 } : null;
-    case 'mom5': return n5.length >= (P.settles ?? 5) && Math.abs(move5) > P.rangeMul * avg15 ? { dir: move5 > 0 ? 1 : -1 } : null;
-    case 'chaseLong': return n5.length >= (P.settles ?? 5) && move5 >= (P.riseMul ?? 1) * avg15 ? { dir: 1 } : null;
-    case 'dipBuy': return n5.length >= (P.settles ?? 5) && move5 <= -(P.dropMul ?? 1.5) * avg15 ? { dir: 1 } : null;
+    case 'vol': return rangeOf(b) >= P.rangeMul * one ? { dir: 0 } : null;
+    case 'mom1': return Math.abs(moveOf(b)) > P.rangeMul * one ? { dir: moveOf(b) > 0 ? 1 : -1 } : null;
+    case 'mom5': return n5.length >= (P.settles ?? 15) && Math.abs(move5) > P.rangeMul * avg15 ? { dir: move5 > 0 ? 1 : -1 } : null;
+    case 'chaseLong': return n5.length >= (P.settles ?? 15) && move5 >= (P.riseMul ?? 1) * avg15 ? { dir: 1 } : null;
+    case 'dipBuy': return n5.length >= (P.settles ?? 15) && move5 <= -(P.dropMul ?? 1.5) * avg15 ? { dir: 1 } : null;
     case 'flowFade': {
       if (b.vol < 3) return null;
       if (b.buy >= 0.75) return { dir: -1 };
@@ -83,7 +87,7 @@ function speak(g: GameState, src: Source, market: string, dir: 0 | 1 | -1, vol?:
   }
 }
 
-/** 정산이 끝난 뒤(봉을 닫은 뒤) 호출. 출처마다 정산 5회에 한 번까지만 말한다. */
+/** 정산이 끝난 뒤(봉을 닫은 뒤) 호출. 출처마다 정산 15회(15분)에 한 번까지만 말한다. */
 export function runTips(g: GameState): void {
   const run = g.run;
   for (const src of SOURCES) {

@@ -4,7 +4,8 @@ import { balance } from './data';
 export const comma = (n: number) => Math.round(n).toLocaleString('ko-KR');
 export const signed = (n: number) => (n >= 0 ? '+' : '-') + comma(Math.abs(n));
 
-export const timeOfDay = (run: RunState): DayTime => (run.settleNo % balance.settlement.dayCycleSettlements) as DayTime;
+/** 하루 = dayCycleSettlements 번의 정산, 아침 · 낮 · 저녁 · 밤이 똑같이 나눠 갖는다(U-47: 12번, 셋씩) */
+export const timeOfDay = (run: RunState): DayTime => { const c = balance.settlement.dayCycleSettlements; return Math.min(3, Math.floor(((run.settleNo % c) * 4) / c)) as DayTime; };
 export const isNight = (run: RunState) => timeOfDay(run) === 3;
 
 /** 속보 띠·말풍선용 알림. 최근 20개만 남긴다. */

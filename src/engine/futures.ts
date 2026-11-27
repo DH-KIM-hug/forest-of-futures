@@ -1,5 +1,5 @@
 // 선물 거래(GDD_v2 3.10): 격리 마진, 수수료, 펀딩비, 청산, 손절·익절, 추가 진입. 봉 단위 처리(processBar)도 여기.
-import { balance, marketById, tipsData } from './data';
+import { balance, marketById, marketDefs, tipsData } from './data';
 import { ceilS, floorS } from './rng';
 import { fundedByAt, refuse } from './loans';
 import { inJump } from './market';
@@ -7,11 +7,13 @@ import { checkLiquidationWipeout } from './bankruptcy';
 import { bump } from './stats';
 import { logEvent, notify, josa } from './util';
 import { totalDebt } from './selectors';
-import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeEventLeft, feeRateRun, hasRun, liqRefund, openingEvent } from './skilltree';
+import { addFeeMul, dayLimitHit, effectiveLevCapsRun, exitFeeMul, feeEventLeft, feeRateRun, hasRun, holdBuffer, liqRefund, openingEvent, winBonus } from './skilltree';
 import type { Bar } from './feed/types';
 import type { Dir, GameState, LastPos, Position, Res, RunState } from './types';
 
 const T = balance.trading;
+/** 동시에 들 수 있는 포지션 수(U-47): 종목마다 하나, 거래할 수 있는 종목 수만큼 */
+export const MAX_POSITIONS = marketDefs.filter((m) => m.tradable).length;
 
 // ── 순수 공식 ───────────────────────────────────────────────────────────
 export const pnlOf = (p: Position, price: number): number => (p.dir * (price - p.entry)) / p.entry * p.notional;
@@ -30,11 +32,12 @@ export function marginFromPct(cash: number, lev: number, pct: number, rate: numb
   return floorS((cash * pct) / 100);
 }
 /** 지금 값에 정리하면 돌려받는 돈. exitMul = 나올 때 수수료에 곱하는 값(스킬트리 A2·C1 의 꼬리, 기본 1). */
-export const closeBack = (p: Position, price: number, exitMul = 1): number => floorS(Math.max(0, p.margin + pnlOf(p, price) - exitFee(p, exitMul)));
+/** 한 번 버티기(B1)로 오소리가 대신 넣어 준 돈(p.buf)은 정리할 때 먼저 돌려준다 */
+export const closeBack = (p: Position, price: number, exitMul = 1): number => floorS(Math.max(0, p.margin + pnlOf(p, price) - exitFee(p, exitMul) - (p.buf ?? 0)));
 /** 나올 때 수수료 */
 export const exitFee = (p: Position, exitMul = 1): number => entryFee(p.notional, (p.feeRate ?? T.feeRate) * exitMul);
 
-/** 지금 쓸 수 있는 배율 상한: 계좌 개설 직후 10 -> 끝난 거래 3건 50 -> 10건 + 확인서 200. */
+/** 지금 쓸 수 있는 배율 상한(U-47): 계좌를 열면 50, 위험 고지 확인서에 발도장을 찍으면 200. */
 export function levCapNow(run: RunState): number {
   const f = run.futures;
   let cap = f.levCap;
@@ -45,8 +48,8 @@ export function levCapNow(run: RunState): number {
   }
   return cap;
 }
-export const waiverAvailable = (run: RunState): boolean =>
-  run.futures.open && !run.futures.waiver && run.futures.closedTrades >= (effectiveLevCapsRun(run)[2].closedTrades as number);
+/** 확인서에 발도장을 찍을 수 있는가: 계좌가 있고 이번 생에 아직 안 찍었다(U-47: 거래 수 조건 없음) */
+export const waiverAvailable = (run: RunState): boolean => run.futures.open && !run.futures.waiver;
 
 export const positionList = (run: RunState): Position[] => Object.values(run.positions);
 /** 숏 보험: 가진 종목의 숏 명목 / 그 종목 지갑 평가액(%, 내림, 100 상한). */
@@ -117,7 +120,7 @@ export function openPosition(g: GameState, o: OpenParams): Res {
     if (ex.lev !== o.lev) return refuse('lev', '추가 진입은 같은 배율만 됩니다.');
     return addToPosition(g, { market: o.market, margin: o.margin, marginPct: o.marginPct });
   }
-  if (Object.keys(run.positions).length >= 5) return refuse('count', '포지션은 최대 5개입니다.');
+  if (Object.keys(run.positions).length >= MAX_POSITIONS) return refuse('count', `포지션은 종목마다 하나, 최대 ${MAX_POSITIONS}개입니다.`);
   if (!T.leverageOptions.includes(o.lev)) return refuse('lev', '없는 배율입니다.');
   if (o.lev > levCapNow(run)) return refuse('cap', `배율 상한 ${levCapNow(run)}배`);
   const lc0 = run.lastClose;
@@ -145,7 +148,7 @@ export function openPosition(g: GameState, o: OpenParams): Res {
   tagsFor(g, p);
   if (lastC && lastC.market === o.market) {
     if (lastC.liq) p.revenge = { dir: lastC.dir === o.dir ? 'same' : 'opposite', within: run.settleNo - lastC.settleNo };
-    if (lastC.dir !== o.dir && run.tick - lastC.tick <= balance.settlement.intervalSec) bump(run, 'flips', 1);
+    if (lastC.dir !== o.dir && run.tick - lastC.tick <= 180) bump(run, 'flips', 1); // 3분 안에 뒤집었다(정산 간격과 무관한 실제 시간)
   }
   run.positions[o.market] = p;
   if (feeEventLeft(run) > 0) bump(run, 'eventNotional', notional); // 오픈 기념 동안 수수료 없이 오간 크기(끝날 때 "아낀 수수료"를 셈한다)
@@ -239,6 +242,13 @@ function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: {
   const back = kind === 'liq' ? refund : closeBack(p, price, exitFeeMul(run, kind));
   run.cash += back;
   const pnl = back - p.margin0 - p.feesPaid + (kind === 'liq' ? 0 : 0);
+  // 고배율 축하금(B3a, U-47): 거래 손익과 따로 현금에 얹는다(거래 기록의 손익 · 수익률은 시세가 낸 그대로)
+  const bonus = kind === 'liq' ? 0 : winBonus(run, p.lev, pnl);
+  if (bonus > 0) {
+    run.cash += bonus;
+    bump(run, 'winBonus', bonus);
+    run.stats.lastBonus = { market: p.market, tick: run.tick, amount: bonus };
+  }
   const loss = Math.max(0, -pnl);
   if (loss > 0) bump(run, 'dayLoss', loss);
   delete run.positions[p.market];
@@ -284,6 +294,7 @@ function finish(g: GameState, p: Position, price: number, kind: EndKind, opts: {
   else if (kind === 'sl') logEvent(run, 'sl', `${name} ${side} 손절`, pnl);
   else logEvent(run, 'close', `${name} ${side} 정리`, pnl);
   if (refund > 0) logEvent(run, 'liq:refund', `증거금 일부가 돌아왔다(비상금 주머니 · 물타기)`, refund);
+  if (bonus > 0) logEvent(run, 'bonus', `오소리 대부의 고배율 축하금`, bonus);
   if (kind === 'liq') {
     notify(run, `${name} ${side} 강제 청산. 증거금 ${josa(p.margin0.toLocaleString('ko-KR'), '이', '가')} 사라졌습니다.`, 'warn');
     checkLiquidationWipeout(g);
@@ -317,6 +328,22 @@ function touched(p: Position, price: number): 'liq' | 'sl' | 'tp' | null {
   return null;
 }
 
+/** 한 번 버티기(B1, U-47): 이 포지션이 처음 청산가에 닿았다 — 오소리가 증거금의 일부를 대신 넣는다(포지션마다 한 번). 넣었으면 true.
+ *  넣은 돈(p.buf)은 정리할 때 먼저 돌려준다(closeBack). 끝내 청산되면 오소리가 떼인다. */
+function holdOnce(g: GameState, p: Position): boolean {
+  const run = g.run;
+  if (p.held) return false;
+  const buf = holdBuffer(run, p.margin0);
+  if (buf < 1) return false;
+  p.held = true;
+  p.buf = buf;
+  p.margin += buf;
+  bump(run, 'holdSaves', 1);
+  run.stats.lastHold = { market: p.market, tick: run.tick, amount: buf };
+  logEvent(run, 'hold', `${marketById[p.market].name} 청산 직전, 오소리 대부가 ${buf.toLocaleString('ko-KR')} 대신 넣음`, buf);
+  return true;
+}
+
 /** 한 틱: 시장이 열려 있을 때 포지션마다 청산 > 손절 > 익절 순으로 본다. 정지 중엔 얼린다. */
 export function processPrice(g: GameState, market: string, price: number): void {
   const run = g.run;
@@ -341,12 +368,14 @@ export function processPrice(g: GameState, market: string, price: number): void 
   }
   // 마진콜 전화(B2): 포지션마다 한 번. 받을지 말지는 화면이 묻는다(addMargin · marginCallDone).
   // 전화가 오는 때 = 청산까지 가는 길의 60%를 지났을 때(ROE 기준). 고정 −70% 로는 200배에서 청산(약 −80%)까지 틈이 0.05% 뿐이라 전화보다 청산이 먼저 온다(U-38).
-  if (!p.called && hasRun(run, 'B2') && roe <= roePct(p, liqPrice(p)) * 0.6) {
+  // 여러 종목을 함께 들 때(U-47): 다른 포지션의 전화를 받는 중이면 이 포지션은 기다린다(끊으면 다음 틱에 이쪽 전화가 온다)
+  if (!p.called && !run.marginCall && hasRun(run, 'B2') && roe <= roePct(p, liqPrice(p)) * 0.6) {
     p.called = true;
     run.marginCall = { market, tick: run.tick };
   }
   if (roe <= -80) p.roeLowSec += 1;
-  const hit = touched(p, price);
+  let hit = touched(p, price);
+  if (hit === 'liq' && holdOnce(g, p)) hit = touched(p, price);
   if (hit === 'liq') finish(g, p, price, 'liq');
   else if (hit === 'sl') finish(g, p, stopPrice(p, p.slRoe!), 'sl');
   else if (hit === 'tp') finish(g, p, stopPrice(p, p.tpRoe!), 'tp');
@@ -385,7 +414,7 @@ export function processBar(g: GameState, bar: Bar): void {
   const fav = p.dir === 1 ? bar.h : bar.l;
   const crossed = (price: number, level: number) => (p.dir === 1 ? price <= level : price >= level);
   const crossedFav = (price: number, level: number) => (p.dir === 1 ? price >= level : price <= level);
-  if (crossed(unfav, liqPrice(p))) return finish(g, p, liqPrice(p), 'liq');
+  if (crossed(unfav, liqPrice(p)) && !(holdOnce(g, p) && !crossed(unfav, liqPrice(p)))) return finish(g, p, liqPrice(p), 'liq');
   if (p.slRoe !== null && crossed(unfav, stopPrice(p, p.slRoe))) return finish(g, p, stopPrice(p, p.slRoe), 'sl');
   if (p.tpRoe !== null && crossedFav(fav, stopPrice(p, p.tpRoe))) return finish(g, p, stopPrice(p, p.tpRoe), 'tp');
   void totalDebt;

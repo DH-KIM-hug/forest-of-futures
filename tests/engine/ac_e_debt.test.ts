@@ -103,42 +103,41 @@ describe('E. 빚·도장·제안', () => {
     A(g, { type: 'rollover', lender: 'shark1' });
     A(g, { type: 'rollover', lender: 'shark1' });
     settleOnce(g);
-    expect(g.run.debts.shark1.principal).toBe(150000 + 6600);
+    expect(g.run.debts.shark1.principal).toBe(150000 + 2145); // 이자 1,950(15만 × 1.3%) × 1.1
     expect(g.run.debts.shark1.overdue).toBe(0);
     expect(g.run.debts.capital.overdue).toBe(1);
   });
 
-  it('AC-v2-63 족제비의 반값 제안: 그 대출의 이자는 3회 동안 절반, 4~6회는 2배', () => {
+  it('AC-v2-63 족제비의 반값 제안: 그 대출의 이자는 9회 동안 절반, 10~18회는 2배(U-47: 정산 60초라 3배로)', () => {
     const g = bare();
     g.run.offers = [{ id: 'promo', from: 0, by: 'capital' }];
     const c0 = g.run.cash;
     expect(acceptOffer(g, 'promo').ok).toBe(true);
     expect(g.run.cash - c0).toBe(50000);
     expect(g.run.debts.capital.principal).toBe(200000);
-    const rate = 0.02;
-    const normal = 150000 * rate;
+    // 캐피탈 0.67%: 보통 몫 15만 → 1,005, 반값 대출 5만 → 반값 167.5 · 두 배 670 · 보통 335
     const seq: number[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 20; i++) {
       seq.push(interestDue(g, 'capital'));
       g.run.promos.capital.forEach((p) => (p.n += 1));
     }
-    expect(seq).toEqual([normal + 500, normal + 500, normal + 500, normal + 2000, normal + 2000, normal + 2000, 4000, 4000]);
+    expect(seq).toEqual([...Array(9).fill(1173), ...Array(9).fill(1675), 1340, 1340]);
   });
 
   it('AC-v2-64 금리 인상 사건 중엔 모든 이자가 2배(기질 서류 체질이면 2.5배)', () => {
     const g = bare();
-    expect(interestDue(g, 'shark1')).toBe(6000);
+    expect(interestDue(g, 'shark1')).toBe(1950); // 15만 × 1.3%
     g.run.effects.push({ id: 'rate_hike', type: 'rateMultiplier', multiplier: 2, remaining: 2 });
-    expect(interestDue(g, 'shark1')).toBe(12000);
+    expect(interestDue(g, 'shark1')).toBe(3900);
     settleOnce(g);
-    expect(g.run.lastSettlement!.interest).toBe(18000);
+    expect(g.run.lastSettlement!.interest).toBe(5910); // 오소리 3,900 + 캐피탈 2,010
     const h = bare();
     h.family.traits = ['paperwork'];
     h.run.effects.push({ id: 'rate_hike', type: 'rateMultiplier', multiplier: 2, remaining: 2 });
-    expect(interestDue(h, 'shark1')).toBe(15000);
+    expect(interestDue(h, 'shark1')).toBe(4875);
   });
 
-  it('AC-v2-65 세금 빚 210,000, 기한 8회째 현금 50,000: 5만을 내고 남은 16만만큼 비싼 설비부터 공매', () => {
+  it('AC-v2-65 세금 빚 210,000, 기한 24회째 현금 50,000: 5만을 내고 남은 16만만큼 비싼 설비부터 공매', () => {
     const g = bare();
     noDebts(g);
     g.run.debts.tax.principal = 210000;
@@ -153,7 +152,7 @@ describe('E. 빚·도장·제안', () => {
     expect(g.run.debts.tax.principal).toBe(0);
     expect(g.run.taxDueIn).toBeNull();
     expect(g.run.cash).toBe(200000 - 160000); // 공매 대금에서 세금을 내고 남은 돈
-    expect(g.run.debts.capital.principal).toBe(1000); // 생활비는 캐피탈 비상금
+    expect(g.run.debts.capital.principal).toBe(330); // 생활비 330 은 캐피탈 비상금
   });
 
   it('AC-v2-65 공매로도 모자라면 캐피탈 원금으로 넘어간다', () => {
@@ -168,7 +167,7 @@ describe('E. 빚·도장·제안', () => {
     expect(g.run.stats.soldForTax).toBe(1);
     expect(g.run.equipment).toHaveLength(0);
     expect(g.run.debts.tax.principal).toBe(0);
-    expect(g.run.debts.capital.principal).toBe(160000 - 10000 + 1000);
+    expect(g.run.debts.capital.principal).toBe(160000 - 10000 + 330);
   });
 
   it('세금은 기한 전에는 청구되지 않고 기한이 다가오면 줄어든다', () => {
@@ -182,58 +181,58 @@ describe('E. 빚·도장·제안', () => {
     expect(g.run.debts.tax.principal).toBe(200000);
   });
 
-  it('U-31 오소리는 같은 생의 두 번째 대출부터 6%: 그 10만은 따로 적혀(tranche) 제 금리로 이자가 붙는다', () => {
-    const g = bare(); // 오소리 15만(4%)
-    expect(lenderById.shark1).toMatchObject({ rate: 0.04, repeatRate: 0.06 });
-    expect(nextBorrowRate(g, 'shark1')).toBe(0.04);
+  it('U-31 오소리는 같은 생의 두 번째 대출부터 2%(U-47, 옛 6%): 그 10만은 따로 적혀(tranche) 제 금리로 이자가 붙는다', () => {
+    const g = bare(); // 오소리 15만(1.3%)
+    expect(lenderById.shark1).toMatchObject({ rate: 0.013, repeatRate: 0.02 });
+    expect(nextBorrowRate(g, 'shark1')).toBe(0.013);
     expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true);
     expect(g.run.stats['borrow.shark1']).toBe(1);
     expect(g.run.debts.shark1.principal).toBe(250000);
     expect(g.run.debts.shark1.tranches ?? []).toEqual([]); // 첫 대출은 보통 금리라 따로 적지 않는다
-    expect(interestDue(g, 'shark1')).toBe(10000); // 250,000 × 4%
-    expect(nextBorrowRate(g, 'shark1')).toBe(0.06);
+    expect(interestDue(g, 'shark1')).toBe(3250); // 250,000 × 1.3%
+    expect(nextBorrowRate(g, 'shark1')).toBe(0.02);
     expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true);
     expect(g.run.debts.shark1.principal).toBe(350000);
-    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 100000, rate: 0.06 }]);
-    expect(interestDue(g, 'shark1')).toBe(16000); // 250,000 × 4% + 100,000 × 6%
-    expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true); // 세 번째도 6%
-    expect(interestDue(g, 'shark1')).toBe(22000);
+    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 100000, rate: 0.02 }]);
+    expect(interestDue(g, 'shark1')).toBe(5250); // 250,000 × 1.3% + 100,000 × 2%
+    expect(A(g, { type: 'borrow', lender: 'shark1' }).ok).toBe(true); // 세 번째도 2%
+    expect(interestDue(g, 'shark1')).toBe(7250);
     expect(g.run.debts.shark1.tranches!.reduce((a, t) => a + t.amount, 0)).toBe(200000);
   });
 
-  it('U-31 도장은 비싼 몫부터: 두 번째 대출 뒤 10,000 을 갚으면 이자가 600 줄고, 6% 몫이 다 없어진 뒤에야 4% 몫이 준다', () => {
+  it('U-31 도장은 비싼 몫부터: 두 번째 대출 뒤 10,000 을 갚으면 이자가 200 줄고, 2% 몫이 다 없어진 뒤에야 1.3% 몫이 준다', () => {
     const g = bare();
     g.run.cash = 0;
     A(g, { type: 'borrow', lender: 'shark1' });
     A(g, { type: 'borrow', lender: 'shark1' });
-    expect(interestDue(g, 'shark1')).toBe(16000);
+    expect(interestDue(g, 'shark1')).toBe(5250);
     expect(A(g, { type: 'stamp', lender: 'shark1' })).toMatchObject({ ok: true, paid: 10000 });
-    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 90000, rate: 0.06 }]);
-    expect(interestDue(g, 'shark1')).toBe(15400); // −600
+    expect(g.run.debts.shark1.tranches).toEqual([{ amount: 90000, rate: 0.02 }]);
+    expect(interestDue(g, 'shark1')).toBe(5050); // −200
     expect(A(g, { type: 'stamp', lender: 'shark1', mult: 10 })).toMatchObject({ ok: true, paid: 100000 });
-    expect(g.run.debts.shark1.tranches ?? []).toEqual([]); // 6% 몫 90,000 이 먼저, 나머지 10,000 은 4% 몫에서
+    expect(g.run.debts.shark1.tranches ?? []).toEqual([]); // 2% 몫 90,000 이 먼저, 나머지 10,000 은 1.3% 몫에서
     expect(g.run.debts.shark1.principal).toBe(240000);
-    expect(interestDue(g, 'shark1')).toBe(9600); // 240,000 × 4%
-    // 다 갚아도 이번 생의 다음 대출은 여전히 6%
-    expect(nextBorrowRate(g, 'shark1')).toBe(0.06);
+    expect(interestDue(g, 'shark1')).toBe(3120); // 240,000 × 1.3%
+    // 다 갚아도 이번 생의 다음 대출은 여전히 2%
+    expect(nextBorrowRate(g, 'shark1')).toBe(0.02);
   });
 
-  it('U-31 물려받은 몫(옛 이자)·새로 빌린 몫(4%)·두 번째 몫(6%)이 한 장부에: 갚는 순서는 6% -> 4% -> 물려받은 몫', () => {
-    const g = fresh(); // 오소리 30만, 물려받은 몫 1.5%
+  it('U-31 물려받은 몫(옛 이자)·새로 빌린 몫(1.3%)·두 번째 몫(2%)이 한 장부에: 갚는 순서는 2% -> 1.3% -> 물려받은 몫', () => {
+    const g = fresh(); // 오소리 30만, 물려받은 몫 0.5%
     A(g, { type: 'borrow', lender: 'shark1' });
-    expect(interestDue(g, 'shark1')).toBe(8500); // 4,500 + 4,000
+    expect(interestDue(g, 'shark1')).toBe(2800); // 1,500 + 1,300
     A(g, { type: 'borrow', lender: 'shark1' });
     expect(g.run.debts.shark1).toMatchObject({ principal: 500000, inherited: 300000 });
-    expect(interestDue(g, 'shark1')).toBe(14500); // 4,500 + 4,000 + 6,000
+    expect(interestDue(g, 'shark1')).toBe(4800); // 1,500 + 1,300 + 2,000
     expect(A(g, { type: 'stamp', lender: 'shark1', mult: 10 })).toMatchObject({ paid: 100000 });
-    expect(interestDue(g, 'shark1')).toBe(8500);
+    expect(interestDue(g, 'shark1')).toBe(2800);
     expect(A(g, { type: 'stamp', lender: 'shark1', mult: 10 })).toMatchObject({ paid: 100000 });
     expect(g.run.debts.shark1).toMatchObject({ principal: 300000, inherited: 300000 });
-    expect(interestDue(g, 'shark1')).toBe(4500);
+    expect(interestDue(g, 'shark1')).toBe(1500);
     g.run.cash = 50000;
     A(g, { type: 'stamp', lender: 'shark1', mult: 'all' });
     expect(g.run.debts.shark1).toMatchObject({ principal: 250000, inherited: 250000 });
-    expect(interestDue(g, 'shark1')).toBe(3750); // 250,000 × 1.5%
+    expect(interestDue(g, 'shark1')).toBe(1250); // 250,000 × 0.5%
   });
 
   it('U-31 캐피탈·조합·독사에는 두 번째 대출 금리가 없다(빌린 횟수만 센다)', () => {
@@ -243,9 +242,9 @@ describe('E. 빚·도장·제안', () => {
     A(g, { type: 'borrow', lender: 'capital' });
     A(g, { type: 'borrow', lender: 'capital' });
     expect(g.run.stats['borrow.capital']).toBe(2);
-    expect(nextBorrowRate(g, 'capital')).toBe(0.02);
+    expect(nextBorrowRate(g, 'capital')).toBe(0.0067);
     expect(g.run.debts.capital.tranches ?? []).toEqual([]);
-    expect(interestDue(g, 'capital')).toBe(2000); // 100,000 × 2%
+    expect(interestDue(g, 'capital')).toBe(670); // 100,000 × 0.67%
     g.run.shark2Open = true;
     A(g, { type: 'borrow', lender: 'shark2' });
     expect(nextBorrowRate(g, 'shark2')).toBe(lenderById.shark2.rate);

@@ -1,4 +1,4 @@
-// U-42(회차 5) 엔진 쪽: 금리 인상은 쉬는 기간 20번 · 오픈 기념 수수료 무료가 남아 있는 동안에는 오지 않는다. 수수료율을 노드 레벨만으로 셈하는 순수 함수가 엔진의 셈과 같다.
+// U-42(회차 5) 엔진 쪽: 금리 인상은 쉬는 기간 60번(U-47, 옛 20번) · 오픈 기념 수수료 무료가 남아 있는 동안에는 오지 않는다. 수수료율을 노드 레벨만으로 셈하는 순수 함수가 엔진의 셈과 같다.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { bare } from './helpers';
 import { balance, eventById, eventsMeta } from '../../src/engine/data';
@@ -8,16 +8,16 @@ import { exitFeeMul, exitFeeMulLevels, feeEventLeft, feeRateLevels, feeRateRun, 
 const act1 = (on: boolean) => { if (on) (balance as { act1?: unknown }).act1 = { friends: false }; else delete (balance as { act1?: unknown }).act1; };
 afterEach(() => { act1(false); eventsMeta.rollProbPerSettlement = 0; });
 
-describe('금리 인상: 쉬는 기간 20번 · 오픈 기념 중에는 없다 (U-42 ⑥)', () => {
+describe('금리 인상: 쉬는 기간 60번(U-47) · 오픈 기념 중에는 없다 (U-42 ⑥)', () => {
   beforeEach(() => { eventsMeta.rollProbPerSettlement = 1; });
-  it('데이터: 쉬는 기간 20번, 오픈 기념 중에는 뽑지 않는다는 표시. 두 배 · 두 번 · 예고 한 번은 그대로', () => {
+  it('데이터: 쉬는 기간 60번, 오픈 기념 중에는 뽑지 않는다는 표시. 두 배 · 예고 한 번은 그대로, 효과는 정산 6번(U-47)', () => {
     const e = eventById.rate_hike as unknown as { effect: { value: number; settlements: number }; announceBefore: number; cooldownSettlements: number; notDuringFeeEvent: boolean };
-    expect(e.cooldownSettlements).toBe(20);
+    expect(e.cooldownSettlements).toBe(60);
     expect(e.notDuringFeeEvent).toBe(true);
-    expect(e.effect).toMatchObject({ value: 2, settlements: 2 });
+    expect(e.effect).toMatchObject({ value: 2, settlements: 6 });
     expect(e.announceBefore).toBe(1);
   });
-  it('오픈 기념이 남아 있는 정산(0~19번째)에는 씨앗 400개를 돌려도 한 번도 안 뽑힌다. 끝난 정산(20번째)부터는 뽑힌다', () => {
+  it('오픈 기념이 남아 있는 정산(0~59번째)에는 씨앗 400개를 돌려도 한 번도 안 뽑힌다. 끝난 정산(60번째)부터는 뽑힌다', () => {
     act1(true);
     const fires = (settleNo: number): number => {
       let k = 0;
@@ -28,11 +28,11 @@ describe('금리 인상: 쉬는 기간 20번 · 오픈 기념 중에는 없다 (
       }
       return k;
     };
-    for (const no of [3, 10, 19]) { const g = bare(); g.run.settleNo = no; expect(feeEventLeft(g.run)).toBeGreaterThan(0); expect(fires(no)).toBe(0); }
-    const g = bare(); g.run.settleNo = 20; expect(feeEventLeft(g.run)).toBe(0);
-    expect(fires(20)).toBeGreaterThan(20);
+    for (const no of [3, 30, 59]) { const g = bare(); g.run.settleNo = no; expect(feeEventLeft(g.run)).toBeGreaterThan(0); expect(fires(no)).toBe(0); }
+    const g = bare(); g.run.settleNo = 60; expect(feeEventLeft(g.run)).toBe(0);
+    expect(fires(60)).toBeGreaterThan(20);
   });
-  it('오픈 기념이 없는 판(1막이 아닌 판)에서는 예전처럼 뽑힌다 — 쉬는 기간만 20번', () => {
+  it('오픈 기념이 없는 판(1막이 아닌 판)에서는 예전처럼 뽑힌다 — 쉬는 기간만 60번', () => {
     eventsMeta.rollProbPerSettlement = 0.35;
     const g = bare(); g.run.rng = 4242;
     const at: number[] = [];
@@ -44,7 +44,7 @@ describe('금리 인상: 쉬는 기간 20번 · 오픈 기념 중에는 없다 (
       g.run.notices = g.run.notices.slice(-3);
     }
     expect(at.length).toBeGreaterThan(3);
-    for (let i = 1; i < at.length; i++) expect(at[i] - at[i - 1]).toBeGreaterThanOrEqual(20);
+    for (let i = 1; i < at.length; i++) expect(at[i] - at[i - 1]).toBeGreaterThanOrEqual(60);
   });
 });
 

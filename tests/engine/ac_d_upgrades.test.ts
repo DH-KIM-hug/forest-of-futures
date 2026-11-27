@@ -41,29 +41,29 @@ describe('D. 업그레이드', () => {
     const b = giveEquip(g, 'wheel2', 'BTH', 50000);
     const b0 = equipGross(g, b);
     g.run.upgrades.coinWheel.DTC = { oil: 3 };
-    expect(equipGross(g, a)).toBeCloseTo(6500 * 1.06, 6);
+    expect(equipGross(g, a)).toBeCloseTo(2170 * 1.06, 6);
     expect(equipGross(g, b)).toBe(b0);
     expect(upgradeCost(g.run, 'oil', 'DTC')).toBe(2662);
   });
 
-  it('AC-v2-49 관성 바퀴 2단계(멍도토 쳇바퀴): 설비 없어도 정산마다 390어치, 전기세 0', () => {
+  it('AC-v2-49 관성 바퀴 2단계(멍도토 쳇바퀴): 설비 없어도 정산마다 130어치(U-47: 정산 60초, 단계당 50 × 1.3 × 2), 전기세 0', () => {
     const g = bare();
     giveWheel(g, 'MDT');
     g.run.upgrades.coinWheel.MDT = { spokes: 2 };
     settleOnce(g);
-    expect(g.run.lastSettlement!.mined).toBeCloseTo(390, 6);
+    expect(g.run.lastSettlement!.mined).toBeCloseTo(130, 6);
     expect(g.run.lastSettlement!.power).toBe(0);
-    expect(g.run.wallet.MDT.qty * g.run.refPrice.MDT).toBeCloseTo(390, 6);
+    expect(g.run.wallet.MDT.qty * g.run.refPrice.MDT).toBeCloseTo(130, 6);
   });
 
-  it('AC-v2-50 절전 5단계: 전기를 쓰는 설비(알바 햄스터 단계)의 전기세 10,290 -> 9,776(올림). 알바가 돌리는 보조 쳇바퀴는 전기세가 없다', () => {
+  it('AC-v2-50 절전 5단계: 전기를 쓰는 설비(알바 햄스터 단계)의 전기세 3,430 -> 3,259(올림). 알바가 돌리는 보조 쳇바퀴는 전기세가 없다', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'helper', 'DTC', 60000);
     const w = giveEquip(g, 'wheel2', 'DTC', 50000);
-    expect(equipPower(g, u)).toBe(10290);
+    expect(equipPower(g, u)).toBe(3430);
     g.run.upgrades.coinWheel.DTC = { power: 5 };
-    expect(equipPower(g, u)).toBe(9776); // 10,290 × 0.95 = 9,775.5
+    expect(equipPower(g, u)).toBe(3259); // 3,430 × 0.95 = 3,258.5
     expect(equipPower(g, w)).toBe(0);
   });
 

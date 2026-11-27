@@ -7,11 +7,12 @@ import { clone, stepMut } from './game';
 import { closePosition as closeAtMarket } from './futures';
 import type { Tick } from './feed/types';
 import type { GameState } from './types';
+import { settleSec } from './pace';
 
-/** 떠난 동안 돌릴 경제 정산 횟수: 0단계는 0, 그 밖은 2 + idle 단계. */
+/** 떠난 동안 돌릴 경제 정산 횟수: 0단계는 0, 그 밖은 6 + 3 × idle 단계(U-47). */
 export function offlineSettlementBudget(g: GameState): number {
   if (stage(g.run) === 0) return balance.progression.stage0OfflineSettlements;
-  return balance.offline.maxSettlements + treeLevel(g.family, 'idle');
+  return balance.offline.maxSettlements + 3 * treeLevel(g.family, 'idle'); // U-47: 정산 60초 — 단계마다 3번(예전 3분)
 }
 
 /** 어느 곳이든 연체가 (한도 - 1)이 되는 정산이면 true. 그 앞에서 멈춘다. */
@@ -23,7 +24,7 @@ function wouldReachGuard(g: GameState): boolean {
 
 /** 자리를 비운 동안의 경제 정산을 현재 가격으로 돌린다. 처리한 정산 수를 돌려준다. */
 export function economyCatchUp(g: GameState, awaySec: number): number {
-  const budget = Math.min(offlineSettlementBudget(g), Math.floor(awaySec / balance.settlement.intervalSec) + (awaySec > balance.offline.replayMaxSec ? 99 : 0));
+  const budget = Math.min(offlineSettlementBudget(g), Math.floor(awaySec / settleSec(g.run)) + (awaySec > balance.offline.replayMaxSec ? 99 : 0));
   let done = 0;
   for (let i = 0; i < budget; i++) {
     if (g.run.over) break;
@@ -72,7 +73,7 @@ export function visit(g: GameState, place: string): Res {
 /**
  * 60초를 넘게 비웠다가 돌아왔을 때. bars = 떠난 틱 이후의 1분 봉(종목마다). 제자리 수정, 시간표를 돌려준다.
  * - 포지션: 봉마다 불리한 쪽 먼저, 청산 > 손절 > 익절. 정지 구간의 봉은 건너뛰고 펀딩비도 붙지 않는다. 펀딩비는 180틱 경계마다.
- * - 경제: `2 + idle` 회분(0단계는 0회)만, 떠난 직후 정산 시각에, 그 시각의 봉 종가로. 연체가 한도-1 이 되는 정산 앞에서 멈춘다.
+ * - 경제: `6 + 3 × idle` 회분(0단계는 0회)만, 떠난 직후 정산 시각에, 그 시각의 봉 종가로. 연체가 한도-1 이 되는 정산 앞에서 멈춘다.
  * 60초 이하의 끊김은 이 함수가 아니라 1초 틱을 그대로 재생한다(`replayTicks`).
  */
 export function catchUp(g: GameState, bars: Bar[], awaySec: number): AwayReport {
@@ -88,7 +89,7 @@ export function catchUp(g: GameState, bars: Bar[], awaySec: number): AwayReport 
   let econDone = 0;
   let validTicks = 0;
   let lastN = leaveN;
-  const interval = bal.settlement.intervalSec;
+  const interval = settleSec(run);
   const keep = bal.offline.barSec * 90 * 24 * 60; // 보관 기간 90일(초) — 1분 봉 기준
   void keep;
   const tooLong = awaySec > 90 * 24 * 3600;

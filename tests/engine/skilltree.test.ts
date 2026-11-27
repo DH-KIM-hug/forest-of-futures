@@ -202,7 +202,7 @@ describe('재화: 갚은 원금 5만당 1개', () => {
     expect(g.family.skill).toEqual({ R: 1, C1: 1 });
     expect(g.run.skill).toEqual({ R: 1, C1: 1 });
     expect(g.run.futures.open).toBe(true);
-    expect(levCapNow(g.run)).toBe(10); // 배율은 그대로
+    expect(levCapNow(g.run)).toBe(50); // 계좌를 열면 50배(U-47), 확인서는 생마다 새로
     expect(defaultSl(g)).toBe(-50);
     expect(g.run.stats.goldGranted).toBeUndefined(); // 새 생은 다시 받을 수 있다
   });
@@ -221,12 +221,13 @@ describe('수수료', () => {
     expect(feeRate(g, 10)).toBe(T.feeRate);
     expect(feeRate(g, 200)).toBe(T.feeRate);
   });
-  it('A1 × A4, 50배 이상이면 × B1, C2 는 보험료 +0.01%p', () => {
-    const g = trader({ A1: 5, A4: 2, B1: 3 });
-    const a1 = 1 - 0.5 * (1 - 0.85 ** 5), a4 = 1 - 0.3 * (1 - 0.85 ** 2), b1 = 1 - 0.3 * (1 - 0.85 ** 3);
+  it('A1 × A4, C2 는 보험료 +0.01%p. B1 · B3a 는 수수료를 건드리지 않는다(U-47)', () => {
+    const g = trader({ A1: 5, A4: 2, B1: 3, B2: 1, B3a: 4 });
+    const a1 = 1 - 0.5 * (1 - 0.85 ** 5), a4 = 1 - 0.3 * (1 - 0.85 ** 2);
     expect(feeRate(g, 10)).toBeCloseTo(T.feeRate * a1 * a4, 12);
     expect(feeRate(g, 25)).toBeCloseTo(T.feeRate * a1 * a4, 12);
-    expect(feeRate(g, 50)).toBeCloseTo(T.feeRate * a1 * a4 * b1, 12);
+    expect(feeRate(g, 50)).toBeCloseTo(T.feeRate * a1 * a4, 12);
+    expect(feeRate(g, 200)).toBeCloseTo(T.feeRate * a1 * a4, 12);
     const c = trader({ C2: 1 });
     expect(feeRate(c, 10)).toBeCloseTo(T.feeRate + 0.0001, 12);
   });
@@ -278,7 +279,7 @@ describe('원칙: 시세를 이기게 해 주는 노드는 없다', () => {
     }
   });
   it('같은 시세에서 청산되는 틱도 같다(비상금 주머니는 돌아오는 돈만 바꾼다)', () => {
-    const a = trader(), b = trader({ C2: 30, A1: 30, A4: 30, B1: 30 });
+    const a = trader(), b = trader({ C2: 30, A1: 30, A4: 30 }); // B1(한 번 버티기)은 아래 따로: 빌린 증거금으로 한 번 버틴다
     for (const g of [a, b]) {
       g.run.futures.levCap = 200;
       A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
@@ -292,27 +293,113 @@ describe('원칙: 시세를 이기게 해 주는 노드는 없다', () => {
   });
 });
 
-describe('배율 단계', () => {
-  it('B1: 50배가 처음부터', () => {
+describe('배율 단계(U-47: 나무는 배율을 열지 않는다)', () => {
+  it('계좌를 열면 50배, 확인서에 발도장을 찍는 순간 200배. 끝난 거래 수는 보지 않는다', () => {
     const g = bare();
-    openFutures(g, 10);
-    expect(levCapNow(g.run)).toBe(10);
-    on(g, { B1: 1 });
+    openFutures(g, 50);
     expect(levCapNow(g.run)).toBe(50);
-    expect(effectiveLevCaps(g).map((c) => c.closedTrades)).toEqual([undefined, 0, 10]);
-    expect(waiverAvailable(g.run)).toBe(false);
-  });
-  it('B3a: 200배가 거래 10건 없이 확인서만으로', () => {
-    const g = bare();
-    openFutures(g, 10);
-    on(g, { B1: 1, B3a: 1 });
-    expect(levCapNow(g.run)).toBe(50); // 확인서는 여전히 찍어야 한다
+    expect(effectiveLevCaps(g).map((c) => c.cap)).toEqual([50, 200]);
+    expect(effectiveLevCaps(g).some((c) => c.closedTrades !== undefined)).toBe(false);
+    expect(g.run.futures.closedTrades).toBe(0);
     expect(waiverAvailable(g.run)).toBe(true);
     expect(A(g, { type: 'signWaiver' }).ok).toBe(true);
     expect(levCapNow(g.run)).toBe(200);
-    const n = bare();
-    openFutures(n, 10);
+    expect(waiverAvailable(g.run)).toBe(false); // 생마다 한 번
+  });
+  it('B1 · B3a 가 있어도 배율 단계는 같다', () => {
+    const g = bare();
+    openFutures(g, 50);
+    on(g, { B1: 3, B2: 1, B3a: 1 });
+    expect(levCapNow(g.run)).toBe(50);
+    expect(effectiveLevCaps(g).map((c) => c.cap)).toEqual([50, 200]);
+    const n = bare(); // 계좌가 없으면 확인서도 없다
     expect(A(n, { type: 'signWaiver' }).ok).toBe(false);
+  });
+});
+
+describe('B1 한 번 버티기(U-47)', () => {
+  const b1 = (lv: number) => 0.3 * (1 - 0.85 ** lv);
+  it('청산가에 처음 닿으면 넣은 증거금 × 효과를 오소리가 대신 넣어 버틴다. 포지션마다 한 번', () => {
+    const g = trader({ B1: 5 });
+    A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
+    const p = g.run.positions.DTC;
+    const liq0 = liqPrice(p);
+    const buf = Math.floor(10000 * b1(5) + 1e-9);
+    tickN(g, 1, { DTC: ref * 0.9955 }); // 청산가(약 −0.4%) 아래: 나무 없는 판이면 여기서 끝난다
+    const q = g.run.positions.DTC;
+    expect(q).toBeDefined();
+    expect(q.held).toBe(true);
+    expect(q.buf).toBe(buf);
+    expect(q.margin).toBe(10000 + buf);
+    expect(liqPrice(q)).toBeLessThan(liq0); // 청산가가 멀어졌다
+    expect(g.run.stats.holdSaves).toBe(1);
+    expect(g.run.eventLog.some((e) => e.kind === 'hold' && e.amount === buf)).toBe(true);
+    // 두 번째로 닿으면 더는 없다
+    tickN(g, 1, { DTC: liqPrice(q) * 0.999 });
+    expect(g.run.positions.DTC).toBeUndefined();
+    expect(g.run.lastClose!.liq).toBe(true);
+    expect(g.run.stats.holdSaves).toBe(1);
+  });
+  it('버틴 뒤 정리하면 대신 넣은 돈은 먼저 돌려준다(손에 오는 돈은 넣은 돈이 없던 셈과 같다)', () => {
+    const g = trader({ B1: 5 });
+    A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
+    tickN(g, 1, { DTC: ref * 0.9955 });
+    const q = g.run.positions.DTC;
+    expect(q.buf).toBeGreaterThan(0);
+    tickN(g, 1, { DTC: ref }); // 제자리로 돌아왔다
+    const want = closeBack(q, ref);
+    expect(want).toBe(Math.floor(10000 + q.buf! - q.buf! - entryFee(q.notional, q.feeRate)));
+    const before = g.run.cash;
+    expect(A(g, { type: 'close', market: 'DTC' }).ok).toBe(true);
+    expect(g.run.cash).toBe(before + want);
+  });
+  it('노드가 없으면 버티지 않는다', () => {
+    const g = trader();
+    A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
+    tickN(g, 1, { DTC: ref * 0.9955 });
+    expect(g.run.positions.DTC).toBeUndefined();
+    expect(g.run.stats.holdSaves).toBeUndefined();
+  });
+});
+
+describe('B3a 고배율 축하금(U-47)', () => {
+  const tail1 = 0.1 * (1 - 0.85);
+  function winAt(levels: Record<string, number>, lev: number): { g: GameState; pnl: number; cash0: number } {
+    const g = trader(levels);
+    const cash0 = g.run.cash;
+    expect(A(g, { type: 'open', market: 'DTC', dir: 1, lev, margin: 10000 }).ok).toBe(true);
+    tickN(g, 1, { DTC: ref * 1.002 });
+    const p = g.run.positions.DTC;
+    const pnl = closeBack(p, g.run.prices.DTC) - p.margin0 - p.feesPaid; // 시세가 낸 손익(수수료 포함)
+    expect(A(g, { type: 'close', market: 'DTC' }).ok).toBe(true);
+    return { g, pnl, cash0 };
+  }
+  it('100배 이상으로 이긴 판: 수익 × 꼬리만큼 현금에 더 얹는다. 거래 손익은 그대로', () => {
+    const { g, pnl, cash0 } = winAt({ B1: 1, B2: 1, B3a: 1 }, 200);
+    expect(pnl).toBeGreaterThan(0);
+    const bonus = Math.floor(pnl * tail1 + 1e-9);
+    expect(bonus).toBeGreaterThan(0);
+    expect(g.run.stats.winBonus).toBe(bonus);
+    expect((g.run.stats.lastBonus as { amount: number }).amount).toBe(bonus);
+    expect(g.run.cash).toBe(cash0 + pnl + bonus);
+    const plain = winAt({}, 200);
+    expect(plain.pnl).toBe(pnl); // 시세가 낸 손익은 나무와 무관
+    expect(plain.g.run.cash).toBe(plain.cash0 + pnl);
+  });
+  it('50배로 이긴 판, 진 판, 청산된 판에는 없다', () => {
+    const fifty = winAt({ B1: 1, B2: 1, B3a: 1 }, 50);
+    expect(fifty.pnl).toBeGreaterThan(0);
+    expect(fifty.g.run.stats.winBonus).toBeUndefined();
+    const g = trader({ B1: 1, B2: 1, B3a: 1 });
+    A(g, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 10000 });
+    tickN(g, 1, { DTC: 67000 });
+    expect(g.run.positions.DTC).toBeUndefined();
+    expect(g.run.stats.winBonus).toBeUndefined();
+    const h = trader({ B1: 1, B2: 1, B3a: 1 });
+    A(h, { type: 'open', market: 'DTC', dir: 1, lev: 100, margin: 10000 });
+    tickN(h, 1, { DTC: ref * 0.999 });
+    A(h, { type: 'close', market: 'DTC' });
+    expect(h.run.stats.winBonus).toBeUndefined();
   });
 });
 

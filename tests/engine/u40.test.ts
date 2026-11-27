@@ -1,4 +1,4 @@
-// U-40(회차 3): FRX 숲거래소 오픈 기념 — 생마다 처음 20번의 정산 동안 거래 수수료 0, 끝나면 0.01%(U-46: 0.02% → 0.01%). 시세·청산 공식은 그대로.
+// U-40(회차 3): FRX 숲거래소 오픈 기념 — 생마다 처음 60번의 정산(U-47: 60초 정산이라 20번 → 60번, 실제 시간 1시간은 그대로) 동안 거래 수수료 0, 끝나면 0.01%(U-46: 0.02% → 0.01%). 시세·청산 공식은 그대로.
 import { afterEach, describe, expect, it } from 'vitest';
 import { A, bare, openFutures, settleOnce, tickN } from './helpers';
 import { balance } from '../../src/engine/data';
@@ -22,8 +22,8 @@ function trader(levels: Record<string, number> = {}): GameState {
 }
 
 describe('오픈 기념 수수료 무료 (U-40)', () => {
-  it('숫자: 정산 20번 무료, 끝나면 0.01%(U-46, 옛 0.04% · 0.02%보다 싸다). 1막 시제품에서만 켜진다', () => {
-    expect(T.openingEvent).toMatchObject({ freeSettlements: 20, afterFeeRate: 0.0001 });
+  it('숫자: 정산 60번 무료(U-47), 끝나면 0.01%(U-46, 옛 0.04% · 0.02%보다 싸다). 1막 시제품에서만 켜진다', () => {
+    expect(T.openingEvent).toMatchObject({ freeSettlements: 60, afterFeeRate: 0.0001 });
     expect(T.openingEvent.afterFeeRate).toBeLessThan(T.feeRate);
     expect(openingEvent()).toBeNull();
     const g = trader();
@@ -31,18 +31,18 @@ describe('오픈 기념 수수료 무료 (U-40)', () => {
     expect(baseFeeRate(g.run)).toBe(T.feeRate); // 이벤트가 없는 판은 그대로 0.04%
     act1(true);
     expect(openingEvent()).not.toBeNull();
-    expect(feeEventLeft(g.run)).toBe(20);
+    expect(feeEventLeft(g.run)).toBe(60);
     expect(feeRate(g, 200)).toBe(0);
   });
-  it('남은 횟수는 정산마다 하나씩 줄고, 스무 번째 정산이 끝나면 0.01%가 된다', () => {
+  it('남은 횟수는 정산마다 하나씩 줄고, 예순 번째 정산이 끝나면 0.01%가 된다', () => {
     act1(true);
     const g = trader();
-    for (let k = 0; k < 20; k++) {
-      expect(feeEventLeft(g.run)).toBe(20 - k);
+    for (let k = 0; k < 60; k++) {
+      expect(feeEventLeft(g.run)).toBe(60 - k);
       expect(feeRate(g, 50)).toBe(0);
       settleOnce(g);
     }
-    expect(g.run.settleNo).toBe(20);
+    expect(g.run.settleNo).toBe(60);
     expect(feeEventLeft(g.run)).toBe(0);
     expect(feeRate(g, 50)).toBeCloseTo(0.0001, 12);
     settleOnce(g, 3);
@@ -77,12 +77,12 @@ describe('오픈 기념 수수료 무료 (U-40)', () => {
   it('끝난 뒤: 0.01%를 내고, 나무의 할인(A1·A4)은 거기서부터 붙는다. 0 이 되지는 않는다', () => {
     act1(true);
     const g = trader({ R: 1, A1: 30, A2: 1, A3a: 1, A4: 30 });
-    g.run.settleNo = 20;
+    g.run.settleNo = 60;
     const r = feeRate(g, 25);
     expect(r).toBeLessThan(0.0001 * 0.36);
     expect(r).toBeGreaterThan(0);
     const plain = trader();
-    plain.run.settleNo = 20;
+    plain.run.settleNo = 60;
     const cash0 = plain.run.cash;
     A(plain, { type: 'open', market: 'DTC', dir: 1, lev: 50, margin: 50_000 });
     expect(plain.run.positions.DTC.feesPaid).toBe(250); // 250만 × 0.01%
@@ -92,7 +92,7 @@ describe('오픈 기념 수수료 무료 (U-40)', () => {
   it('무료일 때 연 포지션에 이벤트가 끝난 뒤 추가 진입하면 그 몫은 지금 수수료율로 낸다(나올 때는 크기로 가중 평균)', () => {
     act1(true);
     const g = trader();
-    g.run.settleNo = 19;
+    g.run.settleNo = 59;
     A(g, { type: 'open', market: 'DTC', dir: 1, lev: 10, margin: 50_000 });
     settleOnce(g);
     expect(feeEventLeft(g.run)).toBe(0);
@@ -111,11 +111,11 @@ describe('오픈 기념 수수료 무료 (U-40)', () => {
   it('생마다 다시 시작한다: 새 생의 정산 번호는 0 이다', () => {
     act1(true);
     const g = trader();
-    g.run.settleNo = 25;
+    g.run.settleNo = 75;
     expect(feeEventLeft(g.run)).toBe(0);
     const next = bare();
     expect(next.run.settleNo).toBe(0);
-    expect(feeEventLeft(next.run)).toBe(20);
+    expect(feeEventLeft(next.run)).toBe(60);
   });
 });
 

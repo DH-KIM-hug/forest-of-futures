@@ -15,6 +15,7 @@ import { interestDue, livingDue, netWorth, ownedCoins, price, refPrice } from '.
 import { bump } from './stats';
 import { lendersMeta } from './data';
 import { onTaxPaid } from './generation';
+import { settleSec } from './pace';
 import { refreshShark2Open } from './loans';
 import { comma, logEvent, notify } from './util';
 import type { CoinId, DebtId, GameState, PayId, RunState } from './types';
@@ -49,7 +50,7 @@ export function forecast(g: GameState) {
 export function creditMining(g: GameState, sec: number): number {
   const run = g.run;
   if (!(sec > 0) || run.over) return 0;
-  const k = sec / balance.settlement.intervalSec;
+  const k = sec / settleSec(run);
   const perCoin: Partial<Record<CoinId, number>> = {};
   for (const u of run.equipment) if (isActive(run, u)) perCoin[u.coin] = (perCoin[u.coin] ?? 0) + equipGross(g, u);
   for (const c of ownedCoins(run)) if (run.coinWheels[c].on) perCoin[c] = (perCoin[c] ?? 0) + spokesGross(g, c) + (wheelStaffed(run, c) ? staffedWheelGross(c) : 0);
@@ -66,7 +67,7 @@ export function creditMining(g: GameState, sec: number): number {
   return sum;
 }
 /** 이번 정산 구간에서 아직 안 들어온 캐는 값의 몫(0~1): 정산까지 남은 수입을 어림할 때 쓴다 */
-export const miningLeftShare = (run: RunState): number => Math.max(0, 1 - (((run.stats.creditedSec as number | undefined) ?? 0) / balance.settlement.intervalSec));
+export const miningLeftShare = (run: RunState): number => Math.max(0, 1 - (((run.stats.creditedSec as number | undefined) ?? 0) / settleSec(run)));
 
 export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void {
   const run = g.run;
@@ -78,7 +79,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
 
   // 1. 채굴: 캐는 값은 틱마다 조금씩 들어온다(creditMining, U-43). 정산은 이번 구간에 아직 안 들어온 나머지만 넣고(틱 없이 정산만 부르는 따라잡기 · 미리 보기는 구간 전체가 여기서 들어온다),
   //    구간 동안 캔 값의 합을 보고서에 적는다. 한 구간의 합은 예전(정산 때 한꺼번에)과 같다.
-  creditMining(g, Math.max(0, balance.settlement.intervalSec - ((st.creditedSec as number | undefined) ?? 0)));
+  creditMining(g, Math.max(0, settleSec(run) - ((st.creditedSec as number | undefined) ?? 0)));
   rep.mined = Math.round(((st.minedCur as number | undefined) ?? 0) * 1e6) / 1e6; // 틱마다 나눠 넣은 값의 합(끝자리 오차를 턴다)
   st.creditedSec = 0;
   st.minedCur = 0;

@@ -48,9 +48,9 @@ export function equipNetNow(g: GameState, u: EquipmentUnit): number {
   return equipGross(g, u) * (price(run, u.coin) / refPrice(run, u.coin)) - equipPower(g, u);
 }
 export const isReverseMargin = (g: GameState, u: EquipmentUnit): boolean => equipNetNow(g, u) <= 1e-9;
-/** 종목 쳇바퀴가 혼자 도는 양(관성 바퀴): 정산당 150어치 × 단계 × g. 전기세 없음. */
+/** 종목 쳇바퀴가 혼자 도는 양(관성 바퀴): 정산당 50어치 × 단계 × g(U-47: 정산 60초, 예전 180초 때 150). 전기세 없음. */
 export function spokesGross(g: GameState, coin: string): number {
-  return 150 * wheelLevel(g.run, coin, 'spokes') * wheelByCoin[coin].yieldMul;
+  return 50 * wheelLevel(g.run, coin, 'spokes') * wheelByCoin[coin].yieldMul;
 }
 /** 켜진 설비 전체의 기준 초당 순수입 합(달리기 레벨 연동 몫만큼 탭에 들어간다). */
 export const baseNetPerSecSum = (run: RunState): number => run.equipment.reduce((a, u) => a + (isActive(run, u) ? tierById[u.tier].netPerSec : 0), 0);
