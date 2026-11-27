@@ -7,13 +7,14 @@ import { useBeatOver } from './CutIn';
 
 type Stage = 'ask' | 'busy' | 'done';
 
-/** 이익으로 닫았을 때 뜨는 스티커형 물음. 저장하면 카드 미리보기를 보여 준다. */
+/** 이익으로 닫았을 때 뜨는 스티커형 물음(U-49: 카드를 먼저 그려 미리보기로 보여 주고, [자랑하기] 한 번에 공유 창, 공유가 안 되면 이미지로 저장). */
 export function ProfitPrompt() {
   const p = useProto((s) => s.profit);
   const [stage, setStage] = useState<Stage>('ask');
   const [thumb, setThumb] = useState<string | null>(null);
   const [note, setNote] = useState('');
-  useEffect(() => { setStage('ask'); setThumb(null); setNote(''); }, [p]);
+  const cvRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => { setStage('ask'); setThumb(null); setNote(''); cvRef.current = null; }, [p]);
   // 장면(이긴 판의 고르기 등)이 떠 있는 동안에는 기다린다(U-42): 고르는 단추 위에 겹쳐 뜨지 않게. 장면이 끝나면 그때부터 15초
   const talking = useProto((s) => s.scenes.length > 0);
   const free = useBeatOver();
@@ -34,17 +35,24 @@ export function ProfitPrompt() {
     el.style.top = 'auto';
     el.style.bottom = `${root.getBoundingClientRect().bottom - chart.getBoundingClientRect().bottom + 2}px`;
   });
-  if (!p || talking || !free) return null;
+  // 뜨자마자 카드를 그려 둔다: 무엇을 자랑하게 될지 미리 보이고, 누르면 바로 공유 창이 열린다(공유 창은 누른 직후에만 열린다)
+  const shown = !!p && !talking && free;
+  useEffect(() => {
+    if (!shown || !p || cvRef.current) return;
+    let live = true;
+    renderCard(p).then((cv) => { if (!live) return; cvRef.current = cv; setThumb(cv.toDataURL('image/png')); (window as unknown as { __lastCard?: string }).__lastCard = cv.toDataURL('image/png'); }).catch(() => { /* 누를 때 다시 그린다 */ });
+    return () => { live = false; };
+  }, [shown, p]);
+  if (!p || !shown) return null;
   const close = () => useProto.getState().patch({ profit: null });
   const save = async () => {
     setStage('busy');
     try {
-      const cv = await renderCard(p);
-      setThumb(cv.toDataURL('image/png'));
-      (window as unknown as { __lastCard?: string }).__lastCard = cv.toDataURL('image/png');
+      const cv = cvRef.current ?? await renderCard(p);
+      if (!cvRef.current) { cvRef.current = cv; setThumb(cv.toDataURL('image/png')); (window as unknown as { __lastCard?: string }).__lastCard = cv.toDataURL('image/png'); }
       const r = await saveCard(cv, p.date);
       if (r !== 'cancelled') play('shutter');
-      setNote(r === 'shared' ? '공유했어요' : r === 'downloaded' ? '이미지로 저장했어요' : '저장하지 않았어요');
+      setNote(r === 'shared' ? '자랑했어요' : r === 'downloaded' ? '이미지로 저장했어요' : '보내지 않았어요');
     } catch { setNote('그림을 만들지 못했어요'); }
     setStage('done');
   };
@@ -58,9 +66,10 @@ export function ProfitPrompt() {
         </>
       ) : (
         <>
-          <div className="tx"><b>{p.gold ? '금테 수익 인증서 저장할까요?' : '수익 인증서 저장할까요?'}</b><small>{p.coin} {p.dir === 1 ? '롱' : '숏'} {p.lev}배, +{comma(Math.round(p.pnl))} 도토리</small></div>
+          {thumb && <img className="th" src={thumb} alt="수익 인증서 미리보기" data-card-thumb />}
+          <div className="tx"><b>{p.gold ? '금테 수익 인증서 나왔어요' : '수익 인증서 나왔어요'}</b><small>{p.coin} {p.dir === 1 ? '롱' : '숏'} {p.lev}배, +{comma(Math.round(p.pnl))} 도토리</small></div>
           <div className="bt">
-            <button className="yes" onClick={save} disabled={stage === 'busy'}>{stage === 'busy' ? '그리는 중…' : '저장'}</button>
+            <button className="yes" data-brag onClick={save} disabled={stage === 'busy'}>{stage === 'busy' ? '그리는 중' : '자랑하기'}</button>
             <button className="no" onClick={close} disabled={stage === 'busy'}>건너뛰기</button>
           </div>
         </>

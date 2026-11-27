@@ -151,7 +151,11 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
     }
     case 'profit': {
       const g = ready();
-      P.patch({ wins: 2, closes: 3, profit: { coin: marketById.DTC.name, dir: 1, lev: 50, roe: 128.4, pnl: 38520, entry: 0.8421, exit: 0.8441, heldSec: 187, wins: 2, closes: 3, gen: 2, date: new Date() } });
+      // U-49: 날다람쥐코인 200배 두 배 판(로고 · 넣은 돈 · 등급 도장 · 자랑 한 줄이 든 카드)
+      const fly = q.get('pcard') !== 'dtc';
+      P.patch({ wins: 2, closes: 3, profit: fly
+        ? { coin: marketById.FLY?.name ?? 'FLY', market: 'FLY', dir: 1, lev: 200, roe: 128.4, pnl: 32330, margin: 25179, tier: '두 배', entry: 94.1, exit: 94.16, heldSec: 41, wins: 2, closes: 3, gen: 2, date: new Date() }
+        : { coin: marketById.DTC.name, market: 'DTC', dir: 1, lev: 50, roe: 42.5, pnl: 12520, margin: 29460, tier: '짭짤하다', entry: 0.8421, exit: 0.8441, heldSec: 187, wins: 2, closes: 3, gen: 2, date: new Date() } });
       return g;
     }
     case 'wallet': {
@@ -303,6 +307,9 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       if (name === 'lossrun') { p.tpRoe = null; plans.DTC = { tp: null, sl: due }; } // 손절만 남긴다: 연습 시세의 첫 틱이 크게 올라도 익절로 닫히지 않게
       p.entry = name === 'lossrun' ? px / (1 + ((st.sl ?? 0) / 100 / p.lev) * 2.2) : px / (1 + ((st.tp ?? 0) / 100 / p.lev) * (name === 'winhold' ? 0.7 : 3));
       if (name === 'winhold') g.run.settleIn = Math.min(50, balance.settlement.intervalSec - 2);
+      // U-49 화면 확인용: &proe=300 = 그 ROE 의 익절가를 넘어 있다(등급 확인), &ptab=lot = 집에서 닫힌다
+      if (q.get('proe')) { const roe = +q.get('proe')!; p.tpRoe = roe; p.slRoe = null; plans.DTC = { tp: null, sl: null }; p.entry = px / (1 + (roe / 100 / p.lev) * 1.6); }
+      if (q.get('ptab') === 'lot') P.patch({ tab: 'lot' });
       g = clone(g);
       return g;
     }

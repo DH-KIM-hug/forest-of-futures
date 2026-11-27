@@ -10,7 +10,7 @@ export type FxEvent =
   | { kind: 'tap'; gain: string; wheel?: boolean; sold?: boolean }
   | { kind: 'settle'; mined: number; sold: boolean }
   | { kind: 'buy'; price: number; key: string }
-  | { kind: 'liq'; market: string };
+  | { kind: 'liq'; market: string; /** 잃은 돈(U-49: 도장 밑에 숫자) */ lost?: number; lev?: number };
 
 const subs = new Set<(e: FxEvent) => void>();
 export const fx = {

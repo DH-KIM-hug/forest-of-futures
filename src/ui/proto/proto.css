@@ -4,6 +4,7 @@
   --o: #4A4640; --o55: rgba(74, 70, 64, .55);
   --grass: #A9C77E; --lot: #BCD48E; --panel: #EFE4C2; --card: #FFF8E4; --cream: #FBF3DC; --paper: #F3E7C6;
   --orange: #F4B56A; --orange-lo: #D8924A; --mint: #8FC3A8; --mint-lo: #6AA488; --teal: #2F7F86; --gold: #E8C24A;
+  /* 손익 색(U-49): 한국식 하나로 — 번 돈 · 오름 = --up(붉음), 잃은 돈 · 내림 = --down(파랑). 경고(청산 · 연체 · 빚)는 --red 따로 */
   --red: #C8553D; --red-ink: #B8432C; --up: #D0584A; --down: #4F7FC0; --sub: #625c53; --idle: #E6DFCC;
   --dsp: 'Jua', 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
   --drop: 0 3px 6px rgba(74, 70, 64, .22);
@@ -39,8 +40,8 @@
 .pr-hud .n .v.n-up { animation: numUp .26s cubic-bezier(.34, 1.56, .64, 1); }
 .pr-hud .n .v.n-down { animation: numDown .3s ease-out; }
 .pr-hud .n i { display: inline-flex; filter: drop-shadow(0 0 0 #fff) drop-shadow(0 2px 0 rgba(255, 255, 255, .9)); }
-.pr-hud .ps { display: inline-block; margin: 2px 0 0; padding: 0; background: none; border: 0; cursor: pointer; text-align: right; font-family: var(--dsp); font-size: 13px; color: #2E6E4C; text-shadow: var(--halo); }
-.pr-hud .ps.neg { color: var(--red-ink); }
+.pr-hud .ps { display: inline-block; margin: 2px 0 0; padding: 0; background: none; border: 0; cursor: pointer; text-align: right; font-family: var(--dsp); font-size: 13px; color: var(--up); text-shadow: var(--halo); }
+.pr-hud .ps.neg { color: var(--down); }
 .goal, .settle { position: relative; display: flex; align-items: center; justify-content: space-between; overflow: hidden; background: var(--card); border: 2.5px solid var(--o); box-shadow: var(--drop); }
 .goal { height: 30px; border-radius: 15px; padding: 0 12px; font-size: 13px; font-weight: 700; animation: goalIn .35s cubic-bezier(.22, 1, .36, 1); }
 .goal small { font-family: var(--dsp); font-size: 13px; font-weight: 400; color: var(--teal); margin-right: 4px; }
@@ -61,7 +62,7 @@
 .pr-world text.pa-t, .pa-float { font-family: var(--dsp); }
 .pa-lbl { stroke: #fff; stroke-width: 4px; paint-order: stroke; stroke-linejoin: round; }
 .pa-float { font-size: 19px; fill: var(--o); stroke: #fff; stroke-width: 5px; paint-order: stroke; stroke-linejoin: round; animation: floatUp .9s cubic-bezier(.22, 1, .36, 1) forwards; }
-.pa-float.neg { fill: var(--red-ink); font-size: 17px; }
+.pa-float.neg { fill: var(--down); font-size: 17px; }
 .pa-pop { transform-box: fill-box; transform-origin: 50% 100%; animation: popIn .42s cubic-bezier(.34, 1.56, .64, 1) both; }
 .pa-hero.idle { animation: breathe 2.4s ease-in-out infinite; }
 .pa-hero.run { animation: bob .28s ease-in-out infinite alternate; }
@@ -92,7 +93,7 @@
 .nm { font-family: var(--dsp); font-size: 17px; line-height: 1.2; }
 .nm small { font-family: -apple-system, sans-serif; font-size: 12.5px; color: var(--sub); }
 .sb { font-size: 13px; line-height: 1.35; color: var(--sub); margin-top: 1px; }
-.sb b { color: #2E6E4C; font-weight: 700; }
+.sb b { color: var(--up); font-weight: 700; }
 .bar { position: relative; height: 10px; margin-top: 5px; background: #fff; border: 2px solid var(--o); border-radius: 5px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--mint); border-radius: 3px; transition: width .4s cubic-bezier(.22, 1, .36, 1); }
 .pr-row.locked .bar i { background: #CFC4A2; }
@@ -162,7 +163,7 @@
 .pr-cutin p { margin: 0 0 8px; font-family: var(--dsp); font-size: 22px; line-height: 1.3; }
 .pr-cutin .meta { display: flex; gap: 14px; font-size: 14px; color: var(--sub); font-weight: 600; }
 .pr-cutin .meta b { font-family: var(--dsp); font-weight: 400; font-size: 16px; }
-.pr-cutin .meta .up { color: #2E6E4C; } .pr-cutin .meta .dn { color: var(--red-ink); }
+.pr-cutin .meta .up { color: var(--up); } .pr-cutin .meta .dn { color: var(--down); }
 .pr-cutin .dots { display: flex; gap: 6px; margin-top: 10px; }
 .pr-cutin .dots i { width: 30px; height: 8px; border-radius: 4px; background: #fff; border: 1.8px solid var(--o); }
 .pr-cutin .dots i.on { background: var(--teal); }
@@ -171,6 +172,7 @@
 /* ── 강제 청산(대) ─────────────────────────────────── */
 .pr-liq { position: absolute; inset: 0; z-index: 25; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; animation: redFlash 1.8s ease-out forwards; }
 .pr-liq .stamp { padding: 2px 26px; font-family: var(--dsp); font-size: 72px; color: var(--red); border: 8px solid var(--red); border-radius: 14px; background: rgba(255, 248, 228, .92); transform: rotate(-12deg); animation: stampBig .34s cubic-bezier(.5, 0, .75, 0) both; }
+.pr-liq .lost { font-family: var(--dsp); font-weight: 400; font-size: 44px; line-height: 1; color: var(--down); padding: 2px 16px; border-radius: 14px; background: rgba(255, 248, 228, .94); border: 3px solid var(--o); animation: fadeIn .25s .3s both; font-variant-numeric: tabular-nums; }
 .pr-liq p { margin: 0; padding: 6px 14px; border-radius: 12px; background: var(--o); color: #fff; font-size: 14px; font-weight: 700; animation: fadeIn .3s .35s both; }
 
 /* ── 엔딩·환생 ─────────────────────────────────────── */
@@ -185,7 +187,7 @@
 .pr-end .blk { margin: 0 14px; padding-top: 8px; border-top: 2px dashed rgba(74, 70, 64, .3); }
 .pr-end h4 { margin: 0 0 4px; font-family: var(--dsp); font-weight: 400; font-size: 14px; color: var(--teal); }
 .pr-end .sc { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 3px 0; }
-.pr-end .sc b { font-variant-numeric: tabular-nums; } .pr-end .sc .dn { color: var(--red-ink); } .pr-end .sc .up { color: #2E6E4C; }
+.pr-end .sc b { font-variant-numeric: tabular-nums; } .pr-end .sc .dn { color: var(--down); } .pr-end .sc .up { color: var(--up); }
 .pr-end .blk .sub { margin: 2px 0 4px; }
 .pr-end .sub { margin: 8px 14px 14px; font-size: 13px; color: var(--sub); }
 .pr .go { flex: 0 0 auto; width: 100%; min-height: 58px; border-radius: 18px; background: var(--orange); border: 3px solid var(--o); color: var(--o); font-family: var(--dsp); font-size: 22px;
@@ -325,7 +327,7 @@
 .pr-hud .walbtn:active { transform: scale(.94); }
 .pr-hud .brk { align-self: flex-end; max-width: 100%; padding: 5px 10px; font-size: 12.5px; font-weight: 700; line-height: 1.35; color: var(--sub); background: var(--card); border: 2px solid var(--o); border-radius: 12px; box-shadow: var(--drop); animation: fadeIn .2s ease-out; }
 .pr-hud .brk b { font-family: var(--dsp); font-weight: 400; font-size: 13.5px; }
-.pr-hud .brk .up { color: #2E6E4C; } .pr-hud .brk .dn { color: var(--red-ink); }
+.pr-hud .brk .up { color: var(--up); } .pr-hud .brk .dn { color: var(--down); }
 .pa-float.coin { fill: #8A6420; }
 .pr-wal-hit { cursor: pointer; }
 
@@ -573,7 +575,7 @@
 .pr-strip .chev { position: relative; font-style: normal; font-size: 12px; color: var(--sub); }
 .pr-strip .chev .dot { position: absolute; top: -4px; left: -11px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); border: 1.5px solid #fff; }
 .pr-strip b { font-weight: 400; }
-.pr-strip .in { color: #2E6E4C; }
+.pr-strip .in { color: var(--up); }
 .pr-strip .out { color: var(--red-ink); }
 .pr-strip.short .one .in { color: var(--red-ink); }
 .pr-strip.short .one .out { color: var(--o); }
@@ -613,7 +615,7 @@
 .pr-tile .do.on { background: var(--orange); border-color: var(--o); color: var(--o); box-shadow: inset 0 -3px 0 var(--orange-lo); }
 .pr-tile .do.popped { animation: buyPop .34s cubic-bezier(.34, 1.56, .64, 1); }
 .pr-tile .stt { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 34px; line-height: 1.15; }
-.pr-tile .stt b { font-family: var(--dsp); font-weight: 400; font-size: 16px; color: #2E6E4C; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pr-tile .stt b { font-family: var(--dsp); font-weight: 400; font-size: 16px; color: var(--up); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pr-tile .stt small { font-size: 11.5px; font-weight: 700; color: var(--sub); }
 
 /* 내 포지션 한 줄(판 맨 위 고정, §3.7.9): 접혀 있어도 보인다 */
@@ -751,9 +753,9 @@
 .pr-away .rw { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 9px; border-radius: 10px; background: #fff; border: 2px solid rgba(74, 70, 64, .3); font-size: 13px; font-weight: 700; line-height: 1.3; }
 .pr-away .rw small { display: block; font-size: 11px; color: var(--sub); }
 .pr-away .rw b { flex: 0 0 auto; font-family: var(--dsp); font-weight: 400; font-size: 16px; }
-.pr-away .rw.loss b { color: var(--red-ink); } .pr-away .rw.gain b { color: #2E6E4C; } .pr-away .rw.loss { border-color: var(--red); }
+.pr-away .rw.loss b { color: var(--down); } .pr-away .rw.gain b { color: var(--up); } .pr-away .rw.loss { border-color: var(--red); }
 .pr-away .sum { display: flex; justify-content: space-around; margin: 2px 0 8px; font-size: 13px; font-weight: 800; }
-.pr-away .sum b { font-family: var(--dsp); font-weight: 400; font-size: 18px; } .pr-away .sum .up { color: #2E6E4C; } .pr-away .sum .dn { color: var(--red-ink); }
+.pr-away .sum b { font-family: var(--dsp); font-weight: 400; font-size: 18px; } .pr-away .sum .up { color: var(--up); } .pr-away .sum .dn { color: var(--down); }
 /* 은퇴 엔딩(U-39 ⑧): 사진에 색이 남아 있고 도장은 금빛이다 */
 .pr-end.retired { background: #4A3F2C; }
 .pr-end.retired .photo { object-position: 50% 70%; }
@@ -903,17 +905,17 @@
 .pa-npc.nod { animation: alBreath var(--al-dur, 2.6s) ease-in-out infinite, npcNod .5s ease-in-out 2.4s 2; animation-composition: add; }
 @keyframes npcNod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(5deg) translateY(1px); } }
 /* 초당 버는 돈: 도는 쳇바퀴 위에 "+n"이 뜨고, 채굴기 → 지갑으로 합이 건너간다 */
-.pa-float.inc { font-size: 13px; fill: #2F6B4F; stroke-width: 4px; animation: floatInc 1.1s cubic-bezier(.22, 1, .36, 1) forwards; }
+.pa-float.inc { font-size: 13px; fill: var(--up); stroke-width: 4px; animation: floatInc 1.1s cubic-bezier(.22, 1, .36, 1) forwards; }
 .pa-float.inc.sum { font-size: 14.5px; fill: #8A6420; }
 @keyframes floatInc { 0% { opacity: 0; transform: translateY(6px); } 18% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px); } }
-.pa-float.hire { font-size: 15px; fill: #2F6B4F; animation: floatHire 2.2s cubic-bezier(.22, 1, .36, 1) forwards; }
+.pa-float.hire { font-size: 15px; fill: var(--up); animation: floatHire 2.2s cubic-bezier(.22, 1, .36, 1) forwards; }
 @keyframes floatHire { 0% { opacity: 0; transform: translateY(8px) scale(.8); } 12% { opacity: 1; transform: translateY(0) scale(1.12); } 22% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
 /* 구르는 돈 숫자: 자리마다 0~9 띠가 굴러간다 */
 .pr-hud .acorn .n .od { display: inline-flex; align-items: flex-end; }
 .od-d { display: inline-block; height: 1.2em; line-height: 1.2; overflow: hidden; vertical-align: bottom; }
 .od-d i { display: block; font-style: normal; line-height: 1.2; transition: transform .1s linear; will-change: transform; }
 .od-c { display: inline-block; line-height: 1.2; }
-.od.rolling.up { color: #2F6B4F; } .od.rolling.down { color: var(--red-ink); }
+.od.rolling.up { color: var(--up); } .od.rolling.down { color: var(--down); }
 .od.n-up { animation: odPulse .5s cubic-bezier(.34, 1.56, .64, 1); } .od.n-big { animation: odBig .9s cubic-bezier(.34, 1.56, .64, 1); } .od.n-down { animation: odDown .5s ease-out; }
 @keyframes odPulse { 0% { transform: scale(1.12); } 100% { transform: scale(1); } }
 @keyframes odBig { 0% { transform: scale(1.28); filter: drop-shadow(0 0 8px #FFE27A); } 60% { transform: scale(1.06); filter: drop-shadow(0 0 5px #FFE27A); } 100% { transform: scale(1); filter: none; } }
@@ -965,7 +967,7 @@
 .al-html.headbob { animation: alBreathBust var(--al-dur, 1.5s) ease-in-out var(--al-delay, 0s) infinite, headBob 5.5s ease-in-out infinite; animation-composition: add; }
 @keyframes headBob { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-1.6deg); } 60% { transform: rotate(1.2deg); } }
 /* U-43: 접힌 한 줄은 "초당 +들어옴 / −나감" — 늘 초록 / 빨강. 나가는 쪽이 크면 그 숫자가 굵게 흔들린다. 견줌 막대는 움직여 바뀐다. 칸의 초당은 크게 */
-.pr-strip .one .in, .pr-strip.short .one .in, .pr-strip.ok .one .in { color: #2E6E4C; font-size: 17px; }
+.pr-strip .one .in, .pr-strip.short .one .in, .pr-strip.ok .one .in { color: var(--up); font-size: 17px; }
 .pr-strip .one .out, .pr-strip.short .one .out, .pr-strip.ok .one .out { color: var(--red-ink); font-size: 17px; }
 .pr-strip.short .one .out { text-decoration: underline 2px; text-underline-offset: 3px; }
 .pr-strip .one .cmpch { color: var(--sub); opacity: .6; }
@@ -974,7 +976,7 @@
 .pr-tile.run .stt b.hired { animation: hireTile 1.6s cubic-bezier(.22, 1, .36, 1); }
 @keyframes hireTile { 0% { transform: scale(.6); color: #8A6420; } 25% { transform: scale(1.35); } 100% { transform: scale(1); } }
 /* 알바를 들인 순간 HUD 초당 칩: "초당 +0 → +26" */
-.pr-hud .ps .hireburst { position: absolute; right: 0; top: 100%; margin-top: 2px; padding: 1px 8px; border-radius: 9px; background: #EEF5E4; border: 2px solid #2E6E4C; color: #2E6E4C; font-size: 13px; white-space: nowrap; animation: floatHireHtml 2.4s cubic-bezier(.22, 1, .36, 1) forwards; pointer-events: none; }
+.pr-hud .ps .hireburst { position: absolute; right: 0; top: 100%; margin-top: 2px; padding: 1px 8px; border-radius: 9px; background: #EEF5E4; border: 2px solid var(--up); color: var(--up); font-size: 13px; white-space: nowrap; animation: floatHireHtml 2.4s cubic-bezier(.22, 1, .36, 1) forwards; pointer-events: none; }
 @keyframes floatHireHtml { 0% { opacity: 0; transform: translateY(-6px) scale(.8); } 12% { opacity: 1; transform: translateY(0) scale(1.1); } 22% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(6px); } }
 .pr-hud .ps { position: relative; }
 @media (prefers-reduced-motion: reduce) { .pr-hud .ps .hireburst, .pr-tile.run .stt b.hired { animation: none; } .pr-hud .ps .hireburst { display: none; } }
@@ -987,7 +989,7 @@
 .pr-hud .ps .hireburst { top: -1px; right: calc(100% + 6px); margin-top: 0; }
 /* U-46: 접힌 판의 견줌 — 다음 정산까지 벌 돈(초당 × 남은 초) 아래 작은 셈 줄, 정산 막대의 「정산 때 −Y」 */
 .pr-strip .cmp > .in small.x { font-size: 10.5px; font-weight: 600; opacity: .8; }
-.settle span b.dn { font-weight: 400; color: var(--red-ink); }
+.settle span b.dn { font-weight: 400; color: var(--down); }
 .pr-strip .one .tm { margin-left: 8px; }
 /* U-46: 컷인이 떠 있으면 화면 어디를 눌러도 넘어간다(카드 · 고르는 단추 · 건너뛰기는 그 위) */
 .pr .pr-cutin .pr-tapall { position: absolute; inset: 0; z-index: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; min-width: 0; min-height: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -1035,9 +1037,9 @@
 .pr-strip .sb-due { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 3px solid var(--red); margin-left: -1.5px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .7); transition: left .4s ease; }
 .pr-strip .sb-end { font-family: var(--dsp); font-weight: 400; font-size: 14px; line-height: 1.1; white-space: nowrap; color: var(--o); text-align: right; }
 .pr-strip .sb-end em { font-style: normal; font-size: 16.5px; font-variant-numeric: tabular-nums; }
-.pr-strip.ok .sb-end em { color: #2E6E4C; }
-.pr-strip.short .sb-end em { color: var(--red-ink); }
-.pr-strip.short .sb-end { color: var(--red-ink); }
+.pr-strip.ok .sb-end em { color: var(--up); }
+.pr-strip.short .sb-end em { color: var(--down); }
+.pr-strip.short .sb-end { color: var(--o); }
 .pr-strip .sb-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-left: 22px; font-size: 12px; font-weight: 700; color: var(--sub); white-space: nowrap; }
 .pr-strip .sb-sub b { font-family: var(--dsp); font-weight: 400; font-size: 13.5px; color: var(--o); font-variant-numeric: tabular-nums; }
 .pr-strip .sb-pos { font-family: var(--dsp); font-weight: 400; font-size: 13px; padding: 0 7px; border-radius: 8px; border: 1.5px solid currentColor; }
@@ -1059,7 +1061,11 @@
 .pr-think { padding: 3px 9px 4px; font-size: 12.5px; line-height: 1.28; text-align: left; }
 .pr-think .tk-coin, .pr-lane .tk-coin { display: inline-block; width: 15px; height: 15px; margin: -2px 4px 0 -2px; vertical-align: middle; border-radius: 50%; }
 /* U-48: 청산이 다가올수록 화면 가장자리가 붉어진다(--v 0~1). 턱밑이면 심장처럼 박동 */
+.pr[data-pc='intl'] { --up: #3F9A6C; --down: #D0584A; }
 .pr-vig { position: absolute; inset: 0; z-index: 15; pointer-events: none; box-shadow: inset 0 0 calc(30px + 70px * var(--v)) calc(4px + 18px * var(--v)) rgba(200, 40, 30, calc(.22 + .58 * var(--v))); transition: box-shadow .5s ease-out; }
 .pr-vig.beat { animation: vigBeat .82s ease-in-out infinite; }
 @keyframes vigBeat { 0%, 100% { opacity: .75; } 14% { opacity: 1; } 28% { opacity: .7; } 42% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .pr-vig.beat { animation: none; } }
+
+/* U-49: 좁은 폰(380px 아래)에서는 포지션 줄의 「청산까지」 글자를 빼고 숫자와 게이지만(손익 숫자가 잘리지 않게) */
+@media (max-width: 380px) { .pr-pin .liq .lb { display: none; } .pr .pr-pin { gap: 6px; } }

@@ -41,6 +41,7 @@ import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
 import { guideStep, allowedEl, type Guide } from './guided';
 import { nextTierCost } from '../../engine/equipment';
 import { EXTRA_WHEEL } from './model';
+import { HomeBurst, HomePops, usePosPops } from './Juice';
 import './proto.css';
 
 const TABS: { id: Tab; label: string; col: string }[] = [
@@ -191,11 +192,11 @@ function TabBar() {
 
 /** 강제 청산: 장면 흔들림 + 붉은 '청산' 도장(대 등급) */
 function LiqStamp({ onShake }: { onShake: () => void }) {
-  const [hit, setHit] = useState<{ k: number; name: string } | null>(null);
+  const [hit, setHit] = useState<{ k: number; name: string; lost?: number; lev?: number } | null>(null);
   const legend = useGame((s) => has(s.g, 'B4'));
   useFx((e) => {
     if (e.kind !== 'liq') return;
-    setHit((h) => ({ k: (h?.k ?? 0) + 1, name: e.market }));
+    setHit((h) => ({ k: (h?.k ?? 0) + 1, name: e.market, lost: e.lost, lev: e.lev }));
     if (!reduced()) onShake();
     window.setTimeout(() => setHit(null), 1800);
   });
@@ -203,7 +204,8 @@ function LiqStamp({ onShake }: { onShake: () => void }) {
   return (
     <div key={hit.k} className="pr-liq" aria-live="assertive">
       <div className={'stamp' + (legend ? ' legend' : '')}>청산</div>
-      <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name} 포지션이 강제로 닫혔다`}</p>
+      {hit.lost !== undefined && hit.lost > 0 && <b className="lost" data-liq-lost={hit.lost}>−{comma(hit.lost)}</b>}
+      <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name}${hit.lev ? ` ${hit.lev}배` : ''} 포지션이 강제로 닫혔다`}</p>
     </div>
   );
 }
@@ -293,12 +295,15 @@ export function ProtoApp() {
   const prologue = useProto((s) => s.prologue);
   const [skip] = useState(() => prologueSeen());
   const openPos = useOpenPositions();
+  const pc = useGame((s) => s.g.settings.priceColors);
   const dark = openPos.some((p) => isNearLiq(p));
   // 심장 소리: 청산 임박, 또는 청산이 지난 1분 폭의 세 배 안으로 들어왔을 때(U-39 ①)
   const tense = openPos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach));
-  useAudioDirector(dark || tense);
   // 청산까지 얼마나 왔나(U-48): 가장 급한 포지션 기준. 0.3 을 넘으면 화면 가장자리가 붉어지고, 0.7 을 넘으면 박동한다(어느 탭에서든)
   const danger = openPos.reduce((a, p) => Math.max(a, dangerOf(p.liqDistPct, p.lev, balance.trading.maintenanceRate as number)), 0);
+  // 심장 소리는 청산이 가까울수록 빨라진다(U-49)
+  useAudioDirector(dark || tense, danger);
+  usePosPops();
   const vig = danger > 0.3 ? Math.min(1, (danger - 0.3) / 0.6) : 0;
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); startRanking(); }, []);
@@ -351,7 +356,7 @@ export function ProtoApp() {
     { duration: 480, easing: 'linear' },
   );
   return (
-    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab} data-guided={guide?.step ?? undefined} data-danger={vig > 0 ? vig.toFixed(2) : undefined}>
+    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab} data-pc={pc} data-guided={guide?.step ?? undefined} data-danger={vig > 0 ? vig.toFixed(2) : undefined}>
       {vig > 0 && <i className={'pr-vig' + (danger >= 0.7 ? ' beat' : '')} aria-hidden="true" style={{ ['--v' as string]: vig.toFixed(3) }} />}
       <Hud />
       <main className="pr-main">
@@ -364,6 +369,8 @@ export function ProtoApp() {
       <TabBar />
       <CutIn />
       <LiqStamp onShake={shake} />
+      <HomePops />
+      <HomeBurst />
       <EndingFlow />
       <ProfitPrompt />
       <WalletSheet />

@@ -26,15 +26,48 @@ export function reachOf(steps: number | null): Reach {
 export const REACH_TEXT: Record<Reach, string> = { far: '한참 멀다', seen: '최근 변동 폭과 비교', tight: '한 번 출렁이면 닿는다', edge: '지금 흔들리는 폭 안이다' };
 const times = (k: number) => (k >= 100 ? '100배 넘게' : k >= 10 ? `${Math.round(k)}배` : `${k.toFixed(1)}배`);
 
-export interface Tension { rangePct: number | null; steps: number | null; reach: Reach; /** 점 다섯 개 가운데 찬 수(가까울수록 많다) */ dots: number; /** 한 줄: "지난 1분 폭 0.11%의 3.8배 · 보이는 거리" */ text: string }
-/** 열린 포지션의 청산까지 거리를 지난 1분 폭에 견준다. */
+/** 그 종목의 평소 1분 폭(%): 지난 몇 분을 1분씩 끊어 잰 폭의 가운데 값(U-49). 방금 한 번 튄 급등락에 게이지가 끌려다니지 않게.
+ *  기록이 2분이 안 되면 지난 1분 폭 그대로 */
+export function typicalRange(hist: number[], maxMin = 10): number | null {
+  if (hist.length < 120) return recentRange(hist);
+  const rs: number[] = [];
+  for (let end = hist.length; end - 60 >= 0 && rs.length < maxMin; end -= 60) {
+    const r = recentRange(hist.slice(end - 60, end));
+    if (r !== null) rs.push(r);
+  }
+  if (!rs.length) return recentRange(hist);
+  rs.sort((a, b) => a - b);
+  return rs[Math.floor(rs.length / 2)];
+}
+/** 평소대로 흔들리면 그 거리에 닿을 법한 시간(초): 흔들림은 시간의 제곱근으로 넓어진다(1분 폭의 k배 = 약 k² 분). 약속이 아니라 눈대중이다 */
+export const reachSecOf = (steps: number): number => 60 * steps * steps;
+/** 시간 → 게이지 점(다섯 개). 배율이 몇이든, 종목이 얼마나 출렁이든 같은 잣대(U-49: 200배 날다람쥐에서 늘 꽉 차던 것) */
+export function dotsOfSec(sec: number): number {
+  return sec < 20 ? 5 : sec < 45 ? 4 : sec < 120 ? 3 : sec < 600 ? 2 : sec < 1800 ? 1 : 0;
+}
+/** 시간 → 한 마디 */
+export function soonText(sec: number): string {
+  return sec < 20 ? '몇 초면 닿는다' : sec < 45 ? '1분 안에도 닿는다' : sec < 120 ? '1, 2분이면 닿는다' : sec < 600 ? '몇 분이면 닿는다' : sec < 1800 ? '한동안은 버틴다' : '한참 멀다';
+}
+
+export interface Tension { rangePct: number | null; steps: number | null; reach: Reach; /** 점 다섯 개 가운데 찬 수(가까울수록 많다) */ dots: number; /** 평소대로 흔들리면 닿을 법한 시간(초) */ sec: number | null; /** 한 줄: "평소 1분 폭 0.60%의 0.7배, 1분 안에도 닿는다" */ text: string }
+/** 열린 포지션의 청산까지 거리를 그 종목의 평소 1분 폭에 견준다(U-49: 배율과 종목에 맞춘 잣대 — 점은 닿을 법한 시간으로 찬다). */
 export function tensionOf(liqDistPct: number, hist: number[]): Tension {
-  const rangePct = recentRange(hist);
+  const rangePct = typicalRange(hist);
   const steps = stepsOf(liqDistPct, rangePct);
   const reach = reachOf(steps);
-  const dots = steps === null ? 0 : steps < 1 ? 5 : steps < 2 ? 4 : steps < 3 ? 3 : steps < 8 ? 2 : steps < 20 ? 1 : 0;
-  const text = steps === null ? '시세를 모으는 중' : `1분 폭(${rangePct!.toFixed(2)}%)의 ${times(steps)}, ${REACH_TEXT[reach]}`;
-  return { rangePct, steps, reach, dots, text };
+  const sec = steps === null ? null : reachSecOf(steps);
+  const dots = sec === null ? 0 : dotsOfSec(sec);
+  const text = steps === null ? '시세를 모으는 중' : `평소 1분 폭(${rangePct!.toFixed(2)}%)의 ${times(steps)}, ${soonText(sec!)}`;
+  return { rangePct, steps, reach, dots, sec, text };
+}
+
+/** 이긴 판의 등급(U-48)에 「이자 벌었다」를 더한 것: 넣은 돈에 견주면 작아도 이번 수금(이자 + 생활비)을 넘게 벌었으면 그것도 한 방이다. 터지지 않으면 null */
+export function burstTier(pnl: number, margin: number, claimTotal: number): WinTier | null {
+  if (!(pnl > 0)) return null;
+  const t = winTier((pnl / Math.max(1, margin)) * 100);
+  if (t.lv > 0) return t;
+  return claimTotal > 0 && pnl >= claimTotal ? { lv: 1, word: '이자 벌었다', rain: 12 } : null;
 }
 
 export interface Odds {
@@ -43,6 +76,7 @@ export interface Odds {
   /** 그 폭이 지난 1분 폭의 몇 배인가 */ needSteps: number | null; liqSteps: number | null;
   /** 이자보다 청산이 가깝다 */ liqFirst: boolean;
   text: string;
+  /** 청산이 평소 1분 폭 안이면 한 줄 경고(U-49) */ tight: string | null;
 }
 /** 들어가기 전의 셈: 이 증거금 · 이 배율이면 이자 한 번 치까지 시세가 얼마나 가야 하는가. 거짓 약속이 아니라 나눗셈이다. */
 export function orderOdds(o: { margin: number; lev: number; claim: number; feeRate: number; maintenanceRate: number; hist: number[] }): Odds | null {
@@ -50,14 +84,18 @@ export function orderOdds(o: { margin: number; lev: number; claim: number; feeRa
   if (!(notional > 0) || !(o.claim > 0)) return null;
   const needPct = (o.claim / notional) * 100 + o.feeRate * 2 * 100; // 들어갈 때·나올 때 수수료만큼 더 가야 한다
   const liqPct = (1 / o.lev - o.maintenanceRate) * 100;
-  const r = recentRange(o.hist);
+  const r = typicalRange(o.hist);
   const needSteps = stepsOf(needPct, r), liqSteps = stepsOf(liqPct, r);
   const liqFirst = needPct >= liqPct;
   const pc = (x: number) => (x >= 10 ? x.toFixed(0) : x >= 1 ? x.toFixed(1) : x.toFixed(2));
   const text = liqFirst
     ? `이자와 생활비 ${n(o.claim)}을 벌려면 유리한 쪽으로 ${pc(needPct)}%, 반대쪽 ${pc(liqPct)}%에 청산`
     : `다음 이자와 생활비 ${n(o.claim)}을 벌려면 유리한 쪽으로 ${pc(needPct)}%${needSteps !== null ? ` (최근 1분 폭의 ${times(needSteps)})` : ''}, 청산까지 ${pc(liqPct)}%`;
-  return { needPct, liqPct, needSteps, liqSteps, liqFirst, text };
+  // 청산 거리가 평소 1분 폭보다 좁다(U-49: 200배 날다람쥐): 배율 상한은 그대로 두고, 들어가기 전에 있는 그대로 말한다
+  const tight = liqSteps !== null && liqSteps < 1
+    ? `청산 ${pc(liqPct)}%가 평소 1분 폭(${pc(r!)}%) 안이다, ${soonText(reachSecOf(liqSteps))}. 이자 ${n(o.claim)}까지는 ${pc(needPct)}%`
+    : null;
+  return { needPct, liqPct, needSteps, liqSteps, liqFirst, text, tight };
 }
 
 /** 지금 손익이 이자 한 번 치의 몇 %인가(포지션 카드의 한 줄). 너무 작으면 null */

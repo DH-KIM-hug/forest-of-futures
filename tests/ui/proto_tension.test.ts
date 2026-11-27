@@ -1,6 +1,6 @@
 // 포지션을 들고 있는 동안의 긴장(U-39 ①)과 자리를 비운 사이 보고서(U-39 ④). 순수 함수 시험.
 import { describe, expect, it } from 'vitest';
-import { claimShare, heroMood, holdBeat, orderOdds, reachOf, recentRange, stepsOf, tensionOf, type HoldSnap } from '../../src/ui/proto/tension';
+import { burstTier, claimShare, dotsOfSec, heroMood, holdBeat, orderOdds, reachOf, reachSecOf, recentRange, stepsOf, tensionOf, typicalRange, type HoldSnap } from '../../src/ui/proto/tension';
 import { awayCard, awayDur } from '../../src/ui/proto/away';
 import type { AwayReport } from '../../src/engine/types';
 
@@ -41,8 +41,8 @@ describe('청산까지 = 지난 1분 폭의 몇 배', () => {
     expect(dots).toEqual([...dots].sort((a, b) => a - b));
     expect(dots[dots.length - 1]).toBe(5);
   });
-  it('한 줄에 폭과 배수와 말이 다 있다', () => {
-    expect(tensionOf(0.4, wave(100, 0.1)).text).toMatch(/1분 폭\(0\.10%\)의 \d\.\d배, 최근 변동 폭과 비교/);
+  it('한 줄에 폭과 배수와 닿을 법한 때가 다 있다', () => {
+    expect(tensionOf(0.4, wave(100, 0.1)).text).toMatch(/평소 1분 폭\(0\.10%\)의 \d\.\d배, 한동안은 버틴다/);
   });
   it('단계 경계', () => {
     expect([0.5, 1, 2.9, 3, 7.9, 8].map(reachOf)).toEqual(['edge', 'tight', 'tight', 'seen', 'seen', 'far']);
@@ -159,5 +159,40 @@ describe('자리를 비운 사이', () => {
   it('익절은 이익으로 적힌다', () => {
     const c = awayCard(rep({ entries: [{ tick: 1100, kind: 'tp', text: '멍도토 롱 50배 익절', amount: 26000 }] }), { cash: 0, debt: 0 }, { cash: 78000, debt: 0 }, o);
     expect(c.rows[0]).toMatchObject({ tone: 'gain', amount: 26000 });
+  });
+});
+
+describe('배율과 종목에 맞춘 게이지(U-49)', () => {
+  it('200배 날다람쥐(청산 0.4%, 평소 1분 폭 0.6%)도 늘 꽉 차지 않는다: 멀어지면 줄고 다가오면 찬다', () => {
+    const h = wave(100, 0.6, 600);
+    const at = [0.9, 0.6, 0.4, 0.25, 0.15].map((d) => tensionOf(d, h).dots);
+    expect(at).toEqual([...at].sort((a, b) => a - b));
+    expect(at[0]).toBeLessThan(5);
+    expect(at[at.length - 1]).toBe(5);
+    expect(new Set(at).size).toBeGreaterThanOrEqual(3);
+  });
+  it('평소 폭은 1분씩 끊어 잰 폭의 가운데 값: 방금 한 번 튄 급등락에 끌려가지 않는다', () => {
+    const calm = wave(100, 0.1, 540);
+    const spike = Array.from({ length: 60 }, (_, i) => 100 * (1 + 0.05 * Math.sin(i / 5)));
+    const r = typicalRange([...calm, ...spike])!;
+    expect(r).toBeLessThan(0.2);
+  });
+  it('닿을 법한 때는 폭의 제곱으로 는다', () => {
+    expect(reachSecOf(1)).toBe(60);
+    expect(reachSecOf(2)).toBe(240);
+    expect(dotsOfSec(5)).toBe(5);
+    expect(dotsOfSec(3600)).toBe(0);
+  });
+  it('들어가기 전: 청산이 평소 1분 폭 안이면 경고 한 줄', () => {
+    const o = orderOdds({ claim: 5130, feeRate: 0.0001, maintenanceRate: 0.001, hist: wave(100, 0.6, 600), margin: 25000, lev: 200 })!;
+    expect(o.tight).toMatch(/청산 0\.40%가 평소 1분 폭\(0\.\d+%\) 안이다/);
+    const o10 = orderOdds({ claim: 5130, feeRate: 0.0001, maintenanceRate: 0.001, hist: wave(100, 0.6, 600), margin: 25000, lev: 10 })!;
+    expect(o10.tight).toBeNull();
+  });
+  it('이긴 판의 등급: 작아도 이번 수금을 넘으면 「이자 벌었다」', () => {
+    expect(burstTier(-5, 100, 10)).toBeNull();
+    expect(burstTier(3, 100, 10)).toBeNull();
+    expect(burstTier(12, 1000, 10)!.word).toBe('이자 벌었다');
+    expect(burstTier(120, 100, 10)!.lv).toBe(3);
   });
 });

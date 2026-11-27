@@ -31,7 +31,7 @@ const bgmId = (slot: BgmSlot, pick: Record<BgmSlot, string>) => `${SLOT_ID[slot]
 const usePrefs = () => { const [, f] = useState(0); useEffect(() => subscribe(() => f((n) => n + 1)), []); return getPrefs(); };
 
 /** 장면에 따라 곡·심장박동·컷인 소리 낮춤·탭 소리·엔딩/환생 소리를 고른다. */
-export function useAudioDirector(near: boolean): void {
+export function useAudioDirector(near: boolean, danger = 0): void {
   const tab = useProto((s) => s.tab);
   const cutin = useProto((s) => s.scenes.length > 0);
   const step = useGame((s) => s.g.estate?.step ?? null);
@@ -42,7 +42,7 @@ export function useAudioDirector(near: boolean): void {
     if (pdev === 'sounds') { setMusic(null); return; }
     setMusic(step === 'card' ? 'bgm_ending' : bgmId(tab === 'phone' ? 'trade' : night ? 'night' : 'day', pick));
   }, [tab, night, step, pick]);
-  useEffect(() => { setHeartbeat(near && !step && pdev !== 'sounds'); }, [near, step]);
+  useEffect(() => { setHeartbeat(near && !step && pdev !== 'sounds', danger); }, [near, step, Math.round(danger * 10)]);
   useEffect(() => { duck(!!cutin); }, [cutin]);
   const prevTab = useRef(tab);
   useEffect(() => {

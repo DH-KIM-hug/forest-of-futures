@@ -22,6 +22,8 @@ const VOL: Record<string, number> = {
   collector_steps: 0.6, collector_paid: 0.8, overdue_stamp: 0.9, cutin_whoosh: 0.55, phone_open: 0.6,
   order_long: 0.65, order_short: 0.65, close_profit: 0.85, close_loss: 0.8, near_liq_heartbeat: 0.5,
   liquidation: 1, ending_bankrupt_stamp: 1, rebirth: 0.9, shutter: 0.7,
+  // U-49 새 소리
+  win_coins: 0.8, win_fanfare: 0.85, win_jackpot: 0.95, liq_gavel: 1, saved_phew: 0.8, paw_stamp: 0.85, news_alarm: 0.6, milestone_up: 0.7, hamster_cheer: 0.6,
 };
 const MUSIC_VOL: Record<string, number> = { bgm_lot_day_a: 0.5, bgm_lot_day_b: 0.5, bgm_lot_day_c: 0.5, bgm_lot_night_a: 0.5, bgm_lot_night_b: 0.5, bgm_trade_a: 0.45, bgm_trade_b: 0.45, bgm_ending: 0.55 };
 const MIN_GAP: Record<string, number> = { tap_gather: 55, acorn_arrive: 110, ui_tap: 80, insufficient: 250, default: 40 };
@@ -160,6 +162,7 @@ export function duck(on: boolean): void {
 
 // ---- 청산 임박 심장박동(겹쳐 깔림) ----
 let wantBeat = false;
+let beatRate = 1;
 let beat: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
 function applyHeartbeat(): void {
   if (!ctx || !unlocked) return;
@@ -167,7 +170,7 @@ function applyHeartbeat(): void {
   if (wantBeat && !beat && prefs.sfx) {
     void load('near_liq_heartbeat').then((b) => {
       if (!b || !wantBeat || beat) return;
-      const s = c.createBufferSource(); s.buffer = b; s.loop = true;
+      const s = c.createBufferSource(); s.buffer = b; s.loop = true; s.playbackRate.value = beatRate;
       const g = c.createGain(); g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(VOL.near_liq_heartbeat, c.currentTime + 0.6);
       s.connect(g); g.connect(sfxBus); s.start();
       beat = { src: s, gain: g };
@@ -180,7 +183,13 @@ function applyHeartbeat(): void {
     try { b.src.stop(t + 0.45); } catch { /* 이미 멈춤 */ }
   }
 }
-export function setHeartbeat(on: boolean): void { wantBeat = on; applyHeartbeat(); }
+/** danger 0~1(청산까지 얼마나 왔나): 가까울수록 심장이 빨라진다(U-49, 1배 → 1.6배) */
+export function setHeartbeat(on: boolean, danger = 0): void {
+  wantBeat = on;
+  beatRate = 1 + 0.6 * Math.max(0, Math.min(1, danger));
+  if (beat && ctx) beat.src.playbackRate.setTargetAtTime(beatRate, ctx.currentTime, 0.3);
+  applyHeartbeat();
+}
 
 // ---- 웅얼거림 대사(U-36) ----
 /** 효과음보다 조금 작게(효과음 버스를 지나므로 효과음 끄기를 그대로 따른다) */

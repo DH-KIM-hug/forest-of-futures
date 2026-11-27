@@ -358,5 +358,95 @@
   "max": -5.4,
   "lufs": -20.4,
   "date": "2026-11-25"
+ },
+ "win_coins": {
+  "file": "win_coins_5f0b749b.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.99,
+  "prompt": "Cascade of many small gold coins and wooden acorns pouring and bouncing onto a wooden floor, bright cheerful cartoon jingle, no music",
+  "max": -3.8,
+  "lufs": -16.3,
+  "date": "2026-11-27"
+ },
+ "win_fanfare": {
+  "file": "win_fanfare_300630da.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 2.47,
+  "prompt": "Short triumphant cartoon victory fanfare sting on bright brass and xylophone, three rising notes and a sparkly cymbal hit, cute game win",
+  "max": -5.7,
+  "lufs": -16.4,
+  "date": "2026-11-27"
+ },
+ "win_jackpot": {
+  "file": "win_jackpot_1d585657.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 3.47,
+  "prompt": "Big cartoon slot machine jackpot: fast ringing bells, a rising whistle and a shower of coins, then a tiny cute animal crowd cheering, joyful",
+  "max": -5.7,
+  "lufs": -16.4,
+  "date": "2026-11-27"
+ },
+ "liq_gavel": {
+  "file": "liq_gavel_ca99023e.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "One heavy wooden judge gavel slam with a deep low boom and a short sad descending tuba note, cartoon, final",
+  "max": -3.4,
+  "lufs": -24.3,
+  "date": "2026-11-27"
+ },
+ "saved_phew": {
+  "file": "saved_phew_7b9f7d7a.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "Cartoon relieved sigh whoosh, a soft exhale followed by a gentle rising sparkle chime, phew close call",
+  "max": -3,
+  "lufs": -17.8,
+  "date": "2026-11-27"
+ },
+ "paw_stamp": {
+  "file": "paw_stamp_1c98dd71.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.79,
+  "prompt": "Soft squishy cartoon paw stamp pressed on paper, a cute muffled thump with a tiny ink squish",
+  "max": -3.7,
+  "lufs": -27.9,
+  "date": "2026-11-27"
+ },
+ "news_alarm": {
+  "file": "news_alarm_0ec77025.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "Short urgent cartoon news flash jingle, quick three-note xylophone ding ding ding with a tiny whistle, breaking news alert, cute",
+  "max": -3.5,
+  "lufs": -13.8,
+  "date": "2026-11-27"
+ },
+ "milestone_up": {
+  "file": "milestone_up_fc049828.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 0.79,
+  "prompt": "Bright rising three-note glockenspiel arpeggio with a coin sparkle, level up, cute and short",
+  "max": -3.5,
+  "lufs": -22.6,
+  "date": "2026-11-27"
+ },
+ "hamster_cheer": {
+  "file": "hamster_cheer_c492e983.mp3",
+  "kind": "sfx",
+  "loop": false,
+  "dur": 1.47,
+  "prompt": "Tiny cute hamsters squeaking happily and cheering together, small celebratory squeaks, cartoon",
+  "max": -3.5,
+  "lufs": -15.2,
+  "date": "2026-11-27"
  }
 }

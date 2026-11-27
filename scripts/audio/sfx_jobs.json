@@ -236,6 +236,60 @@
       "dur": 30,
       "loop": false,
       "prompt": "Short melancholic solo music box melody with a few soft sad notes and a gentle faint pad, slow, lonely but cute, slightly comedic sadness, fades gently at the end, no vocals"
+    },
+    {
+      "id": "win_coins",
+      "kind": "sfx",
+      "dur": 2.0,
+      "prompt": "Cascade of many small gold coins and wooden acorns pouring and bouncing onto a wooden floor, bright cheerful cartoon jingle, no music"
+    },
+    {
+      "id": "win_fanfare",
+      "kind": "sfx",
+      "dur": 2.5,
+      "prompt": "Short triumphant cartoon victory fanfare sting on bright brass and xylophone, three rising notes and a sparkly cymbal hit, cute game win"
+    },
+    {
+      "id": "win_jackpot",
+      "kind": "sfx",
+      "dur": 3.5,
+      "prompt": "Big cartoon slot machine jackpot: fast ringing bells, a rising whistle and a shower of coins, then a tiny cute animal crowd cheering, joyful"
+    },
+    {
+      "id": "liq_gavel",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "One heavy wooden judge gavel slam with a deep low boom and a short sad descending tuba note, cartoon, final"
+    },
+    {
+      "id": "saved_phew",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "Cartoon relieved sigh whoosh, a soft exhale followed by a gentle rising sparkle chime, phew close call"
+    },
+    {
+      "id": "paw_stamp",
+      "kind": "sfx",
+      "dur": 0.8,
+      "prompt": "Soft squishy cartoon paw stamp pressed on paper, a cute muffled thump with a tiny ink squish"
+    },
+    {
+      "id": "news_alarm",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "Short urgent cartoon news flash jingle, quick three-note xylophone ding ding ding with a tiny whistle, breaking news alert, cute"
+    },
+    {
+      "id": "milestone_up",
+      "kind": "sfx",
+      "dur": 0.8,
+      "prompt": "Bright rising three-note glockenspiel arpeggio with a coin sparkle, level up, cute and short"
+    },
+    {
+      "id": "hamster_cheer",
+      "kind": "sfx",
+      "dur": 1.5,
+      "prompt": "Tiny cute hamsters squeaking happily and cheering together, small celebratory squeaks, cartoon"
     }
   ]
 }

@@ -54,7 +54,7 @@ function PinRow({ p }: { p: OpenPos }) {
     <button className={'pr-pin' + (call ? ' call' : '') + (net >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
       <span className="who">{coinLogo(p.market) ? <img className="coin logo" src={coinLogo(p.market)!} alt="" draggable={false} /> : <i className="coin" style={{ background: C.dtc }} />}{m.short ?? m.name}</span>
       <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
-      <span className={'liq r-' + tn.reach} data-reach={tn.reach}>{call ? '청산 임박, 남은 거리 ' : '청산까지 '}{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < tn.dots ? 'on' : ''} />)}</i></span>
+      <span className={'liq r-' + tn.reach} data-reach={tn.reach}><span className="lb">{call ? '청산 임박 ' : '청산까지 '}</span>{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < (call ? 5 : tn.dots) ? 'on' : ''} />)}</i></span>
       <span className="roe"><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(net)))}</b><small>{roeTxt(p.netRoe)}</small></span>
     </button>
   );
