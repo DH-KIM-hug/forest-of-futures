@@ -102,9 +102,26 @@ export function candleSwing(live: number[], mins = 3): { pct: number; bars: numb
   }
   return { pct: sum / bars, bars };
 }
-/** 실제 시세 종목의 순위: 1분 봉 폭이 큰 순서로 n 개. 못 잰 종목, 쉬는 종목(본장 마감)은 뺀다 */
-export function swingRank(xs: { id: string; live: number[]; shut?: boolean }[], n = 3, mins = 3): { id: string; pct: number; bars: number }[] {
-  return xs.filter((x) => !x.shut).map((x) => ({ id: x.id, s: candleSwing(x.live, mins) })).filter((x): x is { id: string; s: { pct: number; bars: number } } => x.s !== null)
+/** 거래소에서 받은 진짜 1분 봉(시작할 때 받아 온 지난 하루 봉 + 그 뒤 실시간으로 채운 봉, dayHistory)으로 같은 셈을 한다(회차 13).
+ *  다 찬 봉(끝난 분)만, 끝에서부터 mins 개. 맨 끝 봉이 지금에서 3분 넘게 떨어져 있으면(오래된 봉) null — 지금의 출렁임이 아니다. */
+export function barSwing(bars: { t: number; h: number; l: number; c: number }[], nowMs: number, mins = 3): { pct: number; bars: number } | null {
+  const done = bars.filter((b) => b.t + 60_000 <= nowMs);
+  const use = done.slice(-mins);
+  if (!use.length || nowMs - (use[use.length - 1].t + 60_000) > 3 * 60_000) return null;
+  let sum = 0;
+  for (const b of use) { if (!(b.c > 0) || !(b.h >= b.l)) return null; sum += ((b.h - b.l) / b.c) * 100; }
+  return { pct: sum / use.length, bars: use.length };
+}
+/** 실제 시세 종목의 순위: 1분 봉 폭이 큰 순서로 n 개. 못 잰 종목, 쉬는 종목(본장 마감)은 뺀다.
+ *  초 단위 실시간 값으로 다 찬 봉이 mins 개 모이기 전에는 거래소의 진짜 1분 봉(bars)으로 잰다(회차 13: 접속하자마자 뜬다). 둘 다 진짜 시세의 봉이다 */
+export function swingRank(xs: { id: string; live: number[]; shut?: boolean; bars?: { t: number; h: number; l: number; c: number }[] }[], n = 3, mins = 3, nowMs = Date.now()): { id: string; pct: number; bars: number }[] {
+  const pick = (x: (typeof xs)[number]) => {
+    const a = candleSwing(x.live, mins);
+    if (a && a.bars >= mins) return a;
+    const b = x.bars ? barSwing(x.bars, nowMs, mins) : null;
+    return b && (!a || b.bars > a.bars) ? b : a;
+  };
+  return xs.filter((x) => !x.shut).map((x) => ({ id: x.id, s: pick(x) })).filter((x): x is { id: string; s: { pct: number; bars: number } } => x.s !== null)
     .map((x) => ({ id: x.id, pct: x.s.pct, bars: x.s.bars })).sort((a, b) => b.pct - a.pct).slice(0, n);
 }
 

@@ -47,6 +47,7 @@ import {
 } from '../vm/trade';
 import { Acorn } from './art';
 import { flyAcorns, reduced, useCountUp } from './fx';
+import { dayBars } from '../dayHistory';
 import { WinBurst } from './Juice';
 import { play, playTap, later } from './audio';
 import { pushPop, treePing } from './popBus';
@@ -540,6 +541,9 @@ export function ProtoTrade() {
     // 도토리로 건 출구: 실제로 들어간 크기(쪼개 넣기면 셋 가운데 하나)에 맞춰 다시 건다
     if (tpK !== null || slK !== null) { plan.current[market] = { tp: tpK !== null ? tpK * cl.total : null, sl: slK !== null ? slK * cl.total : null }; reapply(); }
     else delete plan.current[market];
+    // FRX 첫 실전 카드로 맞춘 출구(이자 한 번)는 그 한 판의 것이다(회차 13): 다음 주문에 말없이 남으면 증거금을 키운 판이
+    // 반대쪽 0.2% 남짓에서 1~2초 만에 손절됐다. 이 판의 출구는 위에서 걸었고, 주문 칸의 출구만 비운다(카드가 다시 뜨면 다시 맞춘다)
+    if (firstSet) setTrade({ tpK: null, slK: null });
     if (part > 0) {
       splitT.current.forEach((t) => window.clearTimeout(t));
       splitT.current = [1, 2].map((k) => window.setTimeout(() => {
@@ -724,6 +728,9 @@ export function ProtoTrade() {
     </div>
   );
 
+  // 훅은 모두 이른 return 앞에서 부른다(회차 13: 잠김, 계좌 없음 화면으로 바뀌는 순간 훅 수가 달라져 화면이 통째로 꺼졌다)
+  const firstTry = useProto((s0) => s0.firstTry);
+
   // 0단계: 아직 앱이 잠겨 있다
   if (mode.mode === 'locked') {
     return frame(
@@ -787,8 +794,9 @@ export function ProtoTrade() {
     );
   })() : null;
   // 지금 출렁이는 곳(U-53): 실제 시세 종목을 1분 봉 폭(지난 3분 평균, 초 단위 실시간 값으로 센 것)으로 줄 세운다. 날다람쥐 · 본장 마감 종목은 뺀다
+  // 회차 13: 실시간 값이 3분 모이기 전에는 접속할 때 거래소에서 받아 온 진짜 1분 봉(dayHistory)으로 잰다 — 들어오자마자 뜬다
   const rankRow = tutSt === 'done' && !pos && !result && !marketById[market].synthetic ? (() => {
-    const rk0 = swingRank(tabs.filter((t) => !marketById[t.id].synthetic).map((t) => ({ id: t.id, live: liveHistoryOf(t.id), shut: sessionOf(t.id, now, rangeOf(t.id))?.state === 'closed' })));
+    const rk0 = swingRank(tabs.filter((t) => !marketById[t.id].synthetic).map((t) => ({ id: t.id, live: liveHistoryOf(t.id), bars: dayBars(t.id).slice(-6), shut: sessionOf(t.id, now, rangeOf(t.id))?.state === 'closed' })), 3, 3, now.getTime());
     if (rk0.length < 2) return null;
     const mins = Math.min(...rk0.map((x) => x.bars));
     return (
@@ -916,7 +924,6 @@ export function ProtoTrade() {
   const planTxt = !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist }) : null;
   const oddsSwing = odds ? swingCountText(hist, odds.needPct) : null;
   const carry = pos && rawPos ? carryOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, notional: rawPos.notional, fundingRate: fundingRateNow()}) : null;
-  const firstTry = useProto((s0) => s0.firstTry);
   const firstShowEarly = tutSt === 'done' && firstTry > 0 && lifeNo(g) === 1 && !pos && !result && cl.total > 0 && !sheet;
   // 느린 판(U-51): 평소대로면 목표까지 5분 넘게 걸리는 판이면 그렇다고, 지금 더 빨리 움직이는 종목이 있으면 그 이름을 — 손 놓고 기다리지 않게. 눌러서 그 종목으로 간다
   const altM = wild && wild.id !== market && !rankRow ? { id: wild.id, name: marketById[wild.id].name, r: wild.r } : null;
@@ -1118,6 +1125,12 @@ export function ProtoTrade() {
             </div>
             )}
             </div>
+            {/* 둘 넘게 들었으면 포지션 카드에서도 한곳 정리로(회차 13): 머리의 합계 칩은 엄지에 작다 */}
+            {openN > 1 && (
+              <button className={'pl-all ' + (openNet >= 0 ? 'up' : 'down')} data-plall={openN} aria-expanded={tray} onClick={() => { play('ui_tap'); setTray(true); setTrayArm(null); plRef.current?.closest('.pt')?.scrollTo?.({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); }}>
+                <span>판 {openN}개 합계 <b>{money(openNet)}</b></span><em>한곳 정리<Chev size={10} /></em>
+              </button>
+            )}
             {/* 느린 판(U-51): 들고 있는 판이 평소대로면 +15%까지 오래 걸리면 한 줄, 더 빠른 종목으로 가는 단추 */}
             {slowLine && <div className="pl-row3">{slowLine}</div>}
           </div>

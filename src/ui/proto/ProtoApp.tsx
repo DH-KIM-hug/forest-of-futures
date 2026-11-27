@@ -1,6 +1,6 @@
 import '@fontsource/jua/korean-400.css';
 import '@fontsource/jua/latin-400.css';
-import { useEffect, useRef, useState } from 'react';
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Tab } from './protoStore';
 import { homeSummary, currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, lifeNo, hamsterMath } from './model';
@@ -360,9 +360,11 @@ export function ProtoApp() {
       {vig > 0 && <i className={'pr-vig' + (danger >= 0.7 ? ' beat' : '')} aria-hidden="true" style={{ ['--v' as string]: vig.toFixed(3) }} />}
       <Hud />
       <main className="pr-main">
-        {tab === 'lot' && <Lot />}
-        {tab === 'map' && <MapTab />}
-        {tab === 'phone' && <PhoneTab />}
+        <TabGuard key={tab}>
+          {tab === 'lot' && <Lot />}
+          {tab === 'map' && <MapTab />}
+          {tab === 'phone' && <PhoneTab />}
+        </TabGuard>
         {/* 거래소에서는 알림이 차트 안의 말 자리로 간다(PhoneLane, U-46) — 종목 줄을 덮지 않게 */}
         {toast && tab !== 'phone' && <div className="pr-toast" role="status">{toast}</div>}
       </main>
@@ -383,4 +385,21 @@ export function ProtoApp() {
       {pdev === 'sounds' && <SoundLab />}
     </div>
   );
+}
+
+/** 한 탭의 화면이 그리다 넘어져도 게임 전체가 까맣게 꺼지지 않게(회차 13: 거래소가 넘어지면 화면이 통째로 꺼졌다).
+ *  넘어지면 그 자리에 한 줄과 [다시 켜기]. 탭을 바꾸면 새로 그린다(key). 돈과 포지션은 엔진에 있어 그대로다 */
+class TabGuard extends Component<{ children: ReactNode }, { down: number }> {
+  state = { down: 0 };
+  static getDerivedStateFromError() { return { down: 1 }; }
+  componentDidCatch(e: unknown) { console.error('tab', e); }
+  render() {
+    if (!this.state.down) return this.props.children;
+    return (
+      <div className="pr-tabdown" role="alert">
+        <p>화면이 잠깐 멈췄다. 돈과 포지션은 그대로다.</p>
+        <button onClick={() => this.setState({ down: 0 })}>다시 켜기</button>
+      </div>
+    );
+  }
 }

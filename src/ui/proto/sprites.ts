@@ -4,6 +4,7 @@ import homeStump from './img/home_stump.webp';
 import heroPhone from './img/hero_phone.webp';
 import wheel from './img/wheel.webp';
 import floorPatch from './img/floor_patch.webp';
+import trophyFrame from './img/trophy_frame.webp'; // 회차 13: 벽의 최고의 판 액자(종이 칸은 비어 있고 글은 화면이 얹는다). 원본 docs/art/v5/raw/trophy_frame.png
 
 // 회차 3 그림(U-40): docs/art/v5/raw/ → img/v5/*.webp (docs/art/v5/mkweb_art.py)
 import bCollector from './img/v5/b_collector.webp';
@@ -72,6 +73,7 @@ export type SpriteId =
   | 'heroRun' //   (옛 이름) 굴리는 자세 [heroWheel 로 대체]
   | 'heroNear' //  주인공: 청산 임박(폰만 본다) [그림 대기 → hero]
   | 'wheel' //     쳇바퀴(집 그림에서 오려 냄). 알바 없는 빈 쳇바퀴에 쓴다
+  | 'trophyFrame' // 벽에 거는 나무 액자(가운데 빈 종이, 오른쪽 아래 도토리 메달)
   | 'floorPatch' // 엄마의 쳇바퀴 자리를 옆 바닥으로 덮은 조각(그 위에 쳇바퀴 그림을 따로 얹는다)
   | 'collector' | 'boss' | 'weasel' | 'raccoon' | 'owl' | 'viper' //       컷인 반신
   | 'cCollector' | 'cBoss' | 'cWeasel' | 'cRaccoon' | 'cOwl' | 'cViper' // 전신(집 · 지도의 가게)
@@ -99,6 +101,7 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   hero: { src: heroPhone, w: 166, h: 220 },
   wheel: { src: wheel, w: 160, h: 196 },
   floorPatch: { src: floorPatch, w: 270, h: 270 },
+  trophyFrame: { src: trophyFrame, w: 300, h: 242 },
   collector: { src: bCollector, w: 433, h: 420 },
   boss: { src: bBoss, w: 396, h: 420 },
   weasel: { src: bWeasel, w: 254, h: 420 },

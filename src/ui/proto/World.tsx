@@ -434,6 +434,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   const houseName = houseDefs[run.house]?.name ?? '빈 오두막';
   const home = HOME_BY_LEVEL[Math.min(run.house, HOME_BY_LEVEL.length - 1)] ?? sprite('home')!;
   const patch = sprite('floorPatch')!;
+  const tro = sprite('trophyFrame');
   const taps0 = run.stats.laborTaps ?? 0;
   const hint = rideSlot >= 0 && !waiting && !open && !near && !talking && taps0 < TAP_HINT_TAPS;
   /** 말풍선: 손님 머리 위, 화면 오른쪽을 넘지 않게 */
@@ -465,22 +466,23 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
         <svg className="fg" viewBox={`0 0 390 ${VB_H.toFixed(2)}`} preserveAspectRatio="none">
           <image href={patch.src} x={FLOOR_PATCH[0] * K} y={FLOOR_PATCH[1] * K} width={FLOOR_PATCH[2] * K} height={FLOOR_PATCH[3] * K} />
           {spots}
-          {bestTrade && (() => {
-            // 문 오른쪽 벽(집 그림 좌표를 390 폭에 맞춘 자리). 누르면 그 판을 한 줄로
-            const fx0 = 337, fy0 = 236, fw = 48, fh = 38;
+          {bestTrade && tro && (() => {
+            // 문 오른쪽 벽(집 그림 좌표를 390 폭에 맞춘 자리). 그림 액자(회차 13) 위에 글을 얹는다: 종이 칸은 그림의 x 13~86%, y 27~86%
+            // 집 단계가 올라도 집 그림은 한 장(HOME_BY_LEVEL)이라 벽 자리는 그대로다. 머리의 목표 막대에 덮이지 않게 문틀 높이 아래쪽에 건다
+            // 낮은 폰(360×640 등)은 구도가 바닥 쪽이라 그 벽이 머리(HUD) 밑에 숨는다: 그때는 문 앞의 큰 상자 위에 세워 둔다(엄마 짐 상자 위의 액자)
+            const fw = 60, fh = fw * tro.h / tro.w;
+            const onWall = cam.top + (244 + 10) * (box.w / 390) >= box.hud;
+            const fx0 = onWall ? 389 - fw : 346 - fw / 2, fy0 = onWall ? 244 : 352 - fh;
+            const px0 = fx0 + fw * 0.13, pw = fw * 0.73, py0 = fy0 + fh * 0.265, ph = fh * 0.6;
             const m0 = bestTrade.market;
+            const amt = '+' + comma(bestTrade.pnl);
             return (
-              <g key={'tro' + bestTrade.pnl} className="pr-trophy" data-trophy={bestTrade.pnl} role="button" tabIndex={0} aria-label={`이번 생 최고의 판 +${comma(bestTrade.pnl)}`}
-                onClick={() => say(`[벽의 액자] 이번 생 최고의 판: ${marketById[m0]?.name ?? m0} ${bestTrade.dir === 1 ? '롱' : '숏'} ${bestTrade.lev}배, +${comma(bestTrade.pnl)} (넣은 돈의 ${bestTrade.roe >= 0 ? '+' : ''}${Math.round(bestTrade.roe)}%).`, 5000)}>
-                <line x1={fx0 + fw / 2} y1={fy0 - 9} x2={fx0 + 6} y2={fy0} stroke={O} strokeWidth={1.2} />
-                <line x1={fx0 + fw / 2} y1={fy0 - 9} x2={fx0 + fw - 6} y2={fy0} stroke={O} strokeWidth={1.2} />
-                <circle cx={fx0 + fw / 2} cy={fy0 - 9} r={1.8} fill={O} />
-                <rect x={fx0} y={fy0} width={fw} height={fh} rx={3} fill="#8A5A2E" stroke={O} strokeWidth={1.6} />
-                <rect x={fx0 + 4} y={fy0 + 4} width={fw - 8} height={fh - 8} rx={1.5} fill="#FFF8E4" />
-                <text x={fx0 + fw / 2} y={fy0 + 13} textAnchor="middle" fontSize={7} fontWeight={800} fill="#8A5A16">최고의 판</text>
-                <text x={fx0 + fw / 2} y={fy0 + 24} textAnchor="middle" fontSize={bestTrade.pnl >= 100000 ? 8 : 9} fontWeight={800} fill="#B8432C">+{comma(bestTrade.pnl)}</text>
-                <circle cx={fx0 + fw - 8} cy={fy0 + fh - 8} r={4} fill="#E8B93A" stroke={O} strokeWidth={1} />
-                <text x={fx0 + 9} y={fy0 + fh - 6.2} fontSize={6.4} fontWeight={800} fill="#6E665A">{bestTrade.lev}배</text>
+              <g key={'tro' + bestTrade.pnl} className="pr-trophy" data-trophy={bestTrade.pnl} data-trophy-at={onWall ? 'wall' : 'box'} role="button" tabIndex={0} aria-label={`이번 생 최고의 판 ${amt}`}
+                onClick={() => say(`[벽의 액자] 이번 생 최고의 판: ${marketById[m0]?.name ?? m0} ${bestTrade.dir === 1 ? '롱' : '숏'} ${bestTrade.lev}배, ${amt} (넣은 돈의 ${bestTrade.roe >= 0 ? '+' : ''}${Math.round(bestTrade.roe)}%).`, 5000)}>
+                <image href={tro.src} x={fx0} y={fy0} width={fw} height={fh} />
+                <text x={px0 + pw / 2} y={py0 + ph * 0.3} textAnchor="middle" fontSize={6.6} fontWeight={800} fill="#8A5A16">최고의 판</text>
+                <text x={px0 + pw / 2} y={py0 + ph * 0.66} textAnchor="middle" fontSize={amt.length >= 10 ? 6.8 : amt.length >= 8 ? 8 : 9.4} fontWeight={900} fill="#B8432C">{amt}</text>
+                <text x={px0 + 2} y={py0 + ph * 0.96} fontSize={6.2} fontWeight={800} fill="#6E665A">{bestTrade.lev}배</text>
               </g>
             );
           })()}

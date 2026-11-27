@@ -1096,3 +1096,7 @@
 /* 목표 막대(U-53): 글이 길면 두 줄로 넘쳐 오른쪽 숫자와 겹치던 것 — 한 줄, 넘치면 말줄임, 숫자는 그대로 */
 .pr-hud .goal > span { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .pr-hud .goal > em { flex: 0 0 auto; display: inline-flex; align-items: center; white-space: nowrap; margin-left: 6px; }
+
+/* 탭 화면이 넘어졌을 때(회차 13) */
+.pr-tabdown { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 240px; padding: 24px 16px; text-align: center; font-weight: 800; color: var(--o, #4A4640); }
+.pr-tabdown button { min-height: 44px; padding: 0 22px; border-radius: 14px; border: 2.5px solid var(--o, #4A4640); background: #FFE58A; font: inherit; font-weight: 800; }
