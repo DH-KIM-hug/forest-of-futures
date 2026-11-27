@@ -39,7 +39,7 @@ export function WalletSheet() {
           <button className="x" onClick={close} aria-label="닫기">✕</button>
         </div>
         <div className="sum"><small>지갑 전체</small><b>{comma(Math.round(walletValue(run)))}</b><Acorn size={22} /></div>
-        {coins.length === 0 && <p className="none">아직 쳇바퀴가 없다.</p>}
+        {coins.length === 0 && <p className="none">지갑에 담긴 코인이 없어요.</p>}
         {coins.map((c) => {
           const w = run.wallet[c];
           const qty = w?.qty ?? 0;

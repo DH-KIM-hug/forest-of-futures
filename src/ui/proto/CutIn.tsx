@@ -95,7 +95,7 @@ function CutInScene({ sc }: { sc: Scene }) {
       patch.everUnlocked = { ...P.everUnlocked, [cur.unlock]: true };
       patch.visited = { ...P.visited, [cur.unlock]: false };
       play('unlock_tab');
-      say(`${TAB_LABEL[cur.unlock]} 탭이 열렸다!`);
+      say(cur.unlock === 'map' ? '마을 지도를 펼쳤다' : cur.unlock === 'phone' ? '숲거래소 앱을 열 수 있다' : `${TAB_LABEL[cur.unlock]} 탭이 열렸다`);
     }
     if (held.current) { held.current = false; useGame.getState().setSpeed(1); }
     P.patch(patch);
@@ -174,7 +174,7 @@ function CutInScene({ sc }: { sc: Scene }) {
           <div className="meta">
             {/* 정산 때 나간 것을 한 줄씩(U-46 사용자: "일당은 언제 나가는 돈인지?") — 이자 · 생활비 · 일당은 정산마다 같이 나간다 */}
             {st.living !== undefined && <span className="parts" data-settle-parts>이자 <b className="dn">−{comma(st.interest + (st.other ?? 0))}</b> 생활비 <b className="dn">−{comma(st.living)}</b>{(st.wages ?? 0) > 0 && <> 일당 {st.hamsters ?? 0}마리 <b className="dn">−{comma(st.wages ?? 0)}</b></>}</span>}
-            <span>내 정산 합계 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span>
+            <span>이번 정산 순증감 <b className={st.net >= 0 ? 'up' : 'dn'}>{st.net >= 0 ? '+' : '−'}{comma(Math.abs(st.net))}</b></span>
           </div>
         )}
         {n > 1 && <div className="dots" aria-label={`${i + 1}/${n}`}>{sc.lines.map((_, k) => <i key={k} className={k <= i ? 'on' : ''} />)}</div>}
@@ -186,7 +186,7 @@ function CutInScene({ sc }: { sc: Scene }) {
             ))}
           </div>
         )}
-        {!pick && <em>{last ? '탭하면 닫기' : '탭하면 다음'}</em>}
+        {!pick && <em>{last ? '눌러서 닫기' : '눌러서 다음'}</em>}
       </div>
     </div>
   );

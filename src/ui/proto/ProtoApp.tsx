@@ -74,13 +74,13 @@ function Hud() {
   const seenP = useProto((st) => st.seen);
   // 빚 없는 생을 이어 가는 동안([계속한다], U-40): 모은 돈의 다음 고비가 목표다. 다 넘으면 언제든 닫을 수 있다고만 적는다
   const sv = seenP.continued && lenderDebtTotal(run) === 0 ? savingsStep(seenP) : -1;
-  const goalSave = sv >= 0 && sv < SAVINGS_STEPS.length ? { label: '빚 없는 아침, 모은 돈', cur: Math.min(Math.floor(run.cash), SAVINGS_STEPS[sv]), need: SAVINGS_STEPS[sv] } : null;
+  const goalSave = sv >= 0 && sv < SAVINGS_STEPS.length ? { label: '빚 없이 모은 돈', cur: Math.min(Math.floor(run.cash), SAVINGS_STEPS[sv]), need: SAVINGS_STEPS[sv] } : null;
   const otherDebt = lenderDebtTotal(run) - run.debts.shark1.principal;
   const goal: { label: string; cur: number; need: number; sub?: string } | null = goal0 ?? (lg ? { label: lg.label, cur: lg.cur, need: lg.need, sub: `이자 −${comma(lg.cut)}` } : goalSave);
   // 손에 든 돈으로 지금 갚으면 금박 도장 막대가 어디까지 차는가(U-41): 다음 정산에 낼 돈은 남겨 두고 센다. 거래로 딴 돈이 장부에 얼마나 가까운지가 집에서 보인다
   const spare = lg ? Math.max(0, Math.min(lg.need - lg.cur, Math.floor(run.cash - (fc0.interest + fc0.living + fc0.wages)))) : 0;
   const ghost = lg && spare >= 1000 ? Math.min(1, (lg.cur + spare) / lg.need) : null;
-  const goalEnd = sv >= SAVINGS_STEPS.length ? '도토리 100만. 사무소에서 언제든 이 생을 닫을 수 있다' : otherDebt > 0 ? `오소리 장부는 깨끗하다. 다른 빚 ${comma(otherDebt)}` : '빚 0, 장부가 깨끗하다';
+  const goalEnd = sv >= SAVINGS_STEPS.length ? '100만 도토리 달성, 사무소에서 언제든 은퇴할 수 있어요' : otherDebt > 0 ? `오소리 완납, 다른 빚 ${comma(otherDebt)}` : '남은 빚 0, 완납';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
   const lot = tab === 'lot';
   const [brk, setBrk] = useState(() => pdev === 'wallet' && /pbrk=1/.test(window.location.search));
@@ -111,7 +111,7 @@ function Hud() {
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">금리 {rate.multiplier}배, {rate.remaining}회 남음{run.debts.shark1.inherited > 0 ? ' (엄마 빚 빼고)' : ''}</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
+          {debtLine(g) > 0 && <div className="debt" data-hl="debt"><b>빚 {comma(debtLine(g))}</b><span key={interest} className={'int' + (run.settleNo > 0 || loanTaken ? ' bumped' : '')}>정산마다 이자 {comma(interest)}</span>{rate && <span className="hike">변동금리 {rate.multiplier}배, {rate.remaining}회 남음{run.debts.shark1.inherited > 0 ? ' (엄마 빚 빼고)' : ''}</span>}{fc.living > 0 && <span>생활비 {rd(fc.living)}</span>}</div>}
         </div>
         <DevBar />
         <div className="acorn">
@@ -268,9 +268,9 @@ function TutorialNotice() {
       <div className="box rcpt">
         <h3>첫 주문 전표 <small>뒷면</small></h3>
         {/* U-46 사용자: "재생 종료라는 말은 대체 뭐임." — 쉬운 말로 그대로 적는다 */}
-        <p><b>첫 주문은 체험용 시세였습니다.</b></p>
-        <p>롱을 누르면 내리고, 숏을 누르면 오르게 짜여 있었습니다.</p>
-        <i className="rstamp" aria-hidden="true">체험용</i>
+        <p><b>첫 주문용 시세였습니다.</b></p>
+        <p>롱에는 내리는 시세를, 숏에는 오르는 시세를 붙였습니다.</p>
+        <i className="rstamp" aria-hidden="true">첫 주문용</i>
         <p className="sub">{live ? <>다음 주문부터 실제 시세로 움직입니다.</> : <>다음 주문부터 연습 시세로 움직입니다.<br />실제 시세가 들어오지 않고 있습니다.</>}</p>
         <button className="buy on wide" data-notice-ok onClick={tutorialEnd}><span>전표를 넣는다</span></button>
       </div>

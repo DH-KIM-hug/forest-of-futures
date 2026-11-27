@@ -39,7 +39,7 @@ export const canRoll = (): boolean => rollTarget(useGame.getState().g.run) !== n
 
 /** 알바가 쳇바퀴를 다 돌리는데 세상을 눌렀다(U-43 사용자: "알바 고용하면 그때부터 탭은 안 되어야 하는데 되네?"): 버는 것은 없다.
  *  이번 생에 처음이면 주인공이 속으로 한 줄 하고 거래소 탭을 가리킨다. 그 뒤로는 거래소 탭만 잠깐 가리킨다. */
-export const STAFFED_THINK = '…쳇바퀴는 알바가 돌린다. 나는 폰이나 보자.';
+export const STAFFED_THINK = '아, 내릴 필요 없어. 내가 비켜 줄게.';
 let pointTimer: number | undefined, thinkTimer: number | undefined;
 export function staffedTap(): void {
   const P = useProto.getState();
@@ -56,4 +56,4 @@ export function staffedTap(): void {
 }
 
 /** 중고폰이 울린 뒤(U-43) 다른 데를 누르면 나오는 한 줄 */
-export const FORCE_NUDGE = '…폰이 울렸다. FRX 앱부터 켜 보자.';
+export const FORCE_NUDGE = '폰에 도토코인 값이 떠 있다. FRX 앱부터 열어 보자.';

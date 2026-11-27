@@ -113,7 +113,7 @@ describe('줄의 시간표 (planSpeech · shownAt)', () => {
   it('게임의 말하는 줄은 모두 5초 안에 다 나온다(프롤로그 + 사무소·정산·튜토리얼 장면)', () => {
     const g = fresh();
     const lines = [
-      ...prologueTalk({ debt: 300000, interest: 4500 }).map((text) => ({ who: 'collector', text })),
+      ...prologueTalk({ debt: 300000, interest: 4500 }),
       ...STORY.settleWin(5500), ...STORY.settleLose(5500), ...STORY.tutIntro(30000, 10, tipArgs(g)), ...STORY.tutLost(30000, 100000, 6, tipArgs(g)),
     ];
     expect(lines.length).toBeGreaterThan(15);

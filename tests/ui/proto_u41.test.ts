@@ -152,7 +152,7 @@ describe('정산을 넘겨 들고 있기 (U-41)', () => {
     A(h, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 50_000 });
     const m0 = h.run.positions.DTC.margin; tickN(h, h.run.settleIn);
     expect(m0 - h.run.positions.DTC.margin).toBe(100); // 1막 밖(엔진 기본): 명목 1,000만의 0.001%
-    expect(STORY.carried({ paid: 6_100 })).toBe('정산을 넘겼다. 손에서 −6,100, 포지션은 그대로');
+    expect(STORY.carried({ paid: 6_100 })).toBe('현금에서 6,100 납부. 포지션 유지.');
   });
 });
 
@@ -194,12 +194,12 @@ describe('이번 생의 길 (U-41)', () => {
     expect(journeyOf({ tradeNet: 500, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).short).toBe('거래 +500');
   });
   it('한 판에 이자 한 번 치(이번 생 처음)의 장면: 오소리 대부 → 추심원 → 주인공, 숫자는 받은 것 그대로', () => {
-    const L = STORY.winClaim({ boss: '이자 한 번 치를 한 판에 버셨네요.', pnl: 15_812, claim: 15_500, spins: 3, stampLeft: 50_000, momLeft: 300_000 });
-    expect(L.map((l) => l.who)).toEqual(['boss', 'collector', 'hero', 'hero']);
-    expect(L[1].text).toContain('15,500');
-    expect(L[2].text).toContain('15,812');
+    const L = STORY.winClaim({ first: '15,500은 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.', pnl: 15_812, claim: 15_500, spins: 3, stampLeft: 50_000, momLeft: 300_000 });
+    expect(L.map((l) => l.who)).toEqual(['collector', 'hero', 'hero', 'hero']); // 개정 대본 장면 20: 추심원 → 칩멍크
+    expect(L[0].text).toContain('15,500');
+    expect(L[1].text).toContain('15,812');
     expect(L[3].text).toContain('금박 도장까지 50,000');
-    expect(STORY.winClaim({ boss: 'x', pnl: 15_812, claim: 15_500, spins: null, stampLeft: null, momLeft: 0 })).toHaveLength(3);
+    expect(STORY.winClaim({ first: 'x', pnl: 15_812, claim: 15_500, spins: null, stampLeft: null, momLeft: 0 })).toHaveLength(3);
   });
 });
 
@@ -225,9 +225,9 @@ describe('도토리일보 시세면 (U-41)', () => {
     expect(c.loud1m!).toBeCloseTo(0.8, 1);
     expect(n.headline).toBe(`지난 6시간, 가코인의 고저 폭 ${a.range!.toFixed(2)}%`);
     expect(n.sub).toContain('나코인');
-    expect(n.boss).toMatch(/^(오늘은|지금 제일)/);
-    expect(n.boss).toContain('23시 무렵 다코인');
-    expect(noteToast(n)).toMatch(/^\[도토리일보 시세면\] 지난 6시간, 가코인/);
+    expect(n.boss).toMatch(/^(오늘은|지금은)/);
+    expect(n.boss).toContain('어제 다코인이 크게 움직인 게 23시 무렵');
+    expect(noteToast(n)).toMatch(/^\[도토리일보 시세면\] 지난 6시간 변동 폭 1위 가코인/);
     expect(Math.round(n.spanMin)).toBe(1440);
   });
   it('기록이 모자라면 모자란 대로: 빈 칸은 "–", 30분 치면 30분이라고 말한다', () => {
@@ -236,7 +236,7 @@ describe('도토리일보 시세면 (U-41)', () => {
     expect(n.rows[0].range).not.toBeNull();
     expect(n.rows[1].range).toBeNull();
     expect(n.headline).toContain('지난 30분');
-    expect(n.boss).toContain('한 시간 치 모이면');
+    expect(n.boss).toContain('한 시간쯤 지나면');
     expect(cell(null)).toBe('–');
     expect(cell(0.421)).toBe('+0.42%');
     expect(cell(-12.34)).toBe('−12.3%');

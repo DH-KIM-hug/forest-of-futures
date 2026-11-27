@@ -473,10 +473,10 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
           {items.map((it) => <g key={it.key}>{it.node}</g>)}
           {!waiting && collector && collector.interest > 0 && (
             collector.overdue
-              ? <Spiky key={`sb${collector.at}`} {...bubble(168)} y={cy0 - 126} w={168} h={30} text={<SvgSay who="collector" text="이자가 모자라요오. 연체." delay={0.9} mute={talking} />} />
-              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={<SvgSay who="collector" text={`이자 ${comma(collector.interest)}, 받았어요오.`} delay={0.9} mute={talking} />} />
+              ? <Spiky key={`sb${collector.at}`} {...bubble(168)} y={cy0 - 126} w={168} h={30} text={<SvgSay who="collector" text="오늘 건 연체로 적을게요." delay={0.9} mute={talking} />} />
+              : <Round key={`rb${collector.at}`} {...bubble(176)} y={cy0 - 124} w={176} h={28} text={<SvgSay who="collector" text={`이자 ${comma(collector.interest)} 받았어요.`} delay={0.9} mute={talking} />} />
           )}
-          {waiting && <Round {...bubble(150)} y={cy0 - 114} w={150} h={28} text={<SvgSay who="collector" text="사무소로 오세요오." delay={0.9} mute={talking} />} />}
+          {waiting && <Round {...bubble(220)} y={cy0 - 114} w={220} h={28} text={<SvgSay who="collector" text="사무소 가실 거면 길 그려 드릴게요." delay={0.9} mute={talking} />} />}
           {/* 폰 꼬리표(U-42): 포지션을 든 채 집에 있으면 주인공 머리 위에 지금 손익이 뜬다. 굴려 번 돈이 있으면 그 아래에 */}
           {hold && !cheering && !talking && !riding && !thinking && !walking && (
             <g className={'pr-herotag ' + (hold.net >= 0 ? 'up' : 'dn')} data-herotag={Math.round(hold.net)} transform={`translate(${hx + 30} ${hy - hh * hScale - 12})`}>
@@ -488,13 +488,13 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
           {cheering && cheer && (
             <g className="pr-cheerbn" data-cheer-banner>
               <text x={hx + 26} y={hy - hh * 1.1 - 30} textAnchor="middle" fontSize={17} className="pa-t pa-lbl">+{comma(cheer.amount)}</text>
-              <text x={hx + 26} y={hy - hh * 1.1 - 13} textAnchor="middle" fontSize={11.5} className="pa-t pa-lbl s">한 판에 이자 {cheer.worth >= 2 ? `${cheer.worth.toFixed(1)}번` : '한 번'} 치</text>
+              <text x={hx + 26} y={hy - hh * 1.1 - 13} textAnchor="middle" fontSize={11.5} className="pa-t pa-lbl s">이자와 생활비 {cheer.worth >= 2 ? `${cheer.worth.toFixed(1)}번` : '한 번'} 치!</text>
             </g>
           )}
           {floats.map((f) => <text key={f.id} x={f.x} y={f.y} textAnchor="middle" className={'pa-float ' + f.cls} style={f.to ? { ['--tx' as string]: `${f.to[0].toFixed(1)}px`, ['--ty' as string]: `${f.to[1].toFixed(1)}px` } : undefined}>{f.t}</text>)}
         </svg>
         <Think cls="home" style={{ left: pct(spot[0], HOME_IMG.w), top: pct(spot[1] - HERO_H - 34, HOME_IMG.h) }} />
-        {hint && <div className="pr-tok" style={{ left: pct(WHEEL_SLOTS[rideSlot][0] + OLD_FACE.dx, HOME_IMG.w), top: pct(WHEEL_SLOTS[rideSlot][1] + WHEEL_BOX.dy - 14, HOME_IMG.h) }} aria-hidden="true">쳇바퀴를 톡톡</div>}
+        {hint && <div className="pr-tok" style={{ left: pct(WHEEL_SLOTS[rideSlot][0] + OLD_FACE.dx, HOME_IMG.w), top: pct(WHEEL_SLOTS[rideSlot][1] + WHEEL_BOX.dy - 14, HOME_IMG.h) }} aria-hidden="true">눌러서 굴리기</div>}
       </div>
       <div className="pr-place" aria-hidden="true">{houseName}</div>
       <div className="pr-tint" style={{ background: tint.color, opacity: tint.op }} />

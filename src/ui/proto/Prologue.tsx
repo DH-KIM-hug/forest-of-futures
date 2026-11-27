@@ -1,5 +1,5 @@
 // 프롤로그(STORY_ACT1 v3 0장, U-29): 첫 실행이 곧 조작 설명. 30~60초, 탭으로 넘긴다.
-// P1 엄마의 오두막 앞(문에 딱지) → P2 빈 방, 쳇바퀴 하나와 붉은 리본 → P3 추심원: 빚 30만 · 가진 돈 0 → P4 쳇바퀴를 굴린다(여기서부터 조작).
+// 개정 대본(docs/gdd/SCRIPT_ACT1_REVISED_USER.md 장면 1~4): P1 짐차가 떠난 뒤(봉투, 반출 목록) → P2 두 번 묶은 매듭(쳇바퀴의 리본) → P3 열쇠를 받으러 온 추심원: 엄마 빚 30만을 내 이름으로 → P4 쳇바퀴를 굴린다(여기서부터 조작).
 // 엄마의 죽음은 보여 주지 않는다. 새 그림은 만들지 않고 시제품 부품(art.tsx)으로 그린다. 숫자는 엔진 값.
 import { useEffect, useRef, useState } from 'react';
 import { O, Acorn } from './art';
@@ -103,10 +103,11 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
   const [gain, setGain] = useState(false);
   const lock = useRef(false);
   // 추심원 말풍선도 한 글자씩 + 웅얼거림(U-36). 첫 줄은 말풍선이 뜨는 0.8초를 기다린다.
-  const sp = useSpeech(TALK[talk], 'collector', { id: talk, active: step === 'p3' && !ledger, delay: talk === 0 ? 1 : 0.1 });
+  const sp = useSpeech(TALK[talk].text, TALK[talk].who, { id: talk, active: step === 'p3' && !ledger, delay: talk === 0 ? 1 : 0.1 });
   // 말하는 동안 음절마다 몸이 살짝 들썩인다(U-43)
   const colRef = useRef<SVGGElement>(null);
-  useEffect(() => { if (sp.typing) talkBob(colRef.current, TALK[talk], sp.shown); }, [sp.shown]);
+  const heroRef = useRef<SVGGElement>(null);
+  useEffect(() => { if (sp.typing) talkBob(TALK[talk].who === 'hero' ? heroRef.current : colRef.current, TALK[talk].text, sp.shown); }, [sp.shown]);
   const t = useRef<number[]>([]);
   const after = (ms: number, f: () => void) => { t.current.push(window.setTimeout(f, ms)); };
   useEffect(() => () => { t.current.forEach((x) => window.clearTimeout(x)); }, []);
@@ -143,11 +144,11 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
   };
   const tapLedger = () => { if (lock.current) return; play('ui_tap'); setLedger(false); go('p4', 150); };
 
-  // U-44: 왜 오늘 저녁 여기 왔는지(사무소의 연락), 빈 방에 쳇바퀴만 남은 까닭(반출 목록의 비고)
-  const caption = step === 'p1' ? (walk === 0 ? '오소리 사무소에서 해 지기 전에 엄마 집으로 오라고 했다.' : '창이 어둡다. 문에 붉은 딱지가 붙어 있다.')
-    : step === 'p2' ? (ribbon ? '' : '다 실려 갔다. 반출 목록에서 쳇바퀴만 「이자 납부용」으로 빠져 있다.')
-    : step === 'p3' ? '' : gain ? '' : '쳇바퀴를 눌러 굴린다.';
-  const hint = step === 'p1' ? '화면을 누르면 걷는다' : step === 'p2' && !ribbon ? '쳇바퀴를 눌러 본다' : step === 'p3' && !ledger ? '탭하면 계속' : '';
+  // 개정 대본: 왜 오늘 해 지기 전에 여기 왔는지(사무소 봉투, 유품 인수), 빈 방에 쳇바퀴만 남은 까닭(반출 목록, 「수금용」 꼬리표)
+  const caption = step === 'p1' ? (walk === 0 ? '장례를 마치고 오니 문틈에 오소리 사무소 봉투가 끼워져 있었다. 엄마 집에서 짐을 빼겠단다. 유품 인수는 오늘 해 질 때까지.' : '바퀴 자국 두 줄이 집 앞에서 큰길로 이어진다. 문에 붙은 반출 목록: 찬장, 식탁, 의자 둘.')
+    : step === 'p2' ? (ribbon ? '' : '바닥에 찬장 자국이 희다. 쳇바퀴에 꼬리표가 붙어 있다. 「수금용, 반출 보류」')
+    : step === 'p3' ? (talk === 0 && !ledger ? '문밖에서 수첩 모서리가 먼저 보인다.' : '') : gain ? '' : '추심원이 문간에서 몸을 비켜 준다. 쳇바퀴를 눌러 굴린다.';
+  const hint = step === 'p1' ? '눌러서 걷기' : step === 'p2' && !ribbon ? '쳇바퀴 살펴보기' : step === 'p3' && !ledger ? '눌러서 계속' : '';
   const [hx, hy, hk] = WALK[Math.min(walk, 2)];
   const emptyImg = sprite('heroEmpty')!, backImg = spriteOr('heroWalkBack', 'heroWalkEmpty')!, rideImg = sprite('heroWheel')!, wheelImg = spriteOr('wheelEmpty', 'wheel')!, outside = sprite('prologue')!;
 
@@ -186,14 +187,15 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
               {gain && <text x={WX} y={WY - 122} textAnchor="middle" className="pa-float">+{TAP}</text>}
             </g>
             {/* 폰은 아직 없다: 빈손으로 서 있다. 굴리는 동안에는 쳇바퀴 안에 있다 */}
-            {!(step === 'p4' && gain) && <Alive id="heroEmpty" seed="hero" x={HEROX} y={HEROY} h={HEROH} />}
+            {!(step === 'p4' && gain) && <g ref={heroRef}><Alive id="heroEmpty" seed="hero" x={HEROX} y={HEROY} h={HEROH} /></g>}
             {step === 'p3' && (
               <g className="pa-walkin">
                 <g ref={colRef}><Alive id="cCollector" seed="collector" x={COLX} y={COLY} h={74} /></g>
                 <g className={'pa-bubble' + (talk > 0 ? ' now' : '')} key={talk}>
-                  <rect x={22} y={COLY - 172} width={346} height={64} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
-                  <path d={`M${COLX - 14} ${COLY - 110} l14 22 l8 -22z`} fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={COLX - 16} y={COLY - 116} width={26} height={6} fill="#fff" />
-                  <foreignObject x={32} y={COLY - 168} width={326} height={58}><div className="pp-say"><span><Typed text={TALK[talk]} shown={sp.shown} /></span></div></foreignObject>
+                  <rect x={22} y={COLY - 192} width={346} height={84} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
+                  {/* 꼬리는 말하는 쪽을 가리킨다(추심원 또는 칩멍크) */}
+                  {(() => { const tx = Math.max(48, Math.min(330, TALK[talk].who === 'hero' ? HEROX : COLX)); return <><path d={`M${tx - 14} ${COLY - 110} l14 22 l8 -22z`} fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={tx - 16} y={COLY - 116} width={26} height={6} fill="#fff" /></>; })()}
+                  <foreignObject x={32} y={COLY - 188} width={326} height={76}><div className={'pp-say' + (TALK[talk].who === 'hero' ? ' by-hero' : '')} data-who={TALK[talk].who}><span>{TALK[talk].who === 'hero' && <b className="pp-who">칩멍크</b>}<Typed text={TALK[talk].text} shown={sp.shown} /></span></div></foreignObject>
                 </g>
                 <rect x={COLX - 65} y={COLY + 6} width={130} height={24} rx={12} fill={O} /><text x={COLX} y={COLY + 23} textAnchor="middle" fontSize={14} fontWeight={700} fill="#fff">오소리 추심원</text>
               </g>
@@ -208,20 +210,21 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
         <div className="pp-card-back" onClick={(e) => { e.stopPropagation(); tapCard(); }}>
           <div key={card} className="pp-card b-ribbon" data-card="ribbon">
             <svg viewBox="0 0 200 130" className="pp-art"><circle className="pp-glow" cx={100} cy={64} r={46} fill="#F8D978" /><g className={card === 2 ? 'pp-swing' : ''} style={{ transformOrigin: '100px 20px' }}><Ribbon x={100} y={62} k={1.9} /></g></svg>
-            {card === 1 ? <><p>손잡이에 붉은 리본이 묶여 있다.</p><small>엄마가 머리에 묶던 것이다.</small></> : <p>풀어서 주머니에 넣었다.</p>}
-            <em>탭하면 계속</em>
+            {card === 1 ? <><p>엄마가 머리에 매던 리본이다. 매듭이 두 개다.</p><small>하나만 지으면 꼭 풀린다고 했다.</small></> : <><p>풀어서 주머니에 넣는다.</p><small>문틀을 두드리는 소리가 난다.</small></>}
+            <em>눌러서 계속</em>
           </div>
         </div>
       )}
       {ledger && (
         <div className="pp-card-back" onClick={(e) => { e.stopPropagation(); tapLedger(); }}>
           <div className="pp-card b-ledger" data-card="ledger">
-            <p>추심원이 장부를 펼친다.</p>
-            <div className="pp-led"><span>빚</span><b className="debt">{comma(DEBT_TOTAL)}</b></div>
+            <p>추심원이 엄마 이름 아래에 새 줄을 긋는다.</p>
+            <small>열쇠를 주머니에 넣는다. 리본이 같이 잡힌다.</small>
+            <div className="pp-led"><span>남은 원금</span><b className="debt">{comma(DEBT_TOTAL)}</b></div>
             <div className="pp-led"><span>정산마다 이자</span><b className="debt">{comma(INTEREST)}</b></div>
             <div className="pp-led"><span>가진 돈</span><b><Acorn size={24} />0</b></div>
             <small>{ledgerNote(firstVisitSec(balance.settlement.intervalSec))}</small>
-            <em>탭하면 계속</em>
+            <em>눌러서 계속</em>
           </div>
         </div>
       )}

@@ -47,7 +47,7 @@ export function chartModel(prices: number[]): ChartModel {
   const lo = dLo - pad;
   const hi = dHi + pad;
   const spanPct = ((hi - lo) / ((hi + lo) / 2)) * 100;
-  return { lo, hi, dataLo: dLo, dataHi: dHi, spanPct, label: `화면 전체 ${spanPct.toFixed(2)}%`, n: data.length };
+  return { lo, hi, dataLo: dLo, dataHi: dHi, spanPct, label: `차트 세로 폭 ${spanPct.toFixed(2)}%`, n: data.length };
 }
 
 /** 지금 장: 최근 60초의 움직임을 '평소'(정산 봉 폭)와 비교. */

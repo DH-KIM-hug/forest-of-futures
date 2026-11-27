@@ -260,9 +260,10 @@ describe('1막 엔딩 글 (U-39 ③)', () => {
   it('고쳐 쓴 글: 석 달의 노동 · 집기 · 저축은행 대신 1막의 물건', () => {
     act1(true);
     expect(act1Text(endingById['END-151']).line).not.toMatch(/석 달/);
-    expect(act1Text(endingById['END-151']).line).toMatch(/쳇바퀴가 며칠/);
-    expect(act1Text(endingById['END-018']).title).toBe('숲속 캐피탈 자동이체 세 번');
-    expect(act1Text(endingById['END-087']).line).toMatch(/쳇바퀴/);
+    expect(act1Text(endingById['END-151']).line).toMatch(/차트가 겨우 한 칸/); // 개정 대본 4부
+    expect(act1Text(endingById['END-018']).title).toBe('자동이체 세 번');
+    expect(act1Text(endingById['END-018']).line).toContain('숲속 캐피탈');
+    expect(act1Text(endingById['END-087']).line).toMatch(/바퀴/);
     expect(act1Text(endingById['END-041']).line).not.toMatch(/냄비|맷돌/);
   });
   it('원인마다 기본 엔딩이 1막에서 말이 된다: 사채 · 압류 · (캐피탈에서 빌린 생의) 제도권 · 청산', () => {
@@ -313,7 +314,7 @@ describe('빚을 다 갚은 생을 닫는다 (U-39 ⑧)', () => {
     expect(A(g, { type: 'retireAct1' }).ok).toBe(true);
     expect(g.run.over).toBe(true);
     expect(g.run.bankruptcy).toBeNull();
-    expect(g.pendingEnding).toMatchObject({ id: 'END-R01', cause: 'RETIRE', isNew: true, title: '빚 없는 칩멍크' });
+    expect(g.pendingEnding).toMatchObject({ id: 'END-R01', cause: 'RETIRE', isNew: true, title: '빈 문간' });
     expect(g.family.ledger['END-R01'].count).toBe(1);
     expect(g.estate).toMatchObject({ kind: 'bankrupt', step: 'card', gold: 8 });
     expect(g.family.gold).toBe(8);

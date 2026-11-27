@@ -88,7 +88,7 @@ export function planLine(o: { tpNet: number | null; slNet: number | null; st: Ac
   if (o.slNet !== null) parts.push(o.st.slMove !== null ? `손절 −${n(o.slNet)} (반대쪽 ${pc(o.st.slMove)}%)` : o.st.slWhy === 'liq' ? `손절 −${n(o.slNet)}보다 청산이 먼저다` : `수수료만으로 −${n(o.slNet)}를 넘는다`);
   // 수수료가 승률을 기울였으면 그 기울기를 적는다(U-42 ④): 익절은 멀고 손절은 가깝다
   const od = o.tpNet !== null && o.slNet !== null ? oddsText(fairOdds(o.st)) : null;
-  if (od) parts.push(`수수료 탓에 ${od}`);
+  if (od) parts.push(`수수료 반영 후 ${od}`);
   return parts.length ? parts.join(', ') : null;
 }
 

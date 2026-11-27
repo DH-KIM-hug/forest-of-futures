@@ -23,7 +23,7 @@ export function reachOf(steps: number | null): Reach {
   if (steps === null) return 'far';
   return steps < 1 ? 'edge' : steps < 3 ? 'tight' : steps < 8 ? 'seen' : 'far';
 }
-export const REACH_TEXT: Record<Reach, string> = { far: '한참 멀다', seen: '보이는 거리', tight: '한 번 출렁이면 닿는다', edge: '지금 흔들리는 폭 안이다' };
+export const REACH_TEXT: Record<Reach, string> = { far: '한참 멀다', seen: '최근 변동 폭과 비교', tight: '한 번 출렁이면 닿는다', edge: '지금 흔들리는 폭 안이다' };
 const times = (k: number) => (k >= 100 ? '100배 넘게' : k >= 10 ? `${Math.round(k)}배` : `${k.toFixed(1)}배`);
 
 export interface Tension { rangePct: number | null; steps: number | null; reach: Reach; /** 점 다섯 개 가운데 찬 수(가까울수록 많다) */ dots: number; /** 한 줄: "지난 1분 폭 0.11%의 3.8배 · 보이는 거리" */ text: string }
@@ -55,8 +55,8 @@ export function orderOdds(o: { margin: number; lev: number; claim: number; feeRa
   const liqFirst = needPct >= liqPct;
   const pc = (x: number) => (x >= 10 ? x.toFixed(0) : x >= 1 ? x.toFixed(1) : x.toFixed(2));
   const text = liqFirst
-    ? `이 판으로는 이자 ${n(o.claim)}을 못 번다 (시세 ${pc(needPct)}% 필요, 청산은 ${pc(liqPct)}%)`
-    : `이자 ${n(o.claim)}까지 시세 ${pc(needPct)}%${needSteps !== null ? ` (1분 폭의 ${times(needSteps)})` : ''}, 청산까지 ${pc(liqPct)}%`;
+    ? `이자와 생활비 ${n(o.claim)}을 벌려면 유리한 쪽으로 ${pc(needPct)}%, 반대쪽 ${pc(liqPct)}%에 청산`
+    : `다음 이자와 생활비 ${n(o.claim)}을 벌려면 유리한 쪽으로 ${pc(needPct)}%${needSteps !== null ? ` (최근 1분 폭의 ${times(needSteps)})` : ''}, 청산까지 ${pc(liqPct)}%`;
   return { needPct, liqPct, needSteps, liqSteps, liqFirst, text };
 }
 
@@ -98,19 +98,19 @@ export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): H
   const claim = Math.max(1, s.claim);
   const B = (key: string, ...v: string[]): HoldBeat | null => (seen[key] ? null : { key, text: rot(nth, ...v) });
   const free = s.feesPaid === 0;
-  return (s.reach === 'edge' ? B('edge', '…조금만 더 밀리면 청산이다.') : null)
-    ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '…한 번만 더 출렁이면 닿는다.') : null)
-    ?? (s.squeezed ? B('squeeze', '…정산이 온다. 낼 돈이 전부 여기 묶여 있다.') : null)
-    ?? (s.roe >= 100 ? B('double', '…두 배다. 두 배면… 조금만 더.') : null)
-    ?? (s.pnl >= claim ? B('claim', `…이자 한 번 치다. 지금 닫으면 ${n(s.pnl)}.`) : null)
-    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `…아까는 +${n(s.peakPnl)}이었다. 아까 닫을 걸.`) : null)
-    ?? (s.roe <= -50 ? B('half', '…넣은 돈의 절반이 녹았다.') : null)
-    ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '…본전이다. 본전이면 나가야 하는데.') : null)
-    ?? ((s.rolled ?? 0) >= claim * 0.05 ? B('rolled', `…굴린 것만 ${n(s.rolled!)}. 다음에 낼 돈의 ${Math.round((s.rolled! / claim) * 100)}%는 모았다.`) : null)
-    ?? (s.settles >= 1 ? B('settled', '…정산이 한 번 지나갔다. 아직 들고 있다.') : null)
+  return (s.reach === 'edge' ? B('edge', '아까만큼만 움직여도 끝인데.') : null)
+    ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '저 선까지만은 오지 마라.') : null)
+    ?? (s.squeezed ? B('squeeze', '종 칠 텐데. 꺼내려면 지금 닫아야 해.') : null)
+    ?? (s.roe >= 100 ? B('double', '건 돈만큼 벌었다. 손가락만 떼면 내 건데.') : null)
+    ?? (s.pnl >= claim ? B('claim', `지금 닫으면 ${n(s.pnl)}. 이번 이자랑 생활비다.`) : null)
+    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `아까 +${n(s.peakPnl)} 떴을 때 왜 그냥 봤지.`) : null)
+    ?? (s.roe <= -50 ? B('half', '반이나 없어졌어.') : null)
+    ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '아까는 본전만 오면 나간다 그랬는데.') : null)
+    ?? ((s.rolled ?? 0) >= claim * 0.05 ? B('rolled', `기다리면서 ${n(s.rolled!)} 벌었다. 낼 돈의 ${Math.round((s.rolled! / claim) * 100)}%쯤.`) : null)
+    ?? (s.settles >= 1 ? B('settled', '종 벌써 쳤네. 이건 아직 그대로네.') : null)
     ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakPnl < claim * 0.1
-      ? (free ? B('flat', '…안 움직인다.', '…다른 코인은 움직이나.')
-        : B('flat', '…안 움직인다. 수수료만 냈다.', '…차트가 누워 있다. 수수료는 이미 나갔다.')) : null);
+      ? (free ? B('flat', '폰 멈췄나?', '딴 종목도 이런가.')
+        : B('flat', '값은 그대론데 수수료만 나갔다.', '들어온 값이랑 똑같네. 들어온 돈은 아니고.')) : null);
 }
 
 // ── 정산 때 낼 돈이 포지션에 묶여 있는가 ───────────────────────────────
@@ -124,6 +124,6 @@ export function squeezeOf(o: { cash: number; income: number; due: number; settle
   const mm = `${Math.floor(Math.max(0, o.settleIn) / 60)}:${String(Math.max(0, o.settleIn) % 60).padStart(2, '0')}`;
   const text = o.holding
     ? `${mm} 뒤 낼 돈 ${n(o.due)}, 손에 ${n(have)}. 닫아야 낸다`
-    : `거래 후 잔액 ${n(have)}, ${mm} 뒤 낼 돈 ${n(o.due)}. 그때까지 못 닫으면 연체`;
+    : `거래 후 잔액 ${n(have)}, ${mm} 뒤 낼 돈 ${n(o.due)}. 그때 잔액이 모자라면 연체`;
   return { due: Math.round(o.due), have, short: Math.round(o.due - have), text };
 }

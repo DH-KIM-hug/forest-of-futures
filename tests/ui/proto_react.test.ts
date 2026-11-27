@@ -29,30 +29,30 @@ describe('거래에 대한 반응 (tradeReaction)', () => {
   });
   it('이자 한 번 치를 따거나 잃으면 그 크기를 말한다(쳇바퀴로 치면 얼마)', () => {
     const w = tradeReaction(T({ pnl: 20000 }), C())!;
-    expect(w.who).toBe('boss');
-    expect(w.lines[0]).toContain('이자 한 번 치');
+    expect(w.who).toBe('collector'); // 개정 대본 장면 20: 추심원이 청구액만큼 따로 두라고 한다
+    expect(w.lines[0]).toContain('15,500은 따로 두세요');
     // U-44: 쳇바퀴로 치면 얼마는 결과 카드의 꼬리표와 주인공의 속마음이 말한다(대부가 되풀이하지 않는다)
     expect(wheelWorth(20000, 4667)).toBe('쳇바퀴 한 대 4.3정산치');
     // U-41: 이번 생 처음은 장면(한 번), 그 뒤로는 오소리 대부 · 추심원 · 족제비가 번갈아 한 줄(되풀이)
     expect(w).toMatchObject({ key: 'winClaim1', scene: true, once: true });
     const seen = { winClaim1: true };
     const again = [2, 3, 4].map((k) => tradeReaction(T({ pnl: 20000 }), C({ seen, claimWins: k }))!);
-    expect(again.map((r) => r.who)).toEqual(['boss', 'collector', 'weasel']);
+    expect(again.map((r) => r.who)).toEqual(['boss', 'collector', 'hero']);
     expect(again.every((r) => !r.scene && !r.once)).toBe(true);
-    expect(again[0].lines[0]).toContain('이자 한 번 치');
+    expect(again[0].lines[0]).toContain('사무소');
     expect(tradeReaction(T({ pnl: -16000 }), C())!).toMatchObject({ who: 'collector', key: 'lossClaim' });
   });
   it('크게 딴 날은 오소리 대부가 장면으로 나온다(한 생에 한 번)', () => {
     const r = tradeReaction(T({ pnl: 50000 }), C())!;
     expect(r).toMatchObject({ key: 'bigWin', who: 'boss', scene: true });
-    expect(r.lines).toHaveLength(2);
+    expect(r.lines).toHaveLength(1);
     expect(tradeReaction(T({ pnl: 50000 }), C({ seen: { bigWin: true } }))!.key).toBe('winClaim1');
   });
   it('청산: 전부 걸고 빈털터리 > 빌린 돈으로 > 세 번째 > 첫 청산 > 번갈아 한 줄', () => {
     expect(tradeReaction(T({ liq: true, allIn: true, pnl: -90000 }), C({ cashAfter: 0, liqs: 1 }))!).toMatchObject({ key: 'liqAllIn', scene: true, who: 'boss' });
     const f = tradeReaction(T({ liq: true, fundedBy: 'shark1', heldSec: 12, pnl: -30000 }), C({ liqs: 1 }))!;
     expect(f.key).toBe('liqFunded');
-    expect(f.lines[0]).toContain('12초');
+    expect(f.lines[0]).toContain('빌리고'); // 빌린 때와 건 때 사이(60초 안)를 짚는다
     expect(tradeReaction(T({ liq: true, pnl: -30000 }), C({ liqs: 3, seen: { liqFirst: true } }))!.key).toBe('liq3');
     expect(tradeReaction(T({ liq: true, pnl: -30000 }), C({ liqs: 1 }))!.key).toBe('liqFirst');
     const seen = { liqFirst: true, liq3: true, liqAllIn: true, liqFunded: true };
@@ -84,21 +84,21 @@ describe('거래에 대한 반응 (tradeReaction)', () => {
 describe('정산 한 줄 (settleRemark)', () => {
   const S = { interest: 14500, other: 0, net: -5800, cashAfter: 80000, nextClaim: 15500, nextNet: -5800, overdue: false, posOpen: false, negStreak: 1, firstPositive: false };
   it('추심원은 오소리 이자만 걷는다. 다른 곳 이자는 자동이체로 적는다', () => {
-    expect(settleRemark(S)).toBe('추심원: 이자 14,500 수금 완료요오. (내 정산 −5,800)');
-    expect(settleRemark({ ...S, other: 5000 })).toContain('다른 곳 이자 5,000은 자동이체');
+    expect(settleRemark(S)).toBe('추심원: 이자 14,500 받았어요. 이번 정산 −5,800');
+    expect(settleRemark({ ...S, other: 5000 })).toContain('다른 곳 이자 5,000 자동이체');
     const none = settleRemark({ ...S, interest: 0, other: 5000, net: 18000 });
     expect(none).not.toContain('추심원');
     expect(none).toContain('[자동이체] 이자 5,000');
   });
   it('바닥이 가까우면 몇 번 남았는지 미리 말한다', () => {
-    expect(settleRemark({ ...S, cashAfter: 12000 })).toContain('이대로면 2번 뒤에 바닥');
-    expect(settleRemark({ ...S, cashAfter: 3000 })).toContain('다음엔 모자라겠네요오');
-    expect(settleRemark({ ...S, overdue: true })).toContain('모자라네요오');
+    expect(settleRemark({ ...S, cashAfter: 12000 })).toContain('이 속도면 2번 뒤엔 밀려요');
+    expect(settleRemark({ ...S, cashAfter: 3000 })).toContain('다음번엔 오늘만큼 못 내시겠는데요');
+    expect(settleRemark({ ...S, overdue: true, short: 4000 })).toContain('다시 세 봐도 4,000 모자라요');
   });
   it('남기 시작한 정산 · 세 번째 적자 · 거래 중', () => {
-    expect(settleRemark({ ...S, net: 900, nextNet: 900, firstPositive: true })).toContain('남기 시작했네요오');
-    expect(settleRemark({ ...S, negStreak: 3 })).toContain('세 번째예요오');
-    expect(settleRemark({ ...S, posOpen: true })).toContain('거래 중이시네요오');
+    expect(settleRemark({ ...S, net: 900, nextNet: 900, firstPositive: true })).toContain('오늘은 내고도 남네요');
+    expect(settleRemark({ ...S, negStreak: 3 })).toContain('이번이 세 번째예요');
+    expect(settleRemark({ ...S, posOpen: true })).toContain('폰 보고 계세요');
   });
 });
 
@@ -134,7 +134,7 @@ describe('오소리 장부 (ledger.ts)', () => {
     expect(pay(50000)).toBeNull();
     expect(pay(50000)).toBe('repeatCleared');
     expect(pay(100000)).toBe('firstCleared');
-    expect(ledgerGoal(g)!.label).toContain('엄마 빚 30만 남음');
+    expect(ledgerGoal(g)!.label).toContain('엄마 빚 잔액 30만');
     expect(pay(50000)).toBeNull();
     expect(pay(50000)).toBe('mom20');
     expect(pay(100000)).toBe('mom10');
@@ -164,12 +164,12 @@ describe('새 인물과 규칙', () => {
   it('새 장면의 줄은 전부 아는 사람이 말하고, 숫자가 들어간다', () => {
     const all = [
       ...STORY.overdue({ interest: 14500, nth: 1, tagged: true, seized: false, nothingLeft: false }), ...STORY.hamstersQuit(2), ...STORY.seize({ what: 'mom', off: 4000 }), ...STORY.seize({ what: 'wheel', off: 25000 }),
-      ...STORY.waiver(), ...STORY.rateHike({ text: '금리 인상', from: 14500, to: 29000, times: 2 }), ...STORY.capitalSms(), ...STORY.capitalIntro({ amount: 50000, ratePct: 2 }),
+      ...STORY.waiver(), ...STORY.rateHike({ text: '금리 인상', from: 14500, to: 29000, times: 2 }), ...STORY.capitalSms({ unit: 50000, perUnit: 1000 }), ...STORY.capitalIntro({ amount: 50000, ratePct: 2 }),
       ...STORY.viperSms(), ...STORY.viperOffer({ unit: 200000, got: 120000, ratePct: 8 }), ...STORY.owlRefuse(), ...STORY.marginCall({ name: '도토코인', dir: 1, lev: 50, broke: false }),
     ];
     for (const l of all) { expect(Object.keys(WHO_NAME)).toContain(l.who); expect(l.text.length).toBeGreaterThan(3); }
-    expect(STORY.viperOffer({ unit: 200000, got: 120000, ratePct: 8 })[1].text).toBe('20만을 적고, 12만을 드리지. 나머지는 선이자일세.');
-    expect(STORY.rateHike({ text: 'x', from: 14500, to: 29000, times: 2 })[1].text).toContain('다음 정산은 14,500 그대로고요오, 그 뒤 2번은 29,000') // U-46: 사건은 예고 다음 정산이 끝난 뒤부터;
+    expect(STORY.viperOffer({ unit: 200000, got: 120000, ratePct: 8 }).slice(2, 4).map((l) => l.text).join(' ')).toBe('잘 봤네. 20만에서 이자 8만을 먼저 떼. 정산 때 붙는 8%도 20만으로 치고.');
+    expect(STORY.rateHike({ text: 'x', from: 14500, to: 29000, times: 2 })[1].text).toContain('이번엔 14,500 그대로 준비하세요. 그다음 2번은 29,000') // U-46: 사건은 예고 다음 정산이 끝난 뒤부터;
   });
   it('1막 시제품은 친구 규칙을 끈다: 뒷골목 두 번째 대출에 연락처를 묻지 않고, 연체해도 절교가 없다', () => {
     const g = fresh();

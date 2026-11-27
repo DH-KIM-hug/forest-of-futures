@@ -74,8 +74,8 @@ function finish(real: number, steps: number, margin: number): void {
   useProto.getState().pushScene({
     id: 'tutLost', lines: STORY.tutLost(margin, lend, Math.round(nextBorrowRate(g2, 'shark1') * 100), tipArgs(g2)),
     choices: lend > 0
-      ? [{ id: 'borrow', label: '더 빌린다', sub: `+${lend.toLocaleString('ko-KR')}, 금리 ${Math.round(nextBorrowRate(g2, 'shark1') * 100)}%`, primary: true, run: () => { const r = useGame.getState().act({ type: 'borrow', lender: 'shark1' }); play(r.ok ? 'collector_paid' : 'insufficient'); useProto.getState().patch({ tutorial: 'notice' }); } }]
-      : [{ id: 'ok', label: '…', primary: true, run: () => useProto.getState().patch({ tutorial: 'notice' }) }],
+      ? [{ id: 'borrow', label: `${lend % 10000 === 0 ? `${lend / 10000}만` : lend.toLocaleString('ko-KR')} 더 빌리기`, sub: `빌린 돈 +${lend.toLocaleString('ko-KR')}, 정산 이자 +${Math.round(lend * nextBorrowRate(g2, 'shark1')).toLocaleString('ko-KR')}`, primary: true, run: () => { const r = useGame.getState().act({ type: 'borrow', lender: 'shark1' }); play(r.ok ? 'collector_paid' : 'insufficient'); useProto.getState().patch({ tutorial: 'notice' }); } }]
+      : [{ id: 'ok', label: '통화 끝내기', sub: '추가 대출 한도 0', primary: true, run: () => useProto.getState().patch({ tutorial: 'notice' }) }],
   });
 }
 

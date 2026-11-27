@@ -42,7 +42,7 @@ describe('청산까지 = 지난 1분 폭의 몇 배', () => {
     expect(dots[dots.length - 1]).toBe(5);
   });
   it('한 줄에 폭과 배수와 말이 다 있다', () => {
-    expect(tensionOf(0.4, wave(100, 0.1)).text).toMatch(/1분 폭\(0\.10%\)의 \d\.\d배, 보이는 거리/);
+    expect(tensionOf(0.4, wave(100, 0.1)).text).toMatch(/1분 폭\(0\.10%\)의 \d\.\d배, 최근 변동 폭과 비교/);
   });
   it('단계 경계', () => {
     expect([0.5, 1, 2.9, 3, 7.9, 8].map(reachOf)).toEqual(['edge', 'tight', 'tight', 'seen', 'seen', 'far']);
@@ -58,7 +58,7 @@ describe('들어가기 전의 셈: 이자 한 번 치까지', () => {
     expect(o.liqPct).toBeCloseTo(9.9, 5);
     expect(o.liqFirst).toBe(false);
     expect(o.needSteps!).toBeGreaterThan(100);
-    expect(o.text).toMatch(/이자 15,500까지 시세 5\.\d%.*청산까지 9\.9%/);
+    expect(o.text).toMatch(/이자와 생활비 15,500을 벌려면 유리한 쪽으로 5\.\d%.*청산까지 9\.9%/);
   });
   it('200배 · 10만: 0.2%도 안 가면 이자 한 번 치, 청산은 0.4%', () => {
     const o = orderOdds({ ...base, margin: 100000, lev: 200 })!;
@@ -69,7 +69,7 @@ describe('들어가기 전의 셈: 이자 한 번 치까지', () => {
   it('너무 작은 판은 청산이 먼저다: 못 번다고 그대로 말한다', () => {
     const o = orderOdds({ ...base, margin: 1000, lev: 10 })!;
     expect(o.liqFirst).toBe(true);
-    expect(o.text).toMatch(/못 번다/);
+    expect(o.text).toMatch(/반대쪽 .*%에 청산/);
   });
   it('걸 돈이 없으면 셈이 없다', () => {
     expect(orderOdds({ ...base, margin: 0, lev: 10 })).toBeNull();
@@ -104,7 +104,7 @@ describe('들고 있는 동안의 속마음', () => {
     expect(holdBeat(s, {})).toBeNull();
   });
   it('이자 한 번 치를 넘으면 그 숫자를 말한다', () => {
-    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, {})).toEqual({ key: 'claim', text: '…이자 한 번 치다. 지금 닫으면 16,000.' });
+    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, {})).toEqual({ key: 'claim', text: '지금 닫으면 16,000. 이번 이자랑 생활비다.' });
   });
   it('같은 말은 포지션마다 한 번', () => {
     expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, { claim: true })).toBeNull();
@@ -152,8 +152,8 @@ describe('자리를 비운 사이', () => {
     expect(c.debtDelta).toBe(0);
   });
   it('추심원 쪽지: 정산은 두 번만 돌았다(12분이면 네 번 올 시간)', () => {
-    expect(awayCard(rep(), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBe('안 계셔서 2번만 걷고 갔어요오. 이자 29,000. 빈 집에선 더 안 걷어요오.');
-    expect(awayCard(rep({ awaySec: 200, economySettlements: 1 }), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBe('안 계셔서 1번만 걷고 갔어요오. 이자 29,000.');
+    expect(awayCard(rep(), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBe('안 계셔서 2번 걷고 갔어요. 이자 29,000, 영수증 두고 가요. 빈집에서는 두 번까지만 받아요.');
+    expect(awayCard(rep({ awaySec: 200, economySettlements: 1 }), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBe('안 계셔서 1번 걷고 갔어요. 이자 29,000, 영수증 두고 가요.');
     expect(awayCard(rep({ awaySec: 90, economySettlements: 0, entries: [] }), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBeNull();
   });
   it('익절은 이익으로 적힌다', () => {

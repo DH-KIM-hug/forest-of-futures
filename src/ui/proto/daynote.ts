@@ -62,7 +62,7 @@ export function dayNote(markets: { id: string; name: string }[], bars: Record<st
   const rows = markets.map((m) => rowOf(m.id, m.name, bars[m.id] ?? [], now));
   const spanMin = Math.max(0, ...markets.map((m) => { const b = bars[m.id] ?? []; return b.length ? (now - b[0].t) / 60000 : 0; }));
   const got = rows.filter((r) => r.range !== null);
-  if (!got.length) return { spanMin, rows, headline: '아직 실을 시세가 없습니다.', sub: '몇 분 뒤에 다시 펴 보세요.', boss: '시세가 한 시간 치 모이면 첫 호가 나옵니다.' };
+  if (!got.length) return { spanMin, rows, headline: '아직 실을 시세가 없습니다.', sub: '몇 분 뒤에 다시 펴 보세요.', boss: '한 시간쯤 지나면 첫 시세면이 나와요.' };
   const win = span(Math.min(360, spanMin));
   const top = got.reduce((a, b) => (b.range! > a.range! ? b : a));
   const low = got.reduce((a, b) => (b.range! < a.range! ? b : a));
@@ -76,13 +76,18 @@ export function dayNote(markets: { id: string; name: string }[], bars: Record<st
     const avg = rs.reduce((a, r) => a + r.ratio!, 0) / rs.length;
     const hot = rs.reduce((a, b) => (b.now1m! > a.now1m! ? b : a));
     const lt = loud.length ? loud.reduce((a, b) => (b.loud1m! > a.loud1m! ? b : a)) : null;
-    const when = lt ? ` 어제는 ${lt.loudHour}시 무렵 ${josa(lt.name, '이었고요.', '였고요.')}` : '';
-    boss = avg < 0.6 ? `오늘은 조용한 편입니다.${when}`
-      : `지금 제일 뛰는 건 ${hot.name}입니다.${when}`;
-  } else boss = spanMin < 60 ? '시세가 한 시간 치 모이면 첫 호가 나옵니다.' : '기록이 모자란 종목은 뺐습니다.';
+    const when = lt ? ` 어제 ${josa(lt.name, '이', '가')} 크게 움직인 게 ${lt.loudHour}시 무렵이었죠.` : '';
+    boss = avg < 0.6 ? `오늘은 조용하네요.${when}`
+      : `지금은 ${hot.name}의 변동 폭이 가장 커요.${when}`;
+  } else boss = spanMin < 60 ? '한 시간쯤 지나면 첫 시세면이 나와요.' : '기록이 모자란 종목은 뺐습니다.';
   return { spanMin, rows, headline, sub, boss };
 }
 /** 표의 한 칸: "+0.42%" 또는 "–" */
 export const cell = (x: number | null): string => (x === null ? '–' : pc(x));
 /** 한 줄 알림용(거래소를 처음 펼 때): "[도토리일보 시세면] 지난 6시간, 삼솔전자의 고저 폭 2.10% · 가장 조용했던 곳은 멍도토 (0.31%)" */
-export const noteToast = (n: DayNote): string => `[도토리일보 시세면] ${n.headline}. ${n.sub}`;
+export const noteToast = (n: DayNote): string => {
+  const got = n.rows.filter((r) => r.range !== null);
+  if (got.length < 2) return `[도토리일보 시세면] ${n.headline}. ${n.sub}`;
+  const top = got.reduce((a, b) => (b.range! > a.range! ? b : a)), low = got.reduce((a, b) => (b.range! < a.range! ? b : a));
+  return `[도토리일보 시세면] 지난 ${span(Math.min(360, n.spanMin))} 변동 폭 1위 ${top.name} ${top.range!.toFixed(2)}%. 가장 잔잔했던 종목은 ${low.name}(${low.range!.toFixed(2)}%).`;
+};

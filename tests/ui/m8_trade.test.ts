@@ -56,7 +56,7 @@ describe('AC-v2-145 차트 세로축', () => {
     expect(m.lo).toBeLessThan(68000);
     expect(m.hi).toBeGreaterThan(68040);
     expect(m.hi - m.lo).toBeLessThan(60); // 범위에 맞춘다(전체 가격대가 아님)
-    expect(m.label).toBe('화면 전체 0.06%');
+    expect(m.label).toBe('차트 세로 폭 0.06%');
   });
   it('최근 120초만 본다, 평평해도 최소 폭이 있다', () => {
     const m = chartModel([1, 1, 1, ...Array.from({ length: 120 }, () => 100)]);

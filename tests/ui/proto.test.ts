@@ -17,7 +17,7 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     expect(t.map((x) => x.slot)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(t.map((x) => x.state)).toEqual(['idle', 'empty', 'empty', 'empty', 'empty', 'empty']);
     expect(t[0]).toMatchObject({ action: null, locked: true, canAct: false });
-    expect(t[0].text).toBe('폰이 없다');
+    expect(t[0].text).toBe('수금폰 필요');
     expect(t[1]).toMatchObject({ action: 'place', btn: '놓기', btnSub: '50,000', canAct: false, locked: false });
     expect(maxWheels()).toBe(SLOT_COUNT);
     expect(claim(g)).toEqual({ interest: 4500, living: 1000, total: 5500 });

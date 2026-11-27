@@ -27,8 +27,8 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     expect(oddsText(fairOdds(free))).toBeNull();
     expect(fairOdds(paid)!).toBeCloseTo(0.5 - 2000 / 15_500, 2); // 0.5 − (한쪽 수수료 ÷ 건 돈)
     expect(oddsText(fairOdds(paid))).toBe('익절 37 : 손절 63');
-    expect(planLine({ tpNet: 15_500, slNet: 15_500, st: paid, hist: [] })).toContain('수수료 탓에 익절 37 : 손절 63');
-    expect(planLine({ tpNet: 15_500, slNet: 15_500, st: free, hist: [] })).not.toContain('수수료 탓');
+    expect(planLine({ tpNet: 15_500, slNet: 15_500, st: paid, hist: [] })).toContain('수수료 반영 후 익절 37 : 손절 63');
+    expect(planLine({ tpNet: 15_500, slNet: 15_500, st: free, hist: [] })).not.toContain('수수료 반영');
   });
   it('나무: 0.02% 에서 노드 없이 37.1% · 판당 −4,000, 단골 수수료 Lv1 → 38.1% · −3,700(봉으로 센 값 36.8~38.8%). U-46 의 0.01% 에서는 43.5% · −2,000 → 44.0% · −1,850(봉 43.4~44.2%)', () => {
     const bare0 = betOdds({}, 0.0002);
@@ -130,10 +130,10 @@ describe('본장까지 남은 시간 (U-42: 달력으로 아는 것만)', () => 
 describe('연달아 이긴 · 진 판, 들고 있는 동안 굴린 돈 (U-42)', () => {
   it('장면의 줄: 숫자는 받은 값 그대로, 엄마 이야기는 건드리지 않는다(빚이 어디서 왔는지는 아직 아무도 말하지 않는다)', () => {
     const w = STORY.winRun({ sum: 31_402, stampPct: 63 }), l = STORY.lossRun({ sum: 31_000, spins: 7, cash: 95_100, claim: 15_500 });
-    expect(w.map((x) => x.who)).toEqual(['weasel', 'boss', 'collector', 'hero']);
-    expect(w[1].text).toContain('+31,402'); // U-44: 금박 도장 몇 %는 장부가 보여 준다(대사에서 뺐다)
-    expect(l[0].text).toContain('−31,000'); expect(l[1].text).toContain('7정산'); expect(l[3].text).toContain('95,100');
-    expect(STORY.lossRun({ sum: 31_000, spins: null, cash: 9_000, claim: 15_500 })[3].text).toContain('15,500에 모자란다');
+    expect(w.map((x) => x.who)).toEqual(['boss', 'hero']); // 개정 대본 장면 29
+    expect(w[0].text).toContain('+31,402'); // U-44: 금박 도장 몇 %는 장부가 보여 준다(대사에서 뺐다)
+    expect(l[0].text).toContain('31,000'); expect(l[1].text).toContain('7번 정산'); expect(l[2].text).toContain('95,100');
+    expect(STORY.lossRun({ sum: 31_000, spins: null, cash: 9_000, claim: 15_500 })[1].text).toContain('이번 정산에 15,500 필요한데');
     for (const x of [...w, ...l]) expect(x.text).not.toMatch(/엄마|어머님/);
   });
   it('속마음: 굴린 돈이 다음 정산의 5%를 넘으면 한 번 — 숫자가 그대로 들어간다', () => {

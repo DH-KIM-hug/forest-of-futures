@@ -117,8 +117,8 @@ describe('오픈 기념 딱지와 대사', () => {
     expect(t).toContain('0.02%');
     expect(t).toContain('7건');
     expect(t).toContain('12,400');
-    expect(t).toContain('200배면 들어갈 때 넣은 돈의 4%');
-    expect(STORY.feeEventEnd({ ratePct: 0.02, trades: 0, saved: 0, lev: 50 })[1].text).toContain('한 건도');
+    expect(t).toContain('200배로 거래하면 수수료는 넣은 돈의 4%예요');
+    expect(STORY.feeEventEnd({ ratePct: 0.02, trades: 0, saved: 0, lev: 50 })[1].text).toContain('이용 0건');
     expect(STORY.feeEventSms({ left: 20, reborn: false })[0]).toMatchObject({ who: 'sms' });
     expect(STORY.feeEventSms({ left: 20, reborn: false })[0].text).toContain('정산 20번');
   });
@@ -128,20 +128,20 @@ describe('되풀이되지 않는 줄', () => {
   const snap: HoldSnap = { pnl: -100, roe: -1, heldSec: 90, claim: 15000, reach: 'far', peakPnl: 0, lowRoe: -1, settles: 0 };
   it('속마음은 포지션 순번으로 번갈아 나온다. 첫 줄은 회차 2 그대로', () => {
     const a = holdBeat(snap, {}, 0)!, b = holdBeat(snap, {}, 1)!, c = holdBeat(snap, {}, 2)!;
-    expect(a.text).toBe('…안 움직인다. 수수료만 냈다.');
+    expect(a.text).toBe('값은 그대론데 수수료만 나갔다.');
     expect(new Set([a.text, b.text, c.text]).size).toBe(2); // U-44: 겹치는 줄은 덜어 냈다(두 줄이 번갈아)
     expect(holdBeat(snap, {}, 2)!.text).toBe(a.text);
     expect(a.key).toBe(b.key);
   });
   it('수수료가 무료인 판에서는 "수수료만 냈다"고 말하지 않는다', () => {
-    for (const k of [0, 1, 2]) expect(holdBeat({ ...snap, feesPaid: 0 }, {}, k)!.text).not.toMatch(/수수료만 냈다|수수료는 이미|돈은 줄었다/);
-    expect(holdBeat({ ...snap, feesPaid: 120 }, {}, 0)!.text).toBe('…안 움직인다. 수수료만 냈다.');
+    for (const k of [0, 1, 2]) expect(holdBeat({ ...snap, feesPaid: 0 }, {}, k)!.text).not.toMatch(/수수료만|수수료는 이미|돈은 줄었다/);
+    expect(holdBeat({ ...snap, feesPaid: 120 }, {}, 0)!.text).toBe('값은 그대론데 수수료만 나갔다.');
   });
   it('청산 반응도 무료일 때는 수수료를 벌었다고 하지 않는다. 본전 세 판은 낸 수수료가 있을 때만 수수료 얘기', () => {
     const ctx = { claim: 15000, wheelNet: 3000, cashAfter: 50000, liqs: 1, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} };
     const t = { pnl: -30000, margin: 30000, lev: 50, liq: true, heldSec: 40, fundedBy: null, allIn: false };
-    expect(tradeReaction(t, { ...ctx, feeFree: true })!.lines[0]).toContain('공짜');
-    expect(tradeReaction(t, ctx)!.lines[0]).toContain('수수료는 이미 받았고요');
+    expect(tradeReaction(t, { ...ctx, feeFree: true })!.lines[0]).toContain('수수료도 없었어요');
+    expect(tradeReaction(t, ctx)!.lines[0]).toContain('수수료도 나갔어요');
     const flat = { ...t, pnl: 0, liq: false };
     expect(tradeReaction(flat, { ...ctx, tinyStreak: 3, feesLife: 0, feeFree: true })!.key).toBe('flatFree');
     expect(tradeReaction(flat, { ...ctx, tinyStreak: 3, feesLife: 2400 })!.key).toBe('feeBleed');
@@ -151,7 +151,7 @@ describe('되풀이되지 않는 줄', () => {
     const lines = [0, 1, 2].map((nth) => settleRemark({ ...c, nth }));
     expect(new Set(lines).size).toBe(3);
     expect(settleRemark(c)).toBe(lines[0]);
-    for (const l of lines) expect(l).toMatch(/^추심원: 이자 14,500/);
+    for (const l of lines) expect(l).toMatch(/^추심원: .*이자 14,500/);
   });
 });
 

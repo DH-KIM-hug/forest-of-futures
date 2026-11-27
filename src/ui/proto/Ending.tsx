@@ -65,7 +65,7 @@ export function EndingFlow() {
         <img src={sprite('hero')!.src} alt="" width={42} height={56} />
         <div>
           <h2>다시 눈을 뜬다</h2>
-          <p>{retired ? '빚을 다 갚고 며칠 뒤, 그 오두막에서 눈을 떴다. 첫 주문을 날린 그날 저녁이다. 오소리 장부에 다시 50만.' : '다시 그 오두막, 첫 주문을 날린 그날 저녁이다. 오소리 장부에 50만.'}</p>
+          <p>{retired ? '완납 영수증을 넣어 둔 주머니에서 엄마 집 열쇠가 나온다. 해가 지고 있다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 다시 50만.' : '문턱에 짐차 바퀴 자국이 아직 젖어 있다. 손끝에 진흙이 묻는다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 50만.'}</p>
         </div>
       </div>
       <div className="award" data-award={e.gold ?? 0}>
@@ -84,7 +84,7 @@ export function EndingFlow() {
 const PATHS: { id: 'A' | 'B' | 'C'; name: string; sub: string }[] = [
   { id: 'A', name: '단타꾼', sub: '빨리 들어가고 빨리 나온다' },
   { id: 'B', name: '고배율꾼', sub: '크게 걸고 크게 망한다' },
-  { id: 'C', name: '버티는 자', sub: '죽지 않는 법을 산다' },
+  { id: 'C', name: '버티는 자', sub: '손실을 줄이고 오래 버틴다' },
 ];
 const COLX = { A: 17, B: 50, C: 83 } as const;
 const ROWY = [91, 73, 54, 34, 13]; // 단계 0(뿌리) ~ 4, 아래에서 위로 자란다

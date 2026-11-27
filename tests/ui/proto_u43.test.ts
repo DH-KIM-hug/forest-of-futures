@@ -81,30 +81,33 @@ describe('U-43 전선은 아이소 바닥을 따라 한 번 꺾인다', () => {
 
 describe('U-43 글', () => {
   it('알바가 쳇바퀴를 다 돌릴 때 주인공의 속마음 · 중고폰이 울린 뒤의 한 줄', () => {
-    expect(STAFFED_THINK).toBe('…쳇바퀴는 알바가 돌린다. 나는 폰이나 보자.');
+    expect(STAFFED_THINK).toBe('아, 내릴 필요 없어. 내가 비켜 줄게.'); // 개정 대본 장면 12
     expect(FORCE_NUDGE).toMatch(/앱/); expect(FORCE_NUDGE).not.toMatch(/거래소(로|에서|에 가)/);
   });
   it('중고폰이 울린다: 오소리 대부가 폰의 FRX 앱을 켜 보라고 한다(거래소는 앱이다, 사용자: "거래소는 MTS라 거래소로 가는 건 아냐.")', () => {
-    const l = STORY.phoneRing();
-    expect(l.some((x) => x.who === 'boss' && x.text === '일꾼은 구하셨네요. 이제 폰에 깔아 둔 FRX 앱 한번 켜 보세요.')).toBe(true);
+    const l = STORY.phoneRing({ paid: 9500, repaid: 0, income: 12924, wages: 3200, claim: 9500, net: 224, left: 400000 });
+    expect(l.some((x) => x.text.includes('폰이 울린다'))).toBe(true); // 개정 대본 장면 13: 영수증과 그 밑의 도토코인 값
+    expect(l.some((x) => x.text === '바퀴 예상 수입 12,924 − 일당 3,200 − 이자와 생활비 9,500 = 224')).toBe(true);
     expect(l.every((x) => !/거래소(로|에서|에 가)/.test(x.text))).toBe(true);
   });
   it('튜토리얼 거래는 전재산: "처음이니까 크게 가 보세요."', () => {
-    const l = STORY.tutIntro(41_642, 10, { tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, debt: 400000, lev: 10 });
-    expect(l.some((x) => x.text === '처음이니까 크게 가 보세요.')).toBe(true);
-    expect(l.some((x) => /전부 41,642/.test(x.text))).toBe(true);
+    const l = STORY.tutIntro(41_642, 10, { tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, rate: 4, debt: 400000, lev: 10 });
+    expect(l.some((x) => x.text === '손에 있던 돈이 다 들어가요.')).toBe(true); // 개정 대본 장면 14
+    expect(l.some((x) => /41,642가 전부/.test(x.text))).toBe(true);
   });
   it('프롤로그의 추심원: 채굴기도 어머님 것(사용자의 줄 그대로)', () => {
-    expect(prologueTalk({ debt: 300000, interest: 4500 })).toContain('저 채굴기도 어머님 거예요오. 고물이라 안 가져갔어요오.');
+    const t = prologueTalk({ debt: 300000, interest: 4500 });
+    expect(t.some((l) => l.text === '돌아가요. 어머님도 저거 밟아서 이자 주셨어요.')).toBe(true); // 개정 대본 장면 3
+    expect(t.some((l) => l.who === 'hero' && /내 이름 써요/.test(l.text))).toBe(true);
   });
   it('집의 설명은 쳇바퀴 → 전선 → 채굴기 → 지갑 순서로 그 자리를 비춘다', () => {
     const ids = Object.keys(TIPS);
-    const order = ['home.tap', 'home.cable', 'home.mine', 'home.wallet'];
+    const order = ['home.tap', 'home.acorn', 'home.claim'];
     expect(order.map((k) => ids.indexOf(k))).toEqual([...order.map((k) => ids.indexOf(k))].sort((x, y) => x - y));
-    expect(order.map((k) => (TIPS as Record<string, { hl?: string }>)[k].hl)).toEqual(['wheel', 'cables', 'rig', 'walletDev']);
-    expect(['cables', 'rig', 'walletDev'].every((k) => k in HL)).toBe(true);
+    expect(order.map((k) => (TIPS as Record<string, { hl?: string }>)[k].hl)).toEqual(['rig', 'acorn', 'goal']); // 개정 대본 장면 5: 채굴기 → 도토리 → 정산 목표
+    expect(['rig', 'acorn', 'goal'].every((k) => k in HL)).toBe(true);
   });
   it('알바의 돈은 1초마다 들어온다고 말한다(정산은 걷어 가기만)', () => {
-    expect((TIPS as Record<string, { text: (o: unknown) => string }>)['ham.trickle'].text({})).toMatch(/1초마다/);
+    expect((TIPS as Record<string, { text: (o: unknown) => string }>)['hud.ps'].text({})).toMatch(/초당은 알바가 버는 돈/);
   });
 });

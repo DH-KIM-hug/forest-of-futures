@@ -24,10 +24,10 @@ beforeEach(() => { resetGuide(); setGuideOff(false); P().resetLife(2, true); });
 
 describe('튜토리얼 대사 (U-32): 모든 줄이 풀린다', () => {
   it('엔진 값이 그대로 끼워진다(쳇바퀴 한 번 2, 첫 청구 5,500, 일당 1,600, 쳇바퀴 50,000, 대출 10만, 빚 30만)', () => {
-    expect(ARGS).toEqual({ tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, debt: 300000, lev: 10 });
+    expect(ARGS).toEqual({ tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, rate: 4, debt: 300000, lev: 10 });
   });
   it('줄마다: 아는 사람이 말하고, 글이 비어 있지 않고, 숫자가 빠지지 않고, 폰 화면 두 줄(34자) 안에 든다', () => {
-    expect(TIP_IDS.length).toBeGreaterThanOrEqual(40);
+    expect(TIP_IDS.length).toBeGreaterThanOrEqual(20); // 개정 대본(2026-11-28): 설명 줄을 장면 대사로 덜어 냈다
     for (const id of TIP_IDS) {
       const l = T(id, ARGS);
       expect(l.tip, id).toBe(id);
@@ -47,19 +47,21 @@ describe('튜토리얼 대사 (U-32): 모든 줄이 풀린다', () => {
     }
     for (const k of used) expect(Object.keys(HL)).toContain(k);
   });
-  it('말투: 추심원은 "~요오"로 늘이고, 족제비는 "~"로 끝내고, 오소리 대부는 "~요오"를 쓰지 않는다', () => {
+  it('말투(개정 대본): 늘이는 "~요오"와 물결은 없고, 가운데점도 없다. 프롤로그는 추심원과 칩멍크가 주고받는다', () => {
     for (const id of TIP_IDS) {
       const l = T(id, ARGS);
-      if (l.who === 'weasel') expect(l.text, id).toMatch(/~$/);
-      if (l.who === 'boss') expect(l.text, id).not.toMatch(/요오|~/);
-      if (l.who === 'collector' && tipsOf(TIPS[id].moment).indexOf(id) === 0) expect(l.text, id).toMatch(/요오/);
+      expect(l.text, id).not.toMatch(/요오|~|·/);
     }
-    expect(prologueTalk({ debt: 300000, interest: 4500 }).every((t) => /요오/.test(t))).toBe(true);
+    const p = prologueTalk({ debt: 300000, interest: 4500 });
+    expect(p.some((t) => t.who === 'collector') && p.some((t) => t.who === 'hero')).toBe(true);
+    expect(p.every((t) => !/요오|·/.test(t.text))).toBe(true);
   });
   it('약속한 설명이 다 있다: 세계·쳇바퀴·정산·연체·빚·지도·알바·선물·배율·증거금·청산·손절·목표·파산', () => {
-    const all = [...prologueTalk({ debt: 300000, interest: 4500 }), ...TIP_IDS.map((id) => T(id, ARGS).text)].join(' ');
-    // U-44: 줄이 덜어지며 "도토리가 돈" · "상속" · "지갑" · "손절·익절"은 장면이 보여 주는 말로 바뀌었다(도토리 30만 · 자제분 거예요오 · 콜드월렛 · 출구)
-    for (const w of ['도토리 30만', '자제분 거예요오', '전기', '도토코인', '바로 팔려', '콜드월렛', '정산', '생활비', '연체', '딱지', '실어 가', '빚', '이자', '빌리', '갚', '햄스터', '일당', '재산', '초당', '롱', '숏', '배율', '증거금', '청산', '10% 반대로 가면 넣은 돈이 다 사라져요', '출구', '짜 둔 게 아닙니다', '잃는 분이 더 많', '파산', '장부']) {
+    const a = tipArgs(fresh());
+    const story = [STORY.collectorCome({ interest: 4500, living: 1000, cash: 160, lend: 100000, again: false, reborn: false }, a), STORY.tutIntro(41000, 10, a), STORY.tutLost(41000, 100000, 6, a), STORY.hamsterHint(1600, a)].flat().map((l) => l.text);
+    const all = [...prologueTalk({ debt: 300000, interest: 4500 }).map((t) => t.text), ...story, ...TIP_IDS.map((id) => T(id, ARGS).text)].join(' ');
+    // 개정 대본(2026-11-28): 설명은 장면 대사와 숫자 곁의 도움말로 옮겨 갔다. 약속한 말은 그대로 있다
+    for (const w of ['30만', '내 이름 써요', '코인을 캐요', '팔리게', '정산', '생활비', '연체', '빚', '이자', '빌리', '갚', '햄스터', '초당', '롱', '숏', '배율', '청산', '반대로 약 10% 움직이면 거신 돈을 모두 잃어요', '손절과 익절', '정산 빼고', '첫 주문용 시세', '장부']) {
       expect(all, w).toContain(w);
     }
     expect(all).not.toMatch(/바이낸스|Binance|Bybit|업비트/i);
@@ -105,11 +107,11 @@ describe('튜토리얼 대사 (U-32): 한 줄은 평생 한 번', () => {
     expect(TIP_IDS.every((id) => tipSeen(id))).toBe(true);
   });
   it('이야기 장면: 처음엔 설명이 끼어 나오고, 다음에는 이야기 줄만 남는다(시계도 멈추지 않는다)', () => {
-    const lines = () => STORY.firstSettle(8500, ARGS);
+    const lines = () => STORY.hamsterHint(1600, ARGS);
     P().pushScene({ id: 's1', lines: lines() });
-    expect(P().scenes[0].lines.length).toBe(3);
+    expect(P().scenes[0].lines.length).toBe(5);
     expect(P().scenes[0].hold).toBe(true);
-    expect(playFront()).toEqual(['-', 'settle.what', '-']);
+    expect(playFront()).toEqual(['-', 'ham.what', '-', 'ham.quit', 'ham.wheel']);
     P().pushScene({ id: 's2', lines: lines(), auto: 4000 });
     expect(P().scenes[0].lines.map((l) => l.tip ?? '-')).toEqual(['-', '-']);
     expect(P().scenes[0].hold).toBe(false);
@@ -136,6 +138,6 @@ describe('튜토리얼 대사 (U-32): 한 줄은 평생 한 번', () => {
     const g = fresh();
     A(g, { type: 'borrow', lender: 'shark1' });
     expect(tipArgs(g)).toMatchObject({ debt: 400000, claim: 9500, lend: 100000 });
-    expect(T('goal.repay', tipArgs(g)).text).toContain('40만');
+    expect(T('hud.debt', tipArgs(g)).text).toContain('40만');
   });
 });

@@ -66,19 +66,19 @@ export function MapTab() {
       const got = Math.floor(unit * (1 - (l2.upfront ?? 0)));
       useProto.getState().pushScene({ id: 'viperOffer', again: true, lines: STORY.viperOffer({ unit, got, ratePct: Math.round(l2.rate * 100) }),
         choices: [
-          { id: 'take', label: '빌린다', sub: `+${comma(got)}, 빚 +${comma(unit)}`, primary: true, run: () => doBorrow('shark2', true) },
-          { id: 'leave', label: '돌아선다', run: () => setMsg('뒷골목: 문이 조용히 닫힌다.') },
+          { id: 'take', label: `${manTxt(got)} 받기`, sub: `빚 +${manTxt(unit)}`, primary: true, run: () => doBorrow('shark2', true) },
+          { id: 'leave', label: '돌아선다', run: () => setMsg('뒷골목: 등 뒤로 문고리가 제자리로 돌아간다.') },
         ] });
       return;
     }
     const r = act({ type: 'borrow', lender: id, consent: true });
     play(r.ok ? 'collector_paid' : 'insufficient');
-    setMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '안 된다');
+    setMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '지금은 처리할 수 없어요');
     if (r.ok && id === 'shark1') onFirstOfficeLoan(before);
     // 숲속 캐피탈에서 처음 빌렸다: 창구 너구리가 조건을 말한다(한도가 왜 그 숫자인지, 밀리면 어떻게 되는지)
     if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: Math.round(lenderById.capital.rate * 100) }) });
   };
-  const doPay = (id: LenderId, mult: number | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족합니다' : r.msg ?? '안 된다'); };
+  const doPay = (id: LenderId, mult: number | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족해요' : r.msg ?? '지금은 처리할 수 없어요'); };
   const fcN = forecast(g);
   const dueNext = fcN.interest + fcN.living + fcN.wages;
   const keepPay = repayBuys(g, dueNext);
@@ -99,7 +99,7 @@ export function MapTab() {
           return (
             <div key={id} className="pr-card plc locked" data-place={id} onClick={() => useProto.getState().pushScene({ id: 'owlRefuse', again: true, auto: 3500, lines: STORY.owlRefuse() })}>
               <PlaceArt id={id} />
-              <div className="plc-top"><div className="ic"><RowIcon kind={id} /></div><div className="mid"><div className="nm">{pl.name} <small>{pl.npc}</small></div><div className="sb">내 이름으로 된 집이 있어야 문을 열어 준다.</div></div></div>
+              <div className="plc-top"><div className="ic"><RowIcon kind={id} /></div><div className="mid"><div className="nm">{pl.name} <small>{pl.npc}</small></div><div className="sb">담보로 맡길 본인 명의의 집이 필요해요.</div></div></div>
             </div>
           );
         }
@@ -115,22 +115,22 @@ export function MapTab() {
               <div className="nm">{pl.name} <small>{pl.npc}</small></div>
               <div className="sb"><b>빚 {comma(d.principal)}</b>, 정산마다 이자 {comma(interestDue(g, id))}{d.overdue > 0 ? <em className="od">, 연체 {d.overdue}회</em> : ''}</div>
               <div className="sb">더 빌리면 금리 {(nextBorrowRate(g, id) * 100).toFixed(0)}%, 한도 {comma(room)} 남음{l.upfront ? `, 선이자 ${l.upfront * 100}%` : ''}</div>
-              {first && <div className="sq">{pl.npc} 「오셨어요? 앉으세요. 도장 하나면 됩니다.」</div>}
+              {first && <div className="sq">{pl.npc} 「개울 건너오셨죠? 앉으세요. 오늘 수금 때문에 오셨다면서요.」</div>}
             </div></div>
             {id === 'capital' && <CapitalTerms room={room} />}
             {id === 'shark1' && loanTaken && <Ledger />}
             <div className="btns">
               <button className={'buy' + (amt > 0 ? ' on' : '')} disabled={amt <= 0} data-borrow={id} data-hl={id === 'shark1' ? 'borrow' : undefined} onClick={() => doBorrow(id)}><span>{amt > 0 ? '빌리기' : '한도 다 씀'}</span><small>{amt > 0 ? '+' + comma(got) : ''}</small></button>
               <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-pay={id} data-hl={id === 'shark1' ? 'pay' : undefined} onClick={() => doPay(id, 1)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
-              <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-payall={id} onClick={() => doPay(id, 'all')}><span>전부</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
+              <button className={'buy' + (d.principal > 0 ? ' pay' : '')} disabled={d.principal <= 0} data-payall={id} onClick={() => doPay(id, 'all')}><span>전부 갚기</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
             </div>
             {/* 정산 빼고 갚기(U-42): 다음 정산에 낼 돈은 손에 남기고 갚는다. [전부]는 그 돈까지 갚아 버린다 — 둘의 차이가 단추에 보인다 */}
             {id === 'shark1' && loanTaken && keepPay && keepPay.amount > payAmt && keepPay.amount < Math.min(d.principal, Math.floor(run.cash)) && (
-              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>{comma(Math.round(dueNext))}은 남긴다, 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 ? `, 금박 도장 +${keepPay.stamps}` : ''}</small></button>
+              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>남길 돈 {comma(Math.round(dueNext))}, 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 ? `, 금박 +${keepPay.stamps}` : ''}</small></button>
             )}
             {/* 빚을 다 갚은 생은 여기서 닫을 수 있다(U-39 ⑧): 은퇴 = 엔딩 카드 → 환생 */}
             {id === 'shark1' && canRetireAct1(g) && (
-              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>이 생을 닫는다, 황금 +{treeAward(run)}</small></button>
+              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>이번 생 마치기, 황금 +{treeAward(run)}</small></button>
             )}
           </div>
         );
@@ -182,20 +182,20 @@ function Ledger() {
   const jr = journeyOf({ tradeNet: tradeLife, claim: claim(g).total, settles: g.run.settleNo, paid: paidLife, claimWins });
   return (
     <div className="pr-ledger" data-ledger aria-label="오소리 장부">
-      <div className="lg-h"><b>장부</b><span>위 줄부터 지워진다</span></div>
+      <div className="lg-h"><b>상환 장부</b><span>위에서부터 갚아요</span></div>
       {rows.map((r) => (
         <div key={r.key} className={'lg-row' + (r.left <= 0 ? ' done' : '') + (r.key === top ? ' top' : '')} data-row={r.key}>
           <i className="rt">{r.ratePct}%</i>
           <span className="nm">{r.label}</span>
           <span className="bar"><u style={{ width: `${r.start > 0 ? (r.left / r.start) * 100 : 0}%` }} /></span>
           <b className="amt">{r.left <= 0 ? '지움' : comma(r.left)}</b>
-          <small className="iv">{r.left <= 0 ? '' : `이자 ${comma(r.interest)}${r.fixed ? ' 고정' : ''}`}</small>
+          <small className="iv">{r.left <= 0 ? '' : r.fixed ? `고정금리 ${r.ratePct}%, 정산 이자 ${comma(r.interest)}` : `이자 ${comma(r.interest)}`}</small>
         </div>
       ))}
       {closes > 0 && <div className="lg-jr" data-journey="ledger">{jr.text}</div>}
       <div className="lg-st" data-stamps={stamps}>
         <span className="dots">{Array.from({ length: Math.min(10, stamps + 1) }, (_, i) => <i key={i} className={i < stamps ? 'on' : ''} />)}{stamps > 9 && <em>×{stamps}</em>}</span>
-        <small>금박 도장 {stamps}개{g.run.debts.shark1.principal > 0 ? `, ${comma(Math.min(toNext, g.run.debts.shark1.principal))} 더 갚으면 하나 (5만마다)` : ', 장부가 깨끗하다'}</small>
+        <small>금박 도장 {stamps}개{g.run.debts.shark1.principal > 0 ? `, 다음 도장까지 ${comma(Math.min(toNext, g.run.debts.shark1.principal))} (5만마다 한 개)` : ', 장부가 깨끗하다'}</small>
       </div>
     </div>
   );
@@ -213,10 +213,10 @@ function CapitalTerms({ room }: { room: number }) {
   const od = g.run.debts.capital.overdue;
   return (
     <div className="pr-terms" data-terms="capital" aria-label="숲속 캐피탈 조건">
-      <div><i>값</i>{comma(unit)} 빌릴 때마다 정산마다 이자 <b>+{comma(perUnit)}</b> <small>(쳇바퀴 한 대가 남기는 돈 {comma(hm.net)})</small></div>
+      <div><i>값</i>{manTxt(unit)} 대출, 정산 이자 <b>+{comma(perUnit)}</b> <small>(바퀴 한 대의 정산당 예상 순수입 {comma(hm.net)})</small></div>
       <div><i>한도</i>기본 {comma(l.limitByHouse![g.run.house])} + 쳇바퀴 한 대당 <b>+{comma(perWheel)}</b></div>
-      <div><i>걷기</i>자동이체. 손에 돈이 없으면 그대로 연체</div>
-      <div className={od > 0 ? 'hot' : ''}><i>밀리면</i>{l.maxOverdue}번째에 쳇바퀴를 실어 간다, <b>비싼 것부터</b>{od > 0 ? ` (지금 ${od}번)` : ''}</div>
+      <div><i>걷기</i>정산 때 자동이체, 잔액 부족 시 연체</div>
+      <div className={od > 0 ? 'hot' : ''}><i>밀리면</i>{l.maxOverdue}회 연체 시 <b>비싼 바퀴부터</b> 압류{od > 0 ? `, 현재 ${od}회` : ''}</div>
     </div>
   );
 }
@@ -224,7 +224,7 @@ function CapitalTerms({ room }: { room: number }) {
 /** 거래소 탭: 오소리 대부가 준 중고폰 속 FRX 숲거래소(Trade.tsx). 폰을 받으면 바로 거래할 수 있다. */
 export function PhoneTab() {
   const open = useGame((s) => s.g.run.futures.open);
-  if (!open) return <div className="pr-pane"><p className="pr-note">폰이 없다.</p></div>;
+  if (!open) return <div className="pr-pane"><p className="pr-note">수금폰이 없다.</p></div>;
   return <ProtoTrade />;
 }
 void say;

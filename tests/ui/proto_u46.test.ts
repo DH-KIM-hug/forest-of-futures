@@ -10,19 +10,20 @@ import { hamsterMath, homeSummary, tiles, perSec, rateTxt } from '../../src/ui/p
 import { A, fresh } from '../engine/helpers';
 import type { GameState } from '../../src/engine/types';
 
-const ARGS = { tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, debt: 300000, lev: 10 };
+const ARGS = { tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, rate: 4, debt: 300000, lev: 10 };
 const text = (ls: { text: string }[]) => ls.map((l) => l.text).join(' / ');
 
 describe('말이 되는 줄 (U-46)', () => {
   it('사무소: "어머님 빚 4,500"이 아니라 이자 4,500 (빚은 30만이다)', () => {
     const t = text(STORY.office({ lend: 100000, ratePct: 4, oldInterest: 4500, newInterest: 8500, debt: 400000 }, ARGS));
-    expect(t).toContain('어머님 빚 이자 4,500에 새 돈 4%. 정산마다 8,500입니다.');
+    expect(t).toContain('집에 가시면 이자 8,500부터 떼어 주시고요.'); // 개정 대본 장면 9: 합친 뒤의 이자
     expect(t).not.toMatch(/어머님 빚 4,500/);
   });
   it('추심원이 걷으러 온 돈은 목표 막대의 숫자(이자 + 생활비)와 같다', () => {
-    const t = STORY.collectorCome({ interest: 4500, living: 1000, cash: 143, lend: 100000, again: false, reborn: false }, ARGS)[0].text;
-    expect(t).toBe('이자 4,500에 생활비 1,000, 걷으러 왔어요오.');
-    expect(STORY.collectorCome({ interest: 4500, living: 1000, cash: 0, lend: 100000, again: false, reborn: true }, ARGS)[0].text).toBe('처음 뵙네요오. 이자 4,500에 생활비 1,000, 걷으러 왔어요오.');
+    const t = text(STORY.collectorCome({ interest: 4500, living: 1000, cash: 143, lend: 100000, again: false, reborn: false }, ARGS));
+    expect(t).toContain('143. 두 알씩 꼬박 밟았는데.');
+    expect(t).toContain('오늘 받을 게 5,500인데');
+    expect(STORY.collectorCome({ interest: 4500, living: 1000, cash: 0, lend: 100000, again: false, reborn: true }, ARGS)[0].text).toBe('오소리 사무소에서 왔습니다. 이자 4,500에 생활비 1,000이요.');
   });
   it('다음 생: "처음 뵙네요오" 한 추심원이 "또" 바꿔 적었다고 하지 않는다', () => {
     expect(text(STORY.rebornSettle(8500))).not.toMatch(/또/);
@@ -30,30 +31,32 @@ describe('말이 되는 줄 (U-46)', () => {
   it('오픈 기념 문자의 속마음은 아무도 안 한 말을 끌어오지 않는다', () => {
     const t = text(STORY.feeEventSms({ left: 19, reborn: false }));
     expect(t).not.toMatch(/사무소에서도 들었다/);
-    expect(t).toContain('…수수료가 공짜면, 저 앱은 뭘로 먹고사나.');
+    expect(t).toContain('무료라는 글씨가 금액보다 크네.');
+    expect(t).toContain('수수료 무료');
   });
   it('금리 인상은 예고 다음 정산이 끝난 뒤부터 붙는다: 속보와 추심원이 그렇게 말한다(엔진 decayEffects 의 차례)', () => {
     expect(eventById.rate_hike.text).toContain('다음 정산이 지나면');
     expect(eventById.rate_hike.text).not.toContain('다음 정산부터');
-    expect(STORY.rateHike({ text: 'x', from: 14500, to: 24500, times: 2, fixed: 4500 })[1].text).toBe('다음 정산은 14,500 그대로고요오, 그 뒤 2번은 24,500이에요오.');
+    expect(STORY.rateHike({ text: 'x', from: 14500, to: 24500, times: 2, fixed: 4500 })[1].text).toBe('이번엔 14,500 그대로 준비하세요. 그다음 2번은 24,500씩이에요.');
   });
   it('거래소는 폰의 앱: 연체 장면은 "앱 속에" 묶였다고 한다', () => {
     const t = text(STORY.overdue({ interest: 14500, nth: 1, tagged: false, seized: false, nothingLeft: false, locked: 100000 }));
-    expect(t).toContain('앱 속에 100,000이 묶여 있어요오');
+    expect(t).toContain('100,000은 아직 거래에 걸려 있잖아요');
     expect(t).not.toMatch(/거래소에/);
   });
   it('엄마의 줄은 오소리 장부의 것: 캐피탈 창구 장면 뒤에 떠도 어느 장부인지 말한다', () => {
-    expect(STORY.momClue('mirror')[0].text.startsWith('오소리 장부,')).toBe(true);
+    expect(STORY.momClue('mirror')[0].text.startsWith('대부가 장부를 넘기자')).toBe(true);
   });
   it('추심원은 걷는 돈을 "다음 수금"이라 한다(정산 때 나가는 돈 전부와 헷갈리지 않게)', () => {
-    expect(text(STORY.winClaim({ boss: 'x', pnl: 22000, claim: 12500, spins: 5, stampLeft: 30000, momLeft: 300000 }))).toContain('다음 수금 12,500은 벌써 손에 있네요오.');
+    const r = tradeReaction({ pnl: 22000, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { claim: 12500, wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} });
+    expect(r?.lines[0]).toBe('12,500은 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.');
   });
   it('세 판째 본전: 서로 다른 종목이어도 맞는 말(수수료가 공짜였던 것만 말한다)', () => {
     const r = tradeReaction({ pnl: 0, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { claim: 15500, wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 3, feesLife: 0, seen: {} });
-    expect(r?.lines[0]).toBe('세 판째 본전이시네요. 수수료가 공짜라 다행이죠.');
+    expect(r?.lines[0]).toBe('세 번이나 사고파셨는데 본전이네요. 지금 수수료 안 받을 때라 다행이죠.');
   });
   it('튜토리얼 뒤 "이제부터 시세는" 줄은 실제 시세 · 연습 시세 둘 다에서 맞다', () => {
-    expect(TIPS['goal.real'].text(ARGS)).toBe('이제부터 시세는 짜 둔 게 아닙니다. 저도 몰라요.');
+    expect(TIPS['goal.real'].text(ARGS)).toBe('이번엔 수금할 돈부터 빼 두자.');
   });
 });
 
@@ -128,10 +131,10 @@ describe('대본 받아쓰기에서 찾은 것 (U-46)', () => {
     const { lenderById, eventById: ev } = await import('../../src/engine/data');
     const lines = (lenderById.shark1 as unknown as { lines: Record<string, string> }).lines;
     for (const t of Object.values(lines)) expect(t).toMatch(/요|다|까|죠/);
-    expect(lines.refuseLimit).toBe('여기까지입니다. 더는 못 빌려 드려요.');
+    expect(lines.refuseLimit).toBe('더는 못 드려요. 먼저 빌리신 것부터 좀 갚으셔야 돼요.');
     expect(ev.rate_hike.text.startsWith('숲속중앙조합')).toBe(true);
-    expect(STORY.viperSms()[0].text.startsWith('빌릴 데가 다 막혔나.')).toBe(true);
-    expect(text(STORY.collectorCome({ interest: 4500, living: 1000, cash: 0, lend: 100000, again: true, reborn: false }, ARGS))).toContain('이자 4,500에 생활비 1,000, 또 왔어요오.');
-    expect(text(STORY.phoneRing(50000))).not.toMatch(/이번 정산에도/);
+    expect(STORY.viperSms()[0].text.startsWith('돈 더 쓸 데가 있거든')).toBe(true);
+    expect(text(STORY.collectorCome({ interest: 4500, living: 1000, cash: 0, lend: 100000, again: true, reborn: false }, ARGS))).toContain('지난번에 드린 지도 아직 있어요?');
+    expect(text(STORY.phoneRing({ paid: 9500, repaid: 50000, income: 12924, wages: 3200, claim: 9500, net: 224, left: 350000 }))).toContain('남은 350,000을 언제 다 갚지');
   });
 });

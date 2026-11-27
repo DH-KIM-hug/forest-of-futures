@@ -54,7 +54,7 @@ function PinRow({ p }: { p: OpenPos }) {
     <button className={'pr-pin' + (call ? ' call' : '') + (net >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
       <span className="who">{coinLogo(p.market) ? <img className="coin logo" src={coinLogo(p.market)!} alt="" draggable={false} /> : <i className="coin" style={{ background: C.dtc }} />}{m.name}</span>
       <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
-      <span className={'liq r-' + tn.reach} data-reach={tn.reach}>{call ? '▼ 청산 임박 ' : '청산까지 '}{p.dir === 1 ? '−' : '+'}{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < tn.dots ? 'on' : ''} />)}</i></span>
+      <span className={'liq r-' + tn.reach} data-reach={tn.reach}>{call ? '청산 임박, 남은 거리 ' : '청산까지 '}{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < tn.dots ? 'on' : ''} />)}</i></span>
       <span className="roe"><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(net)))}</b><small>{roeTxt(p.netRoe)}</small></span>
     </button>
   );
@@ -129,7 +129,7 @@ export function Lot() {
     if (useProto.getState().forceTrade) { say(FORCE_NUDGE); useProto.getState().patch({ pointTab: 'phone' }); return; }
     if (useProto.getState().waiting) { say('추심원이 문 앞에서 기다린다.'); return; }
     const r = rollWheel();
-    if (!r.ok) { if (r.why === 'nowheel') { say('쳇바퀴가 없다.'); play('insufficient'); } else if (r.why === 'staffed') staffedTap(); return; }
+    if (!r.ok) { if (r.why === 'nowheel') { say('바퀴가 있던 자리다. 집에서 다시 살 수 있다.'); play('insufficient'); } else if (r.why === 'staffed') staffedTap(); return; }
     playTap();
     useProto.getState().patch({ tapping: true });
     fx.emit({ kind: 'tap', gain: r.sold ? `+${comma(r.gain)}` : `+${comma(r.worth)} 코인`, wheel: true, sold: r.sold });
@@ -142,13 +142,13 @@ export function Lot() {
     window.clearTimeout(hiTimer.current);
     hiTimer.current = window.setTimeout(() => useProto.getState().patch({ slotHi: null }), 1500);
     if (useProto.getState().forceTrade) { say(FORCE_NUDGE); useProto.getState().patch({ pointTab: 'phone' }); return false; }
-    if (!t.action) { if (t.locked) say(t.state === 'idle' ? '알바는 폰으로 부른다. 폰이 없다.' : t.text); return false; }
+    if (!t.action) { if (t.locked) say(t.state === 'idle' ? '일꾼을 부르려면 수금폰이 필요하다.' : t.text); return false; }
     const had = new Set(useGame.getState().g.run.equipment.map((u) => u.uid));
     const cash0 = useGame.getState().g.run.cash;
     const res = t.action === 'hire' ? act(t.uid ? { type: 'hire', uid: t.uid } : { type: 'hire', coin: WHEEL_COIN })
       : t.action === 'place' ? act({ type: 'buyEquip', tier: EXTRA_WHEEL, coin: WHEEL_COIN })
       : act({ type: 'buyWheel', coin: WHEEL_COIN });
-    if (!res.ok) { say(res.msg === '현금 부족' ? '도토리가 부족합니다' : res.msg ?? '할 수 없다'); play('insufficient'); return false; }
+    if (!res.ok) { say(res.msg === '현금 부족' ? '도토리가 부족해요' : res.msg ?? '지금은 사용할 수 없어요'); play('insufficient'); return false; }
     if (t.action === 'rebuy') act({ type: 'autoSell', coin: WHEEL_COIN, on: true }); // 시제품 기본: 캐면 바로 팔기(지갑 시트에서 끌 수 있다)
     if (t.action === 'place') {
       // 누른 칸의 자리에 놓는다
@@ -157,7 +157,7 @@ export function Lot() {
     }
     play(bought.has(t.action) ? 'buy' : 'new_equipment');
     bought.add(t.action);
-    if (t.action === 'hire') say('알바 햄스터가 왔다.');
+    if (t.action === 'hire') say('햄스터가 바퀴에 올랐다.');
     else fx.emit({ kind: 'buy', price: t.action === 'place' ? cash0 - useGame.getState().g.run.cash : 0, key: String(t.slot) });
     return true;
   };
@@ -201,8 +201,8 @@ export function Lot() {
           {waiting && (
             <div className="pr-wait" role="status" data-wait>
               <span>추심원이 문 앞에서 기다린다</span>
-              {mapOpen && <button className="buy on" data-wait-go onClick={() => { useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); }}><span>사무소로</span><small>지도</small></button>}
-              <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>연체</small></button>
+              {mapOpen && <button className="buy on" data-wait-go onClick={() => { useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); }}><span>사무소로 간다</span><small>조건 보기</small></button>}
+              <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>이번 수금 연체</small></button>
             </div>
           )}
           <button className={'pr-strip' + (ahead ? ' ok' : ' short') + (open ? ' full' : '')} data-strip data-sum data-hl={open ? 'bar' : 'strip'} aria-expanded={open}
@@ -212,8 +212,8 @@ export function Lot() {
               <>
                 <span className="cmp">
                   {/* 다음 정산까지 벌 돈(초당 × 남은 초) vs 정산 때 낼 돈(U-46): "이번 정산을 낼 수 있나"에 답한다 */}
-                  <span className="in"><i className="chev">▼&#xFE0E;</i><small>다음 정산까지 벌 돈</small><b>+{comma(Math.round(earnLeft))}</b><small className="x">초당 +{rateTxt(idleSec)} × {Math.max(0, run.settleIn)}초</small></span>
-                  <span className="bar" role="img" aria-label={ahead ? '버는 돈이 더 많다' : '나가는 돈이 더 많다'}><i style={{ width: `${share * 100}%` }} /><u /></span>
+                  <span className="in"><i className="chev">▼&#xFE0E;</i><small>다음 정산까지 예상 수입</small><b>+{comma(Math.round(earnLeft))}</b><small className="x">초당 +{rateTxt(idleSec)} × {Math.max(0, run.settleIn)}초</small></span>
+                  <span className="bar" role="img" aria-label={ahead ? '예상 수입이 더 많아요' : '예상 지출이 더 많아요'}><i style={{ width: `${share * 100}%` }} /><u /></span>
                   <span className="out"><small>정산 때 낼 돈</small><b>−{comma(sum.due)}</b></span>
                 </span>
                 <span className="nx">정산까지 <b>{left}</b>{cashNow >= 1 ? <>, 손에 <b>{comma(Math.floor(cashNow))}</b></> : null}</span>

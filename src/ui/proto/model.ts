@@ -43,10 +43,10 @@ export function goalAt(g: GameState, i: number, f: GoalFlags): Goal {
   const borrowed = f.loanTaken || (run.stats.sharkBorrowed ?? 0) > 0;
   switch (i) {
     case 0: { const c = claim(g).total; return mk('수금 전에 이자와 생활비 모으기', Math.floor(run.cash), c, f.waiting || borrowed || run.settleNo >= 1 || run.cash >= c); }
-    case 1: return mk('지도에서 오소리 사무소 가기', borrowed ? 1 : 0, 1);
+    case 1: return mk('지도에서 사무소 찾기', borrowed ? 1 : 0, 1);
     case 2: return mk('알바 햄스터 부르기', staffedCount(g) > 0 || (run.stats.hired ?? 0) > 0 ? 1 : 0, 1);
-    case 3: return mk('FRX 앱으로 첫 거래', f.everOpened || Object.keys(run.positions).length > 0 ? 1 : 0, 1);
-    default: return mk('오소리 장부 첫 상환', (run.stats.stamps ?? 0) > 0 ? 1 : 0, 1);
+    case 3: return mk('첫 선물 주문 방향 고르기', f.everOpened || Object.keys(run.positions).length > 0 ? 1 : 0, 1);
+    default: return mk('오소리 사무소에서 원금 갚기', (run.stats.stamps ?? 0) > 0 ? 1 : 0, 1);
   }
 }
 /** 지금 목표 번호: 이미 지난 목표는 되돌아가지 않는다. 끝나면 GOAL_COUNT. */
@@ -98,7 +98,7 @@ export const staffedCount = (g: GameState): number =>
 export const maxWheels = (): number => 1 + tierMaxUnits(EXTRA_WHEEL);
 
 /** 빈 자리에 쳇바퀴를 놓을 수 없는 까닭을 칸에 들어갈 만큼 짧게(돈이 모자란 것은 까닭이 아니라 꺼진 단추로 보인다) */
-const shortWhy = (why: string): string => (/쳇바퀴/.test(why) ? '엄마 쳇바퀴부터' : /집/.test(why) ? '집이 좁다' : '놓을 수 없다');
+const shortWhy = (why: string): string => (/쳇바퀴/.test(why) ? '엄마 쳇바퀴부터' : /집/.test(why) ? '집이 좁다' : '설치 불가');
 
 /** 바닥 자리 여섯의 상태(자리 번호순). prefs = 화면에서 고른 자리(uid → 자리 번호, protoStore.slotOf). */
 export function tiles(g: GameState, prefs: Record<string, number> = {}): Tile[] {
@@ -108,13 +108,13 @@ export function tiles(g: GameState, prefs: Record<string, number> = {}): Tile[] 
   const running = { state: 'run' as const, net: hm.net, text: `초당 +${secOf(hm.sold)}`, sub: `일당 ${n(hm.wage)}은 정산 때`, locked: false, action: null, btn: '', btnSub: '', canAct: false };
   const idle = () => phone
     ? { state: 'idle' as const, net: null, text: '알바 없음', locked: false, action: 'hire' as const, btn: '알바 부르기', btnSub: `정산 때 일당 ${n(hm.wage)}`, canAct: true }
-    : { state: 'idle' as const, net: null, text: '폰이 없다', locked: true, action: null, btn: '', btnSub: '', canAct: false };
+    : { state: 'idle' as const, net: null, text: '수금폰 필요', locked: true, action: null, btn: '', btnSub: '', canAct: false };
   const out: Tile[] = [];
   const w = run.coinWheels[WHEEL_COIN];
   if (w) out.push({ slot: 0, name: HOME_WHEEL_NAME, tagged: !!w.tagBy, ...(w.staffed ? running : idle()) });
   else {
     const cost = wheelByCoin[WHEEL_COIN].cost;
-    out.push({ slot: 0, state: 'lost', name: '실려 간 자리', tagged: false, net: null, text: '쳇바퀴가 실려 갔다', locked: false, action: 'rebuy', btn: '다시 사기', btnSub: n(cost), canAct: run.cash >= cost });
+    out.push({ slot: 0, state: 'lost', name: '바퀴가 있던 자리', tagged: false, net: null, text: '쳇바퀴가 실려 갔다', locked: false, action: 'rebuy', btn: '다시 사기', btnSub: n(cost), canAct: run.cash >= cost });
   }
   const extras = run.equipment.filter((u) => u.tier === EXTRA_WHEEL);
   const seat = assignSlots(extras.map((u) => u.uid), prefs);
@@ -174,6 +174,6 @@ export function tipArgs(g: GameState): TipArgs {
   const coin = g.run.riding ?? ownedCoins(g.run)[0] ?? WHEEL_COIN;
   return {
     tap: Math.round(tapValue(g, coin)), claim: c.total, living: c.living, wage: laborWage(), wheel: nextTierCost(g.run, EXTRA_WHEEL),
-    lend: officeOffer(g).lend || (lenderById.shark1.borrowUnit ?? 0), debt: totalDebt(g.run), lev: TUT.lev,
+    lend: officeOffer(g).lend || (lenderById.shark1.borrowUnit ?? 0), rate: officeOffer(g).ratePct, debt: totalDebt(g.run), lev: TUT.lev,
   };
 }
