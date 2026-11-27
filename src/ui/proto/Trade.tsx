@@ -426,7 +426,8 @@ export function ProtoTrade() {
   const keepM = keepDueMargin({ cash: run.cash, due: dueAll, lev, feeRate: feeRate(g, lev) });
   const keepOn = !!tr.keep;
   const pct = keepOn ? (run.cash > 0 && keepM > 0 ? Math.min(99.99, ((keepM + 0.5) / run.cash) * 100) : 0) : tr.pct;
-  const prev = orderPreview(g, market, pos ? pos.dir : 1, lev, pct);
+  // 첫 주문(튜토리얼)은 띠대로 가진 돈 전부, 그 배율로 셈해 보인다(회차 15: 띠는 전부인데 증거금 줄은 25%였다)
+  const prev = orderPreview(g, market, pos ? pos.dir : 1, tutSt === "await" ? TUT.lev : lev, tutSt === "await" ? 100 : pct);
   const ruler = levRuler(g);
   const mood = marketMood(g, market, hist);
   const cm = chartModel(hist);

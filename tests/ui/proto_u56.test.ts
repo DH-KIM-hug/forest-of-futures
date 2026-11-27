@@ -117,3 +117,15 @@ it('연습 시세의 날다람쥐: 기준 시각을 주면 그 시각의 값(실
 it('한 번 누르기 정리의 가드는 0.3초', () => {
   expect(CLOSE_GUARD_MS).toBe(300);
 });
+
+it('빌리고 전부 갚기를 되풀이해도 갚은 원금(금박 도장, 황금 도토코인의 기준)은 순 갚음만 센다', () => {
+  const g = createGame({ seed: 5 });
+  g.run.cash = 1_000_000;
+  for (let i = 0; i < 4; i++) {
+    act(g, { type: 'borrow', lender: 'shark1' });
+    act(g, { type: 'stamp', lender: 'shark1', mult: 'all' });
+  }
+  const repaid = (g.run.stats['repaid.shark1'] as number | undefined) ?? 0;
+  expect(repaid).toBe(400_000); // 엄마 빚 30만 + 처음 빌린 10만. 그 뒤 세 번의 빌리고 갚기는 0
+  expect((g.run.stats['repaidGross.shark1'] as number | undefined) ?? 0).toBeGreaterThan(repaid);
+});

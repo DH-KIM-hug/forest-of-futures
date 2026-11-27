@@ -60,6 +60,9 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
   if (rateNow !== l.rate) (run.debts[id].tranches ??= []).push({ amount: unit, rate: rateNow });
   run.cash += received;
   run.debts[id].principal += unit;
+  // 갚은 원금은 "갚고 다시 빌린 만큼"을 뺀 순 갚음이다(회차 15: 빌리기 · 전부 갚기를 되풀이해 금박 도장과 황금 도토코인을 찍어 냈다)
+  const rk = `repaid.${id}`;
+  if (((run.stats[rk] as number | undefined) ?? 0) > 0) run.stats[rk] = Math.max(0, (run.stats[rk] as number) - unit);
   bump(run, 'upfrontPaid', unit - received);
   if (id === 'shark1' || id === 'shark2') bump(run, 'sharkBorrowed', unit);
   if (id === 'shark2' && run.stats.flyerOpen) bump(run, 'flyerLoans', 1);
@@ -116,7 +119,8 @@ export function stamp(g: GameState, id: DebtId, mult: Mult = 1): Res {
   if (amt <= 0) return refuse('cash', '현금 부족');
   run.cash -= amt;
   d.principal -= amt;
-  bump(run, `repaid.${id}`, amt); // 이번 생에 갚은 원금(장부의 금박 도장 · 환생 때 황금 도토코인의 기준)
+  bump(run, `repaid.${id}`, amt); // 이번 생에 갚은 원금(장부의 금박 도장 · 환생 때 황금 도토코인의 기준). 다시 빌리면 그만큼 준다(U-56)
+  bump(run, `repaidGross.${id}`, amt); // 다시 빌려도 줄지 않는 갚은 합(엄마 이야기의 거울 단서)
   // 비싼 몫부터 갚는다: 따로 정한 금리 몫(높은 금리 먼저) → 보통 몫 → 물려받은 몫
   if (d.tranches?.length) {
     let left = amt;

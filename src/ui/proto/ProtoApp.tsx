@@ -208,7 +208,7 @@ function LiqStamp({ onShake }: { onShake: () => void }) {
     <div key={hit.k} className={'pr-liq' + (both ? ' low' : '')} data-liq-low={both ? 1 : undefined} aria-live="assertive">
       <div className={'stamp' + (legend ? ' legend' : '')}>청산</div>
       {hit.lost !== undefined && hit.lost > 0 && <b className="lost" data-liq-lost={hit.lost}>−{comma(hit.lost)}</b>}
-      <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name}${hit.lev ? ` ${hit.lev}배` : ''} 포지션이 강제로 닫혔다`}</p>
+      <p>{legend ? `${hit.name} ${hit.lev ? `${hit.lev}배 ` : ""}청산이 전설로 남았다` : `${hit.name}${hit.lev ? ` ${hit.lev}배` : ''} 포지션이 강제로 닫혔다`}</p>
     </div>
   );
 }

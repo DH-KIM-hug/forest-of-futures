@@ -90,7 +90,7 @@ export function momClueDue(g: GameState, seen: Partial<Record<MomClue, boolean>>
   if (o.shownThisVisit) return null;
   const momStart = (balance.start.debts as Record<string, number>).shark1 ?? 0;
   const mom = ledgerRows(g).find((r) => r.key === 'mom');
-  if (!seen.mirror && o.reborrowed && repaidOffice(g) > 0) return 'mirror';
+  if (!seen.mirror && o.reborrowed && ((g.run.stats['repaidGross.shark1'] as number | undefined) ?? repaidOffice(g)) > 0) return 'mirror';
   if (!seen.reason && goldStamps(g) >= 1) return 'reason';
   if (!seen.frame && momStart > 0 && (mom?.left ?? 0) < momStart && repaidOffice(g) > 0) return 'frame';
   return null;
