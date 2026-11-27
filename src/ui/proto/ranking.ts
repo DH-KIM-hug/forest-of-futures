@@ -124,6 +124,16 @@ interface Life {
   /** 재산 판에 마지막으로 넣은 정산 번호 · 값 */ subSettle: number; subPeak: number;
   /** 열린 포지션마다(종목:열린 틱) 진입 때 적은 것 */ open: Record<string, OpenMeta>;
   done: boolean;
+  /** 이미 넣은 닫힌 거래(종목:열린 틱, 반 익절은 :h 번호). 저장에서 이어 간 뒤 같은 판이 다시 닫혀도 두 번 넣지 않는다(U-55) */ closed?: string[];
+}
+const CLOSED_KEEP = 60;
+/** 처음 보는 닫힌 거래면 적고 true */
+function firstClose(L: Life, k: string): boolean {
+  const c = (L.closed ??= []);
+  if (c.includes(k)) return false;
+  c.push(k);
+  if (c.length > CLOSED_KEEP) c.splice(0, c.length - CLOSED_KEEP);
+  return true;
 }
 const lifeId = (g: GameState): string => `${g.run.seed}:${g.family.generation}`;
 const newLife = (g: GameState): Life => ({ id: lifeId(g), lifeNo: lifeNo(g), settles: g.run.settleNo, trades: [], peak: -Infinity, tainted: false, subSettle: -99, subPeak: -Infinity, open: {}, done: false });
@@ -149,7 +159,7 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
   if (rankDevOff) return;
   const live = liveNet(net);
   if (!life || life.id !== lifeId(g)) {
-    // 끝맺지 못한 지난 생(새로 고침 · 시제품은 저장을 읽지 않는다): 그때까지의 최고 재산을 넣는다
+    // 끝맺지 못한 지난 생(저장을 못 읽어 새로 시작했다): 그때까지의 최고 재산을 넣는다. 저장에서 이어 가면 같은 생이라 여기로 오지 않는다(U-55)
     if (life && !life.done) submitLife(life);
     life = newLife(g);
     if (lifeId(prev) !== life.id) prev = g;
@@ -170,7 +180,8 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     const hs = p.halfs ?? [];
     if (hs.length <= was) continue;
     const meta = L.open[posKey(p.market, p.openTick)] ?? null;
-    for (const h of hs.slice(was)) {
+    for (const [hi, h] of hs.slice(was).entries()) {
+      if (!firstClose(L, `${posKey(p.market, p.openTick)}:h${was + hi}`)) continue;
       const c: ClosedTrade = { market: p.market, dir: p.dir, lev: p.lev, margin0: h.margin, pnl: h.pnl, open: meta, exitTs: now, realAtExit: live, tutorialAtExit: tutNow === 'run' };
       if (meta?.tutorial || tutNow === 'run') continue;
       if (!eligible(c)) { if (h.pnl > 0) L.tainted = true; continue; }
@@ -186,6 +197,7 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     const k = posKey(p.market, p.openTick);
     const meta = L.open[k] ?? null;
     delete L.open[k];
+    if (!firstClose(L, k)) continue;
     const { pnl } = closedMath(run, p);
     const c: ClosedTrade = { market: p.market, dir: p.dir, lev: p.lev, margin0: p.margin0, pnl, open: meta, exitTs: now, realAtExit: live, tutorialAtExit: tutNow === 'run' };
     const tut = meta?.tutorial || tutNow === 'run';

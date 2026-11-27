@@ -2,6 +2,8 @@
 // 엔진 규칙: 포지션은 비운 시간 전부 움직이고(봉마다 청산 → 손절 → 익절), 정산은 2번까지만 돈다(연체로 파산하기 직전에서 멈춘다).
 import type { AwayReport } from '../../engine/types';
 
+/** 1~10 은 셈말("두 번"), 그 밖은 숫자 */
+const count = (x: number): string => ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열'][x] ?? String(x);
 const n = (x: number) => Math.round(Math.abs(x)).toLocaleString('ko-KR');
 const signed = (x: number) => `${x >= 0 ? '+' : '−'}${n(x)}`;
 export function awayDur(sec: number): string {
@@ -40,7 +42,7 @@ export function awayCard(r: AwayReport, before: AwayPurse, after: AwayPurse, o: 
   let note: string | null = null;
   if (r.economySettlements > 0) {
     note = `안 계셔서 ${r.economySettlements}번 걷고 갔어요. 이자 ${n(s.interest)}, 영수증 두고 가요.`;
-    if (could > r.economySettlements) note += ' 빈집에서는 두 번까지만 받아요.';
+    if (could > r.economySettlements) note += ` 빈집에서는 ${count(r.economySettlements)} 번까지만 받아요.`; // U-47 뒤로 상한은 6 + 3 × 나무(회차 14: "두 번"이 굳어 있었다)
   } else if (could >= 1) note = '문만 두드리고 갔어요. 다음 정산 때 뵐게요.';
   return {
     title: `자리를 비운 ${awayDur(r.awaySec)}`, note, rows,

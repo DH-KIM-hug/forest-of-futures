@@ -30,13 +30,23 @@ export interface HelloInput {
   markets: string[];
   warm: BarRecord[]; // 정산 봉 최근 480칸
   avg: Record<string, { vol180: number; range180: number; range300s: number }>;
+  /** 최근 1분 봉 몇 개(U-55): 앱이 접속하자마자 "지금 출렁이는 곳"을 셈한다 */
+  recent?: BarRecord[];
 }
+/** hello 에 싣는 최근 1분 봉 수 */
+export const HELLO_RECENT_1M = 15;
 export function helloMessage(h: HelloInput) {
   const bars = groupBars(h.warm, h.markets);
   // hello 의 warm 은 [n0,o,h,l,c,vol,buy] (st 칸 없음)
   const warmBars: Record<string, number[][]> = {};
   for (const m of h.markets) warmBars[m] = bars[m].map((x) => x.slice(0, 7) as number[]);
-  return { t: 'hello' as const, n: h.n, ts: h.ts, epoch: h.epoch, st: h.st, markets: h.markets, warm: { res: 180, bars: warmBars }, avg: h.avg };
+  const msg = { t: 'hello' as const, n: h.n, ts: h.ts, epoch: h.epoch, st: h.st, markets: h.markets, warm: { res: 180, bars: warmBars }, avg: h.avg };
+  if (!h.recent) return msg;
+  // min1 은 [n0,o,h,l,c] (끝난 분만, 시간순)
+  const rec = groupBars(h.recent, h.markets);
+  const min1: Record<string, number[][]> = {};
+  for (const m of h.markets) min1[m] = rec[m].map((x) => x.slice(0, 5) as number[]);
+  return { ...msg, min1 };
 }
 
 export function timeMessage(n: number, ts: number, st: TickRecord['st'], epoch: number) {

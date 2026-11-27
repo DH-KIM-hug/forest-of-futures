@@ -7,6 +7,16 @@ export interface HelloMsg {
   t: 'hello'; n: number; ts: number; epoch: number; st: MarketStatus; markets: string[];
   warm: { res: number; bars: Record<string, number[][]> };
   avg: Record<string, AvgCell>;
+  /** 최근 1분 봉 [n0,o,h,l,c](U-55, 끝난 분만): 접속하자마자 "지금 출렁이는 곳" */
+  min1?: Record<string, number[][]>;
+}
+/** hello 의 최근 1분 봉 → 시세면 기록(dayHistory)의 봉. n 은 서버 번호라 ts − n 을 더해 벽시계(ms)로 */
+export function min1Of(h: HelloMsg): Record<string, { t: number; o: number; h: number; l: number; c: number }[]> | null {
+  if (!h.min1) return null;
+  const off = h.ts - h.n;
+  const out: Record<string, { t: number; o: number; h: number; l: number; c: number }[]> = {};
+  for (const [m, rows] of Object.entries(h.min1)) out[m] = rows.filter((r) => r.length >= 5).map((r) => ({ t: (r[0] + off) * 1000, o: r[1], h: r[2], l: r[3], c: r[4] }));
+  return out;
 }
 export interface TickMsg { t: 'k'; n: number; ts: number; st: MarketStatus; p: Tick['p'] }
 export type ServerMsg = HelloMsg | TickMsg;

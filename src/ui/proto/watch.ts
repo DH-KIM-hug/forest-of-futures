@@ -1,10 +1,11 @@
 // 게임 상태 변화를 보고 시제품 화면 사건(추심원·정산 컷인·탭 해금·목표)을 만든다. 규칙은 엔진의 것만 쓴다.
-import { useGame } from '../../store/gameStore';
+import { resumeHint, useGame } from '../../store/gameStore';
 import { settleSec } from '../../engine/pace';
 import { useProto, type Scene } from './protoStore';
 import { currentGoal, lifeNo, officeOffer, claim, hamsterMath, tipArgs, interestNow, interestAfterHike, fixedInterestNow, staffedCount } from './model';
 import { holdBeat, tensionOf, burstTier } from './tension';
 import { awayCard, type AwayPurse } from './away';
+import type { AwayReport } from '../../engine/types';
 import { historyOf, liveHistoryOf } from '../priceHistory';
 import { canRoll, holdKey, rolledFor } from './roll';
 import { rollTarget } from '../../engine/mining';
@@ -418,7 +419,8 @@ export function guideCheck(): void {
     if (!tipsLeft('home') && (run.stats.laborTaps ?? 0) >= HUD_TIP_TAPS && push('hud')) return;
   }
   if (P.tab === 'map' && !P.loanTaken && push('map')) return;
-  if (P.tab === 'phone' && P.tutorial === 'done' && Object.keys(run.positions).length > 0) push('position');
+  // 첫 실전 판(U-55)은 조명 없이 지켜본다: 설명은 실전 판이 하나 닫힌 뒤의 포지션에서
+  if (P.tab === 'phone' && P.tutorial === 'done' && P.closes > 0 && Object.keys(run.positions).length > 0) push('position');
 }
 /** 빚 칩 설명은 쳇바퀴를 이만큼 굴려 본 뒤에 */
 export const HUD_TIP_TAPS = 12;
@@ -435,15 +437,20 @@ export function startWatch(): void {
   let prevAway = useGame.getState().net.away;
   let prev = useGame.getState().g;
   useProto.getState().patch({ gen: prev.family.generation });
+  const showAway = (a: AwayReport, from: AwayPurse, g: GameState) => {
+    if (g.run.over || useProto.getState().prologue) return;
+    const names = Object.fromEntries(Object.values(marketById).map((m) => [m.id, m.name]));
+    useProto.getState().patch({ away: awayCard(a, from, purseOf(g), { names, openNow: Object.keys(g.run.positions).length, interval: settleSec(g.run) }) });
+    play('settle_bell');
+  };
+  // 저장에서 이어 간 판(U-55): 켜기 전에 이미 떠난 사이를 메웠으면(연습 시세) 그 보고서를 바로 한 장
+  if (prevAway) showAway(prevAway, resumeHint.r?.purse ?? purseOf(prev), prev);
+  else if (resumeHint.r) purse = resumeHint.r.purse;
   useGame.subscribe((s) => {
     const g = s.g;
     if (s.net.away !== prevAway) {
       prevAway = s.net.away;
-      if (s.net.away && !g.run.over && !useProto.getState().prologue) {
-        const names = Object.fromEntries(Object.values(marketById).map((m) => [m.id, m.name]));
-        useProto.getState().patch({ away: awayCard(s.net.away, purse ?? purseOf(prev), purseOf(g), { names, openNow: Object.keys(g.run.positions).length, interval: settleSec(g.run) }) });
-        play('settle_bell');
-      }
+      if (s.net.away) showAway(s.net.away, purse ?? purseOf(prev), g);
       purse = null;
     }
     if (useProto.getState().prologue) { prev = g; return; }

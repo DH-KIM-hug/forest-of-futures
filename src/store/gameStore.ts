@@ -9,6 +9,7 @@ import type { Tick } from '../engine/feed/types';
 import type { AwayReport, GameState, Res } from '../engine/types';
 import { loadGame, localStorageAdapter, saveGame } from '../engine/save';
 import { pickFeedMode, serverUrl, type FeedMode } from '../net/feedMode';
+import { min1Of } from '../net/protocol';
 import { ServerFeed, type FeedStatus } from '../net/serverFeed';
 import { attachServerFeed, type Session } from '../net/session';
 import { HlDirectFeed } from '../net/hlDirect/feed';
@@ -16,6 +17,7 @@ import { attachHlFeed, type HlSession } from '../net/hlDirect/attach';
 import { openSocket, postJson } from '../net/hlDirect/io';
 import { prependHistory } from '../ui/priceHistory';
 import { setDayHistory } from '../ui/dayHistory';
+import { simCatchUp, type FeedMark } from '../ui/proto/protoSave';
 
 const adapter = localStorageAdapter();
 let lastSaved = 0;
@@ -27,6 +29,20 @@ const persist = (g: GameState) => {
 };
 
 const hasWindow = typeof window !== 'undefined';
+
+/** 시제품 저장에서 이어 가는 판(U-55, ui/proto/protoPersist.ts 가 채운다): 저장 시각, 시세 출처의 이어 붙일 값, 떠날 때의 살림 */
+export interface ResumeHint { at: number; feed: FeedMark; purse: { cash: number; debt: number }; /** 연습 시세로 메웠다 */ simDone?: boolean }
+export const resumeHint: { r: ResumeHint | null } = { r: null };
+/** 연습 시세로 떠난 시간을 메운다(따라잡기 보고서는 net.away 로). 한 번만 */
+function simResume(): void {
+  const r = resumeHint.r;
+  if (!r || r.simDone) return;
+  r.simDone = true;
+  const g = clone(useGame.getState().g);
+  simFeed.rebase(g.run.prices, r.feed.kind === 'sim' ? r.feed.n : undefined);
+  const away = simCatchUp(g, () => simFeed.next(), (Date.now() - r.at) / 1000);
+  useGame.setState((s) => ({ g, net: away ? { ...s.net, away } : s.net }));
+}
 // 시제품(?proto=1)은 feed 값이 없으면 서버 없이 브라우저가 직접 받는 실시간 시세(hl)를 쓴다. &feed=sim 은 오프라인용 난수 시세.
 const feedSearch = (): string => {
   const s = window.location.search;
@@ -117,6 +133,9 @@ export async function startLoop(): Promise<void> {
       },
       onAway: (away) => useGame.setState((s) => ({ net: { ...s.net, away } })),
     });
+    // 서버의 hello 에 실린 최근 1분 봉(U-55): 지금 출렁이는 곳이 접속하자마자 뜬다
+    const onHello = feed.helloHandler;
+    feed.helloHandler = (h) => { onHello?.(h); const d = min1Of(h); if (d) setDayHistory(d); };
     const sync = (s: FeedStatus) =>
       useGame.setState((st) => ({ net: { ...st.net, conn: !s.everConnected && s.conn !== 'idle' && session?.localTicksRan() ? 'local' : s.conn, market: s.market, stale: s.stale, everConnected: s.everConnected, url } }));
     feed.onStatus(sync);
@@ -130,6 +149,7 @@ export async function startLoop(): Promise<void> {
     return;
   }
   if (feedMode === 'hl') startHl();
+  if (feedMode === 'sim') simResume();
   if (feedMode === 'replay') {
     const rec: Recording = (await import('../../docs/gdd/v2/sim/data/hl_3m.json')).default as unknown as Recording;
     replayFeed = new ReplayFeed(rec, 0, 0);
@@ -142,7 +162,11 @@ export async function startLoop(): Promise<void> {
 
 /** 브라우저 직결 실시간 시세. 못 붙으면 연습 시세로 내려간다. */
 function startHl(): void {
-  const feed = new HlDirectFeed({ socketFactory: openSocket, post: postJson });
+  const r = resumeHint.r;
+  const g0 = useGame.getState().g;
+  // 저장에서 이어 가면(U-55) 값은 저장된 가상 가격에서 시작하고, 실시간 시세로 저장한 판이면 떠난 사이를 진짜 1분 봉으로 메운다
+  const resume = r ? { n: r.feed.kind === 'hl' && r.feed.n > 1e9 ? r.feed.n : Math.floor(Date.now() / 1000), prices: { ...g0.run.prices }, mids: r.feed.kind === 'hl' ? r.feed.mids : {} } : undefined;
+  const feed = new HlDirectFeed({ socketFactory: openSocket, post: postJson, resume });
   hlFeed = feed;
   hlSession = attachHlFeed(
     feed,
@@ -170,7 +194,10 @@ function startHl(): void {
     if (feed.status.everConnected) return;
     hlSession?.detach();
     feed.disconnect();
+    feed.dropResume();
     useGame.setState((s) => ({ net: { ...s.net, source: 'sim', conn: 'local', market: 'open', stale: false, fallback: true } }));
+    // 저장에서 이어 가던 판: 연습 시세를 저장된 값에 맞추고 떠난 시간을 연습 시세로 메운다
+    if (resumeHint.r) simResume();
   }, HL_GIVE_UP_MS);
 }
 

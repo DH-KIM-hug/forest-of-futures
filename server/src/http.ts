@@ -1,7 +1,7 @@
 // REST (GDD_v2 6.6) 의 경로 처리. 소켓과 분리된 순수 함수라서 테스트하기 쉽다.
 import type { TickStore } from './store.ts';
 import { computeAvg } from './bars.ts';
-import { groupBars, helloMessage, tickMessage, timeMessage } from './protocol.ts';
+import { HELLO_RECENT_1M, groupBars, helloMessage, tickMessage, timeMessage } from './protocol.ts';
 import type { Pipeline } from './pipeline.ts';
 import type { TickRecord } from './types.ts';
 
@@ -83,6 +83,8 @@ export class HelloBuilder {
       this.cache = { at: now, warm, avg };
     }
     const n = pipeline.last?.n ?? pipeline.nOf(now);
-    return helloMessage({ n, ts: n + epoch, epoch: 1, st: pipeline.currentStatus(), markets, warm: this.cache.warm, avg: this.cache.avg });
+    // 최근 1분 봉은 캐시하지 않는다(지금 출렁이는 곳은 최근 몇 분이 생명이다)
+    const recent = store.recentBars(60, HELLO_RECENT_1M);
+    return helloMessage({ n, ts: n + epoch, epoch: 1, st: pipeline.currentStatus(), markets, warm: this.cache.warm, avg: this.cache.avg, recent });
   }
 }

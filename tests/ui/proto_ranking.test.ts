@@ -190,6 +190,15 @@ describe('U-45 게임을 지켜보며 기록한다(observe)', () => {
     expect(life!.trades.length).toBe(1);
     expect(life!.tainted).toBe(false);
   });
+  it('U-55 저장에서 이어 간 뒤 같은 판이 다시 닫혀도(저장이 그 앞이었다) 두 번 넣지 않고, 생을 섞인 것으로 치지도 않는다', () => {
+    const { g1, g2 } = openThenWin(live);
+    const n = __rankState().life!.trades.length;
+    const q = __rankState().queue.items.length;
+    observe(g1, g2, live, T0 + 120_000); // 새로 고쳐 저장된 g1 에서 같은 판이 다시 닫혔다
+    expect(__rankState().life!.trades.length).toBe(n);
+    expect(__rankState().queue.items.length).toBe(q);
+    expect(__rankState().life!.tainted).toBe(false);
+  });
   it('연습 시세(&feed=sim)면 아무것도 줄에 들어가지 않고, 그 생의 재산도 섞인 것으로 친다', () => {
     openThenWin(sim);
     expect(__rankState().queue.items.length).toBe(0);

@@ -24,6 +24,8 @@ import { exitFee } from '../../engine/futures';
 import { acornStops } from './stops';
 import { ctxOfPosition, plans } from './exitPlan';
 import type { Action } from '../../engine/actions';
+import { protoSaveKey } from './protoSave';
+import { restoreProto, startAutosave } from './protoPersist';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
@@ -40,14 +42,21 @@ export function freshGame(): ReturnType<typeof createGame> {
   return g;
 }
 
-/** 새 게임으로 시작(저장 읽기 없음). */
+/** 시제품을 켠다: 저장(U-55, protoPersist.ts)이 있으면 그 생을 이어 가고, 없으면 새 게임. 장면 건너뛰기 · 다시 보기 · 치트는 저장을 읽지도 쓰지도 않는다(protoSaveKey). */
 export function bootProto(): void {
   persistFlag.on = false;
   const st = useGame.getState();
-  let g = freshGame();
   // 튜토리얼 설명(guide.ts): &prologue=1 이나 &guide=1 이면 처음부터 다시, &guide=0 이나 장면 건너뛰기(pdev)에서는 끈다
   if (q.get('prologue') === '1' || q.get('guide') === '1') resetGuide();
   setGuideOff(q.get('guide') === '0' || (!!pdev && q.get('guide') !== '1'));
+  const key = typeof window !== 'undefined' ? protoSaveKey(window.location.search) : null;
+  if (key) {
+    const r = restoreProto(key);
+    if (r.notice) { const n = r.notice; window.setTimeout(() => void import('./watch').then((m) => m.say(n, 5000)), 1800); }
+    startAutosave(key);
+    if (r.restored) return;
+  }
+  let g = freshGame();
   if (pdev) g = scene(pdev, g);
   if (wantPrologue()) { useProto.getState().patch({ prologue: true }); st.setSpeed(0); }
   st.setGame(g);
@@ -350,6 +359,8 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       // U-49 화면 확인용: &proe=300 = 그 ROE 의 익절가를 넘어 있다(등급 확인), &ptab=lot = 집에서 닫힌다
       if (q.get('proe')) { const roe = +q.get('proe')!; p.tpRoe = roe; p.slRoe = null; plans.DTC = { tp: null, sl: null }; p.entry = px / (1 + (roe / 100 / p.lev) * 1.6); }
       if (q.get('ptab') === 'lot' || q.get('ptab') === 'map') P.patch({ tab: q.get('ptab') as 'lot' | 'map' });
+      // U-55 화면 확인용: &pliq=1 = 같은 틱에 밤더리움 25배가 청산된다(이긴 판의 상자와 청산 도장이 함께)
+      if (q.get('pliq') === '1') { const r = stepMut(g, { type: 'action', action: { type: 'open', market: 'BTH', dir: 1, lev: 25, margin: 10_000, sl: null, tp: null } }); if (r.ok && g.run.positions.BTH) g.run.positions.BTH.entry = g.run.prices.BTH * 1.08; }
       g = clone(g);
       return g;
     }

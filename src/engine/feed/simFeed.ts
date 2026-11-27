@@ -29,6 +29,15 @@ export class SimFeed implements Feed {
     }
   }
 
+  /** 저장에서 이어 갈 때(U-55): 값을 그 자리로 옮긴다(n 을 주면 틱 번호도). 날다람쥐코인은 시각의 함수라 n 만 따른다 */
+  rebase(prices: Record<string, number>, n?: number): void {
+    if (n !== undefined && Number.isFinite(n) && n >= 0) this.n = Math.floor(n);
+    for (const m of marketDefs) {
+      if (m.synthetic) { this.price[m.id] = flyPrice(SIM_FLY_EPOCH + this.n); continue; }
+      if (prices[m.id] > 0) this.price[m.id] = prices[m.id];
+    }
+  }
+
   private pickRegime(): Regime {
     const w = simFeedCfg.regimeWeights;
     const r = nextRandom(this.h);

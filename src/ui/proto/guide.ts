@@ -24,8 +24,6 @@ export const HL = {
   cond: { tab: 'phone', label: '손절, 익절 줄' },
   posNet: { tab: 'phone', label: '내 포지션의 손익(수수료 포함)' },
   posLiq: { tab: 'phone', label: '내 포지션의 청산까지' },
-  posTense: { tab: 'phone', label: '청산까지의 거리를 지난 1분 폭에 견준 줄' },
-  closeBtn: { tab: 'phone', label: '정리하기 단추' },
 } satisfies Record<string, { tab?: Tab; panel?: 'open' | 'closed'; label: string }>;
 export type HlKey = keyof typeof HL;
 export const hlSel = (k: HlKey): string => `[data-hl="${k}"]`;
@@ -54,7 +52,7 @@ export const MOMENT: Record<Moment, string> = {
   hamster: '폰을 받은 뒤 첫 정산 직후(족제비 상인)',
   exchange: '거래소 탭을 처음 열었을 때',
   goal: '첫 주문 전표(뒷면)를 닫은 직후(통화가 끝난 뒤)',
-  position: '진짜 시세로 첫 포지션을 열었을 때',
+  position: '첫 실전 판이 닫힌 뒤 다음 포지션을 열었을 때',
 };
 
 const n = (x: number) => Math.round(x).toLocaleString('ko-KR');
@@ -94,10 +92,9 @@ export const TIPS = {
   'fx.margin': t('goal', 'note', () => '「정산 빼고」는 다음 정산에 낼 돈을 남겨 두고 나머지를 걸어요.', 'mg'),
   'fx.stops': t('goal', 'note', () => '손절과 익절: 손실을 끊을 가격과 이익을 챙길 가격을 미리 정할 수 있어요.', 'cond'),
   // ── 첫 진짜 포지션 ──
-  'pos.net': t('position', 'note', () => '큰 숫자는 지금 정리하면 남는 손익. 수수료까지 반영했다.', 'posNet'),
-  'pos.liq': t('position', 'note', () => '청산까지 남은 거리. 0이 되면 걸린 돈이 다 사라진다.', 'posLiq'),
-  'pos.tense': t('position', 'note', () => '점 다섯 개가 차오를수록 청산가에 가까워진다.', 'posTense'),
-  'pos.close': t('position', 'note', () => '[정리하기]는 현재 시세로 거래를 끝낸다.', 'closeBtn'),
+  // U-55: 첫 실전 판은 설명 없이 지켜본다. 이 두 줄은 그 판이 닫힌 뒤 다음 포지션에서(네 줄 → 두 줄)
+  'pos.net': t('position', 'note', () => '큰 숫자는 지금 [정리하기]를 누르면 남는 손익. 수수료까지 뺐다.', 'posNet'),
+  'pos.liq': t('position', 'note', () => '청산까지 남은 거리. 점이 차오를수록 가깝고, 0이면 건 돈이 다 사라진다.', 'posLiq'),
 } satisfies Record<string, TipDef>;
 export type TipId = keyof typeof TIPS;
 export const TIP_IDS = Object.keys(TIPS) as TipId[];

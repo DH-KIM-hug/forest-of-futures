@@ -6,7 +6,7 @@ import type { Bar, Feed, Tick } from '../../engine/feed/types';
 import type { MarketStatus } from '../../engine/types';
 import type { HelloMsg } from '../protocol';
 import { avgOf, fetchCandles, regroup, secondsOf, toBars, volMeans, type CandleSet } from './candles';
-import { COINS, INDEX_ID, SOCKET_URL } from './config';
+import { COINS, INDEX_ID, INDEX_MEMBERS, SOCKET_URL } from './config';
 import { LiveCore } from './core';
 import { flyCandles, flySeconds } from '../../engine/feed/fly';
 import type { PostJson } from './io';
@@ -21,7 +21,12 @@ export interface HlOpts {
   post: PostJson;
   now?: () => number;
   replayMaxTicks?: number; // 이보다 오래 비우면 틱 대신 봉으로 메운다(서버 판과 같은 60)
+  /** 저장에서 이어 갈 때(U-55): 마지막 틱 번호, 그때의 가상 가격과 실제 값. 첫 값이 붙으면 그 사이 움직임을 값에 싣고 1분 봉으로 메운다 */
+  resume?: HlResume;
 }
+export interface HlResume { n: number; prices: Record<string, number>; mids: Record<string, number> }
+/** 이어 가기를 기다리는 가장 긴 시간(ms): 그 안에 첫 값이 안 붙으면 이어 가기를 버리고 저장된 값에서 그대로 간다 */
+export const RESUME_WAIT_MS = 15000;
 export interface Warm { hello: HelloMsg; history: Record<string, number[]>; /** 지난 하루의 1분 봉(가상 가격). 시세면이 읽는다 */ day: Record<string, { t: number; o: number; h: number; l: number; c: number }[]> }
 
 const TRADABLE: Record<string, string> = Object.fromEntries(
@@ -49,10 +54,17 @@ export class HlDirectFeed implements Feed {
   private busy = false;
   private anchoredWaiters: (() => void)[] = [];
   private means: Record<string, number> = {};
+  private resume: HlResume | null;
+  private resumeSince = 0;
+  /** 저장에서 이어 가는 중(첫 값이 붙어 떠난 사이를 메우기 전): 이 동안의 틱은 게임에 넣지 않는다 */
+  resuming: boolean;
 
   constructor(opts: HlOpts) {
     this.o = { now: () => Date.now(), replayMaxTicks: 60, ...opts };
-    this.core = new LiveCore(marketDefs.map((m) => ({ id: m.id, startPrice: m.startPrice, synthetic: m.synthetic })), this.o.now());
+    const sp = opts.resume?.prices ?? {};
+    this.core = new LiveCore(marketDefs.map((m) => ({ id: m.id, startPrice: sp[m.id] > 0 ? sp[m.id] : m.startPrice, synthetic: m.synthetic })), this.o.now());
+    this.resume = opts.resume ?? null;
+    this.resuming = !!this.resume;
     this.adapter = new PrimaryAdapter({ url: SOCKET_URL, coins: COINS, socketFactory: opts.socketFactory, now: this.o.now });
     this.adapter.onEvent((e) => this.core.ingest(e, this.o.now()));
   }
@@ -64,6 +76,8 @@ export class HlDirectFeed implements Feed {
     this.adapter.start();
     this.timer = setInterval(() => void this.run(this.o.now()), 200);
   }
+  /** 이어 가기를 버린다(연습 시세로 내려갈 때) */
+  dropResume(): void { this.resume = null; this.resuming = false; }
   disconnect(): void {
     clearInterval(this.timer);
     this.timer = undefined;
@@ -145,6 +159,11 @@ export class HlDirectFeed implements Feed {
     try {
       const cur = Math.floor(nowMs / 1000);
       if (this.nextN === null) this.nextN = cur;
+      if (this.resume) {
+        if (!this.resumeSince) this.resumeSince = nowMs;
+        if (this.core.anchored) { const r = this.resume; this.resume = null; await this.resumeFrom(r, cur); this.resuming = false; }
+        else if (nowMs - this.resumeSince > RESUME_WAIT_MS) this.dropResume();
+      }
       if (cur - this.nextN > this.o.replayMaxTicks) {
         const from = this.nextN;
         const to = cur - 1;
@@ -171,6 +190,29 @@ export class HlDirectFeed implements Feed {
     } finally {
       this.busy = false;
     }
+  }
+
+  /** 저장에서 이어 간다(U-55): 떠날 때의 실제 값과 지금 값의 비로 가상 가격을 옮기고, 그 사이 1분 봉을 gapHandler 로 넘긴다(엔진 따라잡기) */
+  private async resumeFrom(r: HlResume, cur: number): Promise<void> {
+    const rb = this.core.rebaser;
+    const now = this.core.lastMids;
+    for (const [id, key] of Object.entries(TRADABLE)) {
+      if (r.mids[key] > 0 && now[key] > 0 && r.prices[id] > 0) rb.vprice[id] = r.prices[id] * (now[key] / r.mids[key]);
+    }
+    const rets = INDEX_MEMBERS.filter((k) => r.mids[k] > 0 && now[k] > 0).map((k) => now[k] / r.mids[k] - 1);
+    if (rets.length && r.prices[INDEX_ID] > 0) rb.vprice[INDEX_ID] = r.prices[INDEX_ID] * (1 + rets.reduce((a, b) => a + b, 0) / rets.length);
+    const from = r.n + 1;
+    const to = cur - 1;
+    if (to - from + 1 < this.o.replayMaxTicks) return; // 짧게 비웠다: 다음 틱이 값을 잇는다
+    let bars: Bar[] = [];
+    if (Object.keys(r.mids).length) {
+      try {
+        const cs = await fetchCandles(this.o.post, from * 1000 - 60000, (to + 1) * 1000);
+        bars = toBars(cs, { tradable: TRADABLE, k: this.core.scale(TRADABLE), means: this.means.DTC ? this.means : volMeans(cs), anchor: { kind: 'forward', base: r.prices[INDEX_ID] ?? rb.vprice[INDEX_ID], prev: r.mids } });
+      } catch { /* 봉을 못 받았다: 날다람쥐만 메운다 */ }
+    }
+    bars = [...bars, ...synthBars(from - 59, to)].filter((b) => b.n0 >= from - 59 && b.n0 <= to).sort((a, b) => a.n0 - b.n0);
+    await this.gapHandler?.(from, to, bars);
   }
 
   private set(p: Partial<HlStatus>): void {

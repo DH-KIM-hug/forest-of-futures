@@ -174,6 +174,10 @@
 .pr-liq .stamp { padding: 2px 26px; font-family: var(--dsp); font-size: 72px; color: var(--red); border: 8px solid var(--red); border-radius: 14px; background: rgba(255, 248, 228, .92); transform: rotate(-12deg); animation: stampBig .34s cubic-bezier(.5, 0, .75, 0) both; }
 .pr-liq .lost { font-family: var(--dsp); font-weight: 400; font-size: 44px; line-height: 1; color: var(--down); padding: 2px 16px; border-radius: 14px; background: rgba(255, 248, 228, .94); border: 3px solid var(--o); animation: fadeIn .25s .3s both; font-variant-numeric: tabular-nums; }
 .pr-liq p { margin: 0; padding: 6px 14px; border-radius: 12px; background: var(--o); color: #fff; font-size: 14px; font-weight: 700; animation: fadeIn .3s .35s both; }
+/* 이긴 판의 상자와 같은 순간(U-55): 상자는 위 30%, 도장은 아래로 내려 작게 */
+.pr-liq.low { justify-content: flex-end; gap: 10px; padding-bottom: calc(env(safe-area-inset-bottom) + 21vh); }
+.pr-liq.low .stamp { font-size: 52px; border-width: 6px; padding: 0 20px; }
+.pr-liq.low .lost { font-size: 34px; }
 
 /* ── 엔딩·환생 ─────────────────────────────────────── */
 .pr-end { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 18px); overflow-y: auto; background: #2E2B27; color: var(--o); }

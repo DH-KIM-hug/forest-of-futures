@@ -503,6 +503,20 @@ export function ProtoTrade() {
     return () => window.clearTimeout(t0);
   }, [rankUp?.k, rankSeen, talkingNow, !!burst, profitOn, tutSt]);
   useEffect(() => { if (!rankCard) return; const t = window.setTimeout(() => setRankCard(null), 4200); return () => window.clearTimeout(t); }, [rankCard?.k]);
+  // 승급 카드는 화면 어디를 눌러도 닫힌다(U-55): 머리와 탭 줄을 누른 것도 카드만 닫고 그 아래로는 가지 않는다. 뜬 지 0.4초 안의 탭은 받지 않는다
+  useEffect(() => {
+    if (!rankCard) return;
+    const at = performance.now();
+    const eat = (e: Event) => {
+      const t = e.target as Element | null;
+      if (t?.closest?.('.pt-rankcard')) return;
+      e.stopPropagation(); e.preventDefault();
+      if (e.type === 'click' && performance.now() - at > 400) setRankCard(null);
+    };
+    const kinds = ['pointerdown', 'pointerup', 'click'] as const;
+    for (const k of kinds) window.addEventListener(k, eat, { capture: true });
+    return () => { for (const k of kinds) window.removeEventListener(k, eat, { capture: true }); };
+  }, [rankCard?.k]);
   useEffect(() => { if (!result || talkingNow) return; const t = window.setTimeout(() => setResult(null), 6500); return () => window.clearTimeout(t); }, [result?.k, talkingNow]);
   useEffect(() => { if (!pos) setAddOpen(false); }, [!!pos]);
 

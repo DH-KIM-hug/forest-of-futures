@@ -901,7 +901,7 @@
   .pr .pt .pt-bar .pt-sum { min-height: 0; padding: 0 6px; font-size: 12px; line-height: 14px; }
 }
 /* 승급 축하(U-53): 폰 화면 가운데 카드. 새 케이스와 고리가 흔들리며 들어온다 */
-.pt-rankcard { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(40, 46, 30, .38); animation: fadeIn .2s ease-out; }
+.pt-rankcard { position: absolute; inset: 0; z-index: 30; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(40, 46, 30, .38); animation: fadeIn .2s ease-out; }
 .pt-rankcard .rc-in { width: min(290px, 86%); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 14px 12px; border-radius: 20px; background: #FFFBEF; border: 3px solid var(--o); box-shadow: 0 6px 0 rgba(74, 70, 64, .25); text-align: center; animation: rcPop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
 .pt-rankcard small { font-size: 11.5px; font-weight: 800; color: var(--sub); }
 .pt-rankcard b { font-family: var(--dsp); font-weight: 400; font-size: 27px; line-height: 1.1; color: #6B4510; }

@@ -177,7 +177,7 @@ function TabBar() {
         const b = ok ? badge(t.id) : null;
         return (
           <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '') + (point === t.id && ok && !on ? ' point' : '') + (force && t.id === 'map' ? ' dim' : '')} aria-current={on ? 'page' : undefined}
-            onClick={() => { if (ok && force && t.id === 'map') { say(FORCE_NUDGE); setShake(t.id); window.setTimeout(() => setShake(null), 400); return; } if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
+            onClick={() => { if (useProto.getState().scenes.length > 0) return; /* 장면이 떠 있거나 뜨려는 중(U-55): 닫을 때까지 탭은 바뀌지 않는다 */ if (ok && force && t.id === 'map') { say(FORCE_NUDGE); setShake(t.id); window.setTimeout(() => setShake(null), 400); return; } if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
             {on && <i className="base" />}
             <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? <RowIcon kind={t.id} size={t.id === 'lot' ? 44 : on ? 38 : 32} /> : '?'}</span>
             <small>{ok ? t.label : ''}</small>
@@ -194,6 +194,8 @@ function TabBar() {
 function LiqStamp({ onShake }: { onShake: () => void }) {
   const [hit, setHit] = useState<{ k: number; name: string; lost?: number; lev?: number } | null>(null);
   const legend = useGame((s) => has(s.g, 'B4'));
+  // 같은 순간 이긴 판의 상자가 떠 있으면(U-55) 도장은 상자 밑으로 내려 찍는다: 상자는 위(30%), 도장은 아래 — 둘 다 읽힌다
+  const both = useProto((s) => !!s.burst);
   useFx((e) => {
     if (e.kind !== 'liq') return;
     setHit((h) => ({ k: (h?.k ?? 0) + 1, name: e.market, lost: e.lost, lev: e.lev }));
@@ -202,7 +204,7 @@ function LiqStamp({ onShake }: { onShake: () => void }) {
   });
   if (!hit) return null;
   return (
-    <div key={hit.k} className="pr-liq" aria-live="assertive">
+    <div key={hit.k} className={'pr-liq' + (both ? ' low' : '')} data-liq-low={both ? 1 : undefined} aria-live="assertive">
       <div className={'stamp' + (legend ? ' legend' : '')}>청산</div>
       {hit.lost !== undefined && hit.lost > 0 && <b className="lost" data-liq-lost={hit.lost}>−{comma(hit.lost)}</b>}
       <p>{legend ? `${hit.name} 몰빵이 전설로 남았다` : `${hit.name}${hit.lev ? ` ${hit.lev}배` : ''} 포지션이 강제로 닫혔다`}</p>

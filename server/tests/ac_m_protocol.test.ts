@@ -77,6 +77,15 @@ describe('AC-v2-139 hello', () => {
     expect(h.avg.DTC).toEqual(expect.objectContaining({ vol180: expect.any(Number), range180: expect.any(Number), range300s: expect.any(Number) }));
     expect(h.avg.DTC.range180).toBeGreaterThan(0);
   });
+  it('U-55 최근 1분 봉(시간순 [n0,o,h,l,c])이 실려 앱이 바로 지금 출렁이는 곳을 셈한다', () => {
+    const s = seeded(10);
+    fakeBars(s.store, 60, 40);
+    const h: any = new HelloBuilder(s.ctx).build();
+    for (const m of h.markets) expect(h.min1[m].length).toBe(15);
+    expect(h.min1.DTC[0]).toHaveLength(5);
+    expect(h.min1.DTC[14][0]).toBeGreaterThan(h.min1.DTC[0][0]);
+    assertClean(h, 'hello min1');
+  });
 });
 
 describe('AC-v2-140 /v1/bars', () => {
