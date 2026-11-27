@@ -7,8 +7,9 @@ import type { RawEvent } from '../../../server/src/shared';
 import type { MarketStatus } from '../../engine/types';
 import type { Tick } from '../../engine/feed/types';
 import { INDEX_ID, INDEX_MEMBERS, VOLUME_KEYS } from './config';
+import { flyPrice } from '../../engine/feed/fly';
 
-export interface CoreMarket { id: string; startPrice: number }
+export interface CoreMarket { id: string; startPrice: number; synthetic?: boolean }
 
 export class LiveCore {
   readonly sampler = new Sampler();
@@ -67,6 +68,8 @@ export class LiveCore {
     } else {
       for (const m of this.markets) p[m.id] = [this.rebaser.vprice[m.id], 0, 0.5];
     }
+    // 날다람쥐코인(FLY): 출처가 없다. 값은 시각(초)의 함수라 시장이 늦어도 바람은 분다
+    for (const m of this.markets) if (m.synthetic) p[m.id] = [flyPrice(n), 1, 0.5];
     const t: Tick = { n, st: sel.status, p };
     this.lastTick = t;
     return t;

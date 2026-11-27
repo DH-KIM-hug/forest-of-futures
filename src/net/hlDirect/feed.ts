@@ -8,6 +8,7 @@ import type { HelloMsg } from '../protocol';
 import { avgOf, fetchCandles, regroup, secondsOf, toBars, volMeans, type CandleSet } from './candles';
 import { COINS, INDEX_ID, SOCKET_URL } from './config';
 import { LiveCore } from './core';
+import { flyCandles, flySeconds } from '../../engine/feed/fly';
 import type { PostJson } from './io';
 
 export interface HlStatus {
@@ -24,8 +25,14 @@ export interface HlOpts {
 export interface Warm { hello: HelloMsg; history: Record<string, number[]>; /** 지난 하루의 1분 봉(가상 가격). 시세면이 읽는다 */ day: Record<string, { t: number; o: number; h: number; l: number; c: number }[]> }
 
 const TRADABLE: Record<string, string> = Object.fromEntries(
-  marketDefs.filter((m) => m.id !== INDEX_ID).map((m) => [m.id, m.id] as const),
-); // 내부 키가 곧 시장 id (sources 의 DTC BTH SMS MDT)
+  marketDefs.filter((m) => m.id !== INDEX_ID && !m.synthetic).map((m) => [m.id, m.id] as const),
+); // 내부 키가 곧 시장 id (sources 의 DTC BTH SMS MDT). 날다람쥐코인(FLY)은 출처가 없다: 값은 시각의 함수(engine/feed/fly.ts)
+const SYNTH = marketDefs.filter((m) => m.synthetic).map((m) => m.id);
+/** 출처가 없는 종목의 1분 봉: 시각의 함수에서 바로 셈한다 */
+function synthBars(fromSec: number, toSec: number): Bar[] {
+  if (!SYNTH.length || toSec < fromSec) return [];
+  return flyCandles(fromSec, toSec).map((c) => ({ market: SYNTH[0], n0: Math.round(c.t / 1000), o: c.o, h: c.h, l: c.l, c: c.c, vol: 1, buy: 0.5, st: 'open' as MarketStatus }));
+}
 
 export class HlDirectFeed implements Feed {
   readonly core: LiveCore;
@@ -45,7 +52,7 @@ export class HlDirectFeed implements Feed {
 
   constructor(opts: HlOpts) {
     this.o = { now: () => Date.now(), replayMaxTicks: 60, ...opts };
-    this.core = new LiveCore(marketDefs.map((m) => ({ id: m.id, startPrice: m.startPrice })), this.o.now());
+    this.core = new LiveCore(marketDefs.map((m) => ({ id: m.id, startPrice: m.startPrice, synthetic: m.synthetic })), this.o.now());
     this.adapter = new PrimaryAdapter({ url: SOCKET_URL, coins: COINS, socketFactory: opts.socketFactory, now: this.o.now });
     this.adapter.onEvent((e) => this.core.ingest(e, this.o.now()));
   }
@@ -82,7 +89,7 @@ export class HlDirectFeed implements Feed {
   }
   async bars(res: 60 | 180, from: number, to: number): Promise<Bar[]> {
     const cs = await fetchCandles(this.o.post, from * 1000 - 60000, (to + 1) * 1000);
-    const b60 = this.convert(cs, from > 0 && this.lastN !== null && from === this.lastN + 1 ? 'forward' : 'end').filter((b) => b.n0 >= from - 59 && b.n0 <= to);
+    const b60 = [...this.convert(cs, from > 0 && this.lastN !== null && from === this.lastN + 1 ? 'forward' : 'end'), ...synthBars(from - 59, to)].filter((b) => b.n0 >= from - 59 && b.n0 <= to).sort((a, b) => a.n0 - b.n0);
     return res === 60 ? b60 : regroup(b60, 180);
   }
 
@@ -96,18 +103,20 @@ export class HlDirectFeed implements Feed {
     const cs = await fetchCandles(this.o.post, nowMs - 24 * 3600 * 1000, nowMs);
     this.means = volMeans(cs);
     for (const [k, mean] of Object.entries(this.means)) this.core.vol.seed(k, mean, 3600);
-    const b60 = this.convert(cs, 'end');
-    const b180 = regroup(b60, 180).slice(-480);
+    const nowSec = Math.floor(nowMs / 1000);
+    const b60 = [...this.convert(cs, 'end'), ...synthBars(nowSec - 24 * 3600, nowSec - 60)].sort((a, b) => a.n0 - b.n0);
+    const b180 = regroup(b60, 180);
     const ids = marketDefs.map((m) => m.id);
+    // 준비 봉(정산 봉)은 1분 봉 그대로(U-47: 정산이 60초다). '평소' 값(range180)은 3분 봉으로 잰다
     const rows: Record<string, number[][]> = {};
-    for (const id of ids) rows[id] = b180.filter((b) => b.market === id).map((b) => [b.n0, b.o, b.h, b.l, b.c, b.vol, b.buy]);
+    for (const id of ids) rows[id] = b60.filter((b) => b.market === id).slice(-480).map((b) => [b.n0, b.o, b.h, b.l, b.c, b.vol, b.buy]);
     const history: Record<string, number[]> = {};
-    for (const id of ids) history[id] = secondsOf(b60.filter((b) => b.market === id), 600);
+    for (const id of ids) history[id] = SYNTH.includes(id) ? flySeconds(nowSec - 1, 600) : secondsOf(b60.filter((b) => b.market === id), 600);
     const day: Warm['day'] = {};
     for (const id of ids) day[id] = b60.filter((b) => b.market === id).map((b) => ({ t: b.n0 * 1000, o: b.o, h: b.h, l: b.l, c: b.c }));
     const n = this.lastN ?? Math.floor(nowMs / 1000);
     return {
-      hello: { t: 'hello', n, ts: n, epoch: 0, st: this.core.status, markets: ids, warm: { res: 180, bars: rows }, avg: avgOf(b60, b180, ids) },
+      hello: { t: 'hello', n, ts: n, epoch: 0, st: this.core.status, markets: ids, warm: { res: 60, bars: rows }, avg: avgOf(b60, b180, ids) },
       history,
       day,
     };

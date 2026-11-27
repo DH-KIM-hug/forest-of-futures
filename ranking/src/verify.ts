@@ -7,6 +7,10 @@ export const BOARDS: Board[] = ['networth', 'roe', 'pnl'];
 
 /** 게임 종목 → 실제 시세(Hyperliquid). 서버 안에서만 쓴다. */
 export const REAL: Record<string, string> = { DTC: 'BTC', BTH: 'ETH', SMS: 'xyz:SMSN', MDT: 'DOGE', JQQ: 'xyz:XYZ100' };
+/** 실제 시장이 없는 종목(U-47): 봉을 시각의 함수(src/engine/feed/fly.ts)로 다시 셈한다 */
+export const SYNTH: Record<string, true> = { FLY: true };
+/** 랭킹에 올릴 수 있는 종목인가 */
+export const knownMarket = (m: string): boolean => !!REAL[m] || !!SYNTH[m];
 
 export interface TradeDetail {
   market: string;
@@ -69,7 +73,7 @@ export function parseSubmit(body: unknown): { ok: true; s: Submit } | { ok: fals
 
 /** 거래 기록의 모양 검사(시세를 보기 전). */
 export function checkTradeShape(d: TradeDetail, board: Board, value: number, now: number): string | null {
-  if (!REAL[d.market]) return 'market';
+  if (!knownMarket(d.market)) return 'market';
   if (d.dir !== 1 && d.dir !== -1) return 'dir';
   if (!(d.lev >= 1 && d.lev <= LIMITS.maxLev)) return 'lev';
   if (!(d.margin > 0 && d.margin <= LIMITS.maxMargin)) return 'margin';
@@ -112,9 +116,12 @@ export const LIFE = {
   start: -300_000, // 첫 생: 엄마 빚 30만, 현금 0
   /** 둘째 생부터(U-46): 첫 생의 튜토리얼이 끝난 자리에서 시작한다 — 손에 10만, 빚 50만 */
   rebornStart: -400_000,
-  mineMaxPerSettle: 50_000, // 쳇바퀴 6대 × 6,500 + 최대 탭(12회/초 × 180초 × 2) + 여유
-  eventMaxPerSettle: 3_000, // 마을 사건(지원금 등) 평균 상한
-  maxTrades: 300,
+  // U-47: 정산이 60초(튜토리얼 20초)가 되어 정산당 상한도 1/3
+  mineMaxPerSettle: 17_000, // 쳇바퀴 6대 × 2,170 + 최대 탭(12회/초 × 60초 × 2) + 여유
+  eventMaxPerSettle: 1_000, // 마을 사건(지원금 등) 평균 상한
+  /** 고배율 축하금(나무 B3a): 이긴 거래 수익의 최대 몫(현금에 따로 얹힌다) */
+  winBonusMax: 0.1,
+  maxTrades: 600,
 };
 
 /** 한 생 재산: 모양 검사(시세 전). */
@@ -124,7 +131,7 @@ export function checkLifeShape(d: LifeDetail, value: number, now: number): strin
   if (!(Number.isInteger(d.settles) && d.settles >= 1 && d.settles <= 100_000)) return 'settles';
   if (!Array.isArray(d.trades) || d.trades.length > LIFE.maxTrades) return 'trades';
   for (const t of d.trades) {
-    if (!REAL[t.market] || (t.dir !== 1 && t.dir !== -1) || !(t.lev >= 1 && t.lev <= LIMITS.maxLev)) return 'tradeShape';
+    if (!knownMarket(t.market) || (t.dir !== 1 && t.dir !== -1) || !(t.lev >= 1 && t.lev <= LIMITS.maxLev)) return 'tradeShape';
     if (!(t.margin > 0 && t.margin <= LIMITS.maxMargin) || !(t.exitTs > t.entryTs && t.exitTs <= now + 60_000)) return 'tradeShape';
     if (!Number.isFinite(t.pnl) || !Number.isFinite(t.roe)) return 'tradeShape';
     if (t.pnl > 0 && Math.abs(t.pnl - (t.margin * t.roe) / 100) > Math.max(2, t.margin * 0.01)) return 'pnlRoe';
@@ -142,7 +149,7 @@ export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf:
     wins += t.pnl;
   }
   const start = d.lifeNo >= 2 ? LIFE.rebornStart : LIFE.start;
-  const bound = start + wins + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
+  const bound = start + wins * (1 + LIFE.winBonusMax) + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
   if (value > bound) return `tooHigh(${Math.round(value)} > ${Math.round(bound)})`;
   return null;
 }

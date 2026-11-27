@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { flyCandles } from '../../src/engine/feed/fly';
 import { checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, cleanName, maxFavorablePct, parseSubmit, type TradeDetail } from '../src/verify';
 
 const T0 = 1_800_000_000_000;
@@ -29,23 +30,34 @@ describe('랭킹 제출 검사', () => {
     expect(checkTradeAgainstCandles(trade({ roe: 80, pnl: 40000 }), cs)).toMatch(/roeTooHigh/);
     expect(checkTradeAgainstCandles(trade(), [])).toBe('noCandles');
   });
-  it('한 생 재산: 상한 = −30만 + 검증된 이긴 거래 합 + 정산 × 53,000', () => {
+  it('한 생 재산: 상한 = −30만 + 검증된 이긴 거래 합 × 1.1(축하금) + 정산 × 18,000', () => {
     const cs = [{ t: T0, h: 100.1, l: 100 }];
     const win = trade({ roe: 31, pnl: 15500 });
     const lose = trade({ roe: -40, pnl: -20000 });
-    const life = { lifeNo: 1, settles: 10, peak: 0, trades: [win, lose] };
+    const life = { lifeNo: 1, settles: 30, peak: 0, trades: [win, lose] };
     expect(checkLifeShape(life, 200000, T0 + 300_000)).toBeNull();
-    // −300,000 + 15,500 + 10 × 53,000 = 245,500
-    expect(checkLifeAgainstCandles(life, 245000, () => cs)).toBeNull();
-    expect(checkLifeAgainstCandles(life, 246000, () => cs)).toMatch(/tooHigh/);
+    // U-47: 정산이 60초 → 정산당 상한 17,000 + 1,000. −300,000 + 15,500 × 1.1 + 30 × 18,000 = 257,050
+    expect(checkLifeAgainstCandles(life, 257000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 258000, () => cs)).toMatch(/tooHigh/);
     // U-46: 둘째 생부터는 튜토리얼이 끝난 자리(손에 10만, 빚 50만)에서 시작한다 → 상한도 −40만에서
     const reborn = { ...life, lifeNo: 2 };
-    expect(checkLifeAgainstCandles(reborn, 145000, () => cs)).toBeNull();
-    expect(checkLifeAgainstCandles(reborn, 146000, () => cs)).toMatch(/tooHigh/);
+    expect(checkLifeAgainstCandles(reborn, 157000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(reborn, 158000, () => cs)).toMatch(/tooHigh/);
     // 이긴 거래를 부풀리면 그 거래에서 걸린다
     const fake = { ...life, trades: [trade({ roe: 900, pnl: 450000 })] };
     expect(checkLifeAgainstCandles(fake, 600000, () => cs)).toMatch(/trade:roeTooHigh/);
     expect(checkLifeShape({ ...life, trades: 'x' as any }, 1, T0)).toBe('trades');
+  });
+  it('날다람쥐코인(FLY): 실제 시장이 없어도 같은 함수로 다시 셈한 봉에 대조한다', () => {
+    const e = 1_764_003_600_000, x = e + 10 * 60_000;
+    const cs = flyCandles(e / 1000, x / 1000).map((c) => ({ t: c.t, h: c.h, l: c.l }));
+    const fav = maxFavorablePct(cs, 1);
+    const ok = trade({ market: 'FLY', entryTs: e, exitTs: x, lev: 50, margin: 10000, roe: 50 * fav * 0.9, pnl: (10000 * 50 * fav * 0.9) / 100 });
+    expect(checkTradeShape(ok, 'roe', ok.roe, x + 1000)).toBeNull();
+    expect(checkTradeAgainstCandles(ok, cs)).toBeNull();
+    const fake = { ...ok, roe: 50 * (fav + 1), pnl: (10000 * 50 * (fav + 1)) / 100 };
+    expect(checkTradeAgainstCandles(fake, cs)).toMatch(/roeTooHigh/);
+    expect(checkLifeShape({ lifeNo: 1, settles: 3, peak: 0, trades: [ok] }, 1000, x + 1000)).toBeNull();
   });
   it('제출 파싱: 기기 번호 형식', () => {
     expect(parseSubmit({ deviceId: 'abc', name: 'a', board: 'roe', value: 1, detail: {} }).ok).toBe(false);

@@ -2,6 +2,8 @@
 // 1초 틱 열로 바꿔 흘려 준다. 가격 수준·날짜는 기록에 없다(가상 시작가에서 로그 변화만 얹는다).
 // 한 봉 안의 경로: 상승봉 o -> l -> h -> c, 하락봉 o -> h -> l -> c (각 60초, 로그 선형). 기록 끝에서는 처음으로 돌아간다.
 import { marketDefs, replayMap } from '../data';
+import { flyPrice } from './fly';
+import { SIM_FLY_EPOCH } from './simFeed';
 import type { Bar, Feed, Tick } from './types';
 import type { MarketStatus } from '../types';
 import { barsFromTicks } from './simFeed';
@@ -50,6 +52,7 @@ export class ReplayFeed implements Feed {
     for (const m of marketDefs) {
       let x: number;
       let vol = 1;
+      if (m.synthetic) { p[m.id] = [flyPrice(SIM_FLY_EPOCH + idx), 1, 0.5]; continue; }
       if (m.id === 'JQQ') {
         x = keys.reduce((a, k) => a + logs[k], 0) / keys.length;
         vol = keys.reduce((a, k) => a + this.rec.coins[k].v[kk] / 100, 0) / keys.length;
@@ -65,7 +68,7 @@ export class ReplayFeed implements Feed {
 
   snapshot(): Tick {
     const p: Tick['p'] = {};
-    for (const m of marketDefs) p[m.id] = [m.startPrice, 1, 0.5];
+    for (const m of marketDefs) p[m.id] = [m.synthetic ? flyPrice(SIM_FLY_EPOCH) : m.startPrice, 1, 0.5];
     return { n: this.n, st: this.st, p };
   }
 

@@ -22,6 +22,10 @@ export interface MarketDef {
   tradable: boolean;
   minable: boolean;
   index?: boolean;
+  /** 실제 시장이 없는 종목(FLY): 값은 시각만의 함수(feed/fly.ts) */
+  synthetic?: boolean;
+  /** 좁은 자리(거래소 종목 칸)에 쓰는 짧은 이름 */
+  short?: string;
   color: string;
 }
 export interface CoinWheelDef {

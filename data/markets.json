@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "_doc": "가상 종목. 실제 종목과의 대응은 이 파일에 넣지 않는다(서버 설정에만). simFeed 는 테스트·서버 없는 개발용 난수 시세(v1 모델) 파라미터.",
+  "_doc": "가상 종목. 실제 종목과의 대응은 이 파일에 넣지 않는다(서버 설정에만). simFeed 는 테스트·서버 없는 개발용 난수 시세(v1 모델) 파라미터. FLY(날다람쥐코인, U-47)는 실제 시장이 없는 숲 밈코인: 값은 시각만의 순수 함수(src/engine/feed/fly.ts)라 서버 설정에도 없다(synthetic).",
   "markets": [
     {
       "id": "DTC",
@@ -47,6 +47,17 @@
       "minable": false,
       "index": true,
       "color": "#4FA37A"
+    },
+    {
+      "id": "FLY",
+      "name": "날다람쥐코인",
+      "startPrice": 100.0,
+      "decimals": 2,
+      "tradable": true,
+      "minable": false,
+      "synthetic": true,
+      "color": "#8E3FE0",
+      "short": "날다람쥐"
     }
   ],
   "simFeed": {

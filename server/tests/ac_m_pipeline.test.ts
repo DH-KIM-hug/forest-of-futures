@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EPOCH, RAW, T0, feedMids, makePipe, markets } from './helpers.ts';
 import { TickStore } from '../src/store.ts';
+import { flyPrice } from '../../src/engine/feed/fly.ts';
 
 const SEC = 1000;
 
@@ -101,8 +102,11 @@ describe('틱·봉 저장', () => {
     expect(b60.bars.length).toBeGreaterThanOrEqual(5 * 5);
     expect(b180.bars.length).toBeGreaterThanOrEqual(5);
     expect(b180.bars[0].avg60).toBeGreaterThan(0);
-    expect(markets.map((m) => m.id)).toEqual(['DTC', 'BTH', 'MDT', 'SMS', 'JQQ']);
-    expect(Object.keys(store.ticksBetween(0, 1e9)[0].p).sort()).toEqual(['BTH', 'DTC', 'JQQ', 'MDT', 'SMS']);
+    expect(markets.map((m) => m.id)).toEqual(['DTC', 'BTH', 'MDT', 'SMS', 'JQQ', 'FLY']);
+    // 날다람쥐코인(FLY, U-47)은 출처가 없어도 틱마다 시각의 함수 값으로 나온다
+    expect(Object.keys(store.ticksBetween(0, 1e9)[0].p).sort()).toEqual(['BTH', 'DTC', 'FLY', 'JQQ', 'MDT', 'SMS']);
+    const t0 = store.ticksBetween(0, 1e9)[0];
+    expect(t0.p.FLY[0]).toBeCloseTo(flyPrice(t0.ts), 9);
   });
 });
 void RAW;

@@ -6,6 +6,7 @@ import { Rebaser } from './transform.ts';
 import { BarBuilder } from './bars.ts';
 import type { TickStore } from './store.ts';
 import type { Cell, MarketStatus, RawEvent, SourceId, TickRecord } from './types.ts';
+import { flyPrice } from '../../src/engine/feed/fly.ts';
 
 export interface PipelineDeps {
   store: TickStore;
@@ -157,6 +158,8 @@ export class Pipeline {
   }
 
   private emit(t: TickRecord, mids: Record<string, number>, vols: Record<string, number>): TickRecord {
+    // 날다람쥐코인(FLY): 출처가 없다. 값은 시각(초)의 함수다(브라우저 · 랭킹 서버와 같은 함수)
+    for (const m of this.d.markets) if (m.synthetic) t.p[m.id] = [flyPrice(t.ts), 1, 0.5];
     const st = this.d.store;
     st.insertTick(t);
     if (Object.keys(mids).length) st.insertRaw(t.n, t.src, mids, vols);

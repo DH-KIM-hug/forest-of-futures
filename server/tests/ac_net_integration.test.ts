@@ -49,7 +49,7 @@ describe('M6 로컬 서버 통합', () => {
     });
     expect(ticks.length).toBeGreaterThanOrEqual(3);
     for (let i = 1; i < ticks.length; i++) expect(ticks[i].n).toBe(ticks[i - 1].n + 1);
-    expect(Object.keys(ticks[0].p).sort()).toEqual(['BTH', 'DTC', 'JQQ', 'MDT', 'SMS']);
+    expect(Object.keys(ticks[0].p).sort()).toEqual(['BTH', 'DTC', 'FLY', 'JQQ', 'MDT', 'SMS']); // 날다람쥐코인(U-47)까지 6종목
     expect(g.run.lastSeenTick).toBe(ticks[ticks.length - 1].n);
     expect(g.run.marketStatus).toBe('open');
     expect(g.run.mkt.avgFromServer).toBe(true); // hello 의 평소 값이 들어갔다
@@ -65,7 +65,7 @@ describe('M6 로컬 서버 통합', () => {
     const now = await feed.now();
     expect(now.st).toMatch(/open|delayed/);
     const bars = await feed.bars(60, now.n - 7200, now.n);
-    expect(bars.length).toBe(30 * 5);
+    expect(bars.length).toBe(30 * 6); // 6종목(날다람쥐코인 포함) × 30분
     expect(bars[0]).toMatchObject({ o: 100, h: 101, l: 99, st: 'open' });
   });
 

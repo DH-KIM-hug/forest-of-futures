@@ -3,6 +3,10 @@
 import { marketDefs, simFeedCfg } from '../data';
 import { gauss, nextRandom } from '../rng';
 import type { Bar, Feed, Tick } from './types';
+import { flyPrice } from './fly';
+
+/** 난수 시세에서 날다람쥐코인(FLY)을 셈할 시각: 틱 n 에 이 기준 시각을 더한다(같은 n 이면 같은 값 — 시험이 흔들리지 않게) */
+export const SIM_FLY_EPOCH = 1_764_000_000;
 import type { MarketStatus } from '../types';
 
 type Regime = -1 | 0 | 1;
@@ -20,8 +24,8 @@ export class SimFeed implements Feed {
     this.h = { rng: seed | 0 };
     this.n = startN;
     for (const m of marketDefs) {
-      this.price[m.id] = m.startPrice;
-      this.regime[m.id] = this.pickRegime();
+      this.price[m.id] = m.synthetic ? flyPrice(SIM_FLY_EPOCH + startN) : m.startPrice;
+      if (!m.synthetic) this.regime[m.id] = this.pickRegime();
     }
   }
 
@@ -36,6 +40,7 @@ export class SimFeed implements Feed {
     this.n += 1;
     const p: Tick['p'] = {};
     for (const m of marketDefs) {
+      if (m.synthetic) { this.price[m.id] = flyPrice(SIM_FLY_EPOCH + this.n); p[m.id] = [this.price[m.id], 1, 0.5]; continue; }
       const c = simFeedCfg.params[m.id];
       const sigma = c.sigmaPerTick;
       if (nextRandom(this.h) < c.switchProbPerTick) this.regime[m.id] = this.pickRegime();

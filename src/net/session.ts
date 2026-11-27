@@ -25,7 +25,8 @@ export function applyHello(g: GameState, h: HelloMsg): void {
   for (const [m, rows] of Object.entries(h.warm.bars)) {
     const cur = g.run.mkt.bars[m];
     if (cur && cur.length) continue;
-    const range = g.run.mkt.avg[m]?.range180 ?? 0.0021;
+    // 준비 봉 한 칸의 평소 폭: 3분 폭을 봉 길이에 맞춘다(U-47: 정산 봉이 60초가 되었다)
+    const range = (g.run.mkt.avg[m]?.range180 ?? 0.0021) * Math.sqrt((h.warm.res ?? 180) / 180);
     g.run.mkt.bars[m] = rows.map((r): SettleBar => ({
       n: r[0], o: r[1], h: r[2], l: r[3], c: r[4], vol: r[5], buy: r[6],
       jump: (r[2] - r[3]) / r[1] > balance.trading.jumpSigma * range,

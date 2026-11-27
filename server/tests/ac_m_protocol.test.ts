@@ -50,13 +50,13 @@ describe('AC-v2-138 앱이 받는 메시지에 원본이 없다', () => {
       expect(JSON.stringify(s.store.db.prepare(`SELECT * FROM ${t}`).all())).not.toContain('123456');
     }
   });
-  it('XRP 는 지수에만: 발행 종목은 5개 가상 종목뿐이다', () => {
+  it('XRP 는 지수에만: 발행 종목은 6개 가상 종목뿐이다(실제 시세를 따르는 5개 + 날다람쥐코인)', () => {
     const s = seeded(10);
-    expect(Object.keys(tickMessage(s.ticks[5], s.ctx.markets).p).sort()).toEqual(['BTH', 'DTC', 'JQQ', 'MDT', 'SMS']);
+    expect(Object.keys(tickMessage(s.ticks[5], s.ctx.markets).p).sort()).toEqual(['BTH', 'DTC', 'FLY', 'JQQ', 'MDT', 'SMS']);
   });
 });
 
-function fakeBars(store: TickStore, res: 60 | 180, slots: number, ids = ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']) {
+function fakeBars(store: TickStore, res: 60 | 180, slots: number, ids = ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ', 'FLY']) {
   for (let i = 0; i < slots; i++) {
     for (const m of ids) {
       const b: BarRecord = { market: m, n0: i * res, o: 100, h: 101, l: 99, c: 100.5, vol: 1, buy: 0.5, st: i >= 100 && i < 110 ? 2 : 0, avg60: 100 };

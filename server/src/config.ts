@@ -11,6 +11,8 @@ export interface MarketCfg {
   id: string;
   startPrice: number;
   index?: boolean;
+  /** 실제 시장이 없는 종목(날다람쥐코인 FLY): 값은 시각의 함수(src/engine/feed/fly.ts) */
+  synthetic?: boolean;
 }
 export interface Config {
   port: number;
@@ -48,5 +50,5 @@ export function loadSources(path: string): SourcesConfig {
 }
 export function loadMarkets(path: string): MarketCfg[] {
   const j = JSON.parse(readFileSync(path, 'utf8'));
-  return j.markets.map((m: any) => ({ id: m.id, startPrice: m.startPrice, index: !!m.index }));
+  return j.markets.map((m: any) => ({ id: m.id, startPrice: m.startPrice, index: !!m.index, ...(m.synthetic ? { synthetic: true } : {}) }));
 }

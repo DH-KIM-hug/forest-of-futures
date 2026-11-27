@@ -4,6 +4,7 @@ import { HlDirectFeed } from '../../src/net/hlDirect/feed';
 import { toBars, secondsOf } from '../../src/net/hlDirect/candles';
 import { COINS } from '../../src/net/hlDirect/config';
 import { marketDefs } from '../../src/engine/data';
+import { flyPrice } from '../../src/engine/feed/fly';
 import type { Tick } from '../../src/engine/feed/types';
 
 class FakeSock {
@@ -50,7 +51,10 @@ describe('HlDirectFeed', () => {
     await t.adv(1000);
     const first = t.ticks[t.ticks.length - 1];
     expect(first.st).toBe('open');
-    for (const m of marketDefs) expect(first.p[m.id][0]).toBeCloseTo(m.startPrice, 6);
+    for (const m of marketDefs) {
+      if (m.synthetic) expect(first.p[m.id][0]).toBeCloseTo(flyPrice(first.n), 9); // 날다람쥐코인: 출처 없이 시각의 함수
+      else expect(first.p[m.id][0]).toBeCloseTo(m.startPrice, 6);
+    }
     t.bbo('DTC', PX.DTC * 1.01);
     await t.adv(1000);
     const nx = t.ticks[t.ticks.length - 1];

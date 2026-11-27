@@ -6,7 +6,7 @@ repo = sys.argv[1]
 OUT = repo + '/src/ui/proto/img/coins/'
 import os; os.makedirs(OUT, exist_ok=True)
 S = 96
-for k in ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ']:
+for k in ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ', 'FLY']:
     im = Image.open(f'{repo}/docs/art/v5/golden/coins/{k}.png').convert('RGBA')
     bb = im.split()[-1].point(lambda v: 255 if v > 8 else 0).getbbox()
     im = im.crop(bb)

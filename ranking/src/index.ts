@@ -2,7 +2,8 @@
 // GET  /top?board=networth|roe|pnl&limit=50  → [{rank,name,value,detail,at}]
 // GET  /me?board=…&deviceId=…                 → 내 기록과 순위
 // POST /submit {deviceId,name,board,value,detail} → 검사 뒤 기기당 최고 기록만 남긴다
-import { BOARDS, LIMITS, REAL, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, parseSubmit, type Board, type Candle, type LifeDetail, type TradeDetail } from './verify';
+import { flyCandles } from '../../src/engine/feed/fly';
+import { BOARDS, LIMITS, REAL, SYNTH, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, parseSubmit, type Board, type Candle, type LifeDetail, type TradeDetail } from './verify';
 
 export interface Env {
   DB: D1Database;
@@ -23,6 +24,12 @@ function cors(env: Env, req: Request): Record<string, string> {
 }
 const json = (data: unknown, status: number, h: Record<string, string>) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...h } });
+
+/** 게임 종목의 1분 봉(from · to 는 ms). 날다람쥐코인(FLY)은 시각의 함수로 셈하고, 나머지는 실제 시세(Hyperliquid)에서 받는다 */
+async function marketCandles(market: string, from: number, to: number): Promise<Candle[]> {
+  if (SYNTH[market]) return flyCandles(Math.floor(from / 1000), Math.floor(to / 1000)).map((c) => ({ t: c.t, h: c.h, l: c.l })).filter((c) => c.t <= to);
+  return candles(REAL[market], from, to);
+}
 
 async function candles(coin: string, from: number, to: number): Promise<Candle[]> {
   const start = Math.floor(from / 60000) * 60000;
@@ -83,14 +90,14 @@ export default {
           for (const m of new Set(d.trades.filter((t) => t.pnl > 0).map((t) => t.market))) {
             const ts = d.trades.filter((t) => t.market === m && t.pnl > 0);
             const from = Math.max(Math.min(...ts.map((t) => t.entryTs)), Math.max(...ts.map((t) => t.exitTs)) - 5000 * 60000);
-            byMarket.set(m, await candles(REAL[m], from, Math.max(...ts.map((t) => t.exitTs))));
+            byMarket.set(m, await marketCandles(m, from, Math.max(...ts.map((t) => t.exitTs))));
           }
           why = checkLifeAgainstCandles(d, s.value, (t) => (byMarket.get(t.market) ?? []).filter((c) => c.t >= Math.floor(t.entryTs / 60000) * 60000 && c.t <= t.exitTs));
         }
       } else {
         const d = s.detail as TradeDetail;
         why = checkTradeShape(d, s.board, s.value, now);
-        if (!why) why = checkTradeAgainstCandles(d, await candles(REAL[d.market], d.entryTs, d.exitTs));
+        if (!why) why = checkTradeAgainstCandles(d, await marketCandles(d.market, d.entryTs, d.exitTs));
       }
       if (why) return json({ ok: false, why }, 422, h);
 
