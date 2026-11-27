@@ -35,7 +35,9 @@ const feedSearch = (): string => {
 };
 export const feedMode: FeedMode = hasWindow ? pickFeedMode(feedSearch(), (import.meta as any).env?.VITE_FEED) : 'sim';
 
-const simFeed = new SimFeed(Date.now() & 0xffff);
+// 화면 확인용(U-52): &pfly=초 → 연습 시세가 그 번호에서 시작한다(날다람쥐코인의 숲 소문이 도는 때로 건너뛰기)
+const simStartN = hasWindow ? Math.max(0, Math.floor(+(new URLSearchParams(window.location.search).get('pfly') ?? 0)) || 0) : 0;
+const simFeed = new SimFeed(Date.now() & 0xffff, simStartN);
 const first = simFeed.snapshot();
 const pricesOf = (t: Tick) => Object.fromEntries(Object.entries(t.p).map(([k, v]) => [k, v[0]]));
 

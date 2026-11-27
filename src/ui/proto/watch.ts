@@ -37,6 +37,8 @@ import { closeBack, exitFee, roePct } from '../../engine/futures';
 import { exitFeeMul, feeEventLeft, openingEvent, feeRate } from '../../engine/skilltree';
 import { recentRange } from './tension';
 import { allQuiet, liveliest, sessionOpen, sessionHoursKst, SESSIONS, feeSaved, LIVELY_PCT, QUIET_PCT, openHeadsUp, spanText, untilHourMin } from './market';
+import { flySecOf, windNow, TELL_TEXT } from './flyWind';
+import { TELL_WINDOW } from '../../engine/feed/fly';
 import type { GameState, Position } from '../../engine/types';
 
 /** 포지션이 닫힌 것을 보고 이번 생 승률을 올리고, 이익이면 수익 인증서 물음을 띄운다(한 번 닫을 때 한 번). */
@@ -86,10 +88,50 @@ const openSaid = new Set<string>();
 /** 따라가는 손절(U-50): 포지션마다 마지막으로 팝을 띄운 손절(ROE %) */
 const trailShown: Record<string, number> = {};
 
-export function say(text: string, ms = 3000): void {
-  useProto.getState().patch({ toast: text });
-  window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => useProto.getState().patch({ toast: null }), ms);
+// ── 알림 줄 세우기(U-52): 새 알림이 앞 알림을 덮어 지우지 않는다. 장면(컷인)이 떠 있는 동안에는 기다렸다가 장면이 걷히면 남은 시간만큼 ──
+// 회차 10 에서 본 것: 승급 알림이 0.2초 뒤 반응 한 줄에 덮이고, 2.6초 뒤 추심원 장면 밑에 깔렸다.
+interface Toast { text: string; ms: number; keep: boolean; shown: number }
+const toastQ: Toast[] = [];
+let toastCur: Toast | null = null;
+let toastLast = 0;
+/** 뒤에 기다리는 알림이 있으면 보통 알림은 이만큼 보인 뒤 다음으로 넘어간다 */
+export const TOAST_MIN_MS = 2200;
+/** 꼭 읽혀야 하는 알림(keep)은 적어도 이만큼 */
+export const TOAST_KEEP_MS = 4000;
+/** 이긴 판의 상자가 떠 있는 시간(ms, trade.css .pr-burst 의 --out + 0.35초) */
+export const burstMs = (lv: number): number => (lv >= 3 ? 3000 : lv >= 2 ? 2500 : 1800) + 200;
+/** 장면이 걷히기를 기다리는 이긴 판(가장 최근 하나) */
+let burstWait: (() => void) | null = null;
+const covered = (): boolean => { const P = useProto.getState(); return P.scenes.length > 0 && Date.now() >= P.beatUntil; };
+function toastShow(t: Toast | null): void {
+  const P = useProto.getState();
+  if (!t) { if (P.toast !== null) P.patch({ toast: null, toastKeep: false }); return; }
+  P.patch({ toast: t.text, toastK: P.toastK + 1, toastKeep: t.keep });
+}
+function toastPump(): void {
+  const now = Date.now();
+  const dt = Math.min(1000, now - toastLast);
+  toastLast = now;
+  if (!toastCur) {
+    toastCur = toastQ.shift() ?? null;
+    if (!toastCur) { window.clearInterval(toastTimer); toastTimer = undefined; return; }
+    if (!covered()) toastShow(toastCur);
+    return;
+  }
+  if (covered()) { if (useProto.getState().toast !== null) toastShow(null); return; }
+  if (useProto.getState().toast !== toastCur.text) toastShow(toastCur); // 장면이 걷혔다: 다시
+  toastCur.shown += dt;
+  const need = toastCur.keep ? Math.max(TOAST_KEEP_MS, toastCur.ms) : toastQ.length ? Math.min(toastCur.ms, TOAST_MIN_MS) : toastCur.ms;
+  if (toastCur.shown >= need) { toastCur = null; toastShow(null); toastPump(); }
+}
+/** 한 줄 알림. keep = 승급처럼 꼭 읽혀야 하는 것(뒤 알림에 밀려 짧아지지 않고, 줄이 넘쳐도 버려지지 않는다) */
+export function say(text: string, ms = 3000, keep = false): void {
+  if (toastCur?.text === text || toastQ.some((x) => x.text === text)) return;
+  toastQ.push({ text, ms, keep, shown: 0 });
+  // 줄이 길면 오래된 보통 알림부터 버린다
+  while (toastQ.length > 3) { const i = toastQ.findIndex((x) => !x.keep); if (i < 0) break; toastQ.splice(i, 1); }
+  if (toastTimer === undefined) { toastLast = Date.now(); toastTimer = window.setInterval(toastPump, 150); }
+  toastPump();
 }
 
 /** 이야기 장면을 줄 세운다(이번 생에 이미 본 것은 다시 나오지 않는다). */
@@ -230,7 +272,7 @@ function holdTick(g: GameState): void {
 }
 
 // ── 장이 조용한가 · 본장이 열리고 닫히는가(U-40): 있는 그대로를 말한다. 가짜 출렁임은 없다 ─────────────
-const mk = { quietFor: 0, lastLineAt: -9999, wasQuiet: false, n: 0, sess: {} as Record<string, boolean>, flyAt: -9999 };
+const mk = { quietFor: 0, lastLineAt: -9999, wasQuiet: false, n: 0, sess: {} as Record<string, boolean>, flyAt: -9999, tellAt: -1, tellDone: -1 };
 /** 날다람쥐코인이 1분 새 이만큼(%) 출렁이면 신문 속보 한 줄(U-48). 평소 1분 폭은 0.6%쯤, 하루에 스무 번 남짓 넘는다 */
 export const FLY_NEWS_PCT = 3;
 /** 속보 사이 최소 간격(틱 = 초) */
@@ -259,6 +301,22 @@ function marketTick(g: GameState): void {
       openSaid.add(hu.key);
       say(`[도토리일보] ${marketById[id]?.name ?? id} 본장 개장까지 ${hu.min}분 (${(sessionHoursKst(id, now) ?? '').split('~')[0]})`, 7000);
       break;
+    }
+  }
+  // 숲 소문(U-52): 날다람쥐코인의 급등락 앞에 돌기도 하고 헛돌기도 하는 말. 시세 함수와 같은 씨앗에서 센다(flyWind.ts)
+  if (marketById.FLY?.tradable) {
+    const fs = flySecOf(run);
+    const t = fs !== null ? windNow(fs).tell : null;
+    if (t?.state === 'live' && mk.tellAt !== t.x.at && t.left > 15) {
+      mk.tellAt = t.x.at;
+      play('news_alarm', { vol: 0.6 });
+      say(`[숲 소문] ${marketById.FLY.name}: ${TELL_TEXT[t.x.dir]}. ${TELL_WINDOW}초 안에 ${t.x.dir === 1 ? '▲' : '▼'} 큰 바람? 소문은 둘에 하나쯤 맞는다`, 6500, true);
+      if (P.tab !== 'phone') { useProto.getState().patch({ pointTab: 'phone' }); window.clearTimeout(flyPointT); flyPointT = window.setTimeout(() => { if (!useProto.getState().forceTrade && useProto.getState().pointTab === 'phone') useProto.getState().patch({ pointTab: null }); }, 4500); }
+      return;
+    }
+    if (t && t.state !== 'live' && mk.tellAt === t.x.at && mk.tellDone !== t.x.at) {
+      mk.tellDone = t.x.at;
+      say(t.state === 'came' ? `[숲 소문] ${t.jump.dir === t.x.dir ? '소문대로' : '소문과 반대로'} 큰 바람 ${t.jump.dir === 1 ? '▲' : '▼'}` : '[숲 소문] 헛소문이었다. 바람은 오지 않았다', 4000);
     }
   }
   // 날다람쥐코인 급등락 속보(U-48): 값이 정말로 1분 새 크게 출렁였을 때만(시세에서 센 것). 거래소 밖이면 거래소 탭을 잠깐 가리킨다
@@ -367,7 +425,7 @@ let started = false;
 export function startWatch(): void {
   if (started) return;
   started = true;
-  useProto.subscribe(() => { flushHeld(); guideCheck(); });
+  useProto.subscribe(() => { flushHeld(); guideCheck(); if (burstWait && !covered()) { const f = burstWait; burstWait = null; f(); } });
   // 자리를 비운 사이(U-39 ④): 떠날 때의 살림을 적어 두었다가, 돌아와 엔진이 따라잡은 뒤의 살림과 견준다
   let purse: AwayPurse | null = null;
   const purseOf = (g: GameState): AwayPurse => ({ cash: g.run.cash, debt: totalDebt(g.run) });
@@ -598,15 +656,23 @@ export function startWatch(): void {
           P2.patch({ frxStamps: stamps, bestWin: Math.max(P2.bestWin, pnl), rankUp: after.r > before.r ? { k: (P2.rankUp?.k ?? 0) + 1, r: after.r, name: after.name } : P2.rankUp });
           // 이긴 판이 터지면 그 상자에 「승급」 칩이 같이 뜬다(장면이 덮기 전에 보이게). 아니면 0.7초 뒤 한 줄과 팡파르
           if (after.r > before.r && tierB) later(900, () => play('goal_complete'));
-          if (after.r > before.r && !tierB) later(700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 거래 도장 ${stamps}개. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500); });
+          if (after.r > before.r && !tierB) later(700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 거래 도장 ${stamps}개. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500, true); });
         }
         if (tierB) {
           const P0 = useProto.getState();
           const record = pnl > 0 && prevBest > 0 && pnl > prevBest; // 이번 생 가장 크게 딴 판(첫 이긴 판은 신기록이라 부르지 않는다)
           const ru = P0.rankUp && rankOf(P0.frxStamps).r === P0.rankUp.r && rankOf(P0.frxStamps - stampsOf(tierB.lv)).r < P0.rankUp.r ? P0.rankUp.name : undefined;
-          P0.patch({ burst: { k: (P0.burst?.k ?? 0) + 1, tier: tierB, pnl, margin: p.margin0, streak: pnl > 0 ? P0.winStreak + 1 : 0, lev: p.lev, market: p.market, dir: p.dir, name: marketById[p.market]?.name ?? p.market, how: endKind === 'tp' ? 'tp' : endKind === 'sl' ? 'sl' : 'close', record, rankUp: ru } });
-          winSound(tierB.lv);
-          if (P0.tab !== 'phone') { const c0 = claim(prev).total; cheerOn(pnl, c0 > 0 ? pnl / c0 : 0); later(420, () => play('hamster_cheer')); }
+          const c0 = claim(prev).total;
+          const fire = () => {
+            const P3 = useProto.getState();
+            P3.patch({ burst: { k: (P3.burst?.k ?? 0) + 1, tier: tierB, pnl, margin: p.margin0, streak: pnl > 0 ? P0.winStreak + 1 : 0, lev: p.lev, market: p.market, dir: p.dir, name: marketById[p.market]?.name ?? p.market, how: endKind === 'tp' ? 'tp' : endKind === 'sl' ? 'sl' : 'close', record, rankUp: ru },
+              // 큰 등급의 상자는 2.6초보다 오래 남는다(U-52): 장면이 그 꼬리를 덮지 않게 숨을 늘린다
+              beatUntil: Math.max(P3.beatUntil, Date.now() + burstMs(tierB.lv)) });
+            winSound(tierB.lv);
+            if (P3.tab !== 'phone') { cheerOn(pnl, c0 > 0 ? pnl / c0 : 0); later(420, () => play('hamster_cheer')); }
+          };
+          // 장면(컷인)이 이미 떠 있으면 그 밑에서 터지지 않게 장면이 걷힌 뒤에 터진다(U-52)
+          if (covered()) burstWait = fire; else fire();
         }
         // 첫 실전 한 판(U-50, 첫 생): 이긴 판이 터지면 끝, 진 판이면 한 번 덜 남는다
         if (!tut && useProto.getState().firstTry > 0) {

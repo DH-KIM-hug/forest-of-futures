@@ -58,6 +58,10 @@ interface P {
   cutCount: number;
   negSettles: number;
   toast: string | null;
+  /** 알림이 새로 뜰 때마다 1 씩(같은 글이 장면 뒤에 다시 떠도 거래소 말 자리가 다시 보이게, U-52) */
+  toastK: number;
+  /** 지금 알림이 꼭 읽혀야 하는 것(승급 등): 거래소 말 자리에서도 제 시간만큼 둔다 */
+  toastKeep: boolean;
   collector: Collector | null;
   tapping: boolean;
   wallet: boolean;
@@ -128,7 +132,7 @@ interface P {
 
 const fresh = () => ({
   tab: 'lot' as Tab, goalIdx: 0, everOpened: false, scenes: [] as Scene[], cutCount: 0, negSettles: 0,
-  toast: null, collector: null, tapping: false, wallet: false, profit: null, wins: 0, closes: 0, mapFocus: null,
+  toast: null, toastK: 0, toastKeep: false, collector: null, tapping: false, wallet: false, profit: null, wins: 0, closes: 0, mapFocus: null,
   winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, negRun: 0, odSeen: 0,
   waiting: false, loanTaken: false, sentAwayAt: -1, tutorial: 'none' as P['tutorial'],
   slotOf: {} as Record<string, number>, slotHi: null as number | null,

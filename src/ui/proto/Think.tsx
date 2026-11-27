@@ -25,12 +25,14 @@ export function Think({ cls, style }: { cls: string; style?: React.CSSProperties
 export function PhoneLane() {
   const toast = useProto((s) => s.toast);
   const think = useProto((s) => s.think);
+  const toastK = useProto((s) => s.toastK);
+  const keep = useProto((s) => s.toastKeep);
   const [gone, setGone] = useState<string | null>(null);
   const text = toast ?? think?.text ?? null;
-  const key = toast ? 't:' + toast : think ? 'h:' + think.k : null;
+  const key = toast ? 't:' + toastK : think ? 'h:' + think.k : null;
   useEffect(() => {
     if (!key) return;
-    const t = window.setTimeout(() => setGone(key), toast ? 2600 : 4000);
+    const t = window.setTimeout(() => setGone(key), toast ? (keep ? 5000 : 2600) : 4000);
     return () => window.clearTimeout(t);
   }, [key]);
   if (!text || gone === key) return null;

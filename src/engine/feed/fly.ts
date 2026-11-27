@@ -76,6 +76,9 @@ function jumpAt(js: Jump[], s: number): number {
   return v;
 }
 
+/** 시간 h 의 10분 마디 block 의 변동성 배수(0.45~2.6) */
+const volMul = (h: number, block: number): number => Math.min(2.6, Math.max(0.45, Math.exp(0.55 * gauss(K_VOL, h, block))));
+
 /** 시간 h 의 3,601개 로그 값(초 0~3600, 느린 물결 제외). 처음과 끝은 0. */
 function hourPath(h: number): Float64Array {
   const w = new Float64Array(HOUR + 1);
@@ -83,7 +86,7 @@ function hourPath(h: number): Float64Array {
   for (let s = 0; s < HOUR; s++) {
     const m = Math.floor(s / 60);
     const block = Math.floor(s / 600);
-    const vm = Math.min(2.6, Math.max(0.45, Math.exp(0.55 * gauss(K_VOL, h, block))));
+    const vm = volMul(h, block);
     acc += FLY_SIGMA * vm * gauss(K_STEP, h * 60 + m, s % 60);
     w[s + 1] = acc;
   }
@@ -135,4 +138,65 @@ export function flySeconds(endSec: number, count: number): number[] {
   const out: number[] = [];
   for (let t = Math.floor(endSec) - count + 1; t <= endSec; t++) out.push(flyPrice(t));
   return out;
+}
+
+// ── 바람 세기와 숲 소문(U-52): 값과 같은 씨앗에서 나온다. 값은 바꾸지 않는다 ─────────────
+// 누구의 폰에서든 같은 때 같은 소문이 돈다. 지난 소문이 맞았는지는 같은 함수로 누구나 다시 셀 수 있다.
+
+/** 지금 10분 마디의 바람 세기: 흔들림의 배수(평소 = 1)와 그 마디가 끝나는 시각(초) */
+export function flyGust(tSec: number): { mul: number; endsAt: number } {
+  const t = Math.floor(tSec);
+  const h = Math.floor(t / HOUR);
+  const block = Math.floor((t - h * HOUR) / 600);
+  return { mul: volMul(h, block), endsAt: h * HOUR + (block + 1) * 600 };
+}
+
+export interface FlyJump { at: number; dir: 1 | -1; size: number; ramp: number }
+/** 시간 h 의 급등락(시작 시각, 쪽, 로그 크기, 오르내리는 초) */
+export function flyJumpsOfHour(h: number): FlyJump[] {
+  return jumpsOf(h).map((j) => ({ at: h * HOUR + j.s0, dir: j.amp > 0 ? 1 : -1, size: Math.abs(j.amp), ramp: j.ramp }));
+}
+/** 소문이 돈 뒤 이 초 안에 급등락이 시작하면 맞은 소문이다 */
+export const TELL_WINDOW = 90;
+/** 급등락마다 소문이 미리 돌 확률 */
+export const TELL_TOLD = 0.6;
+/** 미리 돈 소문이 쪽을 맞게 말할 확률 */
+export const TELL_DIR_OK = 0.65;
+const K_TELL = 41;
+export interface FlyTell { at: number; dir: 1 | -1 }
+/** 시간 h 에 도는 소문: 급등락의 10~60초 앞(일부만), 그리고 아무 일 없는 헛소문. 어느 것이 진짜인지는 소문만으로는 모른다 */
+export function flyTellsOfHour(h: number): FlyTell[] {
+  const out: FlyTell[] = [];
+  jumpsOf(h).forEach((j, k) => {
+    if (uni(K_TELL, h, k) >= TELL_TOLD) return;
+    const lead = 10 + Math.floor(uni(K_TELL, h, 10 + k) * 51);
+    const jd: 1 | -1 = j.amp > 0 ? 1 : -1;
+    out.push({ at: h * HOUR + j.s0 - lead, dir: uni(K_TELL, h, 20 + k) < TELL_DIR_OK ? jd : (-jd as 1 | -1) });
+  });
+  const u = uni(K_TELL, h, 30);
+  const nf = u < 0.12 ? 2 : u < 0.42 ? 1 : 0;
+  for (let k = 0; k < nf; k++) out.push({ at: h * HOUR + Math.floor(60 + uni(K_TELL, h, 40 + k) * (HOUR - 1260)), dir: uni(K_TELL, h, 50 + k) < 0.5 ? 1 : -1 });
+  return out.sort((a, b) => a.at - b.at);
+}
+/** fromSec ~ toSec 에 돈 소문(시작 시각 기준) */
+export function flyTellsBetween(fromSec: number, toSec: number): FlyTell[] {
+  const out: FlyTell[] = [];
+  for (let h = Math.floor(fromSec / HOUR); h <= Math.floor(toSec / HOUR); h++) for (const x of flyTellsOfHour(h)) if (x.at >= fromSec && x.at <= toSec) out.push(x);
+  return out;
+}
+/** 소문 x 의 결과: 창 안에 시작한 급등락(없으면 null). 창이 아직 안 끝났으면 undefined */
+export function flyTellOutcome(x: FlyTell, nowSec: number): FlyJump | null | undefined {
+  const js = [...flyJumpsOfHour(Math.floor(x.at / HOUR)), ...flyJumpsOfHour(Math.floor(x.at / HOUR) + 1)].filter((j) => j.at >= x.at && j.at <= x.at + TELL_WINDOW && j.at <= nowSec);
+  if (js.length) return js[0];
+  return nowSec < x.at + TELL_WINDOW ? undefined : null;
+}
+/** 지난 span 초의 소문 성적: 돈 소문 수, 큰 바람이 온 수, 그중 말한 쪽이었던 수 */
+export function flyTellRecord(nowSec: number, span = 86400): { n: number; hit: number; dirHit: number } {
+  let n = 0, hit = 0, dirHit = 0;
+  for (const x of flyTellsBetween(nowSec - span, nowSec - TELL_WINDOW)) {
+    n++;
+    const o = flyTellOutcome(x, nowSec);
+    if (o) { hit++; if (o.dir === x.dir) dirHit++; }
+  }
+  return { n, hit, dirHit };
 }

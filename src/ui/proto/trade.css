@@ -800,3 +800,27 @@
 @media (prefers-reduced-motion: reduce) { .pr .pt .pt-bar .pt-rank.up, .pr-burst .chips .rec { animation: none; } }
 .pr-burst .chips .rec.rk { background: linear-gradient(180deg, #FFE98A, #F3C94A); color: #6B4510; border-color: var(--o); animation-delay: .6s; }
 .pr .pt .pl-row3 { display: flex; margin-top: 4px; } .pr .pt .pl-row3 .pt-slow { margin: 0; padding: 2px 8px; font-size: 11.5px; }
+
+/* ── 날다람쥐코인의 바람 줄(U-52): 바람 세기 + 숲 소문 ── */
+.pr .pt .pt-wind { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: 30px; margin: 0 0 4px; padding: 3px 8px 3px 4px; border-radius: 11px; border: 1.8px solid #CBBE9A; background: #F8F1DD; color: var(--o); font-family: inherit; font-size: 12.5px; font-weight: 700; line-height: 1.25; text-align: left; box-shadow: none; cursor: pointer; }
+.pt-wind .gw { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 8px; background: #fff; border: 1.5px solid #CBBE9A; font-family: var(--dsp); font-size: 12.5px; white-space: nowrap; }
+.pt-wind .gw small { font-family: inherit; font-size: 10.5px; color: var(--sub); }
+.pt-wind .gw .bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 10px; }
+.pt-wind .gw .bars u { width: 3px; border-radius: 1px; background: rgba(74, 70, 64, .2); text-decoration: none; }
+.pt-wind .gw .bars u:nth-child(1) { height: 4px; } .pt-wind .gw .bars u:nth-child(2) { height: 7px; } .pt-wind .gw .bars u:nth-child(3) { height: 10px; }
+.pt-wind .gw.g0 .bars u:nth-child(1), .pt-wind .gw.g1 .bars u:nth-child(-n+2), .pt-wind .gw.g2 .bars u, .pt-wind .gw.g3 .bars u { background: #5E8FA8; }
+.pt-wind.gusty .gw { background: #E6F0F4; border-color: #5E8FA8; color: #2F5C74; }
+.pt-wind.gusty .gw .bars u { background: #2F5C74; }
+.pt-wind .tl { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pt-wind .tl.dim { color: var(--sub); font-weight: 600; }
+.pt-wind .tl.dim small { margin-left: auto; padding-left: 6px; font-size: 11px; opacity: .85; }
+.pt-wind .tl b { font-family: var(--dsp); font-weight: 400; color: #6B4A10; }
+.pt-wind .tl em { font-style: normal; font-family: var(--dsp); font-size: 14px; }
+.pt-wind .tl em.up { color: var(--up); } .pt-wind .tl em.down { color: var(--down); }
+.pt-wind .cd { margin-left: auto; flex: 0 0 auto; padding: 0 7px; border-radius: 8px; font-style: normal; font-family: var(--dsp); font-size: 12px; line-height: 18px; color: #6B4A10; background: linear-gradient(90deg, #F3C94A calc(var(--p) * 100%), #FFF2B0 0); border: 1.5px solid #C98A2B; font-variant-numeric: tabular-nums; }
+.pr .pt .pt-wind.live { background: #FFF6D6; border-color: #C98A2B; box-shadow: 0 0 0 2px rgba(243, 201, 74, .45); animation: windLive 1.6s ease-in-out infinite; }
+.pr .pt .pt-wind.came { background: #FFF0E0; border-color: var(--o); }
+@keyframes windLive { 50% { box-shadow: 0 0 0 4px rgba(243, 201, 74, .2); } }
+.pt-ct .wild.rumor { background: #FFE58A; color: #6B4A10; animation: windLive 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pr .pt .pt-wind.live, .pt-ct .wild.rumor { animation: none; } }
+@media (max-height: 720px) { .pt-wind .tl.dim small { display: none; } }

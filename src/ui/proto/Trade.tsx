@@ -9,6 +9,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefO
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
 import { TUT, hamsterMath, claim, lifeNo } from './model';
+import { flySecOf, windNow, TELL_SHORT, TELL_ODDS_TEXT } from './flyWind';
+import { TELL_WINDOW } from '../../engine/feed/fly';
 import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier, slowHint, typicalRange } from './tension';
 import { closedMath, tradeNet, say as toast } from './watch';
 import { exitFee, fundingRateNow } from '../../engine/futures';
@@ -363,6 +365,9 @@ export function ProtoTrade() {
   const ranges = tabs.map((t) => ({ id: t.id, r: recentRange(liveHistoryOf(t.id)) }));
   const rangeOf = (id: string): number | null => ranges.find((x) => x.id === id)?.r ?? null;
   const wild = liveliest(ranges);
+  // 날다람쥐코인의 바람 세기와 숲 소문(U-52): 시세 함수와 같은 씨앗에서 센다
+  const flySec = marketById.FLY?.tradable ? flySecOf(run) : null;
+  const wind = flySec !== null && tutSt === 'done' ? windNow(flySec) : null;
   const now = new Date();
   const sess = sessionOf(market, now, rangeOf(market));
   const quietAll = allQuiet(ranges.map((x) => x.r));
@@ -674,7 +679,8 @@ export function ProtoTrade() {
           <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '재는 중' : r.toFixed(3) + '%'}`}>
             <i className="bars" aria-hidden="true"><u /><u /><u /></i>{ss?.badge ?? swingText(r).replace(/^1분 /, '')}
           </small>
-          {wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
+          {wind?.tell?.state === 'live' && marketById[t.id].synthetic ? <i className="wild rumor" data-rumor title="숲 소문이 돈다">소문</i>
+            : wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
           {/* 포지션이 있는 종목(U-47: 여러 종목을 함께 든다): 방향과 지금 손익 색 */}
           {t.hasPos && <i className={'pd ' + ((t.posNet ?? 0) >= 0 ? 'up' : 'down')} data-posdir={t.posDir} aria-label={`${t.posDir === 1 ? '롱' : '숏'} 포지션, ${(t.posNet ?? 0) >= 0 ? '이익' : '손실'} ${comma(Math.abs(Math.round(t.posNet ?? 0)))}`}>{t.posDir === 1 ? '▲' : '▼'}</i>}
         </button>
@@ -692,6 +698,22 @@ export function ProtoTrade() {
         : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : m.synthetic ? '밈코인' : '24시간')}</span>{mood}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
     </div>
   );
+  // 바람 줄(U-52): 날다람쥐코인을 볼 때만. 지금 10분의 바람 세기, 숲 소문(돌고 있으면 남은 초), 지난 하루 소문 성적
+  const windLine = wind && marketById[market].synthetic ? (() => {
+    const t = wind.tell, gw = wind.gust;
+    const rec = `지난 하루 소문 ${wind.rec.n}번, 큰 바람 ${wind.rec.hit}번, 말한 쪽 ${wind.rec.dirHit}번`;
+    const cls = 'pt-wind' + (t?.state === 'live' ? ' live' : t?.state === 'came' ? ' came' : '') + (gw.mul >= 1.35 ? ' gusty' : gw.mul < 0.75 ? ' calm' : '');
+    return (
+      <button className={cls} data-wind={t?.state ?? 'none'} data-gust={gw.word} onClick={() => { play('ui_tap'); toast(`${TELL_ODDS_TEXT}. ${rec}. 바람 세기는 지금 10분 동안의 흔들림(평소의 ${gw.mul.toFixed(1)}배).`, 7000); }}
+        aria-label={`바람 ${gw.word}${t ? ', 숲 소문' : ''}`}>
+        <span className={'gw g' + Math.min(3, Math.floor(gw.mul / 0.65))}><i className="bars" aria-hidden="true"><u /><u /><u /></i>{gw.word}<small>{Math.ceil(gw.leftSec / 60)}분</small></span>
+        {t?.state === 'live' ? <><span className="tl"><b>숲 소문</b> {TELL_SHORT[t.x.dir]}<em className={t.x.dir === 1 ? 'up' : 'down'}>{t.x.dir === 1 ? '▲?' : '▼?'}</em></span><i className="cd" style={{ ['--p' as string]: String(t.left / TELL_WINDOW) }}>{t.left}초</i></>
+          : t?.state === 'came' ? <span className="tl"><b>{t.jump.dir === t.x.dir ? '소문대로' : '소문과 반대로'}</b> 큰 바람 <em className={t.jump.dir === 1 ? 'up' : 'down'}>{t.jump.dir === 1 ? '▲' : '▼'}</em></span>
+          : t?.state === 'miss' ? <span className="tl dim">헛소문이었다. 바람은 오지 않았다</span>
+          : <span className="tl dim">소문 없음<small>{wind.rec.n ? `지난 하루 ${wind.rec.n}번 중 ${wind.rec.hit}번 맞음` : `1분 폭 평소 ${gw.pct1m.toFixed(1)}%쯤`}</small></span>}
+      </button>
+    );
+  })() : null;
   // 차트 창: 나무의 초봉 차트(A3a)를 30초 · 긴 창으로 돌려 둔 동안에는 그것이 먼저다. 아니면 고른 시간(2분 · 5분 · 10분)
   const win = sk.zoom && zoom !== 0 ? (zoom === 1 ? 30 : longChartSec(run)) : span;
   const spanLabel = win === 120 ? cm.label : (() => {
@@ -811,7 +833,7 @@ export function ProtoTrade() {
   // 느린 판(U-51): 평소대로면 목표까지 5분 넘게 걸리는 판이면 그렇다고, 지금 더 빨리 움직이는 종목이 있으면 그 이름을 — 손 놓고 기다리지 않게. 눌러서 그 종목으로 간다
   const altM = wild && wild.id !== market ? { id: wild.id, name: marketById[wild.id].name, r: wild.r } : null;
   const heldSec = rawPos ? run.tick - rawPos.openTick : 0;
-  const slow = tutSt !== 'done' || result ? null
+  const slow = tutSt !== 'done' || result || (marketById[market].synthetic && wind?.tell?.state === 'live') ? null
     : pos && rawPos ? (heldSec >= 30 && netRoe < 15 ? slowHint({ needPct: (15 - netRoe) / pos.lev, rangePct: typicalRange(liveHist), goal: '+15%', alt: altM, ownR: rangeOf(market) }) : null)
     : odds && !odds.liqFirst && !prev.reason ? slowHint({ needPct: odds.needPct, rangePct: typicalRange(liveHist), goal: '이자 한 번', alt: altM, ownR: rangeOf(market) }) : null;
   const slowLine = slow ? (
@@ -1026,5 +1048,5 @@ export function ProtoTrade() {
   // 차트를 크게 본 동안에는 아래 덩이(주문 조건)를 접고, 머리에 돌아오는 단추 하나(U-43)
   const bigOn = bigChart && !sheet && !result && tutSt === 'done';
   const unbig = bigOn ? <button className="pt-unbig" data-unbig onClick={() => setBigChart(false)}>주문으로 돌아가기</button> : null;
-  return frame(<>{coins}{quote}{chart}{unbig}{lower}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : ''));
+  return frame(<>{coins}{quote}{windLine}{chart}{unbig}{lower}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : ''));
 }
