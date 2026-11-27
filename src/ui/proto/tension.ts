@@ -127,3 +127,31 @@ export function squeezeOf(o: { cash: number; income: number; due: number; settle
     : `거래 후 잔액 ${n(have)}, ${mm} 뒤 낼 돈 ${n(o.due)}. 그때 잔액이 모자라면 연체`;
   return { due: Math.round(o.due), have, short: Math.round(o.due - have), text };
 }
+
+// ── 손맛(회차 7, U-48): 청산까지 얼마나 왔나, 들고 있는 동안의 고비, 이긴 판의 등급 ─────────────
+/** 들어갈 때의 청산 거리(%) 대비 지금 얼마나 다가왔나: 0 = 진입가, 1 = 청산가. 화면의 붉은 가장자리와 심장 박동의 세기 */
+export function dangerOf(liqDistPct: number, lev: number, maintenanceRate: number): number {
+  const init = (1 / Math.max(1, lev) - maintenanceRate) * 100;
+  if (!(init > 0)) return 0;
+  return Math.max(0, Math.min(1, 1 - Math.max(0, liqDistPct) / init));
+}
+/** 들고 있는 동안 넘으면 숫자 옆에 터지는 고비(수수료까지 넣은 ROE %). 넣은 돈의 몇 배가 됐는지로 읽는다 */
+export const ROE_MILESTONES: { at: number; text: string }[] = [
+  { at: 50, text: '+50%' }, { at: 100, text: '두 배!' }, { at: 200, text: '세 배!' }, { at: 300, text: '네 배!' }, { at: 500, text: '여섯 배!' }, { at: 1000, text: '열한 배!' },
+];
+/** 지금까지 넘은 가장 높은 고비(best, 없으면 0)와 지금 ROE → 새로 넘은 고비(여럿을 한 번에 넘으면 가장 높은 것) */
+export function nextMilestone(best: number, roe: number): { at: number; text: string } | null {
+  let hit: { at: number; text: string } | null = null;
+  for (const m of ROE_MILESTONES) if (m.at > best && roe >= m.at) hit = m;
+  return hit;
+}
+/** 이긴 판의 등급(수수료까지 넣은 ROE %): 0 = 잔돈(결과 카드만), 1~5 = 화면이 터지는 크기 */
+export interface WinTier { lv: 0 | 1 | 2 | 3 | 4 | 5; word: string; rain: number }
+export function winTier(roe: number): WinTier {
+  if (roe >= 1000) return { lv: 5, word: '전설', rain: 46 };
+  if (roe >= 300) return { lv: 4, word: '대박', rain: 36 };
+  if (roe >= 100) return { lv: 3, word: '두 배', rain: 26 };
+  if (roe >= 50) return { lv: 2, word: '한 방', rain: 16 };
+  if (roe >= 15) return { lv: 1, word: '짭짤하다', rain: 9 };
+  return { lv: 0, word: '', rain: 0 };
+}

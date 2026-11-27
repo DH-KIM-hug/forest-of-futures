@@ -57,10 +57,19 @@ interface Spot { x: number; y: number; w: number; h: number; H: number; W: numbe
 /** 대사 카드와 인물이 차지하는 높이(대략). 비추는 조각이 이 안에 들면 카드를 위로 올린다. */
 const CARD_ZONE = 300;
 
+/** 판이 닫힌 순간의 숨(U-48): beatUntil 까지는 null. 그 뒤에 다시 그린다 */
+export function useBeatOver(): boolean {
+  const beat = useProto((s) => s.beatUntil);
+  const [, tick] = useState(0);
+  const wait = beat - Date.now();
+  useEffect(() => { if (wait <= 0) return; const t = window.setTimeout(() => tick((x) => x + 1), wait + 30); return () => window.clearTimeout(t); }, [beat]);
+  return wait <= 0;
+}
 export function CutIn() {
   const sc: Scene | undefined = useProto((s) => s.scenes[0]);
   const over = useGame((s) => s.g.run.over);
-  if (!sc || over) return null;
+  const free = useBeatOver();
+  if (!sc || over || !free) return null;
   return <CutInScene key={sc.id} sc={sc} />;
 }
 

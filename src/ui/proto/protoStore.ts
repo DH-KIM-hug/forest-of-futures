@@ -78,7 +78,9 @@ interface P {
   /** 방금 누른 칸의 자리(세상에서 잠깐 밝힌다) */
   slotHi: number | null;
   /** 포지션을 들고 있는 동안 주인공이 속으로 하는 말(잠깐 떴다 사라진다, tension.ts holdBeat) */
-  think: { text: string; k: number } | null;
+  think: { text: string; k: number; /** 여러 종목을 들 때 어느 종목 얘기인지(말풍선 앞에 작은 로고, U-48) */ m?: string } | null;
+  /** 판이 닫힌 순간의 숨(U-48): 이 시각(ms)까지는 장면(컷인)과 인증서 물음을 띄우지 않는다 — 결과 카드, 도장, 축하가 먼저 보이게 */
+  beatUntil: number;
   /** 엄마 이야기의 단서를 마지막으로 보여 준 정산 번호(한 번 들를 때 하나만) */
   clueAt: number;
   /** 자리를 비운 사이 보고서(돌아왔을 때 한 장, away.ts) */
@@ -112,6 +114,7 @@ const fresh = () => ({
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
   think: null as P['think'], away: null as P['away'], clueAt: -1,
   dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
+  beatUntil: 0,
   rolled: 0, rolledKey: null as number | null, rolledTaps: 0, claimWinRun: 0, claimLossRun: 0, claimRunSum: 0, pointTab: null as Tab | null, forceTrade: false,
 });
 

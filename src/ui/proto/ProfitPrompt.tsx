@@ -3,6 +3,7 @@ import { useProto } from './protoStore';
 import { renderCard, saveCard } from './shareCard';
 import { comma } from '../../engine/util';
 import { play } from './audio';
+import { useBeatOver } from './CutIn';
 
 type Stage = 'ask' | 'busy' | 'done';
 
@@ -15,6 +16,7 @@ export function ProfitPrompt() {
   useEffect(() => { setStage('ask'); setThumb(null); setNote(''); }, [p]);
   // 장면(이긴 판의 고르기 등)이 떠 있는 동안에는 기다린다(U-42): 고르는 단추 위에 겹쳐 뜨지 않게. 장면이 끝나면 그때부터 15초
   const talking = useProto((s) => s.scenes.length > 0);
+  const free = useBeatOver();
   useEffect(() => {
     if (!p || stage !== 'ask' || talking) return;
     const t = window.setTimeout(() => useProto.getState().patch({ profit: null }), 15000);
@@ -32,7 +34,7 @@ export function ProfitPrompt() {
     el.style.top = 'auto';
     el.style.bottom = `${root.getBoundingClientRect().bottom - chart.getBoundingClientRect().bottom + 2}px`;
   });
-  if (!p || talking) return null;
+  if (!p || talking || !free) return null;
   const close = () => useProto.getState().patch({ profit: null });
   const save = async () => {
     setStage('busy');

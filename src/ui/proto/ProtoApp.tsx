@@ -3,8 +3,8 @@ import '@fontsource/jua/latin-400.css';
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto, type Tab } from './protoStore';
-import { homeSummary, currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, firstVisitSec, lifeNo, hamsterMath } from './model';
-import { tensionOf } from './tension';
+import { homeSummary, currentGoal, goalAt, perSettle, debtLine, GOAL_COUNT, isNearLiq, perSec, rateTxt, lifeNo, hamsterMath } from './model';
+import { tensionOf, dangerOf } from './tension';
 import { awayMoney } from './away';
 import { liveHistoryOf } from '../priceHistory';
 import { startWatch, SAVINGS_STEPS, savingsStep, say } from './watch';
@@ -33,7 +33,6 @@ import { has } from '../../engine/skilltree';
 import { useUI } from '../uiStore';
 import { forecast } from '../../engine/settlement';
 import { balance, DEBT_IDS } from '../../engine/data';
-import { settleSec } from '../../engine/pace';
 import { Acorn, RowIcon } from './art';
 import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
@@ -63,9 +62,6 @@ function Hud() {
   const now = useClock();
   const run = g.run;
   const ps = perSettle(g);
-  // 첫 생의 첫 추심원은 60초 뒤에 온다(U-39 ⑤): 그 막대는 60초짜리다
-  const total = run.settleNo === 0 && lifeNo(g) <= 1 ? Math.max(firstVisitSec(settleSec(run)), run.settleIn) : Math.max(settleSec(run), run.settleIn);
-  const left = Math.max(0, run.settleIn);
   const gi = currentGoal(g, goalIdx, flags);
   const fc0 = forecast(g);
   // 빚이 0 이면 남은 튜토리얼 목표(첫 포지션 · 첫 상환)는 뜻이 없다: 장부가 깨끗하다고만 적는다(U-39 ⑧)
@@ -136,10 +132,7 @@ function Hud() {
             <div className="fill" style={{ width: goal ? `${(goal.cur / goal.need) * 100}%` : '100%' }} />
             <span><small>목표</small> {goal ? goal.label : goalEnd}</span>{goal && <em>{ghost !== null ? <i className="gsub gh">{ghost >= 1 ? '갚으면 도장' : `손에 +${comma(spare)}`}</i> : goal.sub && <i className="gsub">{goal.sub}</i>}{comma(goal.cur)}/{comma(goal.need)}</em>}
           </div>
-          {/* 정산 막대를 누르면 「정산 때 −Y」가 이자 · 생활비 · 일당으로 펴진다(U-46) */}
-          <div key={'s' + run.settleNo} onClick={() => setBrk((b) => !b)} role="button" aria-expanded={brk} className={'settle' + (run.settleNo > 0 ? ' rang' : '') + (left <= 5 ? ' soon' : '') + (waiting ? ' held' : '')} data-hl="settle">
-            <div className="fill" style={{ width: `${((total - left) / total) * 100}%` }} /><span>{waiting ? '추심원이 기다린다' : <>정산 때 <b className="dn" data-due>−{rd(fc.interest + fc.living + fc.wages)}</b></>}</span><em>{mmss(left)}</em>
-          </div>
+          {/* 정산 읽기는 하나(U-48): 집 판의 정산 막대(U-47)가 "다음 수금 0:42"와 낼 돈을 말한다. 머리의 옛 「정산 때 −Y  0:39」 띠는 뺐다 */}
         </>
       )}
     </header>
@@ -304,6 +297,9 @@ export function ProtoApp() {
   // 심장 소리: 청산 임박, 또는 청산이 지난 1분 폭의 세 배 안으로 들어왔을 때(U-39 ①)
   const tense = openPos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach));
   useAudioDirector(dark || tense);
+  // 청산까지 얼마나 왔나(U-48): 가장 급한 포지션 기준. 0.3 을 넘으면 화면 가장자리가 붉어지고, 0.7 을 넘으면 박동한다(어느 탭에서든)
+  const danger = openPos.reduce((a, p) => Math.max(a, dangerOf(p.liqDistPct, p.lev, balance.trading.maintenanceRate as number)), 0);
+  const vig = danger > 0.3 ? Math.min(1, (danger - 0.3) / 0.6) : 0;
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => { startHistory(); startWatch(); startRanking(); }, []);
   // 이끄는 길(U-46): 열린 한 가지 말고는 눌러도 아무 일이 없다(그 대신 열린 쪽이 한 번 반짝인다). 누르기 · 끌기 · 클릭을 잡는 쪽(capture)에서 막는다
@@ -355,7 +351,8 @@ export function ProtoApp() {
     { duration: 480, easing: 'linear' },
   );
   return (
-    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab} data-guided={guide?.step ?? undefined}>
+    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab} data-guided={guide?.step ?? undefined} data-danger={vig > 0 ? vig.toFixed(2) : undefined}>
+      {vig > 0 && <i className={'pr-vig' + (danger >= 0.7 ? ' beat' : '')} aria-hidden="true" style={{ ['--v' as string]: vig.toFixed(3) }} />}
       <Hud />
       <main className="pr-main">
         {tab === 'lot' && <Lot />}

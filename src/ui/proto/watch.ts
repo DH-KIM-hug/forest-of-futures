@@ -54,6 +54,8 @@ let toastTimer: number | undefined;
 let cheerTimer: number | undefined;
 /** 크게 딴 뒤 집이 들썩이는 시간(ms) */
 export const CHEER_MS = 45_000;
+/** 크게 닫힌 판(청산, 넣은 돈의 15% 넘게 딴 판, 이번 수금보다 많이 딴 판) 뒤 장면을 미루는 시간(ms, U-48) */
+export const BEAT_MS = 2600;
 let collTimer: number | undefined;
 /** 집의 잔치를 (다시) 켠다: 한 판에 이자 한 번 치를 벌었다. 장면이 떠 있던 동안 지나간 시간은 세지 않게, 장면이 끝날 때 다시 부른다(U-42 ⑤) */
 export function cheerOn(amount: number, worth: number): void {
@@ -179,7 +181,7 @@ function holdTick(g: GameState): void {
     }
     const thinkNow = (text: string) => {
       h.lastAt = run.tick;
-      useProto.getState().patch({ think: { text: Object.keys(run.positions).length > 1 ? `[${marketById[p.market]?.name ?? p.market}] ${text}` : text, k: run.tick } });
+      useProto.getState().patch({ think: { text, k: run.tick, m: Object.keys(run.positions).length > 1 ? p.market : undefined } });
       window.clearTimeout(thinkTimer);
       thinkTimer = window.setTimeout(() => useProto.getState().patch({ think: null }), 6500);
     };
@@ -209,7 +211,7 @@ function holdTick(g: GameState): void {
     h.seen[b.key] = true;
     h.lastAt = run.tick;
     const many = Object.keys(run.positions).length > 1;
-    useProto.getState().patch({ think: { text: many ? `[${marketById[p.market]?.name ?? p.market}] ${b.text}` : b.text, k: run.tick } });
+    useProto.getState().patch({ think: { text: b.text, k: run.tick, m: many ? p.market : undefined } });
     window.clearTimeout(thinkTimer);
     thinkTimer = window.setTimeout(() => useProto.getState().patch({ think: null }), 6500);
     return; // 한 틱에 한 마디
@@ -217,7 +219,12 @@ function holdTick(g: GameState): void {
 }
 
 // ── 장이 조용한가 · 본장이 열리고 닫히는가(U-40): 있는 그대로를 말한다. 가짜 출렁임은 없다 ─────────────
-const mk = { quietFor: 0, lastLineAt: -9999, wasQuiet: false, n: 0, sess: {} as Record<string, boolean> };
+const mk = { quietFor: 0, lastLineAt: -9999, wasQuiet: false, n: 0, sess: {} as Record<string, boolean>, flyAt: -9999 };
+/** 날다람쥐코인이 1분 새 이만큼(%) 출렁이면 신문 속보 한 줄(U-48). 평소 1분 폭은 0.6%쯤, 하루에 스무 번 남짓 넘는다 */
+export const FLY_NEWS_PCT = 3;
+/** 속보 사이 최소 간격(틱 = 초) */
+export const FLY_NEWS_GAP = 300;
+let flyPointT: number | undefined;
 const QUIET_HERO = ['어느 줄을 봐도 비슷하네.', '바퀴 소리만 잘 들린다.'];
 function marketTick(g: GameState): void {
   const P = useProto.getState();
@@ -241,6 +248,19 @@ function marketTick(g: GameState): void {
       openSaid.add(hu.key);
       say(`[도토리일보] ${marketById[id]?.name ?? id} 본장 개장까지 ${hu.min}분 (${(sessionHoursKst(id, now) ?? '').split('~')[0]})`, 7000);
       break;
+    }
+  }
+  // 날다람쥐코인 급등락 속보(U-48): 값이 정말로 1분 새 크게 출렁였을 때만(시세에서 센 것). 거래소 밖이면 거래소 탭을 잠깐 가리킨다
+  if (P.scenes.length === 0 && run.tick - mk.flyAt >= FLY_NEWS_GAP && marketById.FLY?.tradable) {
+    const fh = liveHistoryOf('FLY');
+    const r = recentRange(fh);
+    if (r !== null && r >= FLY_NEWS_PCT) {
+      mk.flyAt = run.tick;
+      const w = fh.slice(-60);
+      const up = w[w.length - 1] >= w[0];
+      say(`[도토리일보 속보] ${marketById.FLY.name}, 1분 새 ${r.toFixed(1)}% 출렁. 지금은 ${up ? '▲오르는' : '▼내리는'} 쪽`, 6500);
+      if (P.tab !== 'phone') { useProto.getState().patch({ pointTab: 'phone' }); window.clearTimeout(flyPointT); flyPointT = window.setTimeout(() => { if (!useProto.getState().forceTrade && useProto.getState().pointTab === 'phone') useProto.getState().patch({ pointTab: null }); }, 4500); }
+      return;
     }
   }
   // 도토리일보 시세면(U-41): 이번 생에 거래소를 처음 펴 보고 조금 지난 뒤, 지난 몇 시간의 머리기사를 한 줄로(기록이 30분은 있어야 싣는다)
@@ -540,6 +560,11 @@ export function startWatch(): void {
     // 강제 청산: 흔들림 + 도장(한 틱에 여럿이면 소리는 한 번)
     const liqPs = closedPs.filter((p) => closedMath(run, p).kind === 'liq');
     if (liqPs.length) play('liquidation');
+    // 판이 닫힌 순간의 숨(U-48): 거래소를 보고 있으면 결과 카드, 청산 도장, 축하가 먼저 보이고, 장면(추심원의 말 등)은 그 뒤에 온다
+    if (closedPs.length && useProto.getState().tab === 'phone') {
+      const big = closedPs.some((p) => { const cmx = closedMath(run, p); return cmx.kind === 'liq' || cmx.pnl / Math.max(1, p.margin0) >= 0.15 || cmx.pnl >= claim(prev).total; });
+      useProto.getState().patch({ beatUntil: Date.now() + (big ? BEAT_MS : 700) });
+    }
     for (const p of liqPs) fx.emit({ kind: 'liq', market: marketById[p.market]?.name ?? p.market });
     // 포지션이 닫혔다(청산 제외 이익 판정은 noteClose 가 한다)
     for (const p of sameLife ? closedPs : []) {
