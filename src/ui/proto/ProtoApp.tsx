@@ -33,6 +33,7 @@ import { has } from '../../engine/skilltree';
 import { useUI } from '../uiStore';
 import { forecast } from '../../engine/settlement';
 import { balance, DEBT_IDS } from '../../engine/data';
+import { settleSec } from '../../engine/pace';
 import { Acorn, RowIcon } from './art';
 import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
@@ -63,7 +64,7 @@ function Hud() {
   const run = g.run;
   const ps = perSettle(g);
   // 첫 생의 첫 추심원은 60초 뒤에 온다(U-39 ⑤): 그 막대는 60초짜리다
-  const total = run.settleNo === 0 && lifeNo(g) <= 1 ? Math.max(firstVisitSec(balance.settlement.intervalSec), run.settleIn) : balance.settlement.intervalSec;
+  const total = run.settleNo === 0 && lifeNo(g) <= 1 ? Math.max(firstVisitSec(settleSec(run)), run.settleIn) : Math.max(settleSec(run), run.settleIn);
   const left = Math.max(0, run.settleIn);
   const gi = currentGoal(g, goalIdx, flags);
   const fc0 = forecast(g);
@@ -83,10 +84,13 @@ function Hud() {
   const goalEnd = sv >= SAVINGS_STEPS.length ? '100만 도토리 달성, 사무소에서 언제든 은퇴할 수 있어요' : otherDebt > 0 ? `오소리 완납, 다른 빚 ${comma(otherDebt)}` : '남은 빚 0, 완납';
   const interest = (['bank', 'capital', 'shark1', 'shark2'] as const).reduce((a, id) => a + interestDue(g, id), 0);
   const lot = tab === 'lot';
+  // 열린 포지션 전부의 손익(U-47): 지금 정리하면 늘거나 줄 돈의 합. 거래소 밖에서도 머리에 보인다
+  const openPs = useOpenPositions();
+  const openSum = openPs.reduce((a, p) => a + p.net, 0);
   const [brk, setBrk] = useState(() => pdev === 'wallet' && /pbrk=1/.test(window.location.search));
   const fc = forecast(g);
   const rd = (n: number) => comma(Math.round(n));
-  const sec = (n: number) => rateTxt(perSec(n));
+  const sec = (n: number) => rateTxt(perSec(n, run));
   const hasWheel = ownedCoins(run).length > 0;
   const rate = run.effects.find((e) => e.type === 'rateMultiplier') ?? null;
   // 알바를 들인 순간(U-43 사용자: "알바 고용하고 하면 초당 얼마 버는지 시각화 제대로 좀"): 초당 칩 옆에 "초당 +0 → +n"(알바 한 마리가 1초에 남기는 돈 = 캐서 판 돈 − 일당, 판의 칸과 같은 엔진 값)
@@ -101,7 +105,7 @@ function Hud() {
     const newLife = prevGen.current !== g.family.generation; prevGen.current = g.family.generation;
     if (newLife || staffedN <= was) return;
     // 초당 칩은 들어오는 돈만 센다(U-46): 알바 한 마리만큼 오른다
-    const one = perSec(hamsterMath(g).sold);
+    const one = perSec(hamsterMath(g).sold, g.run);
     setHire((h) => ({ k: (h?.k ?? 0) + 1, t: `초당 +${rateTxt(one * was)} → +${rateTxt(one * staffedN)}` }));
     const t = window.setTimeout(() => setHire(null), 2400);
     return () => window.clearTimeout(t);
@@ -115,9 +119,10 @@ function Hud() {
         </div>
         <DevBar />
         <div className="acorn">
-          <div className="n" data-hl="acorn"><Money value={run.cash} perSec={perSec(fc.mined)} /><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
+          <div className="n" data-hl="acorn"><Money value={run.cash} perSec={perSec(fc.mined, run)} /><i id="pr-acorn-ic"><Acorn size={26} /></i></div>
           {/* 초당 칩(U-46 사용자: "초당 −275란 말 이상하네… 정산은 20초마다니까"): 1초마다 실제로 들어오는 돈만. 나가는 돈은 정산 때 한 번에 — 정산 막대 옆 「정산 때 −Y」. 한 정산에 버는 돈이 낼 돈에 못 미치면 붉게 */}
-          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 +{rateTxt(perSec(homeSummary(g).mined))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i>{hire && <b key={hire.k} className="hireburst" data-hireburst>{hire.t}</b>}</button>
+          <button className={'ps' + (ps < 0 ? ' neg' : '') + (brk ? ' open' : '')} aria-expanded={brk} data-ps data-hl="ps" onClick={() => setBrk((b) => !b)}>초당 +{rateTxt(perSec(homeSummary(g).mined, run))} <i>{brk ? '▴\uFE0E' : '▾\uFE0E'}</i>{hire && <b key={hire.k} className="hireburst" data-hireburst>{hire.t}</b>}</button>
+ {openPs.length > 0 && tab !== 'phone' && <button className={'hpos ' + (openSum >= 0 ? 'up' : 'down')} data-hudpos={Math.round(openSum)} onClick={() => useProto.getState().setTab('phone')} aria-label={`열린 포지션 ${openPs.length}개 손익 합계, 거래소로`}>포지션 {openPs.length > 1 ? `${openPs.length}개 ` : ''}{openSum >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(openSum)))}</button>}
           {hasWheel && <button className="walbtn" data-hl="wallet" onClick={() => useProto.getState().patch({ wallet: true })} aria-label="콜드월렛 열기"><Acorn size={15} />지갑 {comma(Math.round(walletValue(run)))}</button>}
         </div>
       </div>
@@ -161,8 +166,10 @@ function TabBar() {
     if (id === 'lot' && tab !== 'lot' && cheer) return { t: '잔치 중', hot: false };
     if (id === 'lot' && tab !== 'lot') return { t: mmss(Math.max(0, g.run.settleIn)), hot: g.run.settleIn <= 10 };
     if (id === 'phone' && near) return { t: `▼청산 ${near.liqDistPct.toFixed(1)}%`, hot: true };
-    // 청산이 지난 1분 폭의 세 배 안으로 들어오면 탭 꼬리표가 붉어진다(U-39 ①)
-    if (id === 'phone' && pos.length && ['tight', 'edge'].includes(tensionOf(pos[0].liqDistPct, liveHistoryOf(pos[0].market)).reach)) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}% !`, hot: true };
+    // 청산이 지난 1분 폭의 세 배 안으로 들어오면 탭 꼬리표가 붉어진다(U-39 ①). 여러 종목을 들면(U-47) 가장 급한 것으로 재고, 꼬리표는 손익 합
+    const tight = pos.some((p) => ['tight', 'edge'].includes(tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach));
+    if (id === 'phone' && pos.length > 1) { const sum = pos.reduce((a, p) => a + p.net, 0); const a = Math.abs(sum); return { t: `${sum >= 0 ? '▲+' : '▼−'}${a >= 10000 ? `${+(a / 10000).toFixed(1)}만` : comma(Math.round(a))}${tight ? ' !' : ''}`, hot: tight }; }
+    if (id === 'phone' && pos.length && tight) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}% !`, hot: true };
     if (id === 'phone' && pos.length) return { t: `${pos[0].netRoe >= 0 ? '▲+' : '▼−'}${Math.abs(pos[0].netRoe).toFixed(0)}%`, hot: false };
     if (id === 'map' && waiting) return { t: '사무소', hot: true };
     if (id === 'map' && overdue) return { t: '연체', hot: true };

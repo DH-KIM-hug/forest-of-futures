@@ -1,5 +1,6 @@
 // 게임 상태 변화를 보고 시제품 화면 사건(추심원·정산 컷인·탭 해금·목표)을 만든다. 규칙은 엔진의 것만 쓴다.
 import { useGame } from '../../store/gameStore';
+import { settleSec } from '../../engine/pace';
 import { useProto, type Scene } from './protoStore';
 import { currentGoal, lifeNo, officeOffer, claim, hamsterMath, tipArgs, interestNow, interestAfterHike, fixedInterestNow, staffedCount } from './model';
 import { holdBeat, tensionOf } from './tension';
@@ -151,7 +152,7 @@ interface Hold { openTick: number; seen: Record<string, boolean>; peakPnl: numbe
 const holds: Record<string, Hold> = {};
 let thinkTimer: number | undefined;
 /** 정산 몇 초 전에 추심원이 미리 말하는가 */
-export const headsUpSec = (): number => Math.min(30, Math.floor(balance.settlement.intervalSec * 0.4));
+export const headsUpSec = (run: GameState['run']): number => Math.min(30, Math.floor(settleSec(run) * 0.4));
 function holdTick(g: GameState): void {
   const P = useProto.getState();
   const run = g.run;
@@ -348,7 +349,7 @@ export function startWatch(): void {
       prevAway = s.net.away;
       if (s.net.away && !g.run.over && !useProto.getState().prologue) {
         const names = Object.fromEntries(Object.values(marketById).map((m) => [m.id, m.name]));
-        useProto.getState().patch({ away: awayCard(s.net.away, purse ?? purseOf(prev), purseOf(g), { names, openNow: Object.keys(g.run.positions).length, interval: balance.settlement.intervalSec }) });
+        useProto.getState().patch({ away: awayCard(s.net.away, purse ?? purseOf(prev), purseOf(g), { names, openNow: Object.keys(g.run.positions).length, interval: settleSec(g.run) }) });
         play('settle_bell');
       }
       purse = null;
@@ -411,7 +412,7 @@ export function startWatch(): void {
     }
 
     // ── 정산이 가까운데 낼 돈이 모자라다: 추심원이 미리 말한다(돈이 포지션에 묶여 있으면 그렇다고) ──
-    if (!run.over && sameLife && run.settleIn === headsUpSec() && prev.run.settleIn !== run.settleIn && useProto.getState().loanTaken && useProto.getState().tutorial === 'done' && wouldBeShort(g)) {
+    if (!run.over && sameLife && run.settleIn === headsUpSec(run) && prev.run.settleIn !== run.settleIn && useProto.getState().loanTaken && useProto.getState().tutorial === 'done' && wouldBeShort(g)) {
       const due = claim(g).total;
       const locked = Object.values(run.positions).reduce((a, p) => a + p.margin0, 0);
       play('collector_steps', { vol: 0.5 });
@@ -534,17 +535,16 @@ export function startWatch(): void {
       later(1200, () => play('overdue_stamp'));
       sceneHeld({ id: `seize${run.stats.assetsSeized}`, again: true, lines: STORY.seize({ what, off: Math.abs(ev?.amount ?? 0) }) }, what === 'mom' ? '엄마의 쳇바퀴 압류. 집에서 내역 확인' : what === 'wallet' ? '콜드월렛 압류. 집에서 내역 확인' : '보조 쳇바퀴 압류. 집에서 내역 확인');
     }
-    // 강제 청산: 흔들림 + 도장
-    const lc = run.lastClose;
-    const closedNow = !!lc && (!prev.run.lastClose || prev.run.lastClose.tick !== lc.tick || prev.run.lastClose.market !== lc.market);
-    if (lc && lc.liq && closedNow) {
-      play('liquidation');
-      fx.emit({ kind: 'liq', market: marketById[lc.market]?.name ?? lc.market });
-    }
+    // 닫힌 포지션(U-47: 여러 종목을 함께 들 수 있다 — 한 틱에 둘 이상 닫혀도 하나씩 다 본다)
+    const closedPs = Object.values(prev.run.positions).filter((p) => { const c = run.positions[p.market]; return !c || c.openTick !== p.openTick; });
+    // 강제 청산: 흔들림 + 도장(한 틱에 여럿이면 소리는 한 번)
+    const liqPs = closedPs.filter((p) => closedMath(run, p).kind === 'liq');
+    if (liqPs.length) play('liquidation');
+    for (const p of liqPs) fx.emit({ kind: 'liq', market: marketById[p.market]?.name ?? p.market });
     // 포지션이 닫혔다(청산 제외 이익 판정은 noteClose 가 한다)
-    if (lc && closedNow && sameLife) {
-      const p = prev.run.positions[lc.market];
-      if (p && !run.positions[lc.market]) {
+    for (const p of sameLife ? closedPs : []) {
+      const lc = { market: p.market, liq: closedMath(run, p).kind === 'liq', tick: run.tick };
+      {
         const { exit, pnl, kind: endKind } = closedMath(run, p);
         const tut = useProto.getState().tutorial === 'run';
         // 걸어 둔 출구에 닿아 닫혔는데 거래소를 보고 있지 않았다(U-41): 어디서든 한 줄로 알린다(결과 카드는 거래소 탭에만 뜬다)
@@ -553,7 +553,7 @@ export function startWatch(): void {
         // 튜토리얼 거래는 승률·인증서·반응에 넣지 않는다
         if (!tut) {
           const c = claim(prev).total;
-          noteClose({ market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, margin: p.margin0, claim: c, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: lifeNo(g), gold: !!run.skill?.B4 });
+          noteClose({ market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, margin: p.margin0, claim: c, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: lifeNo(g), gold: !!run.skill?.B4 || (!!run.skill?.B3a && p.lev >= 100 && pnl > 0) });
           // 세상이 그 거래에 반응한다(react.ts): 크기는 다음 청구액에 견준다
           const P = useProto.getState();
           const tiny = isTiny(pnl, c);
@@ -625,8 +625,11 @@ export function startWatch(): void {
     }
     // 배율이 열렸다 · 확인서에 도장을 찍었다
     if (sameLife && !run.over) {
-      if (levCapNow(run) >= 50 && levCapNow(prev.run) < 50 && prev.run.futures.open) later(600, () => say('[FRX 숲거래소] 거래 실적 반영. 이제 50배 주문을 쓸 수 있습니다.', 4500));
-      if (run.futures.waiver && !prev.run.futures.waiver) scene({ id: 'waiver', lines: STORY.waiver() });
+      // U-47: 처음부터 50배(계좌를 연 순간), 발도장을 찍으면 그 자리에서 200배. 찍은 뒤에는 한 줄만
+      // 한 번 버티기(나무 B1): 청산가에 닿은 순간 오소리가 대신 넣었다
+      const lh = run.stats.lastHold as { market: string; tick: number; amount: number } | undefined, plh = prev.run.stats.lastHold as typeof lh;
+      if (lh && (!plh || plh.tick !== lh.tick || plh.market !== lh.market)) { play('buy'); say(`오소리 대부: 한 번은 잡아 드렸어요. ${marketById[lh.market]?.name ?? lh.market} 증거금 +${comma(lh.amount)}, 정리할 때 돌려주세요.`, 5500); }
+      if (run.futures.waiver && !prev.run.futures.waiver) later(400, () => say('[FRX 숲거래소] 위험 고지 확인서 접수. 이번 생은 200배까지 주문할 수 있습니다.', 4500));
     }
     // ── 이야기 사건 ──
     if (!run.over && sameLife) {

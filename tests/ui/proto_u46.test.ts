@@ -65,10 +65,10 @@ describe('떠오르는 숫자와 칸의 숫자 (U-46, 5b 의 남은 흠 a)', () 
   it('도는 칸의 초당 = 쳇바퀴 위에 떠서 채굴기로 가는 "+n"(1초에 캐서 판 돈). 일당은 정산 때라고 작은 줄에', () => {
     const g = borrowed();
     const hm = hamsterMath(g);
-    const floater = Math.round(perSec(hm.sold)); // World.tsx secGain
-    expect(tiles(g)[0].text).toBe(`초당 +${rateTxt(perSec(hm.sold))}`);
+    const floater = Math.round(perSec(hm.sold, g.run)); // World.tsx secGain
+    expect(tiles(g)[0].text).toBe(`초당 +${rateTxt(perSec(hm.sold, g.run))}`);
     expect(Math.round(Number(tiles(g)[0].text.replace(/[^\d.]/g, '')))).toBe(floater);
-    expect(tiles(g)[0].sub).toBe('일당 1,600은 정산 때');
+    expect(tiles(g)[0].sub).toBe('일당 530은 정산 때');
   });
   it('접힌 한 줄: 초록 = 1초마다 들어오는 돈, 빨강 = 정산 때 나가는 돈 전부(이자 + 생활비 + 일당). 견줌(어느 쪽이 큰가)은 예전과 같다', () => {
     const g = borrowed();

@@ -36,6 +36,7 @@ import { acornStops, carryOf, chipCount, keepDueMargin, netForRoe, orderCtx, pla
 import { rollWheel, rolledFor } from './roll';
 import { dayNoteOpen } from './daynote';
 import { ctxOfPosition, plans, reapplyPlan } from './exitPlan';
+import { STORY } from './text';
 import { swingOf, swingText, sessionOf, liveliest, allQuiet, feeEventChip, SESSIONS, opensInText } from './market';
 import { feeEventLeft, openingEvent } from '../../engine/skilltree';
 import {
@@ -58,6 +59,7 @@ const COIN: Record<string, { col: string; glyph: ReactNode }> = {
   MDT: { col: '#E0B84A', glyph: <><circle cx="10" cy="6.4" r="2.3" /><circle cx="13.6" cy="10" r="2.3" /><circle cx="10" cy="13.6" r="2.3" /><circle cx="6.4" cy="10" r="2.3" /></> },
   SMS: { col: '#6C93C4', glyph: <rect x="6.4" y="6.4" width="7.2" height="7.2" rx="1" /> },
   JQQ: { col: '#4FA37A', glyph: <path d="M10 5.2l4.6 8.4H5.4z" /> },
+  FLY: { col: '#8E3FE0', glyph: <path d="M4 9l6-3 6 3-6 4z" /> },
 };
 export function Coin({ id, size = 22 }: { id: string; size?: number }) {
   const c = COIN[id] ?? COIN.DTC;
@@ -212,7 +214,7 @@ export const CARRY_SHOW_SEC = 75;
 /** 시트는 손절·익절 하나뿐이다. 진입은 시트 없이 한 번에 한다. */
 type Sheet = null | 'stops';
 /** pnl = 이 거래로 늘거나 준 돈(들어갈 때·나올 때 수수료 포함). move = 시세로 번 돈, fees = 낸 수수료, worth = 쳇바퀴로 치면 얼마(react.ts) */
-interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number; move: number; fees: number; worth: string | null; /** 정가로 냈다면 더 냈을 수수료(오픈 기념 · 나무의 할인)와 그 까닭 */ saved: number; savedBy: 'event' | 'tree' | null; /** 이 판을 들고 있는 동안 쳇바퀴를 굴려 번 돈(U-42) */ rolled: number }
+interface Result { k: number; kind: 'close' | 'tp' | 'sl' | 'liq'; pnl: number; margin: number; roe: number; name: string; dirText: string; lev: number; move: number; fees: number; worth: string | null; /** 정가로 냈다면 더 냈을 수수료(오픈 기념 · 나무의 할인)와 그 까닭 */ saved: number; savedBy: 'event' | 'tree' | null; /** 이 판을 들고 있는 동안 쳇바퀴를 굴려 번 돈(U-42) */ rolled: number; /** 고배율 축하금(나무 B3a, U-47) */ bonus: number }
 /** 이 거래에서 아낀 수수료: 정가(오픈 기념이 있는 판은 끝난 뒤의 수수료율, 없는 판은 기본 수수료율)로 들어가고 나왔다면 냈을 돈 − 실제로 낸 돈 */
 export function savedFees(p: { notional: number; feeRate?: number }, paid: number, liq: boolean): { saved: number; by: 'event' | 'tree' | null } {
   const ev = openingEvent();
@@ -404,7 +406,7 @@ export function ProtoTrade() {
       setSheet(null);
       // 첫 주문(튜토리얼)은 오픈 기념 문자가 오기 전이다: 아낀 수수료를 「오픈 기념」으로 적지 않는다(U-46)
       const sv = useProto.getState().tutorial === 'run' ? { saved: 0, by: null } : savedFees(was.p, fees, liq);
-      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net), saved: sv.saved, savedBy: sv.by, rolled: Object.keys(run.positions).length === 0 ? Math.round(rolledFor(was.p.openTick)) : 0 }));
+      setResult((r) => ({ k: (r?.k ?? 0) + 1, kind, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net), saved: sv.saved, savedBy: sv.by, rolled: Object.keys(run.positions).length === 0 ? Math.round(rolledFor(was.p.openTick)) : 0, bonus: (() => { const lb = run.stats.lastBonus as { market: string; tick: number; amount: number } | undefined; return lb && lb.market === was.p.market && lb.tick === run.tick ? lb.amount : 0; })() }));
       window.clearTimeout(resT.current);
       resT.current = window.setTimeout(() => setResult(null), 5200);
       if (!liq) play(pnl > 0 ? 'close_profit' : 'close_loss'); // 청산 소리는 watch.ts 가 낸다
@@ -419,6 +421,18 @@ export function ProtoTrade() {
   /** 도토리로 건 출구를 지금 포지션의 크기 · 수수료에 맞춰 다시 건다(진입 직후 · 추가 진입 뒤) */
   const reapply = () => {
     reapplyPlan(market);
+  };
+  /** 50배 위의 칸을 처음 눌렀다(U-47): 오소리 대부가 위험 고지 확인서를 밀어 준다. [발도장 찍기] 한 번이면 이번 생 내내 200배까지 열린다 */
+  const askWaiver = (want: number) => {
+    if (tutSt !== 'done') { say('첫 주문은 정해 둔 배율로 해요.', false); return; }
+    play('ui_tap');
+    useProto.getState().pushScene({
+      id: 'waiverAsk', again: true, hold: true, lines: STORY.waiverAsk(want),
+      choices: [
+        { id: 'stamp', label: '발도장 찍기', sub: `${want}배 주문이 바로 열린다`, primary: true, run: () => { const r = useGame.getState().act({ type: 'signWaiver' }); if (r.ok) { play('overdue_stamp'); setTrade({ lev: want }); } else toast(r.msg ?? '찍을 수 없다'); } },
+        { id: 'later', label: '다음에', sub: '50배까지만', run: () => { /* 그대로 */ } },
+      ],
+    });
   };
   const doOpen = (dir: 1 | -1) => {
     // 튜토리얼 거래(U-31): 첫 한 번은 정해 둔 돈·배율로, 짜 둔 시세 위에서
@@ -543,6 +557,9 @@ export function ProtoTrade() {
   const tpTxt = stopLabel(curTp, sctx, 'tp');
   const pctOf = (v: number | null) => (v === null ? '' : `${v >= 0 ? '+' : '−'}${Math.abs(v) >= 100 ? Math.abs(v).toFixed(0) : Math.abs(v).toFixed(Math.abs(v) % 1 > 0.04 ? 1 : 0)}%`);
 
+  const openTabs = tabs.filter((t) => t.hasPos);
+  const openN = openTabs.length;
+  const openNet = openTabs.reduce((a, t) => a + (t.posNet ?? 0), 0);
   const feeChipH = openingEvent() && useProto.getState().tutorial === 'done' && run.futures.open ? { ...feeEventChip(feeEventLeft(run), feeRate(g, tr.lev ?? run.futures.defaultLev) * 100), left: feeEventLeft(run) } : null;
   const frame = (body: ReactNode, cls = '') => (
     <div className="pt-wrap">
@@ -552,11 +569,13 @@ export function ProtoTrade() {
           <span className="logo"><Acorn size={17} /></span>
           <b>{EXCHANGE_NAME}</b>
           <em>선물</em>
+          {/* 열린 포지션 전부의 손익(U-47): 지금 정리하면 늘거나 줄 돈의 합(수수료 포함) */}
+          {openN > 0 && <span className={'pt-sum ' + (openNet >= 0 ? 'up' : 'down')} data-possum={Math.round(openNet)} role="status" aria-label={`포지션 ${openN}개 합계 ${money(openNet)}`}><small>{openN}개</small>{money(openNet)}</span>}
           {/* 오픈 기념 수수료 무료(U-40): 거래소 머리에 늘 걸려 있다. 끝난 뒤에는 지금 수수료율 */}
           {feeChipH && <span className={'pt-fee' + (feeChipH.on ? ' on' : '') + (feeChipH.on && feeChipH.left <= 3 ? ' last' : '')} data-fee-event={feeChipH.left} role="status" aria-label={feeChipH.text}>{feeChipH.on ? '오픈 기념 무료' : feeChipH.text.replace('거래 ', '')}</span>}
           {Object.keys(activeLevels(g)).length > 0 && <button className="pt-perk" data-perks onClick={() => setPerks((v) => !v)} aria-expanded={perks} aria-label="이번 생에 열린 가지">나무 {Object.keys(activeLevels(g)).length}</button>}
         </header>
-        {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' ? '(+' : '(−') : skillById[id]?.tail ? ` Lv${lv} (${id === 'A3a' ? `+${Math.round(tailRun(run, id))}초` : id === 'B2' ? `−${(tailRun(run, id) * 100).toFixed(2)}%p` : `${id === 'B3b' || id === 'C4' ? '+' : '−'}${(tailRun(run, id) * 100).toFixed(1)}%`})` : ''}</span>)}</div>}
+        {perks && <div className="pt-perks" role="status" onClick={() => setPerks(false)}>{Object.entries(activeLevels(g)).map(([id, lv]) => <span key={id}>{skillById[id]?.name}{skillById[id]?.kind === 'scaled' ? ` Lv${lv} (−${(nodeEffect(g, id) * 100).toFixed(1)}%)`.replace('(−', id === 'C2' || id === 'B1' ? '(+' : '(−') : skillById[id]?.tail ? ` Lv${lv} (${id === 'A3a' ? `+${Math.round(tailRun(run, id))}초` : id === 'B2' ? `−${(tailRun(run, id) * 100).toFixed(2)}%p` : `${id === 'B3b' || id === 'C4' ? '+' : '−'}${(tailRun(run, id) * 100).toFixed(1)}%`})` : ''}</span>)}</div>}
         {body}
       </div>
     </div>
@@ -578,15 +597,20 @@ export function ProtoTrade() {
         const r = rangeOf(t.id), sw = swingOf(r);
         const ss = SESSIONS[t.id] ? sessionOf(t.id, now, r) : null;
         return (
-        <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct sw-' + sw + (t.id === market ? ' on' : '') + (ss?.badge ? ' shut' : '')} data-swing={sw} data-session={ss?.state} onClick={() => setTrade({ market: t.id })}>
+        <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct sw-' + sw + (t.id === market ? ' on' : '') + (ss?.badge ? ' shut' : '')} data-swing={sw} data-session={ss?.state} onClick={() => {
+          setTrade({ market: t.id });
+          // 날다람쥐코인(FLY)을 처음 열었다: 숲 신문 한 줄(생마다 한 번)
+          if (marketById[t.id].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[t.id].name} 상장. 실체 없는 숲 밈코인, 값은 바람이 정한다.`, 6000); }
+        }}>
           <Coin id={t.id} size={22} />
-          <span className="nm">{marketById[t.id].name}</span>
+          <span className="nm">{marketById[t.id].short ?? marketById[t.id].name}</span>
           {/* 종목마다 지난 1분의 출렁임(실시간 값). 주식을 따라가는 종목이 본장 밖에서 자고 있으면 "장 마감" */}
           <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '재는 중' : r.toFixed(3) + '%'}`}>
             <i className="bars" aria-hidden="true"><u /><u /><u /></i>{ss?.badge ?? swingText(r)}
           </small>
           {wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
-          {t.hasPos && <i className={'pd ' + ((t.posRoe ?? 0) >= 0 ? 'up' : 'down')} aria-label="포지션 있음" />}
+          {/* 포지션이 있는 종목(U-47: 여러 종목을 함께 든다): 방향과 지금 손익 색 */}
+          {t.hasPos && <i className={'pd ' + ((t.posNet ?? 0) >= 0 ? 'up' : 'down')} data-posdir={t.posDir} aria-label={`${t.posDir === 1 ? '롱' : '숏'} 포지션, ${(t.posNet ?? 0) >= 0 ? '이익' : '손실'} ${comma(Math.abs(Math.round(t.posNet ?? 0)))}`}>{t.posDir === 1 ? '▲' : '▼'}</i>}
         </button>
         );
       })}
@@ -599,7 +623,7 @@ export function ProtoTrade() {
       <div className="px"><i className="qn">{marketById[market].name}</i><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
       {status ? <div className="st-bad" role="status">{status}</div>
         : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><b>{sess.state === 'closed' ? '본장 마감' : sess.state === 'after' ? '본장 마감, 그래도 움직인다' : '장중인데 조용함, 휴장인 듯'}</b><small data-opens-in>{opensInText(market, now) ? `다음 개장 ${sess.hours.split('~')[0]} (${opensInText(market, now)})` : `본장 ${sess.hours}`}</small></div>
-        : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : '24시간')}</span>{mood}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
+        : <div className={'mood m-' + (mood === '잔잔함' ? 'calm' : mood === '격동' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : m.synthetic ? '숲 밈코인, 값은 바람이' : '24시간')}</span>{mood}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
     </div>
   );
   // 차트 창: 나무의 초봉 차트(A3a)를 30초 · 긴 창으로 돌려 둔 동안에는 그것이 먼저다. 아니면 고른 시간(2분 · 5분 · 10분)
@@ -731,9 +755,9 @@ export function ProtoTrade() {
         <div className="pt-ruler" data-hl="ruler" role="radiogroup" aria-label="배율">
           {ruler.map((nt) => (
             <button key={nt.lev} role="radio" aria-checked={nt.lev === lev} aria-label={`${nt.lev}배${nt.locked ? ' 잠김' : ''}`}
-              className={'nt' + (nt.lev === lev ? ' on' : '') + (nt.hot ? ' hot' : '') + (nt.locked ? ' locked' : '')}
-              onClick={() => { if (nt.locked) say(nt.lockText!, false); else setTrade({ lev: nt.lev }); }}>
-              <i>{nt.locked && <Lock size={12} />}</i><b>{nt.lev}{nt.lev === lev ? '배' : ''}</b>
+              className={'nt' + (nt.lev === lev ? ' on' : '') + (nt.hot ? ' hot' : '') + (nt.locked && !nt.seal ? ' locked' : '') + (nt.seal ? ' seal' : '')} data-lev={nt.lev}
+              onClick={() => { if (nt.seal) askWaiver(nt.lev); else if (nt.locked) say(nt.lockText!, false); else setTrade({ lev: nt.lev }); }}>
+              <i>{nt.locked && !nt.seal && <Lock size={12} />}</i><b>{nt.lev}{nt.lev === lev ? '배' : ''}</b>
             </button>
           ))}
         </div>
@@ -756,7 +780,7 @@ export function ProtoTrade() {
           : <div className={'pt-odds' + (odds!.liqFirst ? ' no' : '')} data-odds>{odds!.text}{!odds!.liqFirst && oddsSwing ? `, ${oddsSwing}` : ''}</div>)}
         {/* 지금 고른 종목이 자고 있다: 이자까지의 셈 대신, 다른 종목이 깨어 있으면 어디가 움직이는지, 전부 조용하면 그렇다고 말한다(가짜 출렁임은 없다) */}
         {quietShown && (
-          <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 다섯 종목 모두 값이 거의 그대로다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? '본장 마감이라' : '지금'} 거의 안 움직인다. 움직이는 곳은 ${marketById[wild.id].name} (1분 ${wild.r.toFixed(2)}%)` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
+          <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 모든 종목 값이 거의 그대로다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? '본장 마감이라' : '지금'} 거의 안 움직인다. 움직이는 곳은 ${marketById[wild.id].name} (1분 ${wild.r.toFixed(2)}%)` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
         )}
       </div>
       {!pos && !prev.reason && tutSt === 'done' && sqOrder && <div className="pt-squeeze" data-squeeze="order">{sqOrder.text}</div>}
@@ -786,14 +810,15 @@ export function ProtoTrade() {
     lower = (
       <>
         {result ? (
-          <div key={'r' + result.k} ref={plRef} className={'pt-pl res ' + (result.pnl >= 0 ? 'win' : 'lose') + ' k-' + result.kind + (sk.legend ? ' legend' : '')} role="status" onClick={() => setResult(null)}>
+          <div key={'r' + result.k} ref={plRef} className={'pt-pl res ' + (result.pnl >= 0 ? 'win' : 'lose') + ' k-' + result.kind + (sk.legend || result.bonus > 0 ? ' legend' : '')} role="status" onClick={() => setResult(null)}>
             <img className="me" data-art={result.kind === 'liq' ? 'heroSad' : result.pnl > 0 ? 'heroHappy' : 'hero'} src={(result.kind === 'liq' ? sprite('heroSad') : result.pnl > 0 ? sprite('heroHappy') : sprite('hero'))!.src} alt="" />
             <div className="big">
               <div className="roe">{money(result.pnl)}</div>
               <div className="sub" data-why>시세 <b className={result.move >= 0 ? 'up' : 'down'}>{money(result.move)}</b>  수수료 {result.fees > 0 ? <b className="down">−{comma(result.fees)}</b> : <b>0</b>}<span className="xtra">넣은 돈 {comma(Math.round(result.margin))}, {result.dirText} {result.lev}배</span></div>
               {/* 쳇바퀴 단위와 아낀 수수료(U-40: 오픈 기념 덕인지 나무 덕인지, 정가였다면 얼마를 더 냈을지)를 한 줄에 — 카드가 길어지지 않게 */}
-              {(result.worth || (result.savedBy && result.saved >= 10) || result.rolled >= 10) && (
+              {(result.worth || (result.savedBy && result.saved >= 10) || result.rolled >= 10 || result.bonus > 0) && (
                 <div className="tags">
+                  {result.bonus > 0 && <span className="bonus" data-bonus={result.bonus}>오소리 축하금 +{comma(result.bonus)}</span>}
                   {result.worth && <span className="worth" data-worth>{result.pnl >= 0 ? '' : '잃은 돈 = '}{result.worth}</span>}
                   {result.savedBy && result.saved >= 10 && <span className="saved" data-saved={result.savedBy}>{result.savedBy === 'event' ? '오픈 기념' : '나무'} −{comma(result.saved)}</span>}
                   {result.rolled >= 10 && <span className="rolled" data-rolled-res={result.rolled}>그동안 굴려 +{comma(result.rolled)}</span>}
@@ -848,12 +873,8 @@ export function ProtoTrade() {
           </div>
         ) : null}
         {order}
-        {/* 확인서를 찍을 수 있을 때는 손절·익절 줄 자리에 확인서가 온다(화면 높이를 늘리지 않는다) */}
-        {!pos && mode.waiver ? (
-        <button className="pt-waiver" data-waiver onClick={() => { const r = act({ type: 'signWaiver' }); if (r.ok) play('overdue_stamp'); else say(r.msg ?? '아직 안 됩니다'); }}>
-          <span><b>고위험 거래 확인서</b><small>도장을 찍으면 200배</small></span><i>도장</i>
-        </button>
-        ) : (
+        {/* 위험 고지 확인서는 막는 문이 아니라 한 장면이다(U-47): 50배 위의 칸을 처음 누르면 오소리 대부가 밀어 준다 */}
+        {(
         <div className="pt-condrow">
           <button className="pt-cond" data-hl="cond" onClick={() => setSheet('stops')}>
             <span className="vals">

@@ -23,8 +23,8 @@ function playFront(): string[] {
 beforeEach(() => { resetGuide(); setGuideOff(false); P().resetLife(2, true); });
 
 describe('튜토리얼 대사 (U-32): 모든 줄이 풀린다', () => {
-  it('엔진 값이 그대로 끼워진다(쳇바퀴 한 번 2, 첫 청구 5,500, 일당 1,600, 쳇바퀴 50,000, 대출 10만, 빚 30만)', () => {
-    expect(ARGS).toEqual({ tap: 2, claim: 5500, living: 1000, wage: 1600, wheel: 50000, lend: 100000, rate: 4, debt: 300000, lev: 10 });
+  it('엔진 값이 그대로 끼워진다(쳇바퀴 한 번 2, 첫 청구 1,830, 일당 530, 쳇바퀴 50,000, 대출 10만 1.3%, 빚 30만)', () => {
+    expect(ARGS).toEqual({ tap: 2, claim: 1830, living: 330, wage: 530, wheel: 50000, lend: 100000, rate: 1.3, debt: 300000, lev: 10 });
   });
   it('줄마다: 아는 사람이 말하고, 글이 비어 있지 않고, 숫자가 빠지지 않고, 폰 화면 두 줄(34자) 안에 든다', () => {
     expect(TIP_IDS.length).toBeGreaterThanOrEqual(20); // 개정 대본(2026-11-28): 설명 줄을 장면 대사로 덜어 냈다
@@ -130,14 +130,14 @@ describe('튜토리얼 대사 (U-32): 한 줄은 평생 한 번', () => {
     expect(tipsLeft('home')).toBe(false);
     P().pushScene({ id: 'guide_home', again: true, lines: tips('home', ARGS) });
     expect(P().scenes.length).toBe(0);
-    P().pushScene({ id: 'office', lines: STORY.office({ lend: 100000, ratePct: 4, oldInterest: 4500, newInterest: 8500, debt: 400000 }, ARGS) });
+    P().pushScene({ id: 'office', lines: STORY.office({ lend: 100000, ratePct: 1.3, oldInterest: 1500, newInterest: 2800, debt: 400000 }, ARGS) });
     expect(P().scenes[0].lines.every((l) => !l.tip)).toBe(true);
     P().patch({ scenes: [] });
   });
-  it('빌린 뒤의 숫자도 풀린다(빚 40만 · 청구 9,500)', () => {
+  it('빌린 뒤의 숫자도 풀린다(빚 40만, 청구 3,130)', () => {
     const g = fresh();
     A(g, { type: 'borrow', lender: 'shark1' });
-    expect(tipArgs(g)).toMatchObject({ debt: 400000, claim: 9500, lend: 100000 });
+    expect(tipArgs(g)).toMatchObject({ debt: 400000, claim: 3130, lend: 100000 });
     expect(T('hud.debt', tipArgs(g)).text).toContain('40만');
   });
 });

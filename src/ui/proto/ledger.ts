@@ -4,7 +4,7 @@ import { balance, lenderById } from '../../engine/data';
 import { haggleMult, rateMult } from '../../engine/selectors';
 import type { GameState } from '../../engine/types';
 
-/** 장부 한 줄. repeat = 두 번째부터 빌린 돈(6%), first = 처음 빌린 돈(4%), mom = 엄마 빚(옛 이자 1.5%) */
+/** 장부 한 줄. repeat = 두 번째부터 빌린 돈(2%), first = 처음 빌린 돈(1.3%), mom = 엄마 빚(옛 이자 0.5%) */
 export interface LedgerRow { key: 'repeat' | 'first' | 'mom'; label: string; ratePct: number; left: number; start: number; interest: number; /** 고정금리(금리 인상 사건에도 그대로) */ fixed: boolean }
 
 /** 금박 도장 하나에 필요한 상환액. 환생 때 받는 황금 실물 도토코인과 같은 기준이다(SKILLTREE_TRADE.md: 갚은 원금 5만당 1개). */

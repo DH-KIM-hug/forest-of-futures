@@ -142,7 +142,7 @@ function submitLife(L: Life): void {
   submit('networth', Math.floor(L.peak), lifeDetail(L.lifeNo, L.settles, L.peak, L.trades));
 }
 /** 정산 몇 번에 한 번까지 생 중간 기록을 넣는가 */
-export const LIFE_SUBMIT_EVERY = 5;
+export const LIFE_SUBMIT_EVERY = 15; // U-47: 정산이 60초 — 15분에 한 번
 
 /** 한 번 지켜본 것(시험용으로 따로 부른다): 두 상태 사이에 생긴 일을 기록한다 */
 export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.now()): void {

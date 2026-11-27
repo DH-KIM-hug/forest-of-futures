@@ -59,13 +59,13 @@ describe('U-45 한 생 재산', () => {
     const g = createGame({ seed: 3, prices: { DTC: 1, BTH: 1, SMS: 1, MDT: 1, JQQ: 1 } });
     expect(rankNetWorth(g)).toBe(Math.floor(g.run.cash - 300_000));
   });
-  it('생의 거래 목록: 이긴 것 먼저, 300개까지, 봉을 못 받는 오래된 이긴 거래는 뺀다', () => {
+  it('생의 거래 목록: 이긴 것 먼저, 600개까지(U-47: 종목 여섯 · 정산 60초), 봉을 못 받는 오래된 이긴 거래는 뺀다', () => {
     const mk = (i: number, pnl: number, ago = 0): TradeDetail => ({ market: 'DTC', dir: 1, lev: 10, margin: 1000, entryTs: T0 - ago, exitTs: T0 - ago + 60_000, roe: pnl / 10, pnl });
-    const all = [...Array.from({ length: 200 }, (_, i) => mk(i, -50)), ...Array.from({ length: 150 }, (_, i) => mk(i, 10 + i))];
+    const all = [...Array.from({ length: 400 }, (_, i) => mk(i, -50)), ...Array.from({ length: 300 }, (_, i) => mk(i, 10 + i))];
     const out = lifeTrades(all);
-    expect(out.length).toBe(300);
-    expect(out.slice(0, 150).every((t) => t.pnl > 0)).toBe(true);
-    expect(out[0].pnl).toBe(159);
+    expect(out.length).toBe(600);
+    expect(out.slice(0, 300).every((t) => t.pnl > 0)).toBe(true);
+    expect(out[0].pnl).toBe(309);
     const old = lifeTrades([mk(0, 100, 6 * 24 * 3600e3), mk(1, 50)]);
     expect(old.map((t) => t.pnl)).toEqual([50]);
     const d = lifeDetail(2, 14, 123_456.9, all.slice(0, 3));

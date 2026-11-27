@@ -1,7 +1,7 @@
 // 거래 탭·시간표의 읽기 모델. 화면은 이것만 읽는다(시험: tests/ui/m8_trade.test.ts).
 import { balance, marketById, marketDefs, tipsData } from '../../engine/data';
 import {
-  closeBack, entryFee, levCapNow, liqPrice, marginFromPct, pnlOf, roePct, shortInsurance, stopPrice, waiverAvailable,
+  closeBack, entryFee, levCapNow, liqPrice, marginFromPct, MAX_POSITIONS, pnlOf, roePct, shortInsurance, stopPrice, waiverAvailable,
 } from '../../engine/futures';
 import { futuresGate, tradeGate } from '../../engine/progression';
 import { effectiveLevCaps, exitFeeMul, feeRate } from '../../engine/skilltree';
@@ -63,12 +63,13 @@ export function marketMood(g: GameState, market: string, hist: number[]): '잔�
 }
 
 // ── 종목 꼬리표 ─────────────────────────────────────────────────────────
-export interface MarketTab { id: string; name: string; pct: number; hasPos: boolean; posRoe: number | null }
+export interface MarketTab { id: string; name: string; pct: number; hasPos: boolean; posRoe: number | null; /** 포지션 방향(없으면 null) */ posDir: 1 | -1 | null; /** 지금 정리하면 늘거나 주는 돈(수수료 포함). 없으면 null */ posNet: number | null }
 export function marketTabs(g: GameState): MarketTab[] {
   const run = g.run;
   return marketDefs.filter((m) => m.tradable).map((m) => {
     const p = run.positions[m.id];
-    return { id: m.id, name: m.name, pct: (price(run, m.id) / refPrice(run, m.id) - 1) * 100, hasPos: !!p, posRoe: p ? roePct(p, price(run, m.id)) : null };
+    const net = p ? closeBack(p, price(run, m.id), exitFeeMul(run)) - p.margin0 - p.feesPaid : null;
+    return { id: m.id, name: m.name, pct: (price(run, m.id) / refPrice(run, m.id) - 1) * 100, hasPos: !!p, posRoe: p ? roePct(p, price(run, m.id)) : null, posDir: p ? p.dir : null, posNet: net };
   });
 }
 
@@ -95,7 +96,7 @@ export function orderPreview(g: GameState, market: string, dir: 1 | -1, lev: num
   else if (margin < T.minMargin) reason = '증거금이 모자랍니다';
   else if (margin + fee > run.cash) reason = '현금 부족';
   else if (lev > levCapNow(run)) reason = levLockText(g, lev);
-  else if (!run.positions[market] && Object.keys(run.positions).length >= 5) reason = '포지션은 최대 5개입니다';
+  else if (!run.positions[market] && Object.keys(run.positions).length >= MAX_POSITIONS) reason = `포지션은 종목마다 하나, 최대 ${MAX_POSITIONS}개입니다`;
   const lp = `${liqPct >= 0 ? '+' : '−'}${Math.abs(liqPct).toFixed(1)}%`;
   return { margin, fee, liq, liqPct, info: `증거금 ${comma(margin)} · 수수료 ${comma(fee)} · 청산가 ${fmtPrice(market, liq)}(${lp})`, reason };
 }
@@ -106,17 +107,15 @@ export function levLockText(g: GameState, lev: number): string {
   const caps = effectiveLevCaps(g);
   const step = caps.find((c) => c.cap >= lev && c.cap > f.levCap) ?? caps[caps.length - 1];
   const need = step.closedTrades ?? 0;
-  if (step.waiver) {
-    return f.closedTrades >= need
-      ? `${step.cap}배: 고위험 거래 확인서에 도장을 찍으면 열립니다`
-      : `끝난 거래 ${need}건 뒤 ${step.cap}배 (지금 ${f.closedTrades}건)`;
-  }
+  if (step.waiver && f.closedTrades >= need) return `${step.cap}배까지: 위험 고지 확인서에 발도장을 찍으면 바로 열립니다`;
   return `끝난 거래 ${need}건 뒤 ${step.cap}배 (지금 ${f.closedTrades}건)`;
 }
-export interface Notch { lev: number; locked: boolean; hot: boolean; lockText: string | null }
+/** seal = 막힌 것이 아니라 확인서 한 장이 남은 칸(U-47: 처음부터 200배, 생마다 한 번 발도장) */
+export interface Notch { lev: number; locked: boolean; hot: boolean; lockText: string | null; seal: boolean }
 export function levRuler(g: GameState): Notch[] {
   const cap = levCapNow(g.run);
-  return LEV_OPTIONS.map((lev) => ({ lev, locked: lev > cap, hot: lev >= 100, lockText: lev > cap ? levLockText(g, lev) : null }));
+  const seal = waiverAvailable(g.run);
+  return LEV_OPTIONS.map((lev) => ({ lev, locked: lev > cap, hot: lev >= 100, lockText: lev > cap ? levLockText(g, lev) : null, seal: lev > cap && seal }));
 }
 
 // ── 포지션 줄 ───────────────────────────────────────────────────────────

@@ -151,7 +151,7 @@ describe('정산을 넘겨 들고 있기 (U-41)', () => {
     const h = trader(200_000);
     A(h, { type: 'open', market: 'DTC', dir: 1, lev: 200, margin: 50_000 });
     const m0 = h.run.positions.DTC.margin; tickN(h, h.run.settleIn);
-    expect(m0 - h.run.positions.DTC.margin).toBe(100); // 1막 밖(엔진 기본): 명목 1,000만의 0.001%
+    expect(m0 - h.run.positions.DTC.margin).toBe(33); // 1막 밖(엔진 기본): 명목 1,000만의 0.00033%(U-47: 정산 60초)
     expect(STORY.carried({ paid: 6_100 })).toBe('현금에서 6,100 납부. 포지션 유지.');
   });
 });
@@ -167,9 +167,9 @@ describe('펀딩비까지 넣은 출구 (U-41: 실시간 판에서 +7,750 익절
       let p = g.run.positions.DTC;
       const st0 = acornStops(ctxOfPosition(g.run, p), 15_500, 15_500);
       A(g, { type: 'stops', market: 'DTC', sl: st0.sl, tp: st0.tp });
-      tickN(g, g.run.settleIn); tickN(g, g.run.settleIn); // 정산 두 번: 펀딩비 100 × 2
+      tickN(g, g.run.settleIn); tickN(g, g.run.settleIn); // 정산 두 번: 펀딩비 33 × 2
       p = g.run.positions.DTC;
-      expect(p.fundingPaid).toBe(200);
+      expect(p.fundingPaid).toBe(66);
       const paid = cash0 - 50_000 - g.run.cash; // 그 사이 정산이 걷어 간 돈(이자는 0 으로 두었지만 생활비가 있다)
       const st1 = acornStops(ctxOfPosition(g.run, p), 15_500, 15_500);
       expect(st1.tp!).toBeGreaterThan(st0.tp!); // 펀딩비만큼 더 가야 한다

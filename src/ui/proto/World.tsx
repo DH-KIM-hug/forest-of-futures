@@ -334,7 +334,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   }, [collector?.at]);
 
   // ── 초당 버는 돈이 눈에 보인다(U-43 사용자: "알바 고용하고 하면 초당 얼마 버는지 시각화 제대로 좀"): 도는 쳇바퀴마다 1초에 한 번 "+n"이 떠서 채굴기 쪽으로 가고, 채굴기 → 지갑으로 합이 건너간다 ──
-  const secGain = Math.round(perSec(hamsterMath(g).sold)); // 알바 한 마리가 1초에 캐서 파는 돈(엔진 값)
+  const secGain = Math.round(perSec(hamsterMath(g).sold, g.run)); // 알바 한 마리가 1초에 캐서 파는 돈(엔진 값)
   const turn = useRef(0);
   const live = useRef({ staffedN, secGain, talking, wheels });
   live.current = { staffedN, secGain, talking, wheels };
@@ -369,7 +369,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
     // 새 생이 알바 둘을 데리고 시작할 때(U-46)는 "알바를 들였다"가 아니다
     const newLife = prevGenW.current !== g.family.generation; prevGenW.current = g.family.generation;
     if (!was || newLife) return;
-    for (const k of now2) if (!was.includes(k)) { const w = wheels.find((x) => x.key === k)!; addFloat(`초당 +0 → +${rateTxt(perSec(hamsterMath(g).sold))}`, Math.max(70, Math.min(320, w.foot[0])), w.foot[1] - HAM_WHEEL_H * K - 14, 'hire'); }
+    for (const k of now2) if (!was.includes(k)) { const w = wheels.find((x) => x.key === k)!; addFloat(`초당 +0 → +${rateTxt(perSec(hamsterMath(g).sold, g.run))}`, Math.max(70, Math.min(320, w.foot[0])), w.foot[1] - HAM_WHEEL_H * K - 14, 'hire'); }
   }, [wheels.filter((w) => w.kind === 'hamster').map((w) => w.key).join(','), g.family.generation]);
 
   const items: Item[] = [];

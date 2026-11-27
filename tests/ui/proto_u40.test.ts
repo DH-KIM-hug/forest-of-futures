@@ -91,11 +91,11 @@ describe('종목마다 출렁임', () => {
 });
 
 describe('코인 로고', () => {
-  it('거래되는 종목 다섯에 전부 로고가 있다(도토코인 · 밤더리움 · 삼솔전자 · 멍도토 · 잣스닥)', () => {
+  it('거래되는 종목 여섯에 전부 로고가 있다(도토코인, 밤더리움, 삼솔전자, 멍도토, 잣스닥, 날다람쥐코인)', () => {
     const ids = marketDefs.filter((m) => m.tradable).map((m) => m.id);
-    expect(ids.sort()).toEqual(['BTH', 'DTC', 'JQQ', 'MDT', 'SMS']);
+    expect(ids.sort()).toEqual(['BTH', 'DTC', 'FLY', 'JQQ', 'MDT', 'SMS']);
     for (const id of ids) { expect(coinLogo(id), id).toMatch(/\.webp/); expect(coinImgHtml(id, 20)).toContain('width="20"'); }
-    expect(new Set(Object.values(COIN_LOGO)).size).toBe(5); // 다섯이 서로 다른 그림이다
+    expect(new Set(Object.values(COIN_LOGO)).size).toBe(6); // 여섯이 서로 다른 그림이다
     expect(coinLogo('NOPE')).toBeNull();
     expect(coinImgHtml('NOPE')).toBeNull();
   });

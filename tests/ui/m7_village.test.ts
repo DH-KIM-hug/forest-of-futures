@@ -153,7 +153,7 @@ describe('창구·건물 표시', () => {
   });
   it('밤에는 조합이 닫힌다(말과 행동 모두)', () => {
     const g = bare();
-    settleOnce(g, 3);
+    settleOnce(g, 9); // U-47: 하루 = 정산 12번, 밤은 10~12번째
     expect(lenderModel(g, 'bank').closed).toBe(true);
     expect(lenderModel(g, 'capital').closed).toBe(false);
   });

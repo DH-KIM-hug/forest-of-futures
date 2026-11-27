@@ -81,17 +81,18 @@ describe('AC-v2-144 차트 사각형은 깨끗하다', () => {
 });
 
 describe('배율 눈금자와 주문 미리보기', () => {
-  it('상한 위는 잠기고 조건 한 줄이 나온다', () => {
+  it('처음부터 50배, 그 위는 발도장 한 번(U-47): 거래 수와 무관하게 확인서 한 장이 남은 칸', () => {
     const g = bare();
     openFutures(g, 10);
-    g.run.futures.closedTrades = 1;
+    g.run.futures.closedTrades = 0;
     const r = levRuler(g);
     expect(r.map((n) => n.lev)).toEqual([1, 2, 5, 10, 25, 50, 100, 200]);
-    expect(r.filter((n) => n.locked).map((n) => n.lev)).toEqual([25, 50, 100, 200]);
-    expect(r.find((n) => n.lev === 50)!.lockText).toBe('끝난 거래 3건 뒤 50배 (지금 1건)');
+    expect(r.filter((n) => n.locked).map((n) => n.lev)).toEqual([100, 200]);
+    expect(r.filter((n) => n.seal).map((n) => n.lev)).toEqual([100, 200]);
+    expect(r.find((n) => n.lev === 200)!.lockText).toContain('발도장');
     expect(r.find((n) => n.lev === 100)!.hot).toBe(true);
-    g.run.futures.closedTrades = 10;
-    expect(levRuler(g).find((n) => n.lev === 200)!.lockText).toContain('확인서');
+    g.run.futures.waiver = true;
+    expect(levRuler(g).filter((n) => n.locked)).toEqual([]);
   });
   it('안내 한 줄: 증거금 · 수수료 · 청산가(%)', () => {
     const g = bare();

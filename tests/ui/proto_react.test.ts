@@ -110,23 +110,23 @@ describe('오소리 장부 (ledger.ts)', () => {
     g.run.cash = 600_000;
     return g;
   };
-  it('줄 셋: 더 빌린 돈 6% · 처음 빌린 돈 4% · 엄마 빚 1.5%. 줄의 이자를 더하면 엔진의 이자다', () => {
+  it('줄 셋: 더 빌린 돈 2%, 처음 빌린 돈 1.3%, 엄마 빚 0.5%(U-47). 줄의 이자를 더하면 엔진의 이자다', () => {
     const g = afterTutorial();
     const rows = ledgerRows(g);
-    expect(rows.map((r) => [r.key, r.ratePct, r.left, r.interest])).toEqual([['repeat', 6, 100000, 6000], ['first', 4, 100000, 4000], ['mom', 1.5, 300000, 4500]]);
+    expect(rows.map((r) => [r.key, r.ratePct, r.left, r.interest])).toEqual([['repeat', 2, 100000, 2000], ['first', 1.3, 100000, 1300], ['mom', 0.5, 300000, 1500]]);
     expect(rows.reduce((a, r) => a + r.interest, 0)).toBe(interestDue(g, 'shark1'));
     expect(ledgerRows(fresh()).map((r) => r.key)).toEqual(['mom']);
   });
   it('갚으면 위(비싼) 줄부터 지워지고, 5만마다 금박 도장 하나(스킬트리 재화의 기준과 같다)', () => {
     const g = afterTutorial();
     expect(STAMP_STEP).toBe(skillMeta.award.per);
-    expect(ledgerGoal(g)).toMatchObject({ cur: 0, need: 50000, cut: 3000 });
+    expect(ledgerGoal(g)).toMatchObject({ cur: 0, need: 50000, cut: 1000 });
     for (let i = 0; i < 5; i++) A(g, { type: 'stamp', lender: 'shark1', mult: 1 });
     expect(repaidOffice(g)).toBe(50000);
     expect(goldStamps(g)).toBe(1);
-    expect(ledgerRows(g)[0]).toMatchObject({ key: 'repeat', left: 50000, interest: 3000 });
-    expect(ledgerGoal(g)).toMatchObject({ cur: 0, need: 50000, cut: 3000 });
-    expect(interestCut(g, 100000)).toBe(3000 + 2000);
+    expect(ledgerRows(g)[0]).toMatchObject({ key: 'repeat', left: 50000, interest: 1000 });
+    expect(ledgerGoal(g)).toMatchObject({ cur: 0, need: 50000, cut: 1000 });
+    expect(interestCut(g, 100000)).toBe(1000 + 650); // U-47: 남은 2% 5만 + 1.3% 5만
   });
   it('장부의 이야기: 6% 지움 → 빌린 돈 다 갚음 → 엄마 빚 20만 → 10만 → 완납', () => {
     const g = afterTutorial();

@@ -3,7 +3,7 @@
 // 그 뒤 오소리 대부가 10만을 더 빌려주고(엔진 borrow), "지금부터 실제 시세" 알림이 뜨면 튜토리얼이 끝난다.
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
-import { TUT, tutorialPrice, officeOffer, tipArgs } from './model';
+import { TUT, tutorialPrice, officeOffer, tipArgs, ratePct } from './model';
 import { tips, tipsLeft } from './guide';
 import { STORY } from './text';
 import { clone } from '../../engine/game';
@@ -23,7 +23,7 @@ export function tutorialIntro(): void {
   P.pushScene({ id: 'tutIntro', lines: STORY.tutIntro(tutorialMargin(), TUT.lev, tipArgs(useGame.getState().g)) });
 }
 /** 거는 돈(U-43 사용자: "걍 전재산 넣으면 되잖아"): 가진 돈 전부(들어갈 때 수수료를 낼 만큼은 뺀다). 최소 증거금도 안 되면 0(튜토리얼을 건너뛴다).
- *  청산되면 손에 0 이 남고, 오소리의 두 번째 10만(6%)이 그다음 걸음이 된다. */
+ *  청산되면 손에 0 이 남고, 오소리의 두 번째 10만(2%)이 그다음 걸음이 된다. */
 export function tutorialMargin(): number {
   const g = useGame.getState().g;
   const m = marginFromPct(g.run.cash, TUT.lev, 100, feeRate(g, TUT.lev, { allIn: true }));
@@ -34,7 +34,7 @@ export function tutorialMargin(): number {
 export function tutorialOpen(dir: 1 | -1): boolean {
   const st = useGame.getState();
   const margin = tutorialMargin();
-  if (margin <= 0) { useProto.getState().patch({ tutorial: 'done' }); return false; }
+  if (margin <= 0) { useProto.getState().patch({ tutorial: 'done' }); st.act({ type: 'endIntro' }); return false; }
   const r = st.act({ type: 'open', market: TUT.market, dir, lev: TUT.lev, margin, sl: null, tp: null });
   if (!r.ok) { say(r.msg ?? '들어갈 수 없습니다'); return false; }
   play(dir === 1 ? 'order_long' : 'order_short');
@@ -72,7 +72,7 @@ function finish(real: number, steps: number, margin: number): void {
   const lend = officeOffer(g2).lend;
   useProto.getState().patch({ tutorial: 'lost' });
   useProto.getState().pushScene({
-    id: 'tutLost', lines: STORY.tutLost(margin, lend, Math.round(nextBorrowRate(g2, 'shark1') * 100), tipArgs(g2)),
+    id: 'tutLost', lines: STORY.tutLost(margin, lend, ratePct(nextBorrowRate(g2, 'shark1')), tipArgs(g2)),
     choices: lend > 0
       ? [{ id: 'borrow', label: `${lend % 10000 === 0 ? `${lend / 10000}만` : lend.toLocaleString('ko-KR')} 더 빌리기`, sub: `빌린 돈 +${lend.toLocaleString('ko-KR')}, 정산 이자 +${Math.round(lend * nextBorrowRate(g2, 'shark1')).toLocaleString('ko-KR')}`, primary: true, run: () => { const r = useGame.getState().act({ type: 'borrow', lender: 'shark1' }); play(r.ok ? 'collector_paid' : 'insufficient'); useProto.getState().patch({ tutorial: 'notice' }); } }]
       : [{ id: 'ok', label: '통화 끝내기', sub: '추가 대출 한도 0', primary: true, run: () => useProto.getState().patch({ tutorial: 'notice' }) }],
@@ -84,5 +84,7 @@ export function tutorialEnd(): void {
   useProto.getState().patch({ tutorial: 'done' });
   // 튜토리얼이 끝난 자리에서 목표를 말해 준다: 빚을 다 갚는 것, 못 갚으면 파산(평생 한 번). 시계를 돌리기 전에 줄 세운다 — 오픈 기념 문자(U-40)는 그 뒤에 온다
   if (tipsLeft('goal')) useProto.getState().pushScene({ id: 'guide_goal', again: true, lines: tips('goal', tipArgs(useGame.getState().g)) });
+  // 정산이 20초에서 60초가 된다(U-47): 이번 정산 구간의 남은 몫은 그대로, 남은 시간만 늘어난다. 목표 장면을 줄 세운 뒤에 한다(상태가 바뀌면 다른 알림이 먼저 끼어든다)
+  useGame.getState().act({ type: 'endIntro' });
   useGame.getState().setSpeed(1);
 }

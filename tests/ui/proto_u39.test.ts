@@ -13,25 +13,25 @@ afterEach(() => { delete (balance as { act1?: unknown }).act1; });
 
 describe('오소리 장부: 엄마 빚은 고정금리 (U-39 ⑥)', () => {
   const borrowed = () => { const g = fresh(); A(g, { type: 'borrow', lender: 'shark1' }); A(g, { type: 'borrow', lender: 'shark1' }); return g; };
-  it('금리 2배 중에도 엄마 빚 줄의 이자는 4,500, 빌린 돈 줄만 두 배', () => {
+  it('금리 2배 중에도 엄마 빚 줄의 이자는 1,500, 빌린 돈 줄만 두 배', () => {
     const g = borrowed();
     g.run.effects.push({ id: 'rate_hike', type: 'rateMultiplier', multiplier: 2, remaining: 2 });
     const rows = Object.fromEntries(ledgerRows(g).map((r) => [r.key, r]));
-    expect(rows.mom).toMatchObject({ interest: 4500, fixed: true });
-    expect(rows.first).toMatchObject({ interest: 8000, fixed: false });
-    expect(rows.repeat).toMatchObject({ interest: 12000, fixed: false });
+    expect(rows.mom).toMatchObject({ interest: 1500, fixed: true });
+    expect(rows.first).toMatchObject({ interest: 2600, fixed: false });
+    expect(rows.repeat).toMatchObject({ interest: 4000, fixed: false });
     expect(ledgerRows(g).reduce((a, r) => a + r.interest, 0)).toBe(interestNow(g));
-    // 엄마 빚 5만을 갚으면 이자는 750 준다(금리 인상과 상관없이)
+    // 엄마 빚 5만을 갚으면 이자는 250 준다(금리 인상과 상관없이)
     g.run.debts.shark1.tranches = []; g.run.debts.shark1.principal = 300000;
-    expect(interestCut(g, 50000)).toBe(750);
+    expect(interestCut(g, 50000)).toBe(250);
   });
-  it('금리 인상 장면에 넣는 숫자: 14,500 → 24,500, 그대로인 몫 4,500', () => {
+  it('금리 인상 장면에 넣는 숫자: 4,800 → 8,100, 그대로인 몫 1,500', () => {
     const g = borrowed();
-    expect(interestNow(g)).toBe(14500);
-    expect(fixedInterestNow(g)).toBe(4500);
-    expect(interestAfterHike(g, 2)).toBe(24500);
-    const lines = STORY.rateHike({ text: '속보', from: 14500, to: 24500, times: 2, fixed: 4500 });
-    expect(lines[1].text).toContain('14,500 그대로 준비하세요. 그다음 2번은 24,500'); // U-46
+    expect(interestNow(g)).toBe(4800);
+    expect(fixedInterestNow(g)).toBe(1500);
+    expect(interestAfterHike(g, 2)).toBe(8100);
+    const lines = STORY.rateHike({ text: '속보', from: 4800, to: 8100, times: 6, fixed: 1500 });
+    expect(lines[1].text).toContain('4,800 그대로 준비하세요. 그다음 6번은 8,100'); // U-46
     expect(lines[2].text).toBe('어머님 건 그대로예요. 처음부터 금리를 정해 둔 거라서요.');
     expect(STORY.rateHike({ text: '속보', from: 2000, to: 4000, times: 2, fixed: 0 })).toHaveLength(2); // U-44: 월급 농담은 뺐다. 엄마 빚을 다 갚은 뒤에는 그 줄이 없다
   });
@@ -41,7 +41,7 @@ describe('오소리 장부: 엄마 빚은 고정금리 (U-39 ⑥)', () => {
     settleOnce(g);
     const first = ledgerRows(g).find((r) => r.key === 'first')!;
     expect(first.label).toBe('밀려서 얹힌 돈');
-    expect(first.left).toBe(5500);
+    expect(first.left).toBe(1830);
     A(g, { type: 'borrow', lender: 'shark1' });
     expect(ledgerRows(g).find((r) => r.key === 'first')!.label).toBe('처음 빌린 돈');
   });
@@ -58,7 +58,7 @@ describe('첫 생의 첫 추심원은 60초 뒤 (U-39 ⑤)', () => {
     const max = balance.progression.maxTapsPerSec * FIRST_VISIT_SEC * tapValue(g, 'DTC');
     expect(max).toBe(1440);
     expect(max).toBeLessThan(claim(g).total);
-    expect(claim(g).total).toBe(5500);
+    expect(claim(g).total).toBe(1830);
   });
 });
 

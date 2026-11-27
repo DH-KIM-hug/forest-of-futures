@@ -223,7 +223,7 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
             <div className="pp-led"><span>남은 원금</span><b className="debt">{comma(DEBT_TOTAL)}</b></div>
             <div className="pp-led"><span>정산마다 이자</span><b className="debt">{comma(INTEREST)}</b></div>
             <div className="pp-led"><span>가진 돈</span><b><Acorn size={24} />0</b></div>
-            <small>{ledgerNote(firstVisitSec(balance.settlement.intervalSec))}</small>
+            <small>{ledgerNote(firstVisitSec(balance.settlement.introSec ?? balance.settlement.intervalSec))}</small>
             <em>눌러서 계속</em>
           </div>
         </div>

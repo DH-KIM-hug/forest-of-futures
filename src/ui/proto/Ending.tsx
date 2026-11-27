@@ -97,13 +97,13 @@ const posOf = (v: NodeView): { x: number; y: number } => {
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 /** 켜고 끄는 노드의 숫자 꼬리 표기(U-39 ⑨) */
 const tailFmt = (id: string, x: number): string =>
-  id === 'A3a' ? `+${Math.round(x)}초` : id === 'B2' ? `−${(x * 100).toFixed(2)}%p` : id === 'B3b' ? `${(x * 100).toFixed(1)}%` : id === 'C4' ? `+${(x * 100).toFixed(1)}%p` : `−${(x * 100).toFixed(1)}%`;
+  id === 'A3a' ? `+${Math.round(x)}초` : id === 'B2' ? `−${(x * 100).toFixed(2)}%p` : id === 'B3b' || id === 'B3a' ? `${(x * 100).toFixed(1)}%` : id === 'C4' ? `+${(x * 100).toFixed(1)}%p` : `−${(x * 100).toFixed(1)}%`;
 /** 노드 효과 한 줄: 지금 → 다음 */
 function effectText(v: NodeView): string {
   if (v.tail) return `${v.tail.text} ${v.level > 0 ? `지금 ${tailFmt(v.id, v.tail.now)}` : '열면'}${v.tail.next !== null ? ` → ${tailFmt(v.id, v.tail.next)}` : ''}`;
   if (v.kind !== 'scaled') return v.level > 0 ? '열림' : '';
-  const what = v.id === 'C2' ? '청산 때 돌려받는 증거금' : v.id === 'B1' ? '50배 이상 수수료' : '거래 수수료';
-  const sign = v.id === 'C2' ? '' : '−';
+  const what = v.id === 'C2' ? '청산 때 돌려받는 증거금' : v.id === 'B1' ? '청산 직전 대신 넣어 주는 증거금' : '거래 수수료';
+  const sign = v.id === 'C2' || v.id === 'B1' ? '' : '−';
   return `${what} ${sign}${pct(v.effect)}${v.nextEffect !== null ? ` → ${sign}${pct(v.nextEffect)}` : ''} (상한 ${sign}${pct(v.cap ?? 0)})`;
 }
 

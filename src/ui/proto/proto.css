@@ -318,7 +318,7 @@
 .pr-card .buy.wide { width: 100%; }
 
 /* ── 지갑·정산당 풀이 ───────────────────────────── */
-.pr .ps, .pr .walbtn, .pr-wal .x, .pr-wal .sb2, .pr-wal .auto { min-width: 0; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; filter: none; opacity: 1; transform: none; }
+.pr .ps, .pr .walbtn, .pr .hpos, .pr-wal .x, .pr-wal .sb2, .pr-wal .auto { min-width: 0; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; filter: none; opacity: 1; transform: none; }
 .pr-hud .ps { display: inline-block; margin-top: 2px; text-align: right; cursor: pointer; }
 .pr-hud .ps i { font-style: normal; font-size: 11px; opacity: .7; }
 .pr-hud .walbtn { display: flex; align-items: center; gap: 4px; margin: 4px 0 0 auto; padding: 3px 9px 3px 7px; font-family: var(--dsp); font-size: 13px; color: var(--o); background: var(--card); border: 2px solid var(--o); border-radius: 12px; box-shadow: 0 0 0 2px #fff, var(--drop); cursor: pointer; }
@@ -1021,3 +1021,35 @@
 .wh-run.on .wh-strip, .wh-run.byhero .wh-strip { animation-play-state: running; }
 @keyframes whStrip { from { transform: translateX(0); } to { transform: translateX(var(--strip)); } }
 @media (prefers-reduced-motion: reduce) { .wh-strip { animation: none !important; } }
+
+/* U-47 정산 막대: 이번 구간에 번 돈이 1초마다 차오르고, 붉은 눈금 = 낼 돈, 흐린 꼬리 = 수금까지 더 들어올 돈, 갈색 = 전부터 손에 있던 돈 */
+.pr .pr-strip.sbar { padding: 10px 6px 5px; gap: 4px; }
+.pr-strip .sb-row { display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; align-items: center; gap: 8px; }
+.pr-strip .sb-row .chev { font-size: 12px; color: var(--sub); }
+.pr-strip .sb-track { position: relative; height: 16px; border-radius: 8px; background: #EFE6D2; border: 2px solid var(--o); overflow: hidden; }
+.pr-strip .sb-track i { position: absolute; top: 0; bottom: 0; left: 0; }
+.pr-strip .sb-earn { background: #5FAE83; transition: width .9s linear; }
+.pr-strip .sb-proj { background: repeating-linear-gradient(135deg, rgba(95, 174, 131, .42) 0 5px, rgba(95, 174, 131, .22) 5px 9px); transition: left .9s linear, width .9s linear; }
+.pr-strip .sb-carry { background: #D9B98A; border-left: 1.5px solid rgba(74, 70, 64, .45); }
+.pr-strip .sb-carry.over { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.pr-strip .sb-due { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 3px solid var(--red); margin-left: -1.5px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .7); transition: left .4s ease; }
+.pr-strip .sb-end { font-family: var(--dsp); font-weight: 400; font-size: 14px; line-height: 1.1; white-space: nowrap; color: var(--o); text-align: right; }
+.pr-strip .sb-end em { font-style: normal; font-size: 16.5px; font-variant-numeric: tabular-nums; }
+.pr-strip.ok .sb-end em { color: #2E6E4C; }
+.pr-strip.short .sb-end em { color: var(--red-ink); }
+.pr-strip.short .sb-end { color: var(--red-ink); }
+.pr-strip .sb-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-left: 22px; font-size: 12px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+.pr-strip .sb-sub b { font-family: var(--dsp); font-weight: 400; font-size: 13.5px; color: var(--o); font-variant-numeric: tabular-nums; }
+.pr-strip .sb-pos { font-family: var(--dsp); font-weight: 400; font-size: 13px; padding: 0 7px; border-radius: 8px; border: 1.5px solid currentColor; }
+.pr-strip .sb-pos.up { color: var(--up); }
+.pr-strip .sb-pos.down { color: var(--down); }
+.pr-strip .sb-brk { display: flex; justify-content: center; align-items: stretch; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.pr-strip .sb-brk > span { display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 2px 8px; border-radius: 9px; background: rgba(255, 253, 246, .85); border: 1.5px solid rgba(74, 70, 64, .35); line-height: 1.15; }
+.pr-strip .sb-brk small { font-size: 11px; font-weight: 700; color: var(--sub); }
+.pr-strip .sb-brk b { font-family: var(--dsp); font-size: 15px; color: var(--red-ink); font-variant-numeric: tabular-nums; }
+.pr-strip .sb-brk .sum { border-color: var(--red); background: #FBE3DC; }
+.pr .pr-pinmore { min-height: 32px; border-radius: 10px; border: 2px dashed rgba(74, 70, 64, .45); background: rgba(255, 253, 246, .8); font-family: var(--dsp); font-size: 13.5px; color: var(--o); }
+@media (prefers-reduced-motion: reduce) { .pr-strip .sb-earn, .pr-strip .sb-proj { transition: none; } }
+.pr-hud .hpos { display: block; margin: 4px 0 0 auto; padding: 2px 9px; font-family: var(--dsp); font-size: 13px; line-height: 1.25; background: #FFFDF6; border: 2px solid currentColor; border-radius: 11px; box-shadow: 0 0 0 2px #fff; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; }
+.pr-hud .hpos.up { color: var(--up); }
+.pr-hud .hpos.down { color: var(--down); }

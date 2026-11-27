@@ -628,3 +628,18 @@
 .pt-chart .plot .pr-lane { position: absolute; left: 6px; right: 6px; top: 6px; z-index: 2; pointer-events: none; display: block; width: fit-content; max-width: calc(100% - 12px); padding: 3px 9px 4px; border-radius: 10px; font-family: var(--dsp); font-size: 12.5px; line-height: 1.28; color: var(--o); background: rgba(255, 253, 246, .94); border: 2px solid var(--o); box-shadow: 0 2px 0 rgba(0, 0, 0, .12); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; animation: fadeIn .18s ease-out; }
 .pt-chart .plot .pr-lane.think { border-style: dashed; }
 .pt-chart .plot .pr-lane .untyped { opacity: 0; }
+
+/* U-47: 종목 여섯(날다람쥐코인), 여러 종목을 함께 든다, 처음부터 200배(발도장 한 번) */
+.pt-coins { grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.pt-ct .nm { font-size: 12.5px; letter-spacing: -.3px; }
+.pt-ct small.swg { font-size: 10px; letter-spacing: -.4px; }
+.pt-ct .pd { top: -6px; right: -4px; width: auto; height: auto; min-width: 17px; padding: 0 3px; border-radius: 8px; font-style: normal; font-size: 10px; line-height: 14px; color: #fff; text-align: center; }
+.pt-bar .pt-sum { display: inline-flex; align-items: baseline; gap: 3px; padding: 2px 8px; border-radius: 9px; border: 2px solid currentColor; background: #FFFDF6; font-family: var(--dsp); font-size: 14px; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pt-bar .pt-sum small { font-size: 11px; color: var(--sub); }
+.pt-bar .pt-sum.up { color: var(--up); }
+.pt-bar .pt-sum.down { color: var(--down); }
+.pt-ruler .nt.seal b { color: var(--red-ink); }
+.pt-ruler .nt.seal i::before { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #FBE3DC; border: 2px dashed var(--red); }
+.pt-pl .tags .bonus { color: #7A4E12; background: linear-gradient(90deg, #FFF2B0, #F3C94A); border: 1.5px solid #B8862A; border-radius: 8px; padding: 0 6px; }
+/* 좁은 폰에서 포지션 합계가 머리에 있으면 오픈 기념 칩은 뺀다(주문 줄에 같은 말이 있다) */
+@media (max-width: 380px) { .pt-bar .pt-sum ~ .pt-fee { display: none; } }

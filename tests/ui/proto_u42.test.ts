@@ -44,8 +44,8 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     const own = { R: 1 };
     const a1 = nodeOdds(own, 'A1', 0)!;
     expect(a1.text).toMatch(/익절 확률 43\.5% → 44\.0%\n한 판 평균 −2,000 → −1,850/); // U-46: 끝난 뒤 수수료 0.01%
-    expect(nodeOdds(own, 'B1', 0)!.next.p!).toBeGreaterThan(a1.now.p!);
-    for (const id of ['R', 'A3a', 'B2', 'B4', 'C3a', 'C4']) expect(nodeOdds(own, id, id === 'R' ? 1 : 0)).toBeNull();
+    // U-47: B1(한 번 버티기)은 수수료를 건드리지 않는다 — 이 판의 승률도 그대로라 적지 않는다
+    for (const id of ['R', 'A3a', 'B1', 'B2', 'B3a', 'B4', 'C3a', 'C4']) expect(nodeOdds(own, id, id === 'R' ? 1 : 0)).toBeNull();
     // 비상금 주머니는 보험료(+0.01%p)만큼 이 판을 더 기울인다 — 그것도 적는다
     const c2 = nodeOdds({ R: 1, C1: 1 }, 'C2', 0)!;
     expect(c2.next.p!).toBeLessThan(c2.now.p!);
@@ -53,7 +53,7 @@ describe('수수료가 기울인 승률 (U-42 ④)', () => {
     const all = Object.fromEntries(Object.keys(skillById).filter((k) => k !== 'C2' && k !== 'A3a' && k !== 'B3b' && k !== 'C3a').map((k) => [k, 100]));
     expect(betOdds(all).p!).toBeLessThan(0.5);
     expect(treeOddsLine(own)).toMatch(/수수료 0\.01%\. 5만 200배, 익절과 손절을 ±15,500에 걸면 익절 44 : 손절 56/); // U-46: 「이자 한 번 걸기」 이름 없이 · 0.01%
-    expect(treeOddsLine({ R: 1, A1: 5, B1: 5 })).toMatch(/익절 46 : 손절 54 \(나무 없이는 44 : 56\)/);
+    expect(treeOddsLine({ R: 1, A1: 5, A4: 5 })).toMatch(/익절 46 : 손절 54 \(나무 없이는 44 : 56\)/);
     expect(REF_BET).toMatchObject({ margin: 50_000, lev: 200, claim: 15_500 });
   });
 });

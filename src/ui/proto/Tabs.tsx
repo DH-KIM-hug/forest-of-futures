@@ -5,7 +5,7 @@ import { onFirstOfficeLoan, retireNow, say } from './watch';
 import { canRetireAct1 } from '../../engine/act1Retire';
 import { treeAward } from '../../engine/skilltree';
 import { balance } from '../../engine/data';
-import { hamsterMath } from './model';
+import { hamsterMath, ratePct } from './model';
 import { comma } from '../../engine/util';
 import { lenderById } from '../../engine/data';
 import { interestDue, lenderLimit, nextBorrowRate } from '../../engine/selectors';
@@ -64,7 +64,7 @@ export function MapTab() {
       const l2 = lenderById.shark2;
       const unit = Math.min(l2.borrowUnit!, Math.max(0, lenderLimit(before, 'shark2') - before.run.debts.shark2.principal));
       const got = Math.floor(unit * (1 - (l2.upfront ?? 0)));
-      useProto.getState().pushScene({ id: 'viperOffer', again: true, lines: STORY.viperOffer({ unit, got, ratePct: Math.round(l2.rate * 100) }),
+      useProto.getState().pushScene({ id: 'viperOffer', again: true, lines: STORY.viperOffer({ unit, got, ratePct: ratePct(l2.rate) }),
         choices: [
           { id: 'take', label: `${manTxt(got)} 받기`, sub: `빚 +${manTxt(unit)}`, primary: true, run: () => doBorrow('shark2', true) },
           { id: 'leave', label: '돌아선다', run: () => setMsg('뒷골목: 등 뒤로 문고리가 제자리로 돌아간다.') },
@@ -76,7 +76,7 @@ export function MapTab() {
     setMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '지금은 처리할 수 없어요');
     if (r.ok && id === 'shark1') onFirstOfficeLoan(before);
     // 숲속 캐피탈에서 처음 빌렸다: 창구 너구리가 조건을 말한다(한도가 왜 그 숫자인지, 밀리면 어떻게 되는지)
-    if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: Math.round(lenderById.capital.rate * 100) }) });
+    if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: ratePct(lenderById.capital.rate) }) });
   };
   const doPay = (id: LenderId, mult: number | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족해요' : r.msg ?? '지금은 처리할 수 없어요'); };
   const fcN = forecast(g);
@@ -114,7 +114,7 @@ export function MapTab() {
             <div className="plc-top"><div className="ic"><RowIcon kind={id} /></div><div className="mid">
               <div className="nm">{pl.name} <small>{pl.npc}</small></div>
               <div className="sb"><b>빚 {comma(d.principal)}</b>, 정산마다 이자 {comma(interestDue(g, id))}{d.overdue > 0 ? <em className="od">, 연체 {d.overdue}회</em> : ''}</div>
-              <div className="sb">더 빌리면 금리 {(nextBorrowRate(g, id) * 100).toFixed(0)}%, 한도 {comma(room)} 남음{l.upfront ? `, 선이자 ${l.upfront * 100}%` : ''}</div>
+              <div className="sb">더 빌리면 금리 {ratePct(nextBorrowRate(g, id))}%, 한도 {comma(room)} 남음{l.upfront ? `, 선이자 ${l.upfront * 100}%` : ''}</div>
               {first && <div className="sq">{pl.npc} 「개울 건너오셨죠? 앉으세요. 오늘 수금 때문에 오셨다면서요.」</div>}
             </div></div>
             {id === 'capital' && <CapitalTerms room={room} />}

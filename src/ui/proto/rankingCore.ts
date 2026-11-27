@@ -3,7 +3,7 @@
 
 export type Board = 'networth' | 'roe' | 'pnl';
 export const BOARDS: Board[] = ['networth', 'roe', 'pnl'];
-export const RANK_MARKETS = ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ'] as const;
+export const RANK_MARKETS = ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ', 'FLY'] as const;
 
 export interface TradeDetail {
   market: string;
@@ -55,10 +55,10 @@ export function lifeNetWorth(x: { cash: number; wallet: number; positionsMargin:
   return Math.floor(x.cash + x.wallet + x.positionsMargin - x.debt);
 }
 
-export const LIFE_MAX_TRADES = 300;
+export const LIFE_MAX_TRADES = 600;
 /** HL 1분 봉을 한 번에 받는 한도(서버가 그 생의 마지막 정리에서 이만큼 거슬러 받는다). 여유를 두고 자른다 */
 const CANDLE_WINDOW_MS = 4900 * 60_000;
-/** 한 생의 거래 목록: 이긴 것 먼저(큰 것부터) 300개까지. 서버가 봉을 못 받는 오래된 이긴 거래는 뺀다(빼면 상한이 줄 뿐 거절되지 않는다). */
+/** 한 생의 거래 목록: 이긴 것 먼저(큰 것부터) 600개까지. 서버가 봉을 못 받는 오래된 이긴 거래는 뺀다(빼면 상한이 줄 뿐 거절되지 않는다). */
 export function lifeTrades(all: TradeDetail[]): TradeDetail[] {
   if (!all.length) return [];
   const lastExit = Math.max(...all.map((t) => t.exitTs));

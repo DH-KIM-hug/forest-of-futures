@@ -20,15 +20,15 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     expect(t[0].text).toBe('수금폰 필요');
     expect(t[1]).toMatchObject({ action: 'place', btn: '놓기', btnSub: '50,000', canAct: false, locked: false });
     expect(maxWheels()).toBe(SLOT_COUNT);
-    expect(claim(g)).toEqual({ interest: 4500, living: 1000, total: 5500 });
-    expect(perSettle(g)).toBe(-5500);
-    expect(homeSummary(g)).toMatchObject({ idle: 0, hamsters: 0, claim: 5500 });
+    expect(claim(g)).toEqual({ interest: 1500, living: 330, total: 1830 }); // U-47: 정산 60초, 정산당 1/3
+    expect(perSettle(g)).toBe(-1830);
+    expect(homeSummary(g)).toMatchObject({ idle: 0, hamsters: 0, claim: 1830 });
     expect(A(g, { type: 'hire', coin: 'DTC' }).code).toBe('nophone');
   });
   it('목표 사슬: 이자 벌기 → 사무소에서 빌리기 → 알바 부르기 → 첫 포지션 → 첫 상환', () => {
     const g = fresh();
     expect(currentGoal(g, 0, F0)).toBe(0);
-    expect(goalAt(g, 0, F0)).toMatchObject({ need: 5500, cur: 0, done: false });
+    expect(goalAt(g, 0, F0)).toMatchObject({ need: 1830, cur: 0, done: false });
     expect(currentGoal(g, 0, { ...F0, waiting: true })).toBe(1); // 추심원이 기다리면 다음 목표는 사무소
     A(g, { type: 'borrow', lender: 'shark1' });
     A(g, { type: 'openAccount', sponsor: true });
@@ -39,18 +39,18 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
   });
   it('빌린 뒤: 알바를 부르면 줄에 초당 수입이 뜨고, 쳇바퀴를 놓으면 줄이 는다. 값과 일당은 대수와 무관', () => {
     const g = fresh();
-    expect(officeOffer(g)).toMatchObject({ lend: 100000, ratePct: 4 });
+    expect(officeOffer(g)).toMatchObject({ lend: 100000, ratePct: 1.3 });
     A(g, { type: 'borrow', lender: 'shark1' });
     A(g, { type: 'openAccount', sponsor: true });
-    expect(interestDue(g, 'shark1')).toBe(8500);
+    expect(interestDue(g, 'shark1')).toBe(2800);
     const hm = hamsterMath(g);
-    expect(hm).toEqual({ sold: 6467, wage: 1600, net: 4867 });
-    expect(tiles(g)[0]).toMatchObject({ state: 'idle', action: 'hire', btn: '알바 부르기', btnSub: '정산 때 일당 1,600', canAct: true, locked: false });
+    expect(hm).toEqual({ sold: 2159, wage: 530, net: 1629 });
+    expect(tiles(g)[0]).toMatchObject({ state: 'idle', action: 'hire', btn: '알바 부르기', btnSub: '정산 때 일당 530', canAct: true, locked: false });
     expect(A(g, { type: 'hire', coin: 'DTC' }).ok).toBe(true);
-    expect(tiles(g)[0]).toMatchObject({ state: 'run', net: 4867, action: null });
+    expect(tiles(g)[0]).toMatchObject({ state: 'run', net: 1629, action: null });
     // U-46: 칸은 1초에 캐서 판 돈(쳇바퀴 위에 떠서 채굴기로 가는 숫자와 같다). 일당은 정산 때 나간다고 작은 줄에
-    expect(tiles(g)[0].text).toBe(`초당 +${(6467 / balance.settlement.intervalSec).toFixed(1)}`);
-    expect(tiles(g)[0].sub).toBe('일당 1,600은 정산 때');
+    expect(tiles(g)[0].text).toBe(`초당 +${(2159 / balance.settlement.intervalSec).toFixed(1)}`);
+    expect(tiles(g)[0].sub).toBe('일당 530은 정산 때');
     expect(tiles(g)[1]).toMatchObject({ state: 'empty', action: 'place', canAct: true });
     expect(A(g, { type: 'buyEquip', tier: 'wheel2', coin: 'DTC' }).ok).toBe(true);
     const uid = g.run.equipment[0].uid;
@@ -65,9 +65,10 @@ describe('시제품 읽기 모델 (U-29·U-30)', () => {
     t = tiles(g, { [uid]: 3 });
     expect(t[3]).toMatchObject({ state: 'run', action: null });
     expect(t[1].btnSub).toBe('50,000'); // 두 번째도 같은 값
-    expect(homeSummary(g)).toMatchObject({ idle: 9735, hamsters: 2, claim: 9500, mined: 12935, wages: 3200, due: 12700 }); // U-46: 접힌 한 줄 = 들어오는 돈(캐서 판 값) / 정산 때 나가는 돈 전부
-    // 초당 환산은 지금 정산 간격을 쓴다
-    expect(perSec(9735)).toBeCloseTo(9735 / balance.settlement.intervalSec, 9);
+    expect(homeSummary(g)).toMatchObject({ idle: 3258, hamsters: 2, claim: 3130, mined: 4318, wages: 1060, due: 4190 }); // U-46: 들어오는 돈(캐서 판 값) / 정산 때 나가는 돈 전부
+    // 초당 환산은 이 생의 지금 정산 간격을 쓴다(U-47: 보통 60초, 튜토리얼 동안 20초)
+    expect(perSec(3258, g.run)).toBeCloseTo(3258 / 60, 9);
+    expect(perSec(3258, { ...g.run, intro: true })).toBeCloseTo(3258 / 20, 9);
   });
   it('쳇바퀴가 실려 가면 그 칸이 [다시 사기]가 되고, 빈 자리는 엄마 쳇바퀴부터라고 잠긴다', () => {
     const g = fresh();
@@ -192,10 +193,10 @@ describe('튜토리얼 거래 (U-31): 짜 둔 시세는 고른 쪽의 반대로�
       expect(cash0 - g.run.cash).toBeLessThan(TUT.margin + 500);
       console.log(`튜토리얼 ${dir === 1 ? '롱' : '숏'}: ${k}걸음(${(k * TUT.stepMs) / 1000}초)에 청산, 잃은 돈 ${Math.round(cash0 - g.run.cash)}`);
       // 두 번째 대출은 더 높은 금리
-      expect(nextBorrowRate(g, 'shark1')).toBe(0.06);
+      expect(nextBorrowRate(g, 'shark1')).toBe(0.02);
       A(g, { type: 'borrow', lender: 'shark1' });
       expect(g.run.debts.shark1.principal).toBe(500000);
-      expect(interestDue(g, 'shark1')).toBe(14500);
+      expect(interestDue(g, 'shark1')).toBe(4800);
     });
   }
 });

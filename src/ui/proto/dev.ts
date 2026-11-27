@@ -4,6 +4,7 @@ import { useGame, persistFlag } from '../../store/gameStore';
 import { buildScenario } from '../dev';
 import { useProto, type Tab } from './protoStore';
 import { createGame, clone, stepMut, newRun } from '../../engine/game';
+import { settleSec } from '../../engine/pace';
 import { netWorth } from '../../engine/selectors';
 import { prologueSeen } from './Prologue';
 import { KNOWN_AFTER_FIRST_LIFE } from './protoStore';
@@ -33,8 +34,9 @@ export function freshGame(): ReturnType<typeof createGame> {
   const st = useGame.getState();
   const g = createGame({ seed: (Date.now() & 0xffff) | 1, prices: st.g.run.prices });
   g.settings.prologueSeen = true;
-  // 첫 생의 첫 추심원은 60초 뒤에 온다(U-39 ⑤). 그 뒤의 정산과 다음 생은 정산 간격 그대로.
-  g.run.settleIn = firstVisitSec(balance.settlement.intervalSec);
+  // 첫 생의 튜토리얼 동안은 정산이 20초다(U-47). 튜토리얼이 끝나면(전표를 넣는다) 60초가 된다(pace.ts endIntro)
+  g.run.intro = true;
+  g.run.settleIn = firstVisitSec(settleSec(g.run));
   return g;
 }
 
@@ -124,6 +126,8 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   const un = { lot: true, phone: true, map: true } as const;
   const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'office'].map((k) => [k, true]));
   P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done' });
+  base.run.intro = false; // 장면 건너뛰기는 튜토리얼이 끝난 판이다(정산 60초)
+  base.run.settleIn = balance.settlement.intervalSec;
   const ready = () => {
     const g = buildScenario('trade', base);
     g.run.settleIn = balance.settlement.intervalSec;
@@ -198,6 +202,16 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       g = clone(g);
       if (name === 'awaypos') window.setTimeout(() => devAway(12, 2.2), 2600); // 12분 비움: 50배 전부가 청산되고, 정산은 두 번만 돈다
       return g;
+    }
+    case 'multi': case 'multihome': {
+      // U-47 여러 종목을 함께 든다: 도토코인 롱 50배, 밤더리움 숏 25배, 날다람쥐코인 롱 200배(발도장을 찍은 생)
+      P.patch({ everUnlocked: { ...un }, visited: { ...un }, tab: name === 'multi' ? 'phone' : 'lot', seen: { ...seen, capitalSms: true, flyNews: true } });
+      const g = midgame(base, { cash: 160_000, waiver: true, wheels: 2 });
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 50, margin: 30_000, sl: null, tp: null } });
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'BTH', dir: -1, lev: 25, margin: 30_000, sl: null, tp: null } });
+      stepMut(g, { type: 'action', action: { type: 'open', market: 'FLY', dir: 1, lev: 200, margin: 20_000, sl: null, tp: null } });
+      g.run.settleIn = Math.round(balance.settlement.intervalSec * 0.7);
+      return clone(g);
     }
     case 'away': {
       P.patch({ everUnlocked: { ...un }, visited: { ...un }, seen: { ...seen, capitalSms: true } });

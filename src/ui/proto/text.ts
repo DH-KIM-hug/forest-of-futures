@@ -2,6 +2,7 @@
 import type { Line, Who } from './protoStore';
 import { T, tips, count, type TipArgs } from './guide';
 import { josa } from '../../engine/util';
+import { lenderById } from '../../engine/data';
 
 export const COLLECTOR_NAME = '오소리 추심원';
 export const BOSS_NAME = '오소리 대부';
@@ -216,9 +217,16 @@ export const STORY = {
     ] : [
       L('collector', `보조 바퀴 싣겠습니다. 이건 경매로 ${n(o.off)} 쳐요. 그만큼 빚에서 뺐어요.`, 'flat'),
     ],
-  /** 장면 33 고위험 거래 확인서에 도장 */
+  /** 장면 33 위험 고지 확인서(U-47): 50배 위의 칸을 처음 누르면 오소리 대부가 종이를 민다. 막는 문이 아니라 발도장 한 번이다 */
+  waiverAsk: (lev: number): Line[] => [
+    L('boss', '잠깐만요. 그 배율은 종이 한 장이 더 필요해요.', 'smile'),
+    L('note', '오소리 대부가 탁자 너머로 종이를 민다. 「위험 고지 확인서」. 맨 아래에 발바닥 모양 빈칸이 있다.'),
+    L('note', `${lev}배는 반대로 약 ${+(100 / lev).toFixed(1)}% 움직이면 넣은 돈을 전부 잃습니다.`),
+    L('boss', '여기 발도장 하나면 돼요. 오늘 하루 말고, 이번 생 내내요.', 'smile'),
+  ],
+  /** 장면 33 확인서에 도장을 찍은 뒤 */
   waiver: (): Line[] => [
-    L('note', '폰 화면 속 도장 자국이 잠깐 번진다. 확인서 아래에 오늘 날짜가 찍힌다.'),
+    L('note', '발도장 자국이 종이에 번진다. 확인서 아래에 오늘 날짜가 찍힌다.'),
     L('note', '200배 주문 가능. 반대로 약 0.5% 움직이면 증거금을 잃을 수 있습니다.'),
   ],
   /** 마진콜 전화(거래의 나무 B2) */
@@ -304,7 +312,7 @@ export const STORY = {
   ledger: (beat: string, o: { cut: number; otherDebt: number; frame?: boolean; momLeft?: number }): Line[] => {
     switch (beat) {
       case 'repeatCleared': return [
-        L('boss', '이제 6%짜리는 끝났어요. 비싼 거 하나 털었네요.', 'smile'),
+        L('boss', `이제 ${Math.round(((lenderById.shark1 as { repeatRate?: number }).repeatRate ?? 0) * 10000) / 100}%짜리는 끝났어요. 비싼 거 하나 털었네요.`, 'smile'),
       ];
       case 'firstCleared': return [
         L('boss', '손님 앞으로 빌린 건 이걸로 끝이에요.', 'smile'),

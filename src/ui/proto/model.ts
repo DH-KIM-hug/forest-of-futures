@@ -2,9 +2,10 @@
 import { tierById, wheelByCoin, balance, lenderById } from '../../engine/data';
 import { isActive, laborWage, nextTierCost, staffedWheelGross, tierBlockReason, tierMaxUnits, tierWage, equipGross, unitsOfTier } from '../../engine/equipment';
 import { sellFeeRate } from '../../engine/mining';
-import { forecast } from '../../engine/settlement';
+import { forecast, miningLeftShare } from '../../engine/settlement';
 import { fixedInterest, interestDue, lenderLimit, ownedCoins, totalDebt } from '../../engine/selectors';
-import type { CoinId, GameState } from '../../engine/types';
+import type { CoinId, GameState, RunState } from '../../engine/types';
+import { settleSec } from '../../engine/pace';
 import { HOME_WHEEL_NAME } from './text';
 import { assignSlots, SLOT_COUNT } from './home';
 import type { TipArgs } from './guide';
@@ -16,8 +17,8 @@ export const EXTRA_WHEEL = 'wheel2';
 /** 몇 번째 생인가(1부터). 엔진의 세대 번호는 2에서 시작한다. */
 export const lifeNo = (g: GameState): number => g.family.generation - balance.start.generation + 1;
 
-/** 첫 생의 첫 추심원이 오기까지(초). 굴려서는 안 된다는 것을 아는 데 40초면 충분하다 — 한 정산(180초)을 다 굴리게 하지 않는다(U-39 ⑤).
- *  이 시간 동안 아무리 눌러도(초당 12번 × 2) 첫 청구액 5,500 에 못 미친다. 빠른 판과 다음 생, 그 뒤의 정산은 그대로다. */
+/** 첫 생의 첫 추심원이 오기까지(초)의 상한(U-39 ⑤). U-47: 튜토리얼 동안 정산은 20초라 실제로는 20초다.
+ *  이 시간 동안 아무리 눌러도(초당 12번 × 2) 첫 청구액(이자 1,500 + 생활비 330)에 못 미친다. */
 export const FIRST_VISIT_SEC = 60;
 export const firstVisitSec = (interval: number): number => Math.min(interval, FIRST_VISIT_SEC);
 
@@ -30,8 +31,10 @@ export function claim(g: GameState): { interest: number; living: number; total: 
 export function officeOffer(g: GameState): { lend: number; ratePct: number; room: number } {
   const l = lenderById.shark1;
   const room = Math.max(0, lenderLimit(g, 'shark1') - g.run.debts.shark1.principal);
-  return { lend: Math.min(l.borrowUnit!, room), ratePct: Math.round(l.rate * 100), room };
+  return { lend: Math.min(l.borrowUnit!, room), ratePct: ratePct(l.rate), room };
 }
+/** 정산당 금리 → 화면의 % 숫자(소수 둘째 자리까지, 끝의 0 은 뺀다): 0.013 → 1.3, 0.02 → 2, 0.0033 → 0.33 */
+export const ratePct = (rate: number): number => Math.round(rate * 10000) / 100;
 
 // ── 목표 사슬 ────────────────────────────────────────────────────────────
 export interface Goal { label: string; cur: number; need: number; done: boolean }
@@ -81,12 +84,12 @@ export interface Tile {
   canAct: boolean;
 }
 const n = (x: number) => Math.round(x).toLocaleString('ko-KR');
-/** 정산당 금액 → 초당(지금 정산 간격 기준: 보통 180초, 빠른 판 20초). 버는 돈은 화면에서 늘 초당으로 보여 준다(U-30). */
-export const perSec = (perSettle: number): number => perSettle / balance.settlement.intervalSec;
+/** 정산당 금액 → 초당(이 생의 지금 정산 간격 기준: 보통 60초, 튜토리얼 동안 20초). 버는 돈은 화면에서 늘 초당으로 보여 준다(U-30). */
+export const perSec = (perSettle: number, run: RunState): number => perSettle / settleSec(run);
 /** 초당 숫자 표기: 100 미만은 소수 한 자리 */
 export const rateTxt = (perSecond: number): string => { const a = Math.abs(perSecond); return a >= 100 ? Math.round(a).toLocaleString('ko-KR') : a.toFixed(1); };
 /** 정산당 금액을 `초당 n` 꼴로 */
-export const secOf = (perSettle: number): string => rateTxt(perSec(perSettle));
+export const secOf = (perSettle: number, run: RunState): string => rateTxt(perSec(perSettle, run));
 /** 알바 한 마리가 붙은 쳇바퀴의 정산당 숫자: 캐서 판 값, 일당, 남는 돈 */
 export function hamsterMath(g: GameState, coin: CoinId = WHEEL_COIN): { sold: number; wage: number; net: number } {
   const sold = Math.floor(staffedWheelGross(coin) * (1 - sellFeeRate(g.run)));
@@ -105,7 +108,7 @@ export function tiles(g: GameState, prefs: Record<string, number> = {}): Tile[] 
   const run = g.run;
   const hm = hamsterMath(g);
   const phone = run.futures.open;
-  const running = { state: 'run' as const, net: hm.net, text: `초당 +${secOf(hm.sold)}`, sub: `일당 ${n(hm.wage)}은 정산 때`, locked: false, action: null, btn: '', btnSub: '', canAct: false };
+  const running = { state: 'run' as const, net: hm.net, text: `초당 +${secOf(hm.sold, run)}`, sub: `일당 ${n(hm.wage)}은 정산 때`, locked: false, action: null, btn: '', btnSub: '', canAct: false };
   const idle = () => phone
     ? { state: 'idle' as const, net: null, text: '알바 없음', locked: false, action: 'hire' as const, btn: '알바 부르기', btnSub: `정산 때 일당 ${n(hm.wage)}`, canAct: true }
     : { state: 'idle' as const, net: null, text: '수금폰 필요', locked: true, action: null, btn: '', btnSub: '', canAct: false };
@@ -176,4 +179,37 @@ export function tipArgs(g: GameState): TipArgs {
     tap: Math.round(tapValue(g, coin)), claim: c.total, living: c.living, wage: laborWage(), wheel: nextTierCost(g.run, EXTRA_WHEEL),
     lend: officeOffer(g).lend || (lenderById.shark1.borrowUnit ?? 0), rate: officeOffer(g).ratePct, debt: totalDebt(g.run), lev: TUT.lev,
   };
+}
+
+// ── 정산 막대(U-47): 집 판의 한 줄 ─────────────────────────────────────────
+export interface SettleBarView {
+  /** 이번 정산 구간에 알바가 캐서 판 돈(1초마다 오른다). 손에 든 돈보다 많이 적지 않는다(거래로 쓴 몫은 빠진다) */ earned: number;
+  /** 지금 초당으로 수금 때까지 더 들어올 돈 */ proj: number;
+  /** 이번 구간 전부터 손에 있던 돈 */ carried: number;
+  /** 이번 수금에 낼 돈 = 이자 + 일당 + 생활비 */ due: number;
+  interest: number; wages: number; living: number; hamsters: number;
+  /** 알바 수입(초당) */ perSec: number;
+  /** 이대로면 수금 뒤에 남는 돈(음수 = 모자람) = 손에 든 돈 + 더 들어올 돈 − 낼 돈 */ left: number;
+  ok: boolean;
+  /** 막대 위의 자리(%) 셈: 막대 전체 = 낼 돈의 1.5배 또는 들어올 돈 중 큰 것 */ pct: (x: number) => number;
+  /** 손에 있던 돈이 막대 밖으로 넘친다 */ over: boolean;
+  text: string;
+}
+/** 막대의 셈. 정산(settlement.ts)과 같은 순서다: 수금 때 손에 있는 만큼 내고, 모자란 것은 연체(이자 · 생활비)가 되거나 알바가 나간다(일당). 열린 포지션의 손익은 넣지 않는다 */
+export function settleBar(g: GameState): SettleBarView {
+  const run = g.run;
+  const f = forecast(g);
+  const fee = 1 - sellFeeRate(run);
+  const interest = Math.round(f.interest), living = Math.round(f.living), wages = Math.round(f.wages);
+  const due = interest + living + wages;
+  const cash = Math.max(0, run.cash);
+  const earned = Math.min(cash, Math.max(0, ((run.stats.minedCur as number | undefined) ?? 0) * fee));
+  const carried = Math.max(0, cash - earned);
+  const proj = Math.max(0, f.mined * fee * miningLeftShare(run));
+  const left = run.cash + proj - due;
+  const D = Math.max(1, due * 1.5, earned + proj + Math.min(carried, due * 0.5));
+  const over = earned + proj + carried > D + 0.5;
+  const ok = left >= 0;
+  const text = ok ? `이대로면 ${Math.round(left).toLocaleString('ko-KR')} 남아요` : `이대로면 ${Math.round(-left).toLocaleString('ko-KR')} 모자라요`;
+  return { earned, proj, carried, due, interest, wages, living, hamsters: staffedCount(g), perSec: (f.mined * fee) / settleSec(run), left, ok, over, text, pct: (x) => Math.max(0, Math.min(100, (x / D) * 100)) };
 }

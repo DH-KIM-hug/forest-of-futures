@@ -1,11 +1,11 @@
 // 집 탭(U-34): 세상(집 그림)이 화면을 채우고, 아래에 접히는 판이 있다.
-//   접힘: 탭 줄 위에 얇은 한 줄("▲ 초당 +89 ≥ 이자 초당 69 · 정산 1:42"). 누르거나 위로 끌면 펴진다. 이때 세상의 쳇바퀴를 누르면 굴린다.
-//   펴짐: 버는 돈 · 견줌 막대 · 나가는 돈 + 바닥 자리 여섯을 2×3 칸으로(칸마다 상태 하나 + 할 일 하나). ▼·아래로 끌기·세상 아무 데나 누르면 접힌다(그 탭은 굴리지 않는다).
+//   접힘: 탭 줄 위에 정산 막대 한 줄(U-47: 이번 구간에 번 돈이 차오르는 막대, 낼 돈의 붉은 눈금, "이대로면 +1,240 남아요", 다음 수금 0:42). 누르거나 위로 끌면 펴진다. 이때 세상의 쳇바퀴를 누르면 굴린다.
+//   펴짐: 같은 막대 + 낼 돈의 내역(이자, 일당, 생활비) + 바닥 자리 여섯을 2×3 칸으로(칸마다 상태 하나 + 할 일 하나). ▼, 아래로 끌기, 세상 아무 데나 누르면 접힌다(그 탭은 굴리지 않는다).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useUI } from '../uiStore';
 import { useProto } from './protoStore';
-import { tiles, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, rateTxt, perSec, claim, type Tile } from './model';
+import { tiles, homeSummary, WHEEL_COIN, EXTRA_WHEEL, isNearLiq, rateTxt, claim, settleBar, type Tile } from './model';
 import { heroMood, tensionOf, type HeroMood } from './tension';
 import { tradeNet } from './watch';
 import { liveHistoryOf } from '../priceHistory';
@@ -52,7 +52,7 @@ function PinRow({ p }: { p: OpenPos }) {
   const tn = tensionOf(p.liqDistPct, liveHistoryOf(p.market));
   return (
     <button className={'pr-pin' + (call ? ' call' : '') + (net >= 0 ? ' plus' : ' minus')} onClick={() => { useUI.getState().setTrade({ market: p.market }); setTab('phone'); }} aria-label={`내 포지션 ${m.name}, 거래소에서 보기`}>
-      <span className="who">{coinLogo(p.market) ? <img className="coin logo" src={coinLogo(p.market)!} alt="" draggable={false} /> : <i className="coin" style={{ background: C.dtc }} />}{m.name}</span>
+      <span className="who">{coinLogo(p.market) ? <img className="coin logo" src={coinLogo(p.market)!} alt="" draggable={false} /> : <i className="coin" style={{ background: C.dtc }} />}{m.short ?? m.name}</span>
       <span className="dir"><b className={p.dir === 1 ? 'long' : 'short'}>{p.dir === 1 ? '롱 ▲' : '숏 ▼'}</b> {p.lev}배</span>
       <span className={'liq r-' + tn.reach} data-reach={tn.reach}>{call ? '청산 임박, 남은 거리 ' : '청산까지 '}{p.liqDistPct.toFixed(1)}%<i className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <u key={i} className={i < tn.dots ? 'on' : ''} />)}</i></span>
       <span className="roe"><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(net)))}</b><small>{roeTxt(p.netRoe)}</small></span>
@@ -177,14 +177,14 @@ export function Lot() {
   };
   const onToggle = () => { if (dragged.current) { dragged.current = false; return; } play('ui_tap'); setPanel(!useProto.getState().panelOpen); };
 
-  // 들어오는 돈 = 1초마다 캐서 판 값(쳇바퀴 위의 "+n"과 같다), 나가는 돈 = 정산 때 걷는 것 전부(이자 + 생활비 + 일당) — U-46
-  const idleSec = perSec(sum.mined);
-  // 다음 정산까지 벌 돈 = 초당 × 남은 초(1초마다 실제로 들어오는 돈) — 손에 든 돈까지 더해 정산 때 낼 돈과 견준다
-  const earnLeft = idleSec * Math.max(0, run.settleIn);
-  const cashNow = run.cash;
-  const ahead = cashNow + earnLeft >= sum.due;
-  const share = earnLeft + sum.due > 0 ? Math.max(0.04, Math.min(0.96, (cashNow + earnLeft) / Math.max(1, cashNow + earnLeft + sum.due))) : 0.5;
+  // 정산 막대(U-47): 이번 정산 구간에 알바가 번 돈이 1초마다 차오르고, 붉은 눈금 = 이번 수금에 낼 돈(이자 + 일당 + 생활비),
+  // 흐린 꼬리 = 지금 초당으로 수금 때까지 더 들어올 돈. 결론 = 지금 손에 든 돈 + 더 들어올 돈 − 낼 돈(정산은 있는 만큼 내고 모자란 것은 연체가 된다)
+  const sb = settleBar(g);
+  const pnlOpen = pos.reduce((a, p) => a + p.net, 0);
   const left = mmss(Math.max(0, run.settleIn));
+  // 여러 종목을 함께 들 때(U-47): 판 머리에는 청산이 가까운 둘만, 나머지는 한 줄로 묶는다(세상을 덮지 않게)
+  const PIN_MAX = 2;
+  const pinned = pos.length > PIN_MAX ? [...pos].sort((a, b) => a.liqDistPct - b.liqDistPct).slice(0, PIN_MAX) : pos;
   const todo = cells.some((t) => t.action && t.canAct);
   const nextEmpty = cells.find((t) => t.state === 'empty')?.slot;
   const bySlot = (s: number) => cells.find((t) => t.slot === s)!;
@@ -195,9 +195,14 @@ export function Lot() {
       {open && <div className="pr-scrim" data-scrim onPointerDown={() => setPanel(false)} aria-hidden="true" />}
       <section className={'pr-panel' + (open ? ' open' : '')} data-panel={open ? 'open' : 'closed'} aria-label="집의 쳇바퀴">
         <div ref={headRef} className="hd">
-          {pos.map((p) => has(g, 'A2')
+          {pinned.map((p) => has(g, 'A2')
             ? <div key={p.market} className="pr-pinwrap"><PinRow p={p} /><button className="buy on pinclose" data-pinclose onClick={() => { const r = act({ type: 'close', market: p.market }); play(r.ok ? 'ui_tap' : 'insufficient'); }}><span>정리</span></button></div>
             : <PinRow key={p.market} p={p} />)}
+          {pos.length > pinned.length && (
+            <button className="pr-pinmore" data-pinmore={pos.length - pinned.length} onClick={() => useProto.getState().setTab('phone')}>
+              포지션 {pos.length - pinned.length}개 더, 거래소에서 보기
+            </button>
+          )}
           {waiting && (
             <div className="pr-wait" role="status" data-wait>
               <span>추심원이 문 앞에서 기다린다</span>
@@ -205,28 +210,37 @@ export function Lot() {
               <button className="buy" data-wait-away onClick={sendAway}><span>돌려보낸다</span><small>이번 수금 연체</small></button>
             </div>
           )}
-          <button className={'pr-strip' + (ahead ? ' ok' : ' short') + (open ? ' full' : '')} data-strip data-sum data-hl={open ? 'bar' : 'strip'} aria-expanded={open}
-            aria-label={open ? '쳇바퀴 자리 접기' : '쳇바퀴 자리 펴기'} onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { drag.current = null; }} onClick={onToggle}>
+          <button className={'pr-strip sbar' + (sb.ok ? ' ok' : ' short') + (open ? ' full' : '')} data-strip data-sum data-sbar={sb.ok ? 'ok' : 'short'} data-hl={open ? 'bar' : 'strip'} aria-expanded={open}
+            aria-label={(open ? '쳇바퀴 자리 접기. ' : '쳇바퀴 자리 펴기. ') + sb.text} onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { drag.current = null; }} onClick={onToggle}>
             <i className="grip" aria-hidden="true" />
-            {open ? (
+            <span className="sb-row">
+              <i className="chev">{open ? '▼\uFE0E' : '▲\uFE0E'}{!open && todo && <u className="dot" />}</i>
+              {/* 막대: 이번 구간에 번 돈(초록, 1초마다) + 수금 때까지 더 들어올 돈(흐린 초록) + 전부터 손에 있던 돈(갈색). 붉은 눈금 = 낼 돈 */}
+              <span className="sb-track" role="img" aria-label={sb.text}>
+                <i className="sb-earn" data-earned={Math.round(sb.earned)} style={{ width: `${sb.pct(sb.earned)}%` }} />
+                <i className="sb-proj" style={{ left: `${sb.pct(sb.earned)}%`, width: `${sb.pct(sb.earned + sb.proj) - sb.pct(sb.earned)}%` }} />
+                {sb.carried >= 1 && <i className={'sb-carry' + (sb.over ? ' over' : '')} title="전부터 손에 있던 돈" style={{ left: `${sb.pct(sb.earned + sb.proj)}%`, width: `${sb.pct(sb.earned + sb.proj + sb.carried) - sb.pct(sb.earned + sb.proj)}%` }} />}
+                <u className="sb-due" data-due={sb.due} style={{ left: `${sb.pct(sb.due)}%` }} />
+              </span>
+              <b className="sb-end" data-left={Math.round(sb.left)}>{sb.ok ? <>이대로면 <em>+{comma(Math.round(sb.left))}</em> 남아요</> : <>이대로면 <em>{comma(Math.round(-sb.left))}</em> 모자라요</>}</b>
+            </span>
+            <span className="sb-sub">
+              <span>{waiting ? '추심원이 문 앞에서 기다린다' : <>다음 수금 <b data-next>{left}</b></>}</span>
+              {pos.length > 0 && <span className={'sb-pos ' + (pnlOpen >= 0 ? 'up' : 'down')} data-pospl={Math.round(pnlOpen)}>포지션 {pnlOpen >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(pnlOpen)))} 별도</span>}
+            </span>
+            {open && (
               <>
-                <span className="cmp">
-                  {/* 다음 정산까지 벌 돈(초당 × 남은 초) vs 정산 때 낼 돈(U-46): "이번 정산을 낼 수 있나"에 답한다 */}
-                  <span className="in"><i className="chev">▼&#xFE0E;</i><small>다음 정산까지 예상 수입</small><b>+{comma(Math.round(earnLeft))}</b><small className="x">초당 +{rateTxt(idleSec)} × {Math.max(0, run.settleIn)}초</small></span>
-                  <span className="bar" role="img" aria-label={ahead ? '예상 수입이 더 많아요' : '예상 지출이 더 많아요'}><i style={{ width: `${share * 100}%` }} /><u /></span>
-                  <span className="out"><small>정산 때 낼 돈</small><b>−{comma(sum.due)}</b></span>
+                {/* 펴면 낼 돈의 내역(U-47): 이자 · 일당 · 생활비 */}
+                <span className="sb-brk" data-brk>
+                  <span><small>이자</small><b>{comma(sb.interest)}</b></span>
+                  <span><small>일당{sb.hamsters > 0 ? ` ${sb.hamsters}마리` : ''}</small><b>{comma(sb.wages)}</b></span>
+                  <span><small>생활비</small><b>{comma(sb.living)}</b></span>
+                  <span className="sum"><small>낼 돈</small><b>{comma(sb.due)}</b></span>
                 </span>
-                <span className="nx">정산까지 <b>{left}</b>{cashNow >= 1 ? <>, 손에 <b>{comma(Math.floor(cashNow))}</b></> : null}</span>
+                <span className="nx">알바 수입 초당 <b>+{rateTxt(sb.perSec)}</b>{run.cash >= 1 ? <>, 손에 <b>{comma(Math.floor(run.cash))}</b></> : null}</span>
                 {/* 이번 생의 길(U-41): 낸 돈과 거래가 벌어 온 돈 */}
                 {(run.settleNo > 0 || closes > 0) && <span className="jr" data-journey="home">{jr.text}</span>}
               </>
-            ) : (
-              <span className="one">
-                <i className="chev">▲&#xFE0E;{todo && <u className="dot" />}</i>
-                {/* 초당 들어오는 돈 / 나가는 돈(U-43): 들어오는 것은 초록, 나가는 것은 빨강. 견줌 기호 대신 빗금 하나 */}
-                <b className="in">초당 +{rateTxt(idleSec)}</b><i className="cmpch" aria-hidden="true">/</i><b className="out">정산 때 −{comma(sum.due)}</b>
-                <span className="tm">{left}</span>
-              </span>
             )}
           </button>
         </div>
