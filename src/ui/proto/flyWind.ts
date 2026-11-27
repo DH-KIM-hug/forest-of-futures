@@ -1,13 +1,13 @@
 // 날다람쥐코인의 바람 세기와 숲 소문(U-52). 셈은 전부 시세 함수와 같은 씨앗(engine/feed/fly.ts) — 꾸민 말이 없다.
 // 소문은 급등락보다 10~60초 앞에 돌기도 하고(급등락의 열에 여섯), 아무 일 없이 돌기도 한다. 쪽은 셋에 둘쯤 맞는다.
 import { flyPrice, flyGust, flyTellsBetween, flyTellOutcome, flyTellRecord, TELL_WINDOW, type FlyTell, type FlyJump } from '../../engine/feed/fly';
-import { SIM_FLY_EPOCH } from '../../engine/feed/simFeed';
+import { SIM_FLY_EPOCH, simFly } from '../../engine/feed/simFeed';
 
 /** 지금 날다람쥐 값이 셈된 시각(초): 받은 틱 번호가 유닉스 초(실시간) 또는 연습 시세의 번호. 값이 그 시각의 함수 값과 같은 것을 고른다(모르면 null) */
 export function flySecOf(run: { prices: Record<string, number>; lastSeenTick: number }): number | null {
   const px = run.prices.FLY;
   if (!px) return null;
-  for (const t of [run.lastSeenTick, SIM_FLY_EPOCH + run.lastSeenTick]) if (t > 0 && Math.abs(flyPrice(t) / px - 1) < 1e-9) return t;
+  for (const t of [run.lastSeenTick, simFly.epoch + run.lastSeenTick, SIM_FLY_EPOCH + run.lastSeenTick]) if (t > 0 && Math.abs(flyPrice(t) / px - 1) < 1e-9) return t;
   return null;
 }
 

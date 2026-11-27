@@ -368,6 +368,8 @@ export interface RunState {
   dayLossLimit: number | null;
   /** 첫 생의 튜토리얼 동안: 정산 간격이 balance.settlement.introSec(U-47). 끝나면 false(pace.ts endIntro) */
   intro?: boolean;
+  /** FRX 회원 등급(U-56 ③, 사용자 결정): 새싹 0, 단골 1 … 등급마다 수수료가 조금 준다(skilltree.ts baseFeeRate). 화면이 도장으로 셈해 넣는다(setFeeTier) */
+  feeTier?: number;
 }
 
 export interface PendingEnding {

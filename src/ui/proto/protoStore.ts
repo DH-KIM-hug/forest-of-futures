@@ -5,6 +5,8 @@ import { tipSeen, type HlKey } from './guide';
 import { loadPanel, savePanel } from './home';
 import type { AwayCard } from './away';
 import type { WinTier } from './tension';
+import type { Board } from './quests';
+import type { RivalEvent, RivalState } from './rivals';
 
 /** 이긴 판이 터지는 화면(U-48 → U-49: 어느 탭에서든). market = 닫힌 종목 */
 export interface Burst { k: number; tier: WinTier; pnl: number; margin: number; streak: number; lev: number; market: string; dir: 1 | -1; name: string; how: 'tp' | 'close' | 'sl'; /** 이번 생 가장 크게 딴 판(U-51) */ record?: boolean; /** 이 판으로 오른 FRX 회원 등급(U-51) */ rankUp?: string }
@@ -125,6 +127,15 @@ interface P {
   pointTab: Tab | null;
   /** 중고폰이 울렸다(U-43): 튜토리얼 거래를 걸 때까지 거래소 탭(폰의 앱)만 열 수 있다(지도 · 집의 할 일은 잠기고 정산 시계가 멈춘다) */
   forceTrade: boolean;
+  /** FRX 의뢰판(U-56): 걸린 의뢰 셋과 돌풍 특보. 튜토리얼이 끝나면 생긴다 */
+  quests: Board | null;
+  /** 방금 닫힌 판이 의뢰를 움직였다(결과 카드의 꼬리표) */
+  questFx: { k: number; lines: string[]; done: boolean; market: string; tick: number } | null;
+  /** 숲 단타방(U-56): 라이벌 넷의 장부와 판 · 방금 일어난 일(저장하지 않는다) */
+  rivals: RivalState | null;
+  rivalLog: RivalEvent[];
+  /** 숲 게시판(의뢰 · 단타방 · 트로피 장)이 열려 있다 */
+  forest: null | 'quest' | 'rival' | 'trophy';
   setPanel: (open: boolean) => void;
   setTab: (t: Tab) => void;
   patch: (p: Partial<P>) => void;
@@ -142,6 +153,7 @@ const fresh = () => ({
   dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
   beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[], treePing: null as TreePing | null, wind: null as Wind | null, firstTry: 3, frxStamps: 0, bestWin: 0, rankUp: null as P['rankUp'], bestTrade: null as P['bestTrade'], rankSeen: 0,
   rolled: 0, rolledKey: null as number | null, rolledTaps: 0, claimWinRun: 0, claimLossRun: 0, claimRunSum: 0, pointTab: null as Tab | null, forceTrade: false,
+  quests: null as Board | null, questFx: null as P['questFx'], rivals: null as RivalState | null, rivalLog: [] as RivalEvent[], forest: null as P['forest'],
 });
 
 export const useProto = create<P>((set) => ({

@@ -117,8 +117,14 @@ export function feeEventLeft(run: RunState): number {
 /** 나무의 할인을 곱하기 전의 기본 수수료율: 이벤트 중 0, 끝난 뒤 afterFeeRate, 이벤트가 없는 판은 trading.feeRate. */
 export function baseFeeRate(run: RunState): number {
   const ev = openingEvent();
-  if (!ev) return balance.trading.feeRate as number;
-  return feeEventLeft(run) > 0 ? 0 : ev.afterFeeRate;
+  if (!ev) return tierFee(balance.trading.feeRate as number, run.feeTier ?? 0);
+  return feeEventLeft(run) > 0 ? 0 : tierFee(ev.afterFeeRate, run.feeTier ?? 0);
+}
+/** FRX 회원 등급의 수수료 할인(U-56 ③, 사용자 결정): 새싹 위로 한 등급마다 0.001%p, 절반까지(0.01% → 0.005%) */
+export const TIER_FEE_STEP = 0.00001;
+export function tierFee(base: number, tier: number): number {
+  if (base <= 0) return base;
+  return Math.max(base / 2, base - Math.max(0, Math.floor(tier)) * TIER_FEE_STEP);
 }
 
 // ── 효과 ────────────────────────────────────────────────────────────────

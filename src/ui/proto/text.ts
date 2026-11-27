@@ -206,8 +206,9 @@ export const STORY = {
     L('weasel', `${count}마리 데려갈게요. 다음에 부르실 땐 일당부터 떼어 놔요.`, 'flat'),
   ],
   /** 장면 25 압류: 실려 가는 것의 이름을 부른다 */
-  seize: (o: { what: 'wheel' | 'mom' | 'wallet'; off: number }): Line[] =>
-    o.what === 'mom' ? [
+  seize: (o: { what: 'wheel' | 'mom' | 'wallet'; off: number; /** 그때 판에 걸려 있던 돈(U-56: 걸어 둔 증거금은 압류되지 않는다) */ locked?: number }): Line[] => [
+    ...(o.locked && o.locked > 0 ? [L('collector', `거래에 걸린 ${won(o.locked, '은', '는')} 손 못 대요. 규정이에요. 그래서 바퀴를 가져가는 거고요.`, 'flat')] : []),
+    ...(o.what === 'mom' ? [
       L('collector', `${n(o.off)}만큼 원금에서 뺐습니다.`, 'flat'),
       L('collector', '…잠시만요. 이쪽으로 빼는 거 맞아요? 문에 걸리는데.', 'flat'),
       L('hero', '그쪽 말고요. 이쪽으로 기울여야 나가요.'),
@@ -216,7 +217,8 @@ export const STORY = {
       L('collector', `지갑은 안에 든 거까지 ${won(o.off, '이에요', '예요')}. 그만큼 빚에서 뺄게요.`, 'flat'),
     ] : [
       L('collector', `보조 바퀴 싣겠습니다. 이건 경매로 ${n(o.off)} 쳐요. 그만큼 빚에서 뺐어요.`, 'flat'),
-    ],
+    ]),
+  ],
   /** 장면 33 위험 고지 확인서(U-47): 50배 위의 칸을 처음 누르면 오소리 대부가 종이를 민다. 막는 문이 아니라 발도장 한 번이다 */
   waiverAsk: (lev: number): Line[] => [
     L('boss', '잠깐만요. 그 배율은 종이 한 장이 더 필요해요.', 'smile'),

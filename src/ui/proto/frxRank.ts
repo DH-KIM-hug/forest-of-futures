@@ -32,3 +32,12 @@ export function lookOf(r: number): RankLook {
 }
 /** 케이스 색(폰 테두리). teal 은 원래 색(var(--teal)) */
 export const CASE_COL: Record<string, string> = { teal: '#3E9A9C', leaf: '#5C9A5A', night: '#3E5C8A', plum: '#7A5AA8', gold: '#C9962E' };
+
+/** 등급의 수수료(U-56 ③, 사용자 결정): 오픈 기념이 끝난 뒤의 수수료율에서 한 등급마다 0.001%p, 절반까지. "0.009%" */
+import { tierFee, openingEvent } from '../../engine/skilltree';
+import { balance } from '../../engine/data';
+export function rankFeePct(r: number): number {
+  const ev = openingEvent();
+  return tierFee(ev ? ev.afterFeeRate : (balance.trading.feeRate as number), r) * 100;
+}
+export const rankFeeText = (r: number): string => `수수료 ${+rankFeePct(r).toFixed(4)}%`;

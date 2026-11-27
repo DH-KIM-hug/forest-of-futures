@@ -225,6 +225,12 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       P.patch({ everUnlocked: { ...un } });
       // 화면 확인용: 황금 도토코인 12개에 뿌리·단골 수수료 Lv2·한 손 정리·확인서 단골을 가진 가문
       if (name === 'tree') { g.family.gold = q.get('pgold') ? +q.get('pgold')! : 12; g.family.skill = { R: 1, A1: 2, A2: 1, B1: 1 }; if (g.estate) g.estate.gold = 3; g.run.stats['repaid.shark1'] = 150_000; }
+      // 화면 확인용(U-56): &pendpos=1 → 판 둘을 든 채 파산한 생(엔딩 카드의 「판에 걸려 있던 돈」)
+      if (name === 'broke' && q.get('pendpos') === '1') {
+        const px = g.run.prices;
+        g.run.positions.FLY = { market: 'FLY', dir: 1, lev: 100, entry: (px.FLY ?? 100) * 1.004, margin: 30_000, margin0: 30_000, notional: 3_000_000, liq: (px.FLY ?? 100) * 0.995, openTick: g.run.tick - 90, feesPaid: 0, marginPct: 25, slRoe: null, tpRoe: null, fundedBy: null } as never;
+        g.run.positions.DTC = { market: 'DTC', dir: -1, lev: 25, entry: (px.DTC ?? 68000) * 0.998, margin: 12_000, margin0: 12_000, notional: 300_000, liq: (px.DTC ?? 68000) * 1.04, openTick: g.run.tick - 40, feesPaid: 0, marginPct: 25, slRoe: null, tpRoe: null, fundedBy: null } as never;
+      }
       if (name !== 'broke') { stepMut(g, { type: 'action', action: { type: 'estateNext' } }); stepMut(g, { type: 'action', action: { type: 'inherit', branch: 'renounce' } }); }
       return g;
     }

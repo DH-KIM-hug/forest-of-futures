@@ -7,6 +7,8 @@ import { flyPrice } from './fly';
 
 /** 난수 시세에서 날다람쥐코인(FLY)을 셈할 시각: 틱 n 에 이 기준 시각을 더한다(같은 n 이면 같은 값 — 시험이 흔들리지 않게) */
 export const SIM_FLY_EPOCH = 1_764_000_000;
+/** 지금 돌고 있는 연습 시세의 날다람쥐 기준 시각(회차 15 사용자 결정 U-56 ②: 브라우저의 연습 시세는 벽시계에 맞춰 실시간 판과 같은 때의 같은 값). 화면이 지금 값의 시각을 찾을 때 쓴다 */
+export const simFly = { epoch: SIM_FLY_EPOCH };
 import type { MarketStatus } from '../types';
 
 type Regime = -1 | 0 | 1;
@@ -20,20 +22,25 @@ export class SimFeed implements Feed {
   n: number;
   st: MarketStatus = 'open';
 
-  constructor(seed = 1, startN = 0) {
+  /** 날다람쥐코인을 셈할 시각 = flyEpoch + n. 시험은 SIM_FLY_EPOCH(같은 n 이면 같은 값), 브라우저는 벽시계에 맞춘다(실시간 판과 같은 바람, 같은 급등락) */
+  flyEpoch: number;
+
+  constructor(seed = 1, startN = 0, flyEpoch = SIM_FLY_EPOCH) {
     this.h = { rng: seed | 0 };
     this.n = startN;
+    this.flyEpoch = flyEpoch;
     for (const m of marketDefs) {
-      this.price[m.id] = m.synthetic ? flyPrice(SIM_FLY_EPOCH + startN) : m.startPrice;
+      this.price[m.id] = m.synthetic ? flyPrice(this.flyEpoch + startN) : m.startPrice;
       if (!m.synthetic) this.regime[m.id] = this.pickRegime();
     }
   }
 
   /** 저장에서 이어 갈 때(U-55): 값을 그 자리로 옮긴다(n 을 주면 틱 번호도). 날다람쥐코인은 시각의 함수라 n 만 따른다 */
-  rebase(prices: Record<string, number>, n?: number): void {
+  rebase(prices: Record<string, number>, n?: number, flyEpoch?: number): void {
     if (n !== undefined && Number.isFinite(n) && n >= 0) this.n = Math.floor(n);
+    if (flyEpoch !== undefined && Number.isFinite(flyEpoch) && flyEpoch > 0) this.flyEpoch = Math.floor(flyEpoch);
     for (const m of marketDefs) {
-      if (m.synthetic) { this.price[m.id] = flyPrice(SIM_FLY_EPOCH + this.n); continue; }
+      if (m.synthetic) { this.price[m.id] = flyPrice(this.flyEpoch + this.n); continue; }
       if (prices[m.id] > 0) this.price[m.id] = prices[m.id];
     }
   }
@@ -49,7 +56,7 @@ export class SimFeed implements Feed {
     this.n += 1;
     const p: Tick['p'] = {};
     for (const m of marketDefs) {
-      if (m.synthetic) { this.price[m.id] = flyPrice(SIM_FLY_EPOCH + this.n); p[m.id] = [this.price[m.id], 1, 0.5]; continue; }
+      if (m.synthetic) { this.price[m.id] = flyPrice(this.flyEpoch + this.n); p[m.id] = [this.price[m.id], 1, 0.5]; continue; }
       const c = simFeedCfg.params[m.id];
       const sigma = c.sigmaPerTick;
       if (nextRandom(this.h) < c.switchProbPerTick) this.regime[m.id] = this.pickRegime();

@@ -34,7 +34,8 @@ import { settle } from '../../engine/settlement';
 import { clone } from '../../engine/game';
 import { fx } from './fx';
 import { pushPop, treePing } from './popBus';
-import { rankOf, stampsOf } from './frxRank';
+import { rankOf, stampsOf, rankFeeText } from './frxRank';
+import { forestClose, forestTick, forestNewLife } from './forestWatch';
 import { play, later } from './audio';
 import { closeBack, exitFee, roePct } from '../../engine/futures';
 import { exitFeeMul, feeEventLeft, openingEvent, feeRate } from '../../engine/skilltree';
@@ -639,7 +640,7 @@ export function startWatch(): void {
       const ev = [...run.eventLog].reverse().find((e) => e.kind.startsWith('seize:'));
       const what = ev?.kind.startsWith('seize:wheel:') ? 'mom' : ev?.kind === 'seize:wallet' ? 'wallet' : 'wheel';
       later(1200, () => play('overdue_stamp'));
-      sceneHeld({ id: `seize${run.stats.assetsSeized}`, again: true, lines: STORY.seize({ what, off: Math.abs(ev?.amount ?? 0) }) }, what === 'mom' ? '엄마의 쳇바퀴 압류. 집에서 내역 확인' : what === 'wallet' ? '콜드월렛 압류. 집에서 내역 확인' : '보조 쳇바퀴 압류. 집에서 내역 확인', true);
+      sceneHeld({ id: `seize${run.stats.assetsSeized}`, again: true, lines: STORY.seize({ what, off: Math.abs(ev?.amount ?? 0), locked: Object.values(run.positions).reduce((a, p) => a + p.margin0, 0) }) }, what === 'mom' ? '엄마의 쳇바퀴 압류. 집에서 내역 확인' : what === 'wallet' ? '콜드월렛 압류. 집에서 내역 확인' : '보조 쳇바퀴 압류. 집에서 내역 확인', true);
     }
     // 닫힌 포지션(U-47: 여러 종목을 함께 들 수 있다 — 한 틱에 둘 이상 닫혀도 하나씩 다 본다)
     const closedPs = Object.values(prev.run.positions).filter((p) => { const c = run.positions[p.market]; return !c || c.openTick !== p.openTick; });
@@ -667,13 +668,15 @@ export function startWatch(): void {
         // FRX 회원 등급(U-51): 닫힌 판마다 도장(터진 판은 더). 등급이 오르면 머리의 칩이 튀고 팡파르 — 이긴 판의 상자가 먼저, 그 뒤에
         const prevBest = useProto.getState().bestWin;
         if (!tut) {
+          // FRX 의뢰판(U-56): 이 판이 의뢰를 끝냈으면 그 도장도 함께
+          const qStamps = forestClose(g, { market: p.market, dir: p.dir, lev: p.lev, pnl, roe: endKind === 'liq' ? -100 : (pnl / Math.max(1, p.margin0)) * 100, heldSec: run.tick - p.openTick, kind: endKind, claim: claim(prev).total, fly: !!marketById[p.market]?.synthetic }, say);
           const P2 = useProto.getState();
-          const before = rankOf(P2.frxStamps), stamps = P2.frxStamps + stampsOf(tierB?.lv ?? 0), after = rankOf(stamps);
+          const before = rankOf(P2.frxStamps), stamps = P2.frxStamps + stampsOf(tierB?.lv ?? 0) + qStamps, after = rankOf(stamps);
           if (pnl > 0 && pnl > P2.bestWin) P2.patch({ bestTrade: { pnl: Math.round(pnl), market: p.market, lev: p.lev, dir: p.dir, roe: (pnl / Math.max(1, p.margin0)) * 100 } });
           P2.patch({ frxStamps: stamps, bestWin: Math.max(P2.bestWin, pnl), rankUp: after.r > before.r ? { k: (P2.rankUp?.k ?? 0) + 1, r: after.r, name: after.name } : P2.rankUp });
           // 이긴 판이 터지면 그 상자에 「승급」 칩이 같이 뜬다(장면이 덮기 전에 보이게). 아니면 0.7초 뒤 한 줄과 팡파르
           if (after.r > before.r && tierB) later(900, () => play('goal_complete'));
-          if (after.r > before.r && !tierB) later(700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 거래 도장 ${stamps}개. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500, true); });
+          if (after.r > before.r && !tierB) later(700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 이제 ${rankFeeText(after.r)}. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500, true); });
         }
         if (tierB) {
           const P0 = useProto.getState();
@@ -840,7 +843,8 @@ export function startWatch(): void {
     if (everOpened !== P.everOpened) P.patch({ everOpened });
     const gi = currentGoal(g, useProto.getState().goalIdx, { everOpened, waiting: useProto.getState().waiting, loanTaken: useProto.getState().loanTaken });
     if (gi !== useProto.getState().goalIdx) { if (gi > useProto.getState().goalIdx) play('goal_complete'); useProto.getState().patch({ goalIdx: gi }); }
-    if (sameLife && g.run.tick !== prev.run.tick) { holdTick(g); marketTick(g); }
+    if (!sameLife) forestNewLife();
+    if (sameLife && g.run.tick !== prev.run.tick) { holdTick(g); forestTick(g, say); marketTick(g); }
     flushHeld(); // 급한 것(연체·압류)이 먼저
     flushCalm();
     guideCheck();

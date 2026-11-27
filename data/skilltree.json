@@ -16,7 +16,7 @@
   "nodes": [
     { "id": "R", "path": "R", "tier": 0, "name": "손에 익은 앱", "desc": "거래의 나무 첫 가지. 들고 있는 판이 고비(+50%, 두 배 …)를 넘을 때마다 FRX 가 넣은 돈의 1%를 고비 보상으로 얹는다. 여기서 세 갈래가 열린다.", "openCost": 1, "kind": "binary", "requires": [], "tail": { "cap": 0.2, "text": "10배 이하 거래의 수수료가 준다(상한 −20%)." } },
     { "id": "A1", "path": "A", "tier": 1, "name": "단골 수수료", "desc": "거래 수수료가 준다(상한 −50%). 이익 중인 포지션의 절반을 그 자리에서 닫는 [반 익절] 단추가 생긴다. 나머지는 계속 달린다.", "openCost": 1, "kind": "scaled", "cap": 0.5, "requires": [ "R" ] },
-    { "id": "A2", "path": "A", "tier": 2, "name": "한 손 정리", "desc": "포지션 정리가 한 번 누르기로 바뀐다. 집 화면의 포지션 줄에서도 바로 정리한다.", "openCost": 2, "kind": "binary", "requires": [ "A1" ], "tail": { "cap": 0.25, "text": "나올 때 수수료가 준다(상한 −25%)." } },
+    { "id": "A2", "path": "A", "tier": 2, "name": "한 손 정리", "desc": "집 화면의 포지션 줄에서도 바로 정리한다.", "openCost": 2, "kind": "binary", "requires": [ "A1" ], "tail": { "cap": 0.25, "text": "나올 때 수수료가 준다(상한 −25%)." } },
     { "id": "A3a", "path": "A", "tier": 3, "name": "초봉 차트", "desc": "차트를 30초 창으로 당겨 본다. 보이는 게 많아질 뿐, 맞히는 건 아니다.", "openCost": 3, "kind": "binary", "requires": [ "A2" ], "pair": "A3b", "tail": { "cap": 480, "text": "더 길게 보는 창이 생긴다(2분 + 상한 8분)." } },
     { "id": "A3b", "path": "A", "tier": 3, "name": "반대 단추", "desc": "롱↔숏 뒤집기를 한 번에(정리 + 반대 진입).", "openCost": 3, "kind": "binary", "requires": [ "A2" ], "pair": "A3a", "tail": { "cap": 0.4, "text": "뒤집어 들어간 포지션의 수수료가 준다(상한 −40%)." } },
     { "id": "A4", "path": "A", "tier": 4, "name": "VIP 창구", "desc": "거래 수수료가 더 준다(상한 −30% 추가).", "openCost": 4, "kind": "scaled", "cap": 0.3, "requires": [ "A3a", "A3b" ] },

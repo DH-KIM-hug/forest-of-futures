@@ -3,6 +3,7 @@
 // 접힌 판일 때 쳇바퀴(와 주인공)를 누르면 굴린다. 새 그림이 없는 것(알바·추심원·콜드월렛)은 예전 SVG 로 그린다.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../../store/gameStore';
+import { forestOpen } from './ForestBoard';
 import { useProto } from './protoStore';
 import { comma } from '../../engine/util';
 import { C, O, Badger, Spiky, Round, Device, Zap } from './art';
@@ -185,6 +186,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   const cheer = useProto((s) => s.cheer);
   /** 이번 생 가장 크게 딴 판(U-53): 문 옆 벽의 액자. 더 크게 따면 바뀐다 */
   const bestTrade = useProto((s) => s.bestTrade);
+  const quests = useProto((s) => s.quests);
   const thinking = useProto((s) => !!s.think);
   const run = g.run;
   const now = useClock();
@@ -478,11 +480,23 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
             const amt = '+' + comma(bestTrade.pnl);
             return (
               <g key={'tro' + bestTrade.pnl} className="pr-trophy" data-trophy={bestTrade.pnl} data-trophy-at={onWall ? 'wall' : 'box'} role="button" tabIndex={0} aria-label={`이번 생 최고의 판 ${amt}`}
-                onClick={() => say(`[벽의 액자] 이번 생 최고의 판: ${marketById[m0]?.name ?? m0} ${bestTrade.dir === 1 ? '롱' : '숏'} ${bestTrade.lev}배, ${amt} (넣은 돈의 ${bestTrade.roe >= 0 ? '+' : ''}${Math.round(bestTrade.roe)}%).`, 5000)}>
+                onClick={() => { say(`[벽의 액자] 이번 생 최고의 판: ${marketById[m0]?.name ?? m0} ${bestTrade.dir === 1 ? '롱' : '숏'} ${bestTrade.lev}배, ${amt} (넣은 돈의 ${bestTrade.roe >= 0 ? '+' : ''}${Math.round(bestTrade.roe)}%).`, 5000); forestOpen('trophy'); }}>
                 <image href={tro.src} x={fx0} y={fy0} width={fw} height={fh} />
                 <text x={px0 + pw / 2} y={py0 + ph * 0.3} textAnchor="middle" fontSize={6.6} fontWeight={800} fill="#8A5A16">최고의 판</text>
                 <text x={px0 + pw / 2} y={py0 + ph * 0.66} textAnchor="middle" fontSize={amt.length >= 10 ? 6.8 : amt.length >= 8 ? 8 : 9.4} fontWeight={900} fill="#B8432C">{amt}</text>
                 <text x={px0 + 2} y={py0 + ph * 0.96} fontSize={6.2} fontWeight={800} fill="#6E665A">{bestTrade.lev}배</text>
+              </g>
+            );
+          })()}
+          {/* 문 옆 벽의 붉은 쪽지 = FRX 의뢰판(U-56). 누르면 숲 게시판. 돌풍 특보가 붙으면 금빛 */}
+          {quests && (() => {
+            const n = quests.slots.length + (quests.gust && !quests.gust.done ? 1 : 0);
+            const gust = !!quests.gust && !quests.gust.done;
+            return (
+              <g className={'pr-qnote' + (gust ? ' gust' : '')} data-qnote={n} role="button" tabIndex={0} aria-label={`의뢰 쪽지 ${n}장`} onClick={() => forestOpen('quest')}>
+                <rect x={214} y={190} width={44} height={56} fill="transparent" />
+                <rect x={213} y={236} width={46} height={15} rx={7.5} fill={gust ? '#FFE58A' : '#FFF8E4'} stroke="#4A4640" strokeWidth={1.6} />
+                <text x={236} y={247} textAnchor="middle" fontSize={9.5} fontWeight={900} fill={gust ? '#8A5A16' : '#4A4640'}>{gust ? '돌풍 의뢰' : `의뢰 ${n}`}</text>
               </g>
             );
           })()}

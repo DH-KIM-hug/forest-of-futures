@@ -21,6 +21,7 @@ import { ProfitPrompt } from './ProfitPrompt';
 import { WalletSheet } from './Wallet';
 import { DayNoteSheet } from './NewsSheet';
 import { RankBoard } from './RankingBoard';
+import { ForestBoard } from './ForestBoard';
 import { startRanking } from './ranking';
 import { dayBars } from './daynote';
 import { tutorialEnd } from './tutorial';
@@ -383,6 +384,7 @@ export function ProtoApp() {
       <AwayNote />
       <DayNoteSheet />
       <RankBoard />
+      <ForestBoard />
       {prologue && <Prologue onDone={endPrologue} canSkip={skip} />}
       {pdev === 'sounds' && <SoundLab />}
     </div>

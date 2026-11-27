@@ -1104,3 +1104,51 @@
 /* 탭 화면이 넘어졌을 때(회차 13) */
 .pr-tabdown { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 240px; padding: 24px 16px; text-align: center; font-weight: 800; color: var(--o, #4A4640); }
 .pr-tabdown button { min-height: 44px; padding: 0 22px; border-radius: 14px; border: 2.5px solid var(--o, #4A4640); background: #FFE58A; font: inherit; font-weight: 800; }
+
+/* ── U-56 회차 15: 숲 게시판(의뢰판 · 단타방 · 트로피 장) ── */
+.fb-face { display: inline-flex; align-items: flex-start; justify-content: center; overflow: hidden; border-radius: 50%; border: 2px solid var(--o); background: #F4E6C8; }
+.fb-face img { width: 165%; max-width: none; height: auto; margin-top: 4%; }
+.fb-face.off img { filter: grayscale(1) brightness(.35); opacity: .55; }
+.fb-face.news { align-items: center; background: #FBF6E8; }
+.fb-face.news b { font-family: var(--dsp); font-weight: 400; font-size: 10px; color: var(--red-ink); }
+.fb-face.me img { width: 140%; }
+.pr-forest .box { width: min(360px, 100%); max-height: calc(100% - 20px); display: flex; flex-direction: column; padding: 12px 12px 12px; }
+.fb-tabs { flex: none; display: flex; gap: 4px; margin-bottom: 8px; }
+.fb-tabs button { flex: 1; min-height: 36px; border-radius: 10px; border: 2px solid var(--o); background: #F4EFE6; font-family: var(--dsp); font-size: 15px; color: var(--sub); }
+.fb-tabs button.on { background: var(--orange); color: var(--o); }
+.fb-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px; }
+.fb-q { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 12px; border: 2px solid rgba(74, 70, 64, .3); background: #FFFDF6; }
+.fb-q.gust { border-color: #C98A2B; background: #FFF1C2; }
+.fb-q .tx { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.fb-q .tx small { font-size: 11px; font-weight: 800; color: var(--sub); }
+.fb-q .tx b { font-size: 14px; line-height: 1.3; }
+.fb-q .tx i { font-style: normal; font-size: 12px; color: #6E665A; line-height: 1.3; }
+.fb-q .bar { display: block; height: 5px; margin-top: 3px; border-radius: 3px; background: rgba(47, 74, 34, .15); overflow: hidden; }
+.fb-q .bar u { display: block; height: 100%; background: #4E8A3A; }
+.fb-q .rw { flex: none; display: flex; flex-direction: column; align-items: center; font-style: normal; font-family: var(--dsp); font-size: 17px; color: #2F4A22; }
+.fb-q .rw small { font-family: inherit; font-size: 11px; color: #8A5A16; }
+.fb-foot, .fb-lead { margin: 2px 2px 0; font-size: 12px; font-weight: 700; line-height: 1.45; color: var(--sub); }
+.fb-rank { display: flex; flex-direction: column; gap: 3px; }
+.fb-row { display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 10px; background: #FFFDF6; border: 1.5px solid rgba(74, 70, 64, .2); }
+.fb-row.me { background: #FFF1C2; border-color: #C98A2B; }
+.fb-row .no { width: 16px; font-style: normal; font-family: var(--dsp); font-size: 15px; text-align: center; }
+.fb-row .nm { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: 13.5px; font-weight: 800; }
+.fb-row .nm small { font-size: 11px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fb-row b { font-family: var(--dsp); font-weight: 400; font-size: 15px; font-variant-numeric: tabular-nums; }
+.fb-row b.up { color: var(--up, #C2413B); } .fb-row b.down { color: var(--down, #3E6FB0); }
+.fb-log { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; padding-top: 6px; border-top: 2px dashed rgba(74, 70, 64, .2); }
+.fb-log .lg { margin: 0; font-size: 12px; font-weight: 700; line-height: 1.4; }
+.fb-log .lg i { display: block; font-style: normal; color: #6E665A; font-weight: 600; }
+.fb-log .lg.liq b, .fb-log .lg.bust b { color: var(--red-ink); }
+.fb-tro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.fb-tro .tro { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center; padding: 5px 6px; border-radius: 10px; border: 1.5px solid rgba(74, 70, 64, .25); background: #F4EFE6; text-align: left; }
+.fb-tro .tro .fb-face { grid-row: 1 / 3; }
+.fb-tro .tro b { font-size: 12px; line-height: 1.25; }
+.fb-tro .tro small { font-size: 10px; line-height: 1.3; color: var(--sub); }
+.fb-tro .tro.on { background: #FFF8E4; border-color: #C98A2B; }
+/* 파산 엔딩: 판에 걸려 있던 돈 */
+.pr-end .card .blk.lockd .sc b.dn { color: var(--red-ink); }
+.pr-qnote { cursor: pointer; }
+.pr-qnote.gust rect:nth-of-type(2) { animation: qnotePulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes qnotePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .pr-qnote.gust rect { animation: none !important; } }

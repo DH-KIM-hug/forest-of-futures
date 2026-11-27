@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { clone, createGame, step, stepMut } from '../engine/game';
 import type { Action } from '../engine/actions';
-import { SimFeed } from '../engine/feed/simFeed';
+import { SimFeed, SIM_FLY_EPOCH, simFly } from '../engine/feed/simFeed';
 import { ReplayFeed, type Recording } from '../engine/feed/replayFeed';
 import type { Tick } from '../engine/feed/types';
 import type { AwayReport, GameState, Res } from '../engine/types';
@@ -17,7 +17,7 @@ import { attachHlFeed, type HlSession } from '../net/hlDirect/attach';
 import { openSocket, postJson } from '../net/hlDirect/io';
 import { prependHistory } from '../ui/priceHistory';
 import { setDayHistory } from '../ui/dayHistory';
-import { simCatchUp, type FeedMark } from '../ui/proto/protoSave';
+import { simCatchUp, SIM_AWAY_CAP, type FeedMark } from '../ui/proto/protoSave';
 
 const adapter = localStorageAdapter();
 let lastSaved = 0;
@@ -39,7 +39,12 @@ function simResume(): void {
   if (!r || r.simDone) return;
   r.simDone = true;
   const g = clone(useGame.getState().g);
-  simFeed.rebase(g.run.prices, r.feed.kind === 'sim' ? r.feed.n : undefined);
+  // 날다람쥐 시각: 저장 때의 기준이 있으면 그대로(떠난 사이를 메운 뒤 벽시계와 맞는다), 없으면 메운 뒤 지금에 닿게
+  const n0 = r.feed.kind === 'sim' ? r.feed.n : simFeed.n;
+  const ranSec = Math.floor(Math.max(0, Math.min((Date.now() - r.at) / 1000, SIM_AWAY_CAP)));
+  const ep = r.feed.fly && r.feed.fly > 0 && (Date.now() - r.at) / 1000 <= SIM_AWAY_CAP ? r.feed.fly : Math.floor(Date.now() / 1000) - n0 - ranSec;
+  simFeed.rebase(g.run.prices, r.feed.kind === 'sim' ? r.feed.n : undefined, ep);
+  simFly.epoch = simFeed.flyEpoch;
   const away = simCatchUp(g, () => simFeed.next(), (Date.now() - r.at) / 1000);
   useGame.setState((s) => ({ g, net: away ? { ...s.net, away } : s.net }));
 }
@@ -53,7 +58,10 @@ export const feedMode: FeedMode = hasWindow ? pickFeedMode(feedSearch(), (import
 
 // 화면 확인용(U-52): &pfly=초 → 연습 시세가 그 번호에서 시작한다(날다람쥐코인의 숲 소문이 도는 때로 건너뛰기)
 const simStartN = hasWindow ? Math.max(0, Math.floor(+(new URLSearchParams(window.location.search).get('pfly') ?? 0)) || 0) : 0;
-const simFeed = new SimFeed(Date.now() & 0xffff, simStartN);
+// 연습 시세의 날다람쥐코인은 벽시계를 따른다(U-56 ②, 사용자 결정): 실시간 판과 같은 때 같은 값, 같은 바람과 급등락. &pfly 화면 확인만 옛 기준 시각
+const simFlyEpoch = simStartN > 0 ? SIM_FLY_EPOCH : Math.floor(Date.now() / 1000);
+const simFeed = new SimFeed(Date.now() & 0xffff, simStartN, simFlyEpoch);
+simFly.epoch = simFlyEpoch;
 const first = simFeed.snapshot();
 const pricesOf = (t: Tick) => Object.fromEntries(Object.entries(t.p).map(([k, v]) => [k, v[0]]));
 
@@ -201,4 +209,4 @@ function startHl(): void {
   }, HL_GIVE_UP_MS);
 }
 
-export const feedHandles = () => ({ serverFeed, session, hlFeed, hlSession });
+export const feedHandles = () => ({ serverFeed, session, hlFeed, hlSession, simFeed });

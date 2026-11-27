@@ -13,6 +13,8 @@ import { endingById, skillById, skillPathEndings } from '../../engine/data';
 import { act1Text } from '../../engine/act1';
 import { play } from './audio';
 import { RankRebirth } from './RankingBoard';
+import { closeBack } from '../../engine/futures';
+import { marketById } from '../../engine/data';
 
 /** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
@@ -51,6 +53,15 @@ export function EndingFlow() {
             {m.scenes.length === 0 && <p className="sub">기록이 없습니다.</p>}
             {m.scenes.map((s, i) => <div key={i} className="sc"><span>{placeName(s.text)}</span>{s.amount !== null && <b className={s.amount >= 0 ? 'up' : 'dn'}>{s.amount >= 0 ? '+' : '−'}{comma(Math.abs(s.amount))}</b>}</div>)}
           </div>
+          {/* 판에 걸려 있던 돈(U-56): 파산하면 폰째로 넘어가고 열린 판은 그대로 사라진다. 걸어 둔 돈과 그때의 값 */}
+          {!retired && Object.keys(g.run.positions).length > 0 && (
+            <div className="blk lockd" data-end-locked={Object.keys(g.run.positions).length}><h4>판에 걸려 있던 돈</h4>
+              {Object.values(g.run.positions).map((p) => { const back = Math.max(0, Math.round(closeBack(p, g.run.prices[p.market] ?? p.entry))); return (
+                <div key={p.market} className="sc"><span>{marketById[p.market]?.name ?? p.market} {p.dir === 1 ? '롱' : '숏'} {p.lev}배, 걸어 둔 {comma(p.margin0)}</span><b className="dn">그때 값 {comma(back)}</b></div>
+              ); })}
+              <p className="sub">압류 목록에는 없었다. 폰이 파산 서류에 올라가면서 판도 같이 사라졌다.</p>
+            </div>
+          )}
           <p className="sub">{m.status}, 장부 {m.ledger}</p>
         </div>
         <button className="go" data-rebirth onClick={() => act({ type: 'estateNext' })}>환생하기</button>

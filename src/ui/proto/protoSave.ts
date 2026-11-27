@@ -34,11 +34,12 @@ export const PROTO_KEEP = [
   'winStreak', 'lossStreak', 'tinyStreak', 'feesLife', 'negRun', 'odSeen', 'loanTaken', 'sentAwayAt', 'tutorial', 'slotOf', 'gen',
   'firstTry', 'frxStamps', 'bestWin', 'bestTrade', 'rankSeen', 'clueAt', 'tradeLife', 'claimWins', 'paidLife',
   'rolled', 'rolledKey', 'rolledTaps', 'claimWinRun', 'claimLossRun', 'claimRunSum',
+  'quests', 'rivals',
 ] as const;
 export type ProtoKept = Partial<Record<(typeof PROTO_KEEP)[number], unknown>>;
 
 /** 시세 출처가 이어 붙일 값: 마지막 틱 번호, 그때의 실제 값(실시간 시세만), 그때 쓰던 출처 */
-export interface FeedMark { kind: 'hl' | 'sim' | 'server' | 'replay'; n: number; mids: Record<string, number> }
+export interface FeedMark { kind: 'hl' | 'sim' | 'server' | 'replay'; n: number; mids: Record<string, number>; /** 연습 시세의 날다람쥐 기준 시각(U-56 ②) */ fly?: number }
 export interface ProtoEnvelope {
   v: number;
   /** 저장한 시각(ms) */ at: number;

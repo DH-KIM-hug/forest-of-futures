@@ -66,7 +66,9 @@ export type Action =
   | { type: 'addMargin'; market: string; amount: number }
   | { type: 'half'; market: string }
   | { type: 'marginCallDone' }
-  | { type: 'setDayLimit'; value: number | null };
+  | { type: 'setDayLimit'; value: number | null }
+  /** FRX 회원 등급(U-56 ③): 수수료 할인의 단계. 0 이상의 정수 */
+  | { type: 'setFeeTier'; tier: number };
 
 export function act(g: GameState, a: Action): Res {
   switch (a.type) {
@@ -117,5 +119,6 @@ export function act(g: GameState, a: Action): Res {
     case 'half': return halfClose(g, a.market);
     case 'marginCallDone': return marginCallDone(g);
     case 'setDayLimit': return setDayLimit(g, a.value);
+    case 'setFeeTier': { const t = Math.max(0, Math.floor(a.tier) || 0); g.run.feeTier = t; return { ok: true } as Res; }
   }
 }

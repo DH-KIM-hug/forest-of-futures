@@ -41,7 +41,7 @@ function markOf(g: GameState): FeedMark {
   const net = useGame.getState().net;
   const hl = feedHandles().hlFeed;
   const kind: FeedMark['kind'] = net.fallback ? 'sim' : feedMode;
-  return { kind, n: g.run.lastSeenTick, mids: kind === 'hl' && hl ? { ...hl.core.lastMids } : {} };
+  return { kind, n: g.run.lastSeenTick, mids: kind === 'hl' && hl ? { ...hl.core.lastMids } : {}, ...(kind === 'sim' ? { fly: feedHandles().simFeed.flyEpoch } : {}) };
 }
 
 /** 지금 쓴다(못 쓰는 순간이면 false) */
