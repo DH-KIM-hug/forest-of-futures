@@ -88,6 +88,26 @@ export function liveliest(ranges: { id: string; r: number | null }[]): { id: str
   return best;
 }
 
+// ── 지금 출렁이는 곳(U-53) ─────────────────────────────────────────────
+/** 초 단위 실시간 값(1초에 하나)을 1분 봉으로 묶어, 끝에서부터 다 찬 봉 mins 개의 높낮이 폭(%, 봉의 종가 대비) 평균. 다 찬 봉이 하나도 없으면 null */
+export function candleSwing(live: number[], mins = 3): { pct: number; bars: number } | null {
+  const bars = Math.min(mins, Math.floor(live.length / 60));
+  if (bars < 1) return null;
+  let sum = 0;
+  for (let k = 0; k < bars; k++) {
+    const c = live.slice(live.length - 60 * (k + 1), live.length - 60 * k);
+    const last = c[c.length - 1];
+    if (!(last > 0)) return null;
+    sum += ((Math.max(...c) - Math.min(...c)) / last) * 100;
+  }
+  return { pct: sum / bars, bars };
+}
+/** 실제 시세 종목의 순위: 1분 봉 폭이 큰 순서로 n 개. 못 잰 종목, 쉬는 종목(본장 마감)은 뺀다 */
+export function swingRank(xs: { id: string; live: number[]; shut?: boolean }[], n = 3, mins = 3): { id: string; pct: number; bars: number }[] {
+  return xs.filter((x) => !x.shut).map((x) => ({ id: x.id, s: candleSwing(x.live, mins) })).filter((x): x is { id: string; s: { pct: number; bars: number } } => x.s !== null)
+    .map((x) => ({ id: x.id, pct: x.s.pct, bars: x.s.bars })).sort((a, b) => b.pct - a.pct).slice(0, n);
+}
+
 // ── 오픈 기념 수수료 무료 ────────────────────────────────────────────────
 /** 주문 판의 딱지: 남은 정산 수 → 글. 끝났으면 지금 수수료율을 말한다. */
 export function feeEventChip(left: number, ratePct: number): { on: boolean; text: string } {

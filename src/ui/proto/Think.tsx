@@ -36,5 +36,5 @@ export function PhoneLane() {
     return () => window.clearTimeout(t);
   }, [key]);
   if (!text || gone === key) return null;
-  return <div className={'pr-lane' + (toast ? ' toast' : ' think')} role="status" aria-label={text} data-lane={toast ? 'toast' : 'think'} {...(toast ? {} : { 'data-think': '' })}>{toast ? text : <><Mark m={think?.m} /><Shown key={think?.k} text={text} /></>}</div>;
+  return <div className={'pr-lane' + (toast ? ' toast' : ' think') + (toast && keep ? ' keep' : '')} role="status" aria-label={text} data-lane={toast ? 'toast' : 'think'} {...(toast ? {} : { 'data-think': '' })}>{toast ? text : <><Mark m={think?.m} /><Shown key={think?.k} text={text} /></>}</div>;
 }

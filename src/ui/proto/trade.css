@@ -824,3 +824,103 @@
 .pt-ct .wild.rumor { background: #FFE58A; color: #6B4A10; animation: windLive 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .pr .pt .pt-wind.live, .pt-ct .wild.rumor { animation: none; } }
 @media (max-height: 720px) { .pt-wind .tl.dim small { display: none; } }
+
+/* ── U-53(회차 12) ── */
+/* 꼭 읽힐 알림(소문, 승급)은 말 자리에서 잘리지 않는다: 360 폭에서 세 줄로 넘쳐 끝이 잘리던 것 */
+.pt-chart .plot .pr-lane.keep { -webkit-line-clamp: 4; max-width: calc(100% - 12px); }
+/* 낮은 폰에서도 「소문」 꼬리표는 남긴다(출렁 꼬리표만 숨긴다) */
+@media (max-height: 720px) { .pr .pt .pt-ct .wild.rumor { display: inline-block; } .pr .pt .pt-ct:has(.wild.rumor) small.swg { display: none; } }
+/* 차트의 소문 깃발(U-53): 위에 깃발(맞음 금빛, 반대 붉은 테, 헛소문 회색, 도는 중 깜빡임), 아래에 큰 바람이 시작한 세모 */
+.pt-chart .plot .pt-mark { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.6px dashed rgba(138, 90, 22, .55); pointer-events: none; z-index: 1; }
+.pt-chart .plot .pt-mark b { position: absolute; top: 3px; left: -1px; padding: 0 4px 0 3px; border-radius: 0 6px 6px 0; font-family: var(--dsp); font-size: 10px; line-height: 14px; font-weight: 800; white-space: nowrap; background: #FFE58A; color: #6B4A10; border: 1.4px solid #8A5A16; }
+.pt-chart .plot .pt-mark.hit b { background: linear-gradient(90deg, #FFE58A, #F3C94A); }
+.pt-chart .plot .pt-mark.flip b { background: #FBE3DC; color: #8A2A1E; border-color: #B8432C; }
+.pt-chart .plot .pt-mark.miss { border-left-color: rgba(120, 112, 100, .45); }
+.pt-chart .plot .pt-mark.miss b { background: #EEE8DA; color: #6E665A; border-color: #9A9080; }
+.pt-chart .plot .pt-mark.live b { animation: windLive 1.6s ease-in-out infinite; }
+.pt-chart .plot .pt-mark.jump { border-left: 0; }
+.pt-chart .plot .pt-mark.jump .jm { position: absolute; bottom: 2px; left: -6px; font-style: normal; font-size: 11px; line-height: 12px; }
+.pt-chart .plot .pt-mark.jump.up .jm { color: var(--up); }
+.pt-chart .plot .pt-mark.jump.dn .jm { color: var(--down); }
+/* 오른쪽 끝 가까운 깃발은 글자를 왼쪽으로 */
+.pt-chart .plot .pt-mark.lf b { left: auto; right: 0; border-radius: 6px 0 0 6px; padding: 0 3px 0 4px; }
+@media (prefers-reduced-motion: reduce) { .pt-chart .plot .pt-mark.live b { animation: none; } }
+/* 지금 출렁이는 곳(U-53): 시세 줄 밑 한 줄. 이름을 누르면 그 종목으로 */
+.pr .pt .pt-hot { display: flex; align-items: center; gap: 4px; margin: 0 0 4px; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 11.5px; }
+.pr .pt .pt-hot button { flex: 0 1 auto; min-width: 0; min-height: 26px; display: inline-flex; align-items: center; gap: 3px; padding: 0 7px; border-radius: 13px; border: 1.6px solid rgba(74, 70, 64, .35); background: #FFFDF6; color: var(--o); font: inherit; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.pr .pt .pt-hot .hd { border: 0; background: none; padding: 0 2px 0 0; color: #8A5A16; font-weight: 800; flex: 0 0 auto; }
+.pr .pt .pt-hot .it i { font-style: normal; font-size: 10px; width: 14px; height: 14px; line-height: 14px; text-align: center; border-radius: 7px; background: #FFE58A; color: #6B4A10; flex: 0 0 auto; }
+.pr .pt .pt-hot .it b { color: #B8432C; font-weight: 800; }
+.pr .pt .pt-hot .it.on { border-color: var(--o); background: #FFF3C4; }
+@media (max-width: 380px) { .pr .pt .pt-hot { font-size: 10.5px; gap: 3px; } .pr .pt .pt-hot button { padding: 0 5px; } }
+/* 출구 시트 밑의 주문 줄(U-53): 시트를 닫지 않고 바로 롱 · 숏 */
+.pr .pt .pt-sheet:has(+ .pt-sheetgo) { margin-bottom: 0; padding-bottom: 6px; }
+.pr .pt .pt-sheetgo { flex: 0 0 auto; margin: 0 -12px -10px; padding: 4px 12px 10px; background: var(--card); }
+/* 누르는 자리(U-53): 배율 칸, 증거금 칩, 차트 창 고르기가 엄지에 맞게 조금 크게(390 폭 28 → 34, 낮은 폰 26 → 32) */
+.pr .pt .pt-ruler .nt { min-height: 34px; }
+.pr .pt .pt-mg .pt-chip { min-height: 36px; }
+.pr .pt .pt-win .seg { height: 28px; }
+@media (max-height: 720px) { .pr .pt .pt-ruler .nt { min-height: 32px; } .pr .pt .pt-mg .pt-chip { min-height: 32px; } }
+/* 포지션 한곳 정리(U-53): 머리의 합계 칩을 누르면 열린다 */
+.pr .pt .pt-bar .pt-sum { cursor: pointer; align-items: center; min-height: 0; font-size: 13px; line-height: 14px; border-radius: 8px; }
+.pr .pt .pt-bar .pt-sum svg { margin-left: 1px; transform: rotate(90deg); transition: transform .18s; }
+.pr .pt .pt-bar .pt-sum.open svg { transform: rotate(-90deg); }
+.pr .pt:not(.pa) > .pt-tray { margin: 0 -10px; }
+.pr .pt .pt-tray { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 8px; background: #FFF8DC; border-bottom: 2px solid var(--o); animation: fadeIn .15s ease-out; }
+.pr .pt .pt-tray .tr-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 72px; align-items: center; gap: 6px; }
+.pr .pt .pt-tray .tr-go { display: flex; align-items: center; gap: 5px; min-height: 36px; min-width: 0; padding: 0 4px; border-radius: 10px; background: none; border: 0; font: inherit; font-weight: 800; font-size: 13px; color: var(--o); text-align: left; }
+.pr .pt .pt-tray .tr-go span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr .pt .pt-tray .tr-go small { font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.pr .pt .pt-tray .tr-go small.up, .pt-tray .tr-row.up .tr-net { color: var(--up); }
+.pr .pt .pt-tray .tr-go small.down, .pt-tray .tr-row.down .tr-net { color: var(--down); }
+.pr .pt .pt-tray .tr-net { font-family: var(--dsp); font-weight: 400; font-size: 16px; font-variant-numeric: tabular-nums; }
+.pr .pt .pt-tray .tr-close { min-height: 36px; border-radius: 11px; border: 2px solid var(--o); background: var(--well); font: inherit; font-weight: 800; font-size: 13.5px; color: var(--o); box-shadow: inset 0 -3px 0 rgba(74, 70, 64, .14); }
+.pr .pt .pt-tray .tr-close.gain { background: #FFE58A; }
+.pr .pt .pt-tray .tr-close.arm { background: var(--red); color: #fff; }
+.pr .pt .pt-tray .tr-all { min-height: 40px; margin-top: 2px; border-radius: 12px; border: 2.5px solid var(--o); background: linear-gradient(180deg, #FFE58A, #F3C94A); font: inherit; font-weight: 800; font-size: 14px; color: #5A3A10; box-shadow: inset 0 -3px 0 rgba(138, 90, 22, .35); }
+.pr .pt .pt-tray .tr-all b { color: var(--up); margin-left: 4px; }
+/* 합계 칩의 테두리 · 바탕(단추가 되면서 전역 단추 초기화에 지워지던 것) */
+.pr .pt .pt-bar .pt-sum { border: 2px solid currentColor; background: #FFFDF6; padding: 0 7px; }
+.pr .pt .pt-bar .pt-sum.up { color: var(--up); } .pr .pt .pt-bar .pt-sum.down { color: var(--down); }
+/* 포지션이 있으면 머리가 붐빈다: 오픈 기념 칩과 등급의 다음 목표 글은 접는다(주문 줄과 등급 칩을 누르면 같은 말이 있다) */
+.pr .pt .pt-bar:has(.pt-sum) .pt-fee, .pr .pt .pt-bar:has(.pt-sum) .pt-rank .rn small { display: none; }
+/* 등급 칩의 다음 목표(U-53): "새싹 단골까지 2" */
+.pr .pt .pt-bar .pt-rank .rn { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.pr .pt .pt-bar .pt-rank .rn small { font-family: var(--body, inherit); font-size: 9.5px; font-weight: 800; opacity: .78; letter-spacing: -.2px; }
+/* 등급의 폰 케이스(U-53): 테두리 색은 그 자리에서 바뀐다. 황금 케이스는 빛이 한 번씩 흐른다 */
+.pr .pt { transition: border-color .6s ease; }
+.pr .pt.case-gold { box-shadow: 0 0 0 2.5px var(--o), inset 0 0 0 2px var(--o), 0 0 14px 2px rgba(232, 185, 58, .45); }
+/* 낮은 폰(360×640)에도 얇은 머리: 등급, 포지션 합계, 나무 칩, 폰 고리(거래소 이름과 오픈 기념 칩은 뺀다) */
+@media (max-height: 720px) {
+  .pr .pt:not(.pa) { border-top-width: 17px; }
+  .pr .pt:not(.pa) > .pt-bar { display: flex; top: -17px; height: 17px; }
+  .pr .pt:not(.pa) > .pt-bar > b, .pr .pt:not(.pa) > .pt-bar .pt-fee { display: none; }
+  .pr .pt:not(.pa) > .pt-charm { display: block; top: -21px; right: 22px; width: 19px; height: 25px; }
+  .pr .pt .pt-bar .pt-rank { padding-top: 0; padding-bottom: 1px; line-height: 12px; font-size: 11px; }
+  .pr .pt .pt-bar .pt-rank i { margin-top: 1px; height: 2px; }
+  .pr .pt .pt-bar .pt-sum { min-height: 0; padding: 0 6px; font-size: 12px; line-height: 14px; }
+}
+/* 승급 축하(U-53): 폰 화면 가운데 카드. 새 케이스와 고리가 흔들리며 들어온다 */
+.pt-rankcard { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(40, 46, 30, .38); animation: fadeIn .2s ease-out; }
+.pt-rankcard .rc-in { width: min(290px, 86%); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 14px 12px; border-radius: 20px; background: #FFFBEF; border: 3px solid var(--o); box-shadow: 0 6px 0 rgba(74, 70, 64, .25); text-align: center; animation: rcPop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.pt-rankcard small { font-size: 11.5px; font-weight: 800; color: var(--sub); }
+.pt-rankcard b { font-family: var(--dsp); font-weight: 400; font-size: 27px; line-height: 1.1; color: #6B4510; }
+.pt-rankcard .rc-phone { position: relative; width: 70px; height: 92px; margin: 4px 0 2px; }
+.pt-rankcard .rc-phone .ph { position: absolute; inset: 6px 8px 0 8px; border-radius: 13px; border: 6px solid var(--case); background: #FFFBEF; box-shadow: 0 0 0 2px var(--o), inset 0 0 0 2px var(--o); animation: rcCase .7s ease-out both; }
+.pt-rankcard .rc-phone .ph u { position: absolute; left: 50%; top: 4px; width: 16px; height: 3px; margin-left: -8px; border-radius: 2px; background: rgba(74, 70, 64, .3); }
+.pt-rankcard .rc-phone .ph.gold { background: linear-gradient(120deg, #FFFBEF 30%, #FFF1B8 50%, #FFFBEF 70%) 0 0 / 300% 100%; animation: rcCase .7s ease-out both, rcShine 1.8s linear .7s infinite; }
+.pt-rankcard .rc-bow { position: absolute; top: -6px; right: 0; transform-origin: 50% 0; animation: rcSwing 1.4s ease-out .2s both; }
+.pt-rankcard .gift { margin: 0; font-size: 14px; font-weight: 800; color: var(--o); }
+.pt-rankcard .gift em { font-style: normal; padding: 1px 7px; border-radius: 8px; background: #FFE58A; color: #6B4A10; }
+.pt-rankcard .nx { margin: 2px 0 0; font-size: 11.5px; font-weight: 700; color: var(--sub); }
+@keyframes rcPop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes rcCase { 0% { border-color: #3E9A9C; } 100% { border-color: var(--case); } }
+@keyframes rcShine { to { background-position: -300% 0; } }
+@keyframes rcSwing { 0% { transform: rotate(28deg); } 30% { transform: rotate(-18deg); } 55% { transform: rotate(10deg); } 80% { transform: rotate(-4deg); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pt-rankcard .rc-in, .pt-rankcard .rc-bow, .pt-rankcard .rc-phone .ph, .pt-rankcard .rc-phone .ph.gold { animation: none; } .pt-rankcard { animation: none; } .pr .pt { transition: none; } }
+.pr .pt .pt-sheetgo { margin-top: -3px; }
+@media (max-width: 380px) { .pr .pt .pt-hot .it i { display: none; } .pr .pt .pt-hot { gap: 3px; } .pr .pt .pt-hot .hd { padding-right: 0; letter-spacing: -.4px; } .pr .pt .pt-hot button { padding: 0 5px; gap: 2px; letter-spacing: -.3px; } }
+/* 자리가 모자라 숫자가 잘리던 것: 순위 동그라미는 빼고(왼쪽부터 순서), 칸은 줄지 않는다 */
+.pr .pt .pt-hot .it i { display: none; }
+.pr .pt .pt-hot button.it { flex: 0 0 auto; }
+.pr .pt .pt-hot .hd + .it { border-color: #C98A2B; background: #FFF3C4; }

@@ -88,6 +88,14 @@ export interface SettleCtx {
   /** 연체면 모자란 돈(엔진 lastSettlement.unpaid) */ short?: number;
 }
 const rot = (nth: number, ...v: string[]): string => v[((nth % v.length) + v.length) % v.length];
+/** 이야기가 없는 정산 한 줄인가(U-53): 연체, 곧 밀린다는 경고, 처음 남은 정산, 세 번째 적자는 이야기다. 나머지("이자 받았어요")는 되풀이라
+ *  연습 속도(정산 20초)에서는 말 자리를 자주 차지한다 — 그런 줄은 ROUTINE_GAP_MS 안에 한 번만 말한다(종소리와 추심원 그림은 그대로) */
+export function remarkIsRoutine(c: SettleCtx): boolean {
+  if (c.overdue || c.firstPositive || c.negStreak === 3) return false;
+  const runway = c.nextNet < 0 ? Math.floor(c.cashAfter / -c.nextNet) : null;
+  return !(runway !== null && runway <= 3);
+}
+export const ROUTINE_GAP_MS = 55_000;
 /** 정산 알림 한 줄. 추심원은 오소리 대부의 이자만 걷는다. 다른 곳 이자는 자동이체로 적는다. */
 export function settleRemark(c: SettleCtx): string {
   const sum = `이번 정산 ${c.net >= 0 ? '+' : '−'}${n(c.net)}`;

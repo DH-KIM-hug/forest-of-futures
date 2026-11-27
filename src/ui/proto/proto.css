@@ -1088,3 +1088,11 @@
 .pr-vmap .mhero.hop { animation: mapHop .45s ease-in-out 4; }
 @keyframes mapHop { 0%, 100% { transform: translate(-150%, -30%); } 50% { transform: translate(-150%, -62%); } }
 @media (prefers-reduced-motion: reduce) { .pr-vmap .mhero.hop { animation: none; } }
+/* 벽의 액자(U-53): 이번 생 최고의 판. 누를 수 있다 */
+.pr-stage .fg .pr-trophy { pointer-events: auto; cursor: pointer; }
+.pr-trophy { animation: trophyIn .6s cubic-bezier(.2, 1.6, .4, 1) both; transform-box: fill-box; transform-origin: 50% 0; }
+@keyframes trophyIn { 0% { transform: rotate(-14deg) scale(.6); opacity: 0; } 60% { transform: rotate(6deg); opacity: 1; } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pr-trophy { animation: none; } }
+/* 목표 막대(U-53): 글이 길면 두 줄로 넘쳐 오른쪽 숫자와 겹치던 것 — 한 줄, 넘치면 말줄임, 숫자는 그대로 */
+.pr-hud .goal > span { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pr-hud .goal > em { flex: 0 0 auto; display: inline-flex; align-items: center; white-space: nowrap; margin-left: 6px; }

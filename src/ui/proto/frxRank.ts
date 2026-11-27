@@ -13,3 +13,22 @@ export function rankOf(stamps: number): Rank {
 }
 /** 닫힌 판 하나의 도장. tierLv = 터진 판의 등급(없으면 0) */
 export const stampsOf = (tierLv: number): number => 1 + Math.min(3, Math.max(0, tierLv));
+
+/** 등급마다 폰이 달라진다(U-53, 꾸밈뿐: 돈 · 수수료 · 확률은 그대로). 케이스는 폰 테두리 색, 고리는 폰 모서리의 리본 */
+export interface RankLook { case: string; caseName: string; bow: string; bowName: string; /** 이 등급에 오르면 받는 것(새로 바뀐 것 하나) */ gift: string }
+export const RANK_LOOKS: RankLook[] = [
+  { case: 'teal', caseName: '청록', bow: '#C2413B', bowName: '붉은 리본', gift: '' },
+  { case: 'leaf', caseName: '잎새 초록', bow: '#C2413B', bowName: '붉은 리본', gift: '잎새 초록 폰 케이스' },
+  { case: 'leaf', caseName: '잎새 초록', bow: '#E8B93A', bowName: '금빛 리본', gift: '금빛 리본 고리' },
+  { case: 'night', caseName: '밤하늘', bow: '#E8B93A', bowName: '금빛 리본', gift: '밤하늘 폰 케이스' },
+  { case: 'plum', caseName: '머루 보라', bow: '#E8B93A', bowName: '금빛 리본', gift: '머루 보라 폰 케이스' },
+  { case: 'gold', caseName: '황금', bow: '#C2413B', bowName: '붉은 리본', gift: '황금 폰 케이스' },
+];
+/** 전설 2 부터는 케이스는 황금 그대로, 고리가 번갈아 바뀐다 */
+export function lookOf(r: number): RankLook {
+  if (r < RANK_LOOKS.length) return RANK_LOOKS[r];
+  const odd = (r - RANK_LOOKS.length) % 2 === 0;
+  return { ...RANK_LOOKS[RANK_LOOKS.length - 1], bow: odd ? '#E8B93A' : '#C2413B', bowName: odd ? '금빛 리본' : '붉은 리본', gift: odd ? '금빛 리본 고리' : '붉은 리본 고리' };
+}
+/** 케이스 색(폰 테두리). teal 은 원래 색(var(--teal)) */
+export const CASE_COL: Record<string, string> = { teal: '#3E9A9C', leaf: '#5C9A5A', night: '#3E5C8A', plum: '#7A5AA8', gold: '#C9962E' };

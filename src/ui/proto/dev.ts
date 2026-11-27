@@ -126,6 +126,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   const un = { lot: true, phone: true, map: true } as const;
   const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'office'].map((k) => [k, true]));
   P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done', firstTry: name === 'first' ? 3 : 0 });
+  if (q.get('ptro')) P.patch({ bestTrade: { pnl: 15_812, market: 'FLY', lev: 200, dir: 1, roe: 128 }, bestWin: 15_812 }); // U-53 벽의 액자 확인용
   if (q.get('pstamps')) P.patch({ frxStamps: +q.get('pstamps')!, bestWin: q.get('pbest') ? +q.get('pbest')! : 0 }); // U-51 FRX 회원 등급 확인용
   base.run.intro = false; // 장면 건너뛰기는 튜토리얼이 끝난 판이다(정산 60초)
   base.run.settleIn = balance.settlement.intervalSec;

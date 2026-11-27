@@ -18,7 +18,9 @@ import { comma } from '../../engine/util';
 import { DEBT_IDS, eventById, lenderById, marketById } from '../../engine/data';
 import { levCapNow } from '../../engine/progression';
 import { forecast } from '../../engine/settlement';
-import { tradeReaction, settleRemark, isTiny, worthCertificate } from './react';
+import { tradeReaction, settleRemark, remarkIsRoutine, ROUTINE_GAP_MS, isTiny, worthCertificate } from './react';
+/** 되풀이 정산 한 줄을 마지막으로 말한 때(U-53) */
+let routineAt = 0;
 import { dayBars, dayNote, noteToast } from './daynote';
 import { STAMP_STEP } from './ledger';
 import { reapplyAllPlans } from './exitPlan';
@@ -541,7 +543,10 @@ export function startWatch(): void {
       if (firstPositive) P0.patch({ seen: { ...P0.seen, posSettle: true } });
       const fcN = forecast(g);
       const posPnl = Object.values(run.positions).reduce((a, p) => { const v = positionView(g, p.market); return a + (v ? tradeNet(p, v.back) : 0); }, 0);
-      const remark = () => settleRemark({ nth: run.settleNo, short: r.unpaid, interest: badger, other, net, cashAfter: run.cash, nextClaim: fcN.interest + fcN.living, nextNet: fcN.net, overdue: od, posOpen: Object.keys(run.positions).length > 0, posPnl, negStreak: net < 0 ? useProto.getState().negRun : 0, firstPositive });
+      const rctx = { nth: run.settleNo, short: r.unpaid, interest: badger, other, net, cashAfter: run.cash, nextClaim: fcN.interest + fcN.living, nextNet: fcN.net, overdue: od, posOpen: Object.keys(run.positions).length > 0, posPnl, negStreak: net < 0 ? useProto.getState().negRun : 0, firstPositive };
+      const remark = () => settleRemark(rctx);
+      // 되풀이 한 줄은 55초에 한 번(U-53): 연습 속도에서 추심원이 말 자리를 차지하지 않게. 이야기가 있는 줄은 늘
+      const sayRemark = () => { if (remarkIsRoutine(rctx)) { if (Date.now() - routineAt < ROUTINE_GAP_MS) return; routineAt = Date.now(); } say(remark(), 4500); };
       useProto.getState().patch({ negRun: net < 0 ? useProto.getState().negRun + 1 : 0 });
       if (r.interest > 0 && badger > 0) {
         useProto.getState().patch({ collector: { interest: badger, fill: od ? Math.min(0.85, r.paid / Math.max(1, r.interest)) : 1, overdue: od, at: Date.now() } });
@@ -568,13 +573,13 @@ export function startWatch(): void {
         }
         else if (no === 1) scene({ id: 'firstSettle', lines: lifeNo(g) <= 1 ? STORY.firstSettle(badger, tipArgs(g)) : STORY.rebornSettle(badger), settle: meta });
         else if (no <= FULL_CUTINS && Object.keys(run.positions).length === 0 && P.tab !== 'phone') scene({ id: `settle${run.settleNo}`, lines: STORY.settleWin(badger), settle: meta, auto: 4000 });
-        else say(remark(), 4500);
+        else sayRemark();
         quitNow();
         // 빌린 뒤에도 이자를 못 낸 정산: 사채 문자
         if (od && P.loanTaken) { sceneHeld({ id: 'sms', lines: STORY.sms(officeOffer(g).lend) }); if (!useProto.getState().seen.sms) useProto.getState().patch({ visited: { ...useProto.getState().visited, map: false } }); }
         // 폰을 받은 뒤 첫 정산: 족제비가 알바를 권한다(막지 않는 한 줄)
         if (P.loanTaken && !od) scene({ id: 'hamsterHint', lines: STORY.hamsterHint(hamsterMath(g).wage, tipArgs(g)), auto: 5000 });
-      } else { say(remark(), 4500); quitNow(); }
+      } else { sayRemark(); quitNow(); }
       // 알바를 들인 채 정산을 한 번 넘겼는데 중고폰이 아직 안 울렸다(U-46, 회차 5b 의 남은 흠): 엄마의 쳇바퀴에만 알바를 들이고 돈을 쥔 채 기다린 생. 이 정산 뒤에 울린다
       {
         const P = useProto.getState();
@@ -653,6 +658,7 @@ export function startWatch(): void {
         if (!tut) {
           const P2 = useProto.getState();
           const before = rankOf(P2.frxStamps), stamps = P2.frxStamps + stampsOf(tierB?.lv ?? 0), after = rankOf(stamps);
+          if (pnl > 0 && pnl > P2.bestWin) P2.patch({ bestTrade: { pnl: Math.round(pnl), market: p.market, lev: p.lev, dir: p.dir, roe: (pnl / Math.max(1, p.margin0)) * 100 } });
           P2.patch({ frxStamps: stamps, bestWin: Math.max(P2.bestWin, pnl), rankUp: after.r > before.r ? { k: (P2.rankUp?.k ?? 0) + 1, r: after.r, name: after.name } : P2.rankUp });
           // 이긴 판이 터지면 그 상자에 「승급」 칩이 같이 뜬다(장면이 덮기 전에 보이게). 아니면 0.7초 뒤 한 줄과 팡파르
           if (after.r > before.r && tierB) later(900, () => play('goal_complete'));

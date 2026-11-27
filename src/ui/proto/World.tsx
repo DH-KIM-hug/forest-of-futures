@@ -9,7 +9,8 @@ import { C, O, Badger, Spiky, Round, Device, Zap } from './art';
 import { SvgSay } from './speech';
 import { useFx, flyAcorns, flyIcons, coinSvg, tintAt, useClock } from './fx';
 import { sellFeeRate } from '../../engine/mining';
-import { houseDefs } from '../../engine/data';
+import { houseDefs, marketById } from '../../engine/data';
+import { say } from './watch';
 import { COLLECTOR_NAME } from './text';
 import { EXTRA_WHEEL } from './model';
 import { EMPTY_WHEEL_H, EMPTY_WHEEL_DY, EMPTY_WHEEL_FACE, HOME_IMG, WHEEL_SLOTS, WHEEL_BOX, WHEEL_FACE as OLD_FACE, FLOOR_PATCH, HERO_SPOT, HERO_H, VISITOR_SPOT, WALLET_SPOT, TAP_AREA, RIG_SPOT, RIG_H, RIG_ART, HOOP, heroSpotFor, assignSlots, homeCam, cableRoute, type Foot, type Pt } from './home';
@@ -182,6 +183,8 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
   const slotHi = useProto((s) => s.slotHi);
   const talking = useProto((s) => s.scenes.length > 0);
   const cheer = useProto((s) => s.cheer);
+  /** 이번 생 가장 크게 딴 판(U-53): 문 옆 벽의 액자. 더 크게 따면 바뀐다 */
+  const bestTrade = useProto((s) => s.bestTrade);
   const thinking = useProto((s) => !!s.think);
   const run = g.run;
   const now = useClock();
@@ -462,6 +465,25 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
         <svg className="fg" viewBox={`0 0 390 ${VB_H.toFixed(2)}`} preserveAspectRatio="none">
           <image href={patch.src} x={FLOOR_PATCH[0] * K} y={FLOOR_PATCH[1] * K} width={FLOOR_PATCH[2] * K} height={FLOOR_PATCH[3] * K} />
           {spots}
+          {bestTrade && (() => {
+            // 문 오른쪽 벽(집 그림 좌표를 390 폭에 맞춘 자리). 누르면 그 판을 한 줄로
+            const fx0 = 337, fy0 = 236, fw = 48, fh = 38;
+            const m0 = bestTrade.market;
+            return (
+              <g key={'tro' + bestTrade.pnl} className="pr-trophy" data-trophy={bestTrade.pnl} role="button" tabIndex={0} aria-label={`이번 생 최고의 판 +${comma(bestTrade.pnl)}`}
+                onClick={() => say(`[벽의 액자] 이번 생 최고의 판: ${marketById[m0]?.name ?? m0} ${bestTrade.dir === 1 ? '롱' : '숏'} ${bestTrade.lev}배, +${comma(bestTrade.pnl)} (넣은 돈의 ${bestTrade.roe >= 0 ? '+' : ''}${Math.round(bestTrade.roe)}%).`, 5000)}>
+                <line x1={fx0 + fw / 2} y1={fy0 - 9} x2={fx0 + 6} y2={fy0} stroke={O} strokeWidth={1.2} />
+                <line x1={fx0 + fw / 2} y1={fy0 - 9} x2={fx0 + fw - 6} y2={fy0} stroke={O} strokeWidth={1.2} />
+                <circle cx={fx0 + fw / 2} cy={fy0 - 9} r={1.8} fill={O} />
+                <rect x={fx0} y={fy0} width={fw} height={fh} rx={3} fill="#8A5A2E" stroke={O} strokeWidth={1.6} />
+                <rect x={fx0 + 4} y={fy0 + 4} width={fw - 8} height={fh - 8} rx={1.5} fill="#FFF8E4" />
+                <text x={fx0 + fw / 2} y={fy0 + 13} textAnchor="middle" fontSize={7} fontWeight={800} fill="#8A5A16">최고의 판</text>
+                <text x={fx0 + fw / 2} y={fy0 + 24} textAnchor="middle" fontSize={bestTrade.pnl >= 100000 ? 8 : 9} fontWeight={800} fill="#B8432C">+{comma(bestTrade.pnl)}</text>
+                <circle cx={fx0 + fw - 8} cy={fy0 + fh - 8} r={4} fill="#E8B93A" stroke={O} strokeWidth={1} />
+                <text x={fx0 + 9} y={fy0 + fh - 6.2} fontSize={6.4} fontWeight={800} fill="#6E665A">{bestTrade.lev}배</text>
+              </g>
+            );
+          })()}
           {/* 전선(U-43): 쳇바퀴마다 채굴기로 한 가닥, 채굴기에서 콜드월렛으로 한 가닥. 도는 쳇바퀴의 전선에는 전기가 흐른다. 바닥에 놓인 것이라 쳇바퀴 · 사람보다 먼저 그린다 */}
           <g className="pr-cables" data-hl="cables">
             {wheels.map((w) => <Cable key={w.key} from={cableFrom(w)} to={sock} on={w.running} hero={w.kind === 'hero'} hue={w.tagged ? '#B8785A' : '#8A9A62'} route={routes[w.key]} />)}
