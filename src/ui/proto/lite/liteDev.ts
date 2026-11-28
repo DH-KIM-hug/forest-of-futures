@@ -55,6 +55,8 @@ export function liteScene(name: string, base: GameState): GameState {
     case 'lite_loan': { const g = ready(base); P.patch({ seen: { ...useProto.getState().seen, capitalSms: true } }); window.setTimeout(() => openLoan(), 600); return g; }
     // U-63 대출 탭: lite_loan_od = 오소리 사무소에 연체 1회, 대출 탭을 보는 자리
     case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
+    // U-63 대출 탭: lite_loan_od = 오소리 사무소에 연체 1회, 대출 탭을 보는 자리
+    case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
     case 'lite_quick': { const g = ready(base); g.run.cash = 2400; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_quick_settle': { const g = ready(base); g.run.cash = 2400; g.run.settleIn = 9; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_tut': case 'lite_sign': {

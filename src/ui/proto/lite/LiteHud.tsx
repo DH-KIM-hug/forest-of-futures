@@ -13,14 +13,14 @@ import { settleSec } from '../../../engine/pace';
 import { DEBT_IDS } from '../../../engine/data';
 import { FlyTutorial } from './FlyTutorial';
 import { useState } from 'react';
-import { LoanButton, openLoan } from './LiteLoan';
+import { openLoan } from './LiteLoan';
 import { LiteBook } from './LiteEnding';
 import { openBoard } from '../ranking';
 import { dayNoteOpen } from '../daynote';
 import { play } from '../audio';
 import { useUnlock } from '../rankUnlock';
 
-/** 머리의 작은 아이콘 셋(U-61): 지도에서 가던 전광판, 엔딩 도감, 도토리일보 */
+/** 머리의 작은 아이콘 셋(U-61): 전광판, 엔딩 도감, 도토리일보 */
 function HudIcons({ onBook }: { onBook: () => void }) {
   const locked = useUnlock((s) => !s.rec);
   const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -57,12 +57,12 @@ export function LiteHud() {
   const short = run.cash < due;
   const [book, setBook] = useState(false);
   return (
-    <header className={'pr-hud lite' + (tab === 'phone' ? ' tight' : '')} data-lite-hud>
+    <header className="pr-hud lite tight" data-lite-hud>
       <div className="r1">
         <div className="lt">
           <div className="clock">{clockText(now)} <SoundBtn /><LiveBadge /></div>
-          {/* U-61: 지도 탭이 없다. 빚 칩이나 「대출」을 누르면 거래소 안의 대출 */}
-          <div className="debt-row"><button className="debt" data-hl="debt" data-debt-open onClick={() => { play('ui_tap'); openLoan(); }} aria-label={`빚 ${comma(debt)}, 대출 열기`}><b>빚 {comma(debt)}</b>{od > 0 && <span className="hike">연체 {od}회</span>}</button><LoanButton /><HudIcons onBook={() => setBook(true)} /></div>
+          {/* U-63: 빚 칩을 누르면 아래 대출 탭으로 */}
+          <div className="debt-row"><button className="debt" data-hl="debt" data-debt-open onClick={() => { play('ui_tap'); openLoan(); }} aria-label={`빚 ${comma(debt)}, 대출로`}><b>빚 {comma(debt)}</b>{od > 0 && <span className="hike">연체 {od}회</span>}</button><HudIcons onBook={() => setBook(true)} /></div>
         </div>
         <div className="acorn">
           <div className="n" data-hl="acorn"><Money value={run.cash} perSec={0} /><i id="pr-acorn-ic"><Acorn size={26} /></i></div>

@@ -1,4 +1,4 @@
-// U-61: 라이트에서 지도 탭을 없애고 대출은 거래소 안 「대출」. 빌리고 갚는 길은 지도와 같은 loanActs.ts, 급할 때 빌리기 말풍선의 조건
+// U-61: 라이트에서 지도 탭을 없애고 대출은 거래소 안 「대출」. U-63: 대출은 아래 탭(거래소, 대출)의 한 화면. 빌리고 갚는 길은 지도와 같은 loanActs.ts, 급할 때 빌리기 말풍선의 조건
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLiteGame, liteAfterLoan } from '../../src/engine/lite';
 import { clone } from '../../src/engine/game';
@@ -8,6 +8,7 @@ import { useGame } from '../../src/store/gameStore';
 import { useProto } from '../../src/ui/proto/protoStore';
 import { borrowAt, borrowRoom, cheapestOpen, knownLenders, payAllWarn, payAt, quickBorrowWhy } from '../../src/ui/proto/loanActs';
 import { FT_STEPS } from '../../src/ui/proto/lite/flyTutSteps';
+import { openLoan } from '../../src/ui/proto/lite/LiteLoan';
 
 const fresh = () => { const g = createLiteGame({ seed: 7 }); liteAfterLoan(g); return g; };
 
@@ -97,5 +98,18 @@ describe('U-61 날다람쥐 길잡이의 끝 걸음은 「대출」을 비춘다
     const line = st.line({} as never);
     expect(line).toContain('대출');
     expect(FT_STEPS.some((s) => s.line({} as never).includes('지도'))).toBe(false);
+  });
+});
+
+describe('U-63 대출은 아래 탭의 한 화면', () => {
+  it('빚 칩과 장면(사무소로 간다, 갚으러 간다)은 대출 탭으로 가고 그 돈줄을 비춘다', () => {
+    useProto.getState().patch({ tab: 'phone', mapFocus: null });
+    openLoan('capital');
+    expect(useProto.getState().tab).toBe('map');
+    expect(useProto.getState().mapFocus).toBe('capital');
+    useProto.getState().patch({ tab: 'phone', mapFocus: null });
+    openLoan();
+    expect(useProto.getState().tab).toBe('map');
+    expect(useProto.getState().mapFocus).toBeNull();
   });
 });

@@ -40,8 +40,7 @@ import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
 import { pdev, isLite } from './config';
 import { LiteHud } from './lite/LiteHud';
-import { LiteLoan, openLoan } from './lite/LiteLoan';
-import type { LenderId } from '../../engine/types';
+import { LiteLoan, LoanIcon } from './lite/LiteLoan';
 import { LiteManga } from './lite/LiteManga';
 import { MangaCut } from './lite/MangaCut';
 import { LiteCuts } from './lite/LiteCuts';
@@ -60,12 +59,15 @@ const TABS: { id: Tab; label: string; col: string }[] = [
   { id: 'lot', label: '집', col: '#E9C99A' },
   { id: 'phone', label: '거래소', col: '#9AD0C2' },
 ];
-/** 라이트 모드(&lite=1): 집이 없다. 지도(빌리고 갚는 곳)와 거래소 둘 */
-const LITE_TABS = TABS.filter((t) => t.id !== 'lot');
+/** 라이트 모드(&lite=1, U-63): 집도 지도도 없다. 아래 탭은 거래소와 대출 둘. 대출은 'map' 자리를 쓴다(사무소로 간다, 갚으러 간다가 그대로 이리 온다) */
+const LITE_TABS: { id: Tab; label: string; col: string }[] = [
+  { id: 'phone', label: '거래소', col: '#9AD0C2' },
+  { id: 'map', label: '대출', col: '#F3E7C6' },
+];
 /** 탭 그림(GPT, docs/art/v5/ui/pair_icons.png): 지도와 거래소. 집은 아직 코드 그림 */
 /** 라이트에서 집 탭으로 가라는 말(장면 끝, 고르는 단추 등)은 거래소로(폰이 없으면 지도로) 바꿔 듣는다 */
-// U-61: 라이트에는 지도 탭이 없다. 지도로 가라는 말(사무소로 간다, 갚으러 간다)은 거래소 안의 「대출」을 연다(폰이 아직 없으면 예전 지도)
-const liteTab = (t: Tab, futuresOpen: boolean): Tab => (isLite && (t === 'lot' || t === 'map') ? (futuresOpen ? 'phone' : 'map') : t);
+// U-63: 라이트의 'map' 은 대출 탭이다. 지도로 가라는 말(사무소로 간다, 갚으러 간다)은 그대로 대출 탭으로
+const liteTab = (t: Tab, futuresOpen: boolean): Tab => (isLite && t === 'lot' ? (futuresOpen ? 'phone' : 'map') : t);
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 function Hud() {
@@ -168,7 +170,7 @@ function TabBar() {
   const [shake, setShake] = useState<string | null>(null);
   const point = useProto((s) => s.pointTab);
   const force = useProto((s) => s.forceTrade);
-  const open = (id: Tab) => id === 'lot' || !!un[id];
+  const open = (id: Tab) => id === 'lot' || isLite || !!un[id];
   const near = pos.find((p) => isNearLiq(p));
   const overdue = DEBT_IDS.some((id) => g.run.debts[id].overdue > 0);
   const badge = (id: Tab): { t: string; hot: boolean } | null => {
@@ -195,7 +197,7 @@ function TabBar() {
           <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '') + (point === t.id && ok && !on ? ' point' : '') + (force && t.id === 'map' ? ' dim' : '')} aria-current={on ? 'page' : undefined}
             onClick={() => { if (useProto.getState().scenes.length > 0) return; /* 장면이 떠 있거나 뜨려는 중(U-55): 닫을 때까지 탭은 바뀌지 않는다 */ if (ok && force && t.id === 'map') { say(FORCE_NUDGE); setShake(t.id); window.setTimeout(() => setShake(null), 400); return; } if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
             {on && <i className="base" />}
-            <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? <RowIcon kind={t.id} size={t.id === 'lot' ? 44 : on ? 38 : 32} /> : '?'}</span>
+            <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? (isLite && t.id === 'map' ? <LoanIcon size={26} /> : <RowIcon kind={t.id} size={isLite ? 28 : t.id === 'lot' ? 44 : on ? 38 : 32} />) : '?'}</span>
             <small>{ok ? t.label : ''}</small>
             {ok && !visited[t.id] && <i className="dot" />}
             {b && <i className={'bdg' + (b.hot ? ' hot' : '')}>{b.t}</i>}
@@ -305,7 +307,7 @@ function useGuide(): Guide | null {
   const r = g.run;
   const extras = r.equipment.filter((u) => u.tier === EXTRA_WHEEL);
   // 라이트: 이끄는 길은 첫 대출 한 걸음뿐(추심원 → 사무소 → 빌리기). 그 뒤 첫 판은 FRX 첫 실전 카드가 맞춰 준다
-  if (isLite) return P.loanTaken || P.prologue || !P.waiting ? null : { step: 'borrow', allow: ['[data-borrow="shark1"]', '[data-choice="go"]', '[data-loan-open]', '[data-loan]'] };
+  if (isLite) return P.loanTaken || P.prologue || !P.waiting ? null : { step: 'borrow', allow: ['[data-borrow="shark1"]', '[data-choice="go"]', '[data-tab="map"]', '[data-loan]'] };
   return guideStep({ life: lifeNo(g), ...P, momStaffed: !!r.coinWheels.DTC?.staffed, extras: extras.length, extrasStaffed: extras.filter((u) => u.staffed).length, canPlace: r.cash >= nextTierCost(r, EXTRA_WHEEL) });
 }
 
@@ -316,7 +318,6 @@ export function ProtoApp() {
   // 라이트: 집 탭으로 가라는 말이 오면 저장된 탭도 바로 고친다(그 사이 한 번은 위의 liteTab 이 막는다)
   useEffect(() => {
     if (tab === tab0) return;
-    if (isLite && tab0 === 'map' && tab === 'phone') { const f = useProto.getState().mapFocus; openLoan((f as LenderId | null) ?? null); useProto.getState().patch({ mapFocus: null }); }
     useProto.getState().setTab(tab);
   }, [tab, tab0]);
   const toast = useProto((s) => s.toast);
@@ -390,14 +391,13 @@ export function ProtoApp() {
       <main className="pr-main">
         <TabGuard key={tab}>
           {tab === 'lot' && !isLite && <Lot />}
-          {tab === 'map' && <MapTab />}
+          {tab === 'map' && (isLite ? <LiteLoan /> : <MapTab />)}
           {tab === 'phone' && <PhoneTab />}
         </TabGuard>
         {/* 거래소에서는 알림이 차트 안의 말 자리로 간다(PhoneLane, U-46) — 종목 줄을 덮지 않게 */}
         {toast && tab !== 'phone' && <div className="pr-toast" role="status">{toast}</div>}
       </main>
-      {!isLite && <TabBar />}
-      {isLite && <LiteLoan />}
+      <TabBar />
       <CutIn />
       <LiqStamp onShake={shake} />
       {isLite && <MangaCut />}

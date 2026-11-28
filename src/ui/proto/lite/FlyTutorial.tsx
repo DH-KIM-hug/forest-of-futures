@@ -17,7 +17,7 @@ import { closedMath } from '../watch';
 import { sprite } from '../sprites';
 import { play } from '../audio';
 import { reduced } from '../fx';
-import { isLite } from '../config';
+import { isLite, pdev } from '../config';
 import { markTip } from '../guide';
 import { FT_STEPS, FT_LEV, FT_PCT, FT_SHOW_LEV, ftActDone, ftNext, ftJump, ftResume, ftSeenBefore, markFtSeen, type FtCtx, type FtTarget } from './flyTutSteps';
 import type { Position } from '../../../engine/types';
@@ -43,7 +43,7 @@ const TARGETS: Record<FtTarget, string | (() => Element | null)> = {
   posLiq: '[data-hl="posLiq"]',
   close: '.pt-btn.close',
   settle: '[data-lite-settle]',
-  loan: '[data-loan-open]',
+  loan: '.pr-tabs [data-tab="map"]', // 아래 대출 탭(U-63)
 };
 const find = (t: FtTarget | undefined): Element | null => {
   if (!t) return null;
@@ -97,7 +97,8 @@ function FlyTutorialOn() {
   const run = g.run;
   const rawPos = run.positions.FLY as Position | undefined;
   const [root, setRoot] = useState<HTMLElement | null>(null);
-  const [i, setI] = useState(() => ftResume(!!rawPos));
+  // 화면 확인용(&pdev=lite_tut&pftat=loan): 그 걸음부터
+  const [i, setI] = useState(() => { const at = pdev ? new URLSearchParams(window.location.search).get('pftat') : null; const j = at ? FT_STEPS.findIndex((x) => x.id === at) : -1; return j >= 0 ? j : ftResume(!!rawPos); });
   const [canSkip] = useState(ftSeenBefore);
   const [L, setL] = useState<Layout | null>(null);
   const [bh, setBh] = useState(118);
