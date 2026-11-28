@@ -20,22 +20,35 @@ import { openBoard } from '../ranking';
 import { dayNoteOpen } from '../daynote';
 import { play } from '../audio';
 import { useUnlock } from '../rankUnlock';
+import { liteSeenCount } from '../../../engine/liteFruit';
+import { useLiteOpen } from './liteUnlock';
+import { LiteUnlockStamp } from './LiteUnlockStamp';
 import { DoorLine, Lurkers } from './Collectors';
 
-/** 머리의 작은 아이콘 셋(U-61): 전광판, 엔딩 도감, 도토리일보 */
+/** 머리의 작은 아이콘(U-61, U-68): 전광판은 처음 다 갚은 뒤에만, 엔딩 도감은 엔딩을 하나라도 본 뒤에, 도토리일보는 첫 판을 닫은 뒤에 칸이 생긴다 */
 function HudIcons({ onBook }: { onBook: () => void }) {
-  const locked = useUnlock((s) => !s.rec);
+  // 처음 다 갚은 축하가 걸려 있거나 떠 있는 동안에는 아직 없다: 축하를 닫으면 그때 칸이 생긴다
+  const rank = useUnlock((s) => !!s.rec && (s.rec.cheered || (!s.due && !s.cheer)));
+  const book = useGame((s) => liteSeenCount(s.g.family.liteBook) > 0);
+  const news = useLiteOpen(true).news;
   return (
     <span className="lt-icons">
-      <button className={locked ? 'locked' : ''} data-hud-rank onClick={() => { play('ui_tap'); openBoard(); }} aria-label={locked ? '숲 전광판, 잠김' : '숲 전광판'}>
-        <GIcon name="board" size={24} />
-      </button>
-      <button data-hud-book onClick={() => { play('ui_tap'); onBook(); }} aria-label="엔딩 도감">
-        <GIcon name="book" size={24} />
-      </button>
-      <button data-hud-news onClick={() => { play('ui_tap'); dayNoteOpen(true); }} aria-label="도토리일보">
-        <GIcon name="news" size={24} />
-      </button>
+      {rank && (
+        <button data-hud-rank onClick={() => { play('ui_tap'); openBoard(); }} aria-label="숲 전광판">
+          <GIcon name="board" size={24} />
+        </button>
+      )}
+      {book && (
+        <button data-hud-book onClick={() => { play('ui_tap'); onBook(); }} aria-label="엔딩 도감">
+          <GIcon name="book" size={24} />
+        </button>
+      )}
+      {news && (
+        <button data-hud-news onClick={() => { play('ui_tap'); dayNoteOpen(true); }} aria-label="도토리일보">
+          <GIcon name="news" size={24} />
+        </button>
+      )}
+      <LiteUnlockStamp />
     </span>
   );
 }

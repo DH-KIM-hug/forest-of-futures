@@ -46,6 +46,7 @@ import { exitFeeMul, feeEventLeft, openingEvent, feeRate } from '../../engine/sk
 import { recentRange } from './tension';
 import { allQuiet, liveliest, sessionOpen, sessionHoursKst, SESSIONS, feeSaved, LIVELY_PCT, QUIET_PCT, openHeadsUp, spanText, untilHourMin } from './market';
 import type { GameState, Position } from '../../engine/types';
+import { featureOpen, liteTrades, liteTradeClosed } from './lite/liteUnlock';
 
 /** 포지션이 닫힌 것을 보고 이번 생 승률을 올리고, 이익이면 수익 인증서 물음을 띄운다(한 번 닫을 때 한 번). */
 export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: number; pnl: number; margin: number; claim: number; entry: number; exit: number; heldSec: number; gen: number; gold?: boolean; /** 이번 생 가장 크게 딴 판 */ record?: boolean }): void {
@@ -56,6 +57,8 @@ export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: nu
   // 인증서 물음은 볼 만한 이익에만(잔돈 이익마다 뜨지 않는다, U-38)
   // 라이트(LITE_CONTI 컷 C5): 인증서 물음은 대박 이상과 이번 생 신기록에만
   const card = win && (isLite ? (burstTier(c.pnl, c.margin, c.claim)?.lv ?? 0) >= 4 || !!c.record : worthCertificate(c.pnl, c.margin, c.claim));
+  // 라이트 첫 경험(U-68): 이 기기에서 닫은 판을 센다(길잡이 판은 빼고). 판 수에 따라 종목, 도토리일보, 의뢰가 열린다
+  if (isLite) liteTradeClosed({ tutorial: P.flyTut === 'run' });
   P.patch({ wins, closes, profit: card ? { coin: marketById[c.market]?.name ?? c.market, dir: c.dir, lev: c.lev, roe: c.roe, pnl: c.pnl, entry: c.entry, exit: c.exit, heldSec: c.heldSec, wins, closes, gen: c.gen, date: new Date(), gold: c.gold, market: c.market, margin: c.margin, tier: burstTier(c.pnl, c.margin, c.claim)?.word } : null }); // 뒤에 닫힌 판이 있으면 앞 판의 인증서 물음은 지나간 일이다(U-46: 청산 · 연체 장면 사이에 옛 +117,651 이 다시 뜨던 것)
 }
 
@@ -343,7 +346,8 @@ function marketTick(g: GameState): void {
     }
   }
   // 도토리일보 시세면(U-41): 이번 생에 거래소를 처음 펴 보고 조금 지난 뒤, 지난 몇 시간의 머리기사를 한 줄로(기록이 30분은 있어야 싣는다)
-  if (P.tab === 'phone' && P.scenes.length === 0 && !P.seen.dayNoteHint && P.seen.feeEventSms && !P.toast && Object.keys(run.positions).length === 0) {
+  // 라이트(U-68): 도토리일보가 열린 뒤에만(첫 판을 닫은 뒤)
+  if ((!isLite || featureOpen('news', liteTrades())) && P.tab === 'phone' && P.scenes.length === 0 && !P.seen.dayNoteHint && P.seen.feeEventSms && !P.toast && Object.keys(run.positions).length === 0) {
     const ms = Object.values(marketById).filter((m) => m.tradable).map((m) => ({ id: m.id, name: m.name }));
     const note = dayNote(ms, Object.fromEntries(ms.map((m) => [m.id, dayBars(m.id)])), Date.now());
     if (note.spanMin >= 30) { P.patch({ seen: { ...useProto.getState().seen, dayNoteHint: true } }); say(noteToast(note), 8000); return; }

@@ -18,7 +18,7 @@ import { play } from '../audio';
 import { reduced } from '../fx';
 import { isLite, pdev } from '../config';
 import { markTip } from '../guide';
-import { FT_STEPS, FT_LEV, FT_PCT, FT_SHOW_LEV, ftActDone, ftNext, ftJump, ftResume, ftSeenBefore, markFtSeen, type FtCtx, type FtTarget } from './flyTutSteps';
+import { FT_STEPS, FT_LEV, FT_PCT, FT_SHOW_LEV, FT_TP_K, FT_SL_K, ftActDone, ftNext, ftJump, ftResume, ftSeenBefore, markFtSeen, type FtCtx, type FtTarget } from './flyTutSteps';
 import type { Position } from '../../../engine/types';
 import faceThink from '../img/manga/face_think.webp';
 import faceHappy from '../img/manga/face_happy.webp';
@@ -36,7 +36,10 @@ const TARGETS: Record<FtTarget, string | (() => Element | null)> = {
   lev50: `.pt-ruler [data-lev="${FT_LEV}"]`,
   lev200: `.pt-ruler [data-lev="${FT_SHOW_LEV}"]`,
   mg25: () => Array.from(document.querySelectorAll('.pt-mg button')).find((b) => b.querySelector('b')?.textContent?.trim() === `${FT_PCT}%`) ?? null,
-  firstGo: '[data-first-go]',
+  // 출구(U-68): FRX 첫 실전 카드 대신 손절과 익절 칸, 그 시트의 칩(data-ak = tp|sl + 넣은 돈의 몇 배)
+  cond: '.pt-condrow .pt-cond',
+  tpChip: `.pt-sheet [data-ak="tp${FT_TP_K}"]`,
+  slChip: `.pt-sheet [data-ak="sl${FT_SL_K}"]`,
   orderBtns: '.pt-orders',
   posNet: '[data-hl="posNet"]',
   posLiq: '[data-hl="posLiq"]',
@@ -119,7 +122,7 @@ function FlyTutorialOn() {
     if (!P.scenes.some((x) => x.id === 'feeEventSms')) return;
     P.patch({ scenes: P.scenes.filter((x) => x.id !== 'feeEventSms'), seen: { ...P.seen, feeEventSms: true, ftHeldSms: true } });
   }, [scenes]);
-  // 시작할 때: 거래소를 날다람쥐로, 첫 실전 카드가 뜨게. 첫 정산 장면은 이 길잡이가 대신 말한다. 오픈 기념 문자는 끝난 뒤로 미룬다
+  // 시작할 때: 거래소를 날다람쥐로. 첫 정산 장면은 이 길잡이가 대신 말한다. 오픈 기념 문자는 끝난 뒤로 미룬다
   useEffect(() => {
     const P = useProto.getState();
     const seen = { ...P.seen };
@@ -190,12 +193,17 @@ function FlyTutorialOn() {
     if (how === 'done') markFtSeen();
     P.patch({ flyTut: how, seen });
   };
-  const go = (to: number) => { if (to < 0) { play('paw_stamp'); finish('done'); return; } setI(to); };
+  const go = (to: number) => {
+    // 출구를 다 맞췄으면 시트를 닫아 주문 단추로 돌아간다(시트가 롱 숏 자리를 덮는다)
+    if (step?.id === 'stops') (document.querySelector('.pt-sheet .pt-x') as HTMLElement | null)?.click();
+    if (to < 0) { play('paw_stamp'); finish('done'); return; }
+    setI(to);
+  };
 
   // 판이 닫히면 들고 있던 걸음에서 결과로
   useEffect(() => { const j = ftJump(i, !!closed); if (j !== i) setI(j); }, [closed, i]);
   // 행동 걸음: 비춘 단추를 누른 결과가 화면에 들어오면 다음
-  const ui = { lev: tr.lev ?? null, pct: tr.pct, keep: !!tr.keep, tpK: tr.tpK ?? null, slK: tr.slK ?? null, hasPos: !!rawPos, closed: !!closed };
+  const ui = { lev: tr.lev ?? null, pct: tr.pct, keep: !!tr.keep, tpK: tr.tpK ?? null, slK: tr.slK ?? null, hasPos: !!rawPos, closed: !!closed, sheet: !!document.querySelector('.pt-sheet') };
   useEffect(() => {
     if (!step || step.kind === 'text') return;
     if (ftActDone(step.id, ui, tapped.current)) { const t = window.setTimeout(() => go(ftNext(i, !!closed)), step.kind === 'wait' ? 500 : 260); return () => window.clearTimeout(t); }

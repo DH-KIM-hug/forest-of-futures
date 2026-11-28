@@ -1,0 +1,14 @@
+/* 라이트 첫 경험(U-68): 잠긴 종목 칩, 열림 도장 */
+.pr .pt .pt-ct.locked, .pr .mga .pt .pt-ct.locked { opacity: .55; filter: grayscale(.75); background: #EFE6D6; color: #6E6253; }
+.pr .pt .pt-ct.locked:active { transform: scale(.96); }
+.pt-ct.locked small.lk { gap: 1px; color: #6E6253; }
+.pt-ct.locked small.lk img.gi { width: 14px; height: 14px; }
+
+.pr .lu-stamp { position: absolute; z-index: 60; left: 16px; right: 16px; top: 22%; width: fit-content; margin: 0 auto; display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border: 3px solid #1E140E; background: #FFE58A; box-shadow: 4px 4px 0 #1E140E; color: #1E140E; transform: rotate(-3deg); animation: luIn .42s cubic-bezier(.2, 1.6, .4, 1) both, luOut .3s ease-in 2.3s both; pointer-events: auto; }
+.lu-stamp span { display: flex; flex-direction: column; min-width: 0; }
+.lu-stamp b { font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1.15; }
+.lu-stamp small { font-size: 12px; font-weight: 700; color: #5E3A22; }
+.lu-stamp img.gi { flex: none; }
+@keyframes luIn { from { opacity: 0; transform: rotate(-3deg) scale(1.8); } to { opacity: 1; transform: rotate(-3deg) scale(1); } }
+@keyframes luOut { to { opacity: 0; transform: rotate(-3deg) translateY(-10px); } }
+@media (prefers-reduced-motion: reduce) { .pr .lu-stamp { animation: none; } }

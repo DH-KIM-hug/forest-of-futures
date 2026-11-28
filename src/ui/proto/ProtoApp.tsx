@@ -307,7 +307,7 @@ function useGuide(): Guide | null {
   const P = { prologue: useProto((s) => s.prologue), tutorial: useProto((s) => s.tutorial), tab: useProto((s) => s.tab), waiting: useProto((s) => s.waiting), loanTaken: useProto((s) => s.loanTaken), forceTrade: useProto((s) => s.forceTrade), panelOpen: useProto((s) => s.panelOpen) };
   const r = g.run;
   const extras = r.equipment.filter((u) => u.tier === EXTRA_WHEEL);
-  // 라이트: 이끄는 길은 첫 대출 한 걸음뿐(추심원 → 사무소 → 빌리기). 그 뒤 첫 판은 FRX 첫 실전 카드가 맞춰 준다
+  // 라이트: 이끄는 길은 첫 대출 한 걸음뿐(추심원 → 사무소 → 빌리기). 그 뒤 첫 판은 날다람쥐 길잡이가 맞춰 준다(FRX 첫 실전 카드는 U-68 에 뺐다)
   if (isLite) return P.loanTaken || P.prologue || !P.waiting ? null : { step: 'borrow', allow: ['[data-borrow="shark1"]', '[data-choice="go"]', '[data-tab="map"]', '[data-loan]'] };
   return guideStep({ life: lifeNo(g), ...P, momStaffed: !!r.coinWheels.DTC?.staffed, extras: extras.length, extrasStaffed: extras.filter((u) => u.staffed).length, canPlace: r.cash >= nextTierCost(r, EXTRA_WHEEL) });
 }

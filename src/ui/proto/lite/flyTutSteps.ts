@@ -12,7 +12,7 @@ export type FtPhase = 'pre' | 'hold' | 'post';
 
 /** 비출 곳. 화면이 선택자로 찾는다(FlyTutorial.tsx TARGETS) */
 export type FtTarget =
-  | 'flyTab' | 'quote' | 'wind' | 'chart' | 'orders' | 'lev50' | 'lev200' | 'mg25' | 'firstGo' | 'orderBtns'
+  | 'flyTab' | 'quote' | 'wind' | 'chart' | 'orders' | 'lev50' | 'lev200' | 'mg25' | 'cond' | 'tpChip' | 'slChip' | 'orderBtns'
   | 'posNet' | 'posLiq' | 'close' | 'settle' | 'loan';
 
 /** 대사에 끼우는 값(전부 엔진 값이거나 화면이 지금 본 값) */
@@ -39,7 +39,7 @@ const n = (x: number) => Math.round(Math.abs(x)).toLocaleString('ko-KR');
 const upWord = (c: FtCtx) => (c.pc === 'intl' ? '초록' : '빨강');
 const downWord = (c: FtCtx) => (c.pc === 'intl' ? '빨강' : '파랑');
 
-/** 첫 판: 50배, 넣는 돈 25%, 익절 +50% 손절 −25%(넣은 돈의 몇 배, FRX 첫 실전 카드와 같은 값, U-67) */
+/** 첫 판: 50배, 넣는 돈 25%, 익절 +50% 손절 −25%(넣은 돈의 몇 배, U-67). 출구는 길잡이가 손절과 익절 칸에서 칩으로 맞춘다(U-68) */
 export const FT_LEV = 50;
 export const FT_TP_K = 0.5;
 export const FT_SL_K = 0.25;
@@ -69,7 +69,9 @@ export const FT_STEPS: FtStep[] = [
   // ── 5. 증거금 ──
   { id: 'mg', kind: 'act', phase: 'pre', who: 'boss', target: 'mg25', line: () => `넣을 돈은 ${FT_PCT}%만. 전부 거는 손님은 제가 제일 좋아하고요.` },
   // ── 6. 익절과 손절 ──
-  { id: 'stops', kind: 'act', phase: 'pre', who: 'boss', target: 'firstGo', line: () => '익절 손절은 제가 맞춰 드릴게요. 눌러요.' },
+  { id: 'stopsOpen', kind: 'act', phase: 'pre', who: 'boss', target: 'cond', line: () => '언제 내릴지 미리 정해 둬요. 여기를 눌러요.' },
+  { id: 'stopsTp', kind: 'act', phase: 'pre', who: 'boss', target: 'tpChip', line: () => `익절은 +${Math.round(FT_TP_K * 100)}%. 이만큼 벌면 알아서 내려요.` },
+  { id: 'stops', kind: 'act', phase: 'pre', who: 'boss', target: 'slChip', line: () => `손절은 −${Math.round(FT_SL_K * 100)}%. 딱 이만큼만 잃어요.` },
   // ── 7. 주문하고 지켜보기 ──
   { id: 'order', kind: 'act', phase: 'pre', who: 'boss', target: 'orderBtns', line: () => '이제 롱이나 숏. 감 가는 쪽으로.' },
   { id: 'pnl', kind: 'text', phase: 'hold', who: 'boss', target: 'posNet', line: (c) => (c.net === null ? '이 숫자가 지금 손익이에요.' : c.net >= 0 ? `이 숫자가 지금 손익. 벌써 +${n(c.net)}이네요.` : `이 숫자가 지금 손익. −${n(c.net)}. 그런 날도 있죠.`) },
@@ -99,13 +101,15 @@ export const FT_FIRST_HOLD = ftIndex('pnl');
 export const FT_RESULT = ftIndex('result');
 
 /** 행동 걸음의 화면 상태 */
-export interface FtUi { lev: number | null; pct: number; keep: boolean; tpK: number | null; slK: number | null; hasPos: boolean; closed: boolean }
+export interface FtUi { lev: number | null; pct: number; keep: boolean; tpK: number | null; slK: number | null; hasPos: boolean; closed: boolean; /** 손절과 익절 시트가 열려 있다 */ sheet?: boolean }
 
 /** 행동 걸음이 끝났는가: 비춘 단추를 진짜로 눌렀고(tapped), 그 결과가 화면에 들어갔다. wait 는 판이 닫히면(누르지 않아도) 끝 */
 export function ftActDone(id: string, u: FtUi, tapped: boolean): boolean {
   switch (id) {
     case 'lev': return tapped && u.lev === FT_LEV;
     case 'mg': return tapped && u.pct === FT_PCT && !u.keep;
+    case 'stopsOpen': return tapped && !!u.sheet;
+    case 'stopsTp': return tapped && u.tpK === FT_TP_K;
     case 'stops': return tapped && u.tpK === FT_TP_K && u.slK === FT_SL_K;
     case 'order': return u.hasPos || u.closed; // 누르는 순간 판이 열린다(눌린 단추만 받으니 tapped 와 같다)
     case 'wait': return u.closed;

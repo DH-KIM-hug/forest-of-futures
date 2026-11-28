@@ -104,17 +104,6 @@
 .pr .mga .pt .pt-cond .more, .pr .mga .pt .pt-cond .vals .set { color: var(--ink); }
 .pr .mga .pt .pt-cond .more { padding: 1px 6px; background: var(--mg-gold); border: 2px solid var(--ink); }
 
-/* ── 오소리 대부의 추천 = 얼굴 + 말풍선 ── */
-.pr .mga .pt .pt-first { position: relative; grid-template-columns: 50px minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
-.pt-first .ft-boss { grid-column: 1; grid-row: 1 / 3; align-self: center; width: 50px; height: 54px; object-fit: cover; object-position: 50% 0; border: 2.5px solid var(--ink); background: var(--cream); }
-.pr .mga .pt .pt-first::before { content: ''; grid-column: 2 / 4; grid-row: 1 / 3; align-self: stretch; margin-left: 11px; border: 2.5px solid var(--ink); border-radius: 16px; background: #fff; }
-.pr .mga .pt .pt-first.set::before { background: #EEF6E2; }
-.pr .mga .pt .pt-first::after { content: ''; position: absolute; left: 51px; top: 50%; margin-top: -7px; border: 7px solid transparent; border-right: 11px solid var(--ink); border-left: 0; }
-.pr .mga .pt .pt-first > :not(.ft-boss) { position: relative; z-index: 1; }
-.pr .mga .pt .pt-first .ft-t { grid-column: 2; grid-row: 1; margin: 5px 0 0 22px; }
-.pr .mga .pt .pt-first .ft-t b { border-radius: 0; background: var(--ink); }
-.pr .mga .pt .pt-first p { grid-column: 2; grid-row: 2; margin: 1px 4px 6px 22px; color: var(--ink); font-size: 12.5px; }
-.pr .mga .pt .pt-first .ft-go { grid-column: 3; grid-row: 1 / 3; align-self: center; min-height: 44px; margin: 4px 8px 4px 2px; padding: 4px 9px; border-radius: 0; border: 2.5px solid var(--ink); background: var(--mg-gold); color: var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size: 14.5px; line-height: 1.15; }
 
 /* ── 롱 숏: 사선으로 갈라진 한 칸(롱! 붉게, 숏! 파랗게) ── */
 .pr .mga .pt .pt-orders[data-hl='orders'] { display: flex; gap: 0; margin: 2px 2px 1px; padding: 3px; background: var(--ink); box-shadow: 4px 4px 0 rgba(30, 20, 14, .35); }
@@ -225,13 +214,6 @@
   .pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn small { font-size: 11.5px; }
   .pr .mga .pt .pt-pl:not(.res) .roe { font-size: 29px; }
   .pr .mga .pt .pt-pl .me.sweat { width: 46px; height: 46px; }
-  .pt-first .ft-boss { width: 42px; height: 44px; }
-  .pr .mga .pt .pt-first p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; }
-  .pr .mga .pt .pt-first .ft-t { margin-top: 3px; }
-  .pr .mga .pt .pt-first { grid-template-columns: 42px minmax(0, 1fr) auto; }
-  .pr .mga .pt .pt-first::after { left: 43px; }
-  .pr .mga .pt .pt-first p { font-size: 11.5px; margin-bottom: 4px; }
-  .pr .mga .pt .pt-first .ft-go { font-size: 13px; }
   .pt-chart .plot .mga-bal { width: 140px; height: 58px; top: 18%; }
   .pt-chart .plot .mga-bal b { font-size: 17px; }
   .pt-pl .mga-thump { font-size: 18px; top: -14px; }

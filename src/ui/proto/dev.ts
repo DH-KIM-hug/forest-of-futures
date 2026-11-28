@@ -171,7 +171,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
     }
     // ── U-50 화면 확인용 ──
     case 'first': {
-      // 튜토리얼이 막 끝난 첫 생(손에 10만, 실전 거래 0건): 「첫 실전 한 판」 카드
+      // 튜토리얼이 막 끝난 첫 생(손에 10만, 실전 거래 0건): 첫 실전 판(FRX 첫 실전 카드는 U-68 에 뺐다)
       const g = ready();
       g.run.futures.closedTrades = 0; g.run.cash = 100_000;
       P.patch({ tab: 'phone', seen: { ...useProto.getState().seen, feeEventSms: true } });

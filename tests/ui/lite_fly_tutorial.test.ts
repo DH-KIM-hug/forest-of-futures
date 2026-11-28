@@ -20,8 +20,8 @@ describe('날다람쥐 길잡이 걸음', () => {
     expect(FT_IDS[FT_IDS.length - 1]).toBe('bye');
     expect(new Set(FT_IDS).size).toBe(FT_IDS.length);
   });
-  it('행동 걸음은 넷(배율, 증거금, 익절 손절, 주문)과 기다림 하나, 나머지는 말', () => {
-    expect(FT_STEPS.filter((s) => s.kind === 'act').map((s) => s.id)).toEqual(['lev', 'mg', 'stops', 'order']);
+  it('행동 걸음은 여섯(배율, 증거금, 손절과 익절 칸, 익절 칩, 손절 칩, 주문)과 기다림 하나, 나머지는 말', () => {
+    expect(FT_STEPS.filter((s) => s.kind === 'act').map((s) => s.id)).toEqual(['lev', 'mg', 'stopsOpen', 'stopsTp', 'stops', 'order']);
     expect(FT_STEPS.filter((s) => s.kind === 'wait').map((s) => s.id)).toEqual(['wait']);
     for (const s of FT_STEPS.filter((x) => x.kind !== 'text')) expect(s.target, s.id).toBeTruthy();
   });
@@ -36,6 +36,12 @@ describe('날다람쥐 길잡이 걸음', () => {
     expect(ftActDone('mg', { ...u, pct: 100 }, true)).toBe(false);
     expect(ftActDone('stops', { ...u, tpK: null }, true)).toBe(false);
     expect(ftActDone('stops', u, true)).toBe(true);
+    // U-68: FRX 첫 실전 카드 대신 손절과 익절 칸을 진짜로 연다. 칩도 하나씩 누른다
+    expect(ftActDone('stopsOpen', u, true)).toBe(false);
+    expect(ftActDone('stopsOpen', { ...u, sheet: true }, false)).toBe(false);
+    expect(ftActDone('stopsOpen', { ...u, sheet: true }, true)).toBe(true);
+    expect(ftActDone('stopsTp', { ...u, tpK: null }, true)).toBe(false);
+    expect(ftActDone('stopsTp', u, true)).toBe(true);
     expect(ftActDone('order', u, true)).toBe(false);
     expect(ftActDone('order', { ...u, hasPos: true }, true)).toBe(true);
     expect(ftActDone('wait', { ...u, hasPos: true }, false)).toBe(false);

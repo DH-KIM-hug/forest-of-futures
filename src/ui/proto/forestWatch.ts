@@ -16,6 +16,8 @@ import { earnTrophy, trophyById } from './trophies';
 import { play, later } from './audio';
 import { comma } from '../../engine/util';
 import type { GameState } from '../../engine/types';
+import { isLite } from './config';
+import { featureOpen, liteTrades } from './lite/liteUnlock';
 
 type Say = (text: string, ms?: number, keep?: boolean) => void;
 const gen = (g: GameState): number => g.family.generation ?? 1;
@@ -77,6 +79,8 @@ export function forestTick(g: GameState, say: Say): void {
   // 지켜보는 중에 엔진을 바로 바꾸면 같은 틱이 한 번 더 지켜진다(닫힌 판을 두 번 센다): 지켜보기가 끝난 뒤에 넣는다
   if ((run.feeTier ?? 0) !== tier && !run.over && !tierQueued) { tierQueued = true; window.setTimeout(() => { tierQueued = false; const g2 = useGame.getState().g; const t2 = Math.max(useProto.getState().frxBest, rankOfRun(g2.run, useProto.getState().frxBest).r); if (!g2.run.over && (g2.run.feeTier ?? 0) !== t2) useGame.getState().act({ type: 'setFeeTier', tier: t2 }); }, 0); }
   if (P.tutorial !== 'done' || run.over || !run.futures.open) return;
+  // 라이트 첫 경험(U-68): 의뢰판, 돌풍 특보, 단타방은 세 판을 닫은 뒤에 붙는다
+  if (isLite && !featureOpen('quests', liteTrades())) return;
   const seed = ((run.seed ?? 1) * 31 + gen(g)) >>> 0;
   const cap = levCapNow(run);
   let board = P.quests ? fitBoard(P.quests, cap) : newBoard(seed, cap);
