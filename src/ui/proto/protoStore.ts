@@ -107,8 +107,8 @@ interface P {
   firstTry: number;
   /** 라이트: 프롤로그 뒤 날다람쥐코인 길잡이(lite/flyTutSteps.ts). off = 안 돈다, run = 도는 중, done = 끝까지 봤다, skip = 건너뛰었다 */
   flyTut: 'off' | 'run' | 'done' | 'skip';
-  /** FRX 회원 등급(U-51): 이번 생의 거래 도장 · 이번 생 가장 크게 딴 돈 · 방금 오른 등급(머리 칩이 튄다) */
-  frxStamps: number; bestWin: number; rankUp: { k: number; r: number; name: string } | null;
+  /** FRX 회원 등급(U-65): 이번 생에 오른 가장 높은 등급(예탁금과 거래액으로, frxRank.ts) · 이번 생 가장 크게 딴 돈 · 방금 오른 등급(머리 칩이 튄다, why = 「거래액 1천만 돌파」) */
+  frxBest: number; bestWin: number; rankUp: { k: number; r: number; name: string; why?: string } | null;
   /** 이번 생 가장 크게 딴 판의 기록(U-53: 집 벽의 액자) · 승급 축하를 보여 준 rankUp.k(폰을 열 때 한 번) */
   bestTrade: { pnl: number; market: string; lev: number; dir: 1 | -1; roe: number } | null; rankSeen: number;
   /** 엄마 이야기의 단서를 마지막으로 보여 준 정산 번호(한 번 들를 때 하나만) */
@@ -153,7 +153,7 @@ const fresh = () => ({
   slotOf: {} as Record<string, number>, slotHi: null as number | null,
   think: null as P['think'], away: null as P['away'], clueAt: -1,
   dayNote: false, tradeLife: 0, claimWins: 0, paidLife: 0, cheer: null as P['cheer'],
-  beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[], treePing: null as TreePing | null, wind: null as Wind | null, firstTry: 3, flyTut: 'off' as P['flyTut'], frxStamps: 0, bestWin: 0, rankUp: null as P['rankUp'], bestTrade: null as P['bestTrade'], rankSeen: 0,
+  beatUntil: 0, burst: null as Burst | null, pops: [] as Pop[], treePing: null as TreePing | null, wind: null as Wind | null, firstTry: 3, flyTut: 'off' as P['flyTut'], frxBest: 0, bestWin: 0, rankUp: null as P['rankUp'], bestTrade: null as P['bestTrade'], rankSeen: 0,
   rolled: 0, rolledKey: null as number | null, rolledTaps: 0, claimWinRun: 0, claimLossRun: 0, claimRunSum: 0, pointTab: null as Tab | null, forceTrade: false,
   quests: null as Board | null, questFx: null as P['questFx'], rivals: null as RivalState | null, rivalLog: [] as RivalEvent[], forest: null as P['forest'],
 });

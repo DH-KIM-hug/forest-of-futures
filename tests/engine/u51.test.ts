@@ -99,19 +99,3 @@ describe('느린 판 한 줄 (U-51)', () => {
   });
 });
 
-import { rankOf, stampsFor, stampsOf } from '../../src/ui/proto/frxRank';
-describe('FRX 회원 등급 (U-51): 첫 생에도 거래로 자라는 이름표', () => {
-  it('도장 → 등급, 끝이 없다', () => {
-    expect([1, 2, 3, 4, 5, 6].map(stampsFor)).toEqual([3, 7, 12, 18, 25, 33]);
-    expect(rankOf(0)).toMatchObject({ r: 0, name: '새싹', have: 0, need: 3, next: '단골' });
-    expect(rankOf(3)).toMatchObject({ r: 1, name: '단골', have: 0, need: 4 });
-    expect(rankOf(11)).toMatchObject({ r: 2, name: '큰손', have: 4, need: 5, next: '고래' });
-    expect(rankOf(33).name).toBe('전설 2');
-    expect(rankOf(1000).r).toBeGreaterThan(20);
-  });
-  it('도장: 진 판 1, 터진 판은 등급만큼 더(최대 +3)', () => {
-    expect(stampsOf(0)).toBe(1);
-    expect(stampsOf(1)).toBe(2);
-    expect(stampsOf(5)).toBe(4);
-  });
-});

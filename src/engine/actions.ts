@@ -15,6 +15,7 @@ import { buyNode, callLoanCut, pickNode, setDayLimit } from './skilltree';
 import { retireAct1 } from './act1Retire';
 import { buyTree, chooseBranch, estateNext, pawn, retire, startNextGeneration, type ChoiceBranch } from './generation';
 import { onBackground, onForeground, visit } from './offline';
+import { questTip } from './questTip';
 
 export type Action =
   | { type: 'eduPage' }
@@ -68,7 +69,9 @@ export type Action =
   | { type: 'marginCallDone' }
   | { type: 'setDayLimit'; value: number | null }
   /** FRX 회원 등급(U-56 ③): 수수료 할인의 단계. 0 이상의 정수 */
-  | { type: 'setFeeTier'; tier: number };
+  | { type: 'setFeeTier'; tier: number }
+  /** FRX 의뢰판 사례금(U-65): 손에 든 돈으로. 한 번 3만, 한 생 15만까지(questTip.ts) */
+  | { type: 'questTip'; amount: number; who?: string };
 
 export function act(g: GameState, a: Action): Res {
   switch (a.type) {
@@ -120,5 +123,6 @@ export function act(g: GameState, a: Action): Res {
     case 'marginCallDone': return marginCallDone(g);
     case 'setDayLimit': return setDayLimit(g, a.value);
     case 'setFeeTier': { const t = Math.max(0, Math.floor(a.tier) || 0); g.run.feeTier = t; return { ok: true } as Res; }
+    case 'questTip': return questTip(g, a.amount, a.who);
   }
 }

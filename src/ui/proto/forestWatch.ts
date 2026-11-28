@@ -7,7 +7,9 @@ import { liveHistoryOf } from '../priceHistory';
 import { flySecOf } from './flyWind';
 import { flyGust } from '../../engine/feed/fly';
 import { sessionOpen, SESSIONS } from './market';
-import { rankOf } from './frxRank';
+import { rankOfRun, whyOf, whyText } from './frxRank';
+import { flyAcorns } from './fx';
+import { josa } from '../../engine/util';
 import { applyClose, fitBoard, newBoard, newsLine, questById, setGust, GUST_MUL, GUST_QUEST, type CloseInfo } from './quests';
 import { newRivals, opposite, rivalById, standings, stepRivals, type RivalEvent } from './rivals';
 import { earnTrophy, trophyById } from './trophies';
@@ -30,7 +32,7 @@ function trophy(id: string, g: GameState, say: Say): void {
   if (earnTrophy(id, gen(g))) later(1800, () => { play('paw_stamp'); say(`[트로피 장] 「${trophyById[id].name}」 집 벽에 걸었다.`, 4500); });
 }
 
-/** 판이 닫혔다(튜토리얼 거래 빼고): 의뢰판에 대 보고, 보상 도장의 합을 돌려준다 */
+/** 판이 닫혔다(튜토리얼 거래 빼고): 의뢰판에 대 보고, 끝난 의뢰의 사례금을 손에 넣는다. 받은 사례금의 합을 돌려준다 */
 export function forestClose(g: GameState, c: Omit<CloseInfo, 'gust'>, say: Say): number {
   const P = useProto.getState();
   const fs = c.fly ? flySecOf(g.run) : null;
@@ -42,22 +44,38 @@ export function forestClose(g: GameState, c: Omit<CloseInfo, 'gust'>, say: Say):
   if (!r.news.length) { P.patch({ quests: r.board }); return 0; }
   const lines = r.news.map(newsLine);
   P.patch({ quests: r.board, questFx: { k: (P.questFx?.k ?? 0) + 1, lines, done: r.finished.length > 0, market: c.market, tick: g.run.tick } });
-  for (const id of r.finished) {
-    const q = questById[id];
-    later(1400, () => { play('goal_complete'); say(`[FRX 의뢰] ${q.name}: 「${q.title}」 완료. 거래 도장 +${q.reward}`, 5000, true); });
-    trophy('q_' + id, g, say);
+  let got = 0;
+  for (const t of r.tips) {
+    const q = questById[t.id];
+    got += t.amount;
+    // 지켜보는 중에 엔진을 바로 바꾸면 같은 틱이 한 번 더 지켜진다(닫힌 판을 두 번 센다): 한 줄과 함께 나중에 넣는다
+    later(1400, () => {
+      const res = useGame.getState().act({ type: 'questTip', amount: t.amount, who: q.name });
+      const n = res.ok ? Math.round(res.amount ?? t.amount) : 0;
+      play('goal_complete');
+      say(n > 0 ? `[FRX 의뢰] ${josa(q.name, '이', '가')} 사례금 ${comma(n)}을 줬다.` : `[FRX 의뢰] ${q.name}: 「${q.title}」 끝. 이번 생 사례금은 다 받았다.`, 5000, true);
+      if (n > 0 && typeof document !== 'undefined') flyAcorns((document.querySelector('[data-forestline]') ?? document.querySelector('.pr-toast') ?? document.body).getBoundingClientRect(), 6);
+    });
+    trophy('q_' + t.id, g, say);
   }
-  return r.stamps;
+  return got;
 }
 
 /** 틱마다: 등급 수수료 맞추기, 의뢰판 · 단타방 시작, 돌풍 특보, 라이벌의 판 */
 export function forestTick(g: GameState, say: Say): void {
   const run = g.run;
   const P = useProto.getState();
-  // 등급 수수료(U-56 ③): 도장으로 셈한 등급을 엔진에 넣는다
-  const tier = rankOf(P.frxStamps).r;
+  // FRX 회원 등급(U-65): 예탁금과 거래액으로 셈한 등급. 오르면 지킨다(이번 생 가장 높은 등급), 수수료는 그 등급으로
+  const rk = rankOfRun(run, P.frxBest);
+  if (rk.r > P.frxBest && P.tutorial === 'done' && !run.over) {
+    const w = whyOf(rk.r, rk.dep, rk.vol);
+    P.patch({ frxBest: rk.r, rankUp: { k: (P.rankUp?.k ?? 0) + 1, r: rk.r, name: rk.name, why: whyText(w) } });
+    // 승급 한 줄은 거래소 밖에서만(거래소에서는 승급 카드가 같은 말을 한다)
+    if (P.tab !== 'phone') later(700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${whyText(w)}. ${rk.name} 회원이 되셨어요 ♥ 수수료를 깎아 드릴게요.`, 5500, true); });
+  }
+  const tier = Math.max(P.frxBest, rk.r);
   // 지켜보는 중에 엔진을 바로 바꾸면 같은 틱이 한 번 더 지켜진다(닫힌 판을 두 번 센다): 지켜보기가 끝난 뒤에 넣는다
-  if ((run.feeTier ?? 0) !== tier && !run.over && !tierQueued) { tierQueued = true; window.setTimeout(() => { tierQueued = false; const g2 = useGame.getState().g; const t2 = rankOf(useProto.getState().frxStamps).r; if (!g2.run.over && (g2.run.feeTier ?? 0) !== t2) useGame.getState().act({ type: 'setFeeTier', tier: t2 }); }, 0); }
+  if ((run.feeTier ?? 0) !== tier && !run.over && !tierQueued) { tierQueued = true; window.setTimeout(() => { tierQueued = false; const g2 = useGame.getState().g; const t2 = Math.max(useProto.getState().frxBest, rankOfRun(g2.run, useProto.getState().frxBest).r); if (!g2.run.over && (g2.run.feeTier ?? 0) !== t2) useGame.getState().act({ type: 'setFeeTier', tier: t2 }); }, 0); }
   if (P.tutorial !== 'done' || run.over || !run.futures.open) return;
   const seed = ((run.seed ?? 1) * 31 + gen(g)) >>> 0;
   const cap = levCapNow(run);
@@ -71,7 +89,7 @@ export function forestTick(g: GameState, say: Say): void {
       if (st.gustSaid !== gw.endsAt && P.scenes.length === 0) {
         st.gustSaid = gw.endsAt;
         play('news_alarm', { vol: 0.7 });
-        say(`[도토리일보 돌풍 특보] ${Math.max(1, Math.ceil((gw.endsAt - fs) / 60))}분 동안 날다람쥐코인에 돌풍! 이익 한 판이면 도장 +${GUST_QUEST.reward}`, 7000, true);
+        say(`[도토리일보 돌풍 특보] ${Math.max(1, Math.ceil((gw.endsAt - fs) / 60))}분 동안 날다람쥐코인에 돌풍! 이익 한 판이면 사례금!`, 7000, true);
       }
     } else {
       if (board.gust && fs >= board.gust.endsAt) board = setGust(board, null);

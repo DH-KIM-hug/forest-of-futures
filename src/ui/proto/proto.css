@@ -1127,6 +1127,11 @@
 .fb-q .bar u { display: block; height: 100%; background: #4E8A3A; }
 .fb-q .rw { flex: none; display: flex; flex-direction: column; align-items: center; font-style: normal; font-family: var(--dsp); font-size: 17px; color: #2F4A22; }
 .fb-q .rw small { font-family: inherit; font-size: 11px; color: #8A5A16; }
+/* U-65: 의뢰판 맨 위의 FRX 회원 등급(예탁금, 거래액, 다음 등급) */
+.fb-tier { display: flex; flex-direction: column; gap: 1px; margin: 0 0 6px; padding: 7px 10px; border: 2px solid var(--o); border-radius: 10px; background: #FFF6D8; color: var(--o); }
+.fb-tier .ms { display: flex; gap: 12px; color: var(--sub); }
+.fb-tier .ms b { color: var(--o); }
+.fb-q .rw .tip { color: #6B4510; }
 .fb-foot, .fb-lead { margin: 2px 2px 0; font-size: 12px; font-weight: 700; line-height: 1.45; color: var(--sub); }
 .fb-rank { display: flex; flex-direction: column; gap: 3px; }
 .fb-row { display: flex; align-items: center; gap: 7px; padding: 4px 6px; border-radius: 10px; background: #FFFDF6; border: 1.5px solid rgba(74, 70, 64, .2); }

@@ -39,16 +39,16 @@ describe('랭킹 제출 검사', () => {
     const lose = trade({ roe: -40, pnl: -20000 });
     const life = { lifeNo: 1, settles: 30, peak: 0, trades: [win, lose] };
     expect(checkLifeShape(life, 200000, T0 + 300_000)).toBeNull();
-    // U-47: 정산이 60초 → 정산당 상한 17,000 + 1,000. −300,000 + 15,500 × 1.1 + 30 × 18,000 = 257,050
+    // U-47: 정산이 60초 → 정산당 상한 17,000 + 1,000. −300,000 + 15,500 × 1.1 + 30 × 18,000 = 257,050, U-65 의뢰 사례금 +150,000 → 407,050
     // (U-51: 진 거래의 고비 몫은 따로 본다 — 여기서는 진 거래의 봉을 주지 않는다)
     const nopop = (t: TradeDetail) => (t.pnl > 0 ? cs : []);
-    expect(checkLifeAgainstCandles({ ...life, trades: [win] }, 257000, () => cs)).toBeNull();
-    expect(checkLifeAgainstCandles(life, 257000, nopop)).toBeNull();
-    expect(checkLifeAgainstCandles(life, 258000, nopop)).toMatch(/tooHigh/);
+    expect(checkLifeAgainstCandles({ ...life, trades: [win] }, 407000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 407000, nopop)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 408000, nopop)).toMatch(/tooHigh/);
     // U-46: 둘째 생부터는 튜토리얼이 끝난 자리(손에 10만, 빚 50만)에서 시작한다 → 상한도 −40만에서
     const reborn = { ...life, lifeNo: 2 };
-    expect(checkLifeAgainstCandles(reborn, 157000, nopop)).toBeNull();
-    expect(checkLifeAgainstCandles(reborn, 158000, nopop)).toMatch(/tooHigh/);
+    expect(checkLifeAgainstCandles(reborn, 307000, nopop)).toBeNull();
+    expect(checkLifeAgainstCandles(reborn, 308000, nopop)).toMatch(/tooHigh/);
     // 이긴 거래를 부풀리면 그 거래에서 걸린다
     const fake = { ...life, trades: [trade({ roe: 900, pnl: 450000 })] };
     expect(checkLifeAgainstCandles(fake, 600000, () => cs)).toMatch(/trade:roeTooHigh/);
@@ -78,12 +78,12 @@ describe('랭킹 제출 검사', () => {
     const win = trade({ roe: 31, pnl: 15500 });
     const lose = trade({ roe: -40, pnl: -20000 });
     const life = { lifeNo: 1, settles: 30, peak: 0, trades: [win, lose] };
-    // −300,000 + 15,500 × 1.1 + (1,500 + 1,500) + 30 × 18,000 = 260,050 (진 거래도 +50% 를 지났을 수 있다)
-    expect(checkLifeAgainstCandles(life, 260000, () => cs)).toBeNull();
-    expect(checkLifeAgainstCandles(life, 261000, () => cs)).toMatch(/tooHigh/);
+    // −300,000 + 15,500 × 1.1 + (1,500 + 1,500) + 30 × 18,000 + 150,000(사례금) = 410,050 (진 거래도 +50% 를 지났을 수 있다)
+    expect(checkLifeAgainstCandles(life, 410000, () => cs)).toBeNull();
+    expect(checkLifeAgainstCandles(life, 411000, () => cs)).toMatch(/tooHigh/);
     // 진 거래의 봉을 못 받았으면 그 몫은 0(거절되지 않고 상한만 준다)
-    expect(checkLifeAgainstCandles(life, 258500, (t) => (t.pnl > 0 ? cs : []))).toBeNull();
-    expect(checkLifeAgainstCandles(life, 258600, (t) => (t.pnl > 0 ? cs : []))).toMatch(/tooHigh/);
+    expect(checkLifeAgainstCandles(life, 408500, (t) => (t.pnl > 0 ? cs : []))).toBeNull();
+    expect(checkLifeAgainstCandles(life, 408600, (t) => (t.pnl > 0 ? cs : []))).toMatch(/tooHigh/);
     // 한 생에서 실제로 받을 수 있는 최대(Lv 끝없이 = 3%)보다 넉넉하다: 고비 여섯을 다 넘긴 판
     expect(LIFE.popAt.length * LIFE.popRateMax).toBeCloseTo(0.18, 6);
   });
@@ -123,3 +123,16 @@ describe('U-57 날다람쥐 시세 함수의 판', () => {
   });
 });
 
+describe('U-65 의뢰 사례금', () => {
+  it('한 생에 사례금 15만까지를 상한에 더한다(본편, 라이트 모두). 게임의 상한과 같은 숫자', async () => {
+    const { QUEST_TIP } = await import('../../src/engine/questTip');
+    expect(LIFE.questMaxPerLife).toBe(QUEST_TIP.lifeMax);
+    const life = { lifeNo: 1, settles: 1, peak: 0, trades: [] as TradeDetail[] };
+    const base = -300_000 + 18_000;
+    expect(checkLifeAgainstCandles(life, base + 150_000, () => [])).toBeNull();
+    expect(checkLifeAgainstCandles(life, base + 150_001, () => [])).toMatch(/tooHigh/);
+    const lite = { ...life, lite: true, lifeNo: 2 };
+    expect(checkLifeAgainstCandles(lite, -290_000 + 18_000 + 150_000, () => [])).toBeNull();
+    expect(checkLifeAgainstCandles(lite, -290_000 + 18_000 + 150_001, () => [])).toMatch(/tooHigh/);
+  });
+});

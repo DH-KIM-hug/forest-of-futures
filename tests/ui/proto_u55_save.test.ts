@@ -42,7 +42,7 @@ describe('U-55 봉투', () => {
     const { g } = midGame();
     const r = stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 50, margin: 10_000 } });
     expect(r.ok).toBe(true);
-    const P = { tutorial: 'done', loanTaken: true, frxStamps: 7, bestTrade: { pnl: 3, market: 'FLY', lev: 50, dir: 1, roe: 12 }, scenes: [{ id: 'x' }], toast: '지워질 것', burst: { k: 1 } };
+    const P = { tutorial: 'done', loanTaken: true, frxBest: 2, bestTrade: { pnl: 3, market: 'FLY', lev: 50, dir: 1, roe: 12 }, scenes: [{ id: 'x' }], toast: '지워질 것', burst: { k: 1 } };
     const raw = pack({ g, p: pickProto(P), trade: { market: 'DTC', lev: 50, pct: 25, sl: null, tp: null }, feed: { kind: 'sim', n: g.run.lastSeenTick, mids: {} }, now: 123_456 });
     const u = unpack(raw);
     expect(u.ok).toBe(true);
@@ -53,7 +53,7 @@ describe('U-55 봉투', () => {
     expect(Object.keys(u.env.g.run.positions)).toEqual(['DTC']);
     expect(u.env.g.run.positions.DTC.entry).toBe(g.run.positions.DTC.entry);
     expect(u.env.g.run.prices).toEqual(g.run.prices);
-    expect(u.env.p).toEqual({ tutorial: 'done', loanTaken: true, frxStamps: 7, bestTrade: P.bestTrade });
+    expect(u.env.p).toEqual({ tutorial: 'done', loanTaken: true, frxBest: 2, bestTrade: P.bestTrade });
     expect(u.env.trade).toMatchObject({ market: 'DTC', lev: 50 });
     expect(u.env.feed).toEqual({ kind: 'sim', n: g.run.lastSeenTick, mids: {} });
   });

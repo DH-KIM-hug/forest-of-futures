@@ -908,6 +908,9 @@
 .pt-rankcard .rc-bow { position: absolute; top: -6px; right: 0; transform-origin: 50% 0; animation: rcSwing 1.4s ease-out .2s both; }
 .pt-rankcard .gift { margin: 0; font-size: 14px; font-weight: 800; color: var(--o); }
 .pt-rankcard .gift em { font-style: normal; padding: 1px 7px; border-radius: 8px; background: #FFE58A; color: #6B4A10; }
+/* U-65: 승급의 까닭(「거래액 1천만 돌파」)과 두 잣대 */
+.pt-rankcard .why { margin: 0; padding: 1px 9px; border-radius: 8px; background: #6B4510; color: #FFE58A; }
+.pt-rankcard .ms { margin: 2px 0 0; line-height: 1.35; color: var(--o); }
 .pt-rankcard .nx { margin: 2px 0 0; font-size: 11.5px; font-weight: 700; color: var(--sub); }
 @keyframes rcPop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
 @keyframes rcCase { 0% { border-color: #3E9A9C; } 100% { border-color: var(--case); } }

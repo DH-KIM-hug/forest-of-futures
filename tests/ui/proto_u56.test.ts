@@ -1,6 +1,6 @@
 // U-56(회차 15): FRX 의뢰판, 숲 단타방, 트로피 장, 등급 수수료, 연습 시세 날다람쥐의 벽시계, 한 번 누르기 정리
 import { describe, it, expect } from 'vitest';
-import { newBoard, applyClose, fitBoard, setGust, questById, QUESTS, GUST_QUEST, judge, type CloseInfo } from '../../src/ui/proto/quests';
+import { newBoard, applyClose, fitBoard, setGust, questById, QUESTS, GUST_QUEST, judge, tipOf, type CloseInfo } from '../../src/ui/proto/quests';
 import { newRivals, stepRivals, standings, opposite, RIVALS, RIVAL_BANK } from '../../src/ui/proto/rivals';
 import { TROPHIES } from '../../src/ui/proto/trophies';
 import { tierFee, TIER_FEE_STEP, baseFeeRate } from '../../src/engine/skilltree';
@@ -24,11 +24,11 @@ describe('FRX 의뢰판', () => {
     const fit = fitBoard({ ...a, slots: [{ id: 'lev100', prog: 0 }, ...a.slots.slice(1).filter((s) => s.id !== 'lev100')].slice(0, 3) }, 10);
     expect(fit.slots.some((s) => s.id === 'lev100')).toBe(false);
   });
-  it('끝낸 의뢰는 도장을 주고 그 자리에 다음 의뢰가 붙는다', () => {
+  it('끝낸 의뢰는 사례금을 주고 그 자리에 다음 의뢰가 붙는다', () => {
     const b = { ...newBoard(3, 200), slots: [{ id: 'short', prog: 0 }, { id: 'five', prog: 4 }, { id: 'sl', prog: 0 }] };
     const r = applyClose(b, C({ dir: -1, pnl: 5000 }), 200);
     expect(r.finished.sort()).toEqual(['five', 'short']);
-    expect(r.stamps).toBe(questById.short.reward + questById.five.reward);
+    expect(r.tips.reduce((a, t) => a + t.amount, 0)).toBe(tipOf(questById.short, 4200) + tipOf(questById.five, 4200));
     expect(r.board.slots).toHaveLength(3);
     expect(r.board.slots.map((s) => s.id)).not.toContain('short');
     expect(r.board.slots.find((s) => s.id === 'sl')?.prog).toBe(0);
@@ -47,7 +47,7 @@ describe('FRX 의뢰판', () => {
     expect(b.gust).toEqual({ endsAt: 1000, done: false });
     const r = applyClose(b, C({ market: 'FLY', fly: true, gust: true, pnl: 300 }), 200);
     expect(r.finished).toContain('gust');
-    expect(r.stamps).toBeGreaterThanOrEqual(GUST_QUEST.reward);
+    expect(r.tips.find((t) => t.id === 'gust')?.amount).toBe(tipOf(GUST_QUEST, 4200));
     b = setGust(r.board, null);
     expect(b.gust).toBeNull();
   });

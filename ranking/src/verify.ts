@@ -131,6 +131,8 @@ export const LIFE = {
   popRateMax: 0.03,
   popAt: [50, 100, 200, 300, 500, 1000],
   maxTrades: 600,
+  /** FRX 의뢰판 사례금(U-65, src/engine/questTip.ts QUEST_TIP.lifeMax): 한 생에 받는 사례금 합의 상한. 본편, 라이트 모두 */
+  questMaxPerLife: 150_000,
 };
 
 /** 한 거래가 받을 수 있었던 고비 보상의 상한: 그 사이 봉으로 닿을 수 있었던 고비 수 × 넣은 돈 × 3%. 봉이 없으면 0(상한이 줄 뿐) */
@@ -155,7 +157,7 @@ export function checkLifeShape(d: LifeDetail, value: number, now: number): strin
   return null;
 }
 
-/** 이긴 거래마다 실제 봉으로 가능한지 보고, 재산 상한 = 시작 + 이긴 거래 합 × (1 + 축하금) + 거래마다 고비 보상 상한 + 정산 × (쳇바퀴 + 사건). */
+/** 이긴 거래마다 실제 봉으로 가능한지 보고, 재산 상한 = 시작 + 이긴 거래 합 × (1 + 축하금) + 거래마다 고비 보상 상한 + 정산 × (쳇바퀴 + 사건) + 의뢰 사례금 상한. */
 export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf: (t: TradeDetail) => Candle[]): string | null {
   let wins = 0;
   let pops = 0;
@@ -168,7 +170,7 @@ export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf:
     wins += t.pnl;
   }
   const start = d.lite === true ? LIFE.liteStart : d.lifeNo >= 2 ? LIFE.rebornStart : LIFE.start;
-  const bound = start + wins * (1 + LIFE.winBonusMax) + pops + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
+  const bound = start + wins * (1 + LIFE.winBonusMax) + pops + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle) + LIFE.questMaxPerLife;
   if (value > bound) return `tooHigh(${Math.round(value)} > ${Math.round(bound)})`;
   return null;
 }

@@ -30,6 +30,7 @@ import { ctxOfPosition, plans } from './exitPlan';
 import type { Action } from '../../engine/actions';
 import { protoSaveKey } from './protoSave';
 import { restoreProto, startAutosave } from './protoPersist';
+import { barOf, rankName, whyOf, whyText } from './frxRank';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
@@ -68,6 +69,8 @@ export function bootProto(): void {
   // U-59 &pdev=rank_clear: 빚이 1만 남은 판(본편은 clear, 라이트는 lite_clear 와 같다). 장면 건너뛰기는 전광판이 잠긴 채로 열려, 지도에서 [전부 갚기]를 누르면 첫 완납 축하가 뜬다
   const pd = pdev === 'rank_clear' || pdev === 'lite_rank_clear' ? (isLite ? 'lite_clear' : 'clear') : pdev;
   if (pd) g = isLite ? liteScene(pd, g) : scene(pd, g);
+  // U-65 FRX 회원 등급 확인용: &prank=r 이면 판이 열린 뒤 그 등급에 막 오른 것처럼(승급 카드가 뜬다, &prankby=dep 이면 예탁금으로)
+  if (pd && q.get('prank')) window.setTimeout(() => { const r = +q.get('prank')!, dep = q.get('prankby') === 'dep', w = whyOf(r, dep ? barOf(r).dep : 0, dep ? 0 : barOf(r).vol); useProto.getState().patch({ frxBest: r, rankUp: { k: 1, r, name: rankName(r), why: whyText(w) }, rankSeen: 0 }); }, 2500);
   if (wantPrologue()) { useProto.getState().patch({ prologue: true }); st.setSpeed(0); }
   st.setGame(g);
   // 화면 확인용: &pguide=<때> 는 그 때의 설명 장면을 바로 띄운다(예: pdev=cabin0&guide=1&pguide=hamster)
@@ -150,7 +153,6 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   const seen = Object.fromEntries([...KNOWN_AFTER_FIRST_LIFE, 'firstSettle', 'office'].map((k) => [k, true]));
   P.patch({ seen, cutCount: 1, loanTaken: true, tutorial: 'done', firstTry: name === 'first' ? 3 : 0 });
   if (q.get('ptro')) P.patch({ bestTrade: { pnl: 15_812, market: 'FLY', lev: 200, dir: 1, roe: 128 }, bestWin: 15_812 }); // U-53 벽의 액자 확인용
-  if (q.get('pstamps')) P.patch({ frxStamps: +q.get('pstamps')!, bestWin: q.get('pbest') ? +q.get('pbest')! : 0 }); // U-51 FRX 회원 등급 확인용
   base.run.intro = false; // 장면 건너뛰기는 튜토리얼이 끝난 판이다(정산 60초)
   base.run.settleIn = balance.settlement.intervalSec;
   const ready = () => {

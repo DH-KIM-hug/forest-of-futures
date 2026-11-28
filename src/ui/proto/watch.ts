@@ -37,7 +37,6 @@ import { fx } from './fx';
 import { isLite } from './config';
 import { retireSubLite } from './lite/fruitText';
 import { pushPop, treePing } from './popBus';
-import { rankOf, stampsOf, rankFeeText } from './frxRank';
 import { forestClose, forestTick, forestNewLife } from './forestWatch';
 import { play, later } from './audio';
 import { closeBack, exitFee, roePct } from '../../engine/futures';
@@ -681,28 +680,22 @@ export function startWatch(): void {
         const autoOut = !tut && (endKind === 'tp' || endKind === 'sl') && useProto.getState().tab !== 'phone';
         // 이긴 판의 등급(U-48 → U-49): 어느 탭에서든 화면이 터진다. 집이면 도토리 비가 집 안으로 쏟아지고 햄스터들이 들썩인다
         const tierB = !tut && endKind !== 'liq' ? burstTier(pnl, p.margin0, claim(prev).total) : null;
-        // FRX 회원 등급(U-51): 닫힌 판마다 도장(터진 판은 더). 등급이 오르면 머리의 칩이 튀고 팡파르 — 이긴 판의 상자가 먼저, 그 뒤에
+        // FRX 회원 등급(U-65)은 예탁금과 거래액으로 forestTick 이 본다. 여기서는 이번 생 가장 크게 딴 판만
         const prevBest = useProto.getState().bestWin;
         if (!tut) {
-          // FRX 의뢰판(U-56): 이 판이 의뢰를 끝냈으면 그 도장도 함께
-          const qStamps = forestClose(g, { market: p.market, dir: p.dir, lev: p.lev, pnl, roe: endKind === 'liq' ? -100 : (pnl / Math.max(1, p.margin0)) * 100, heldSec: run.tick - p.openTick, kind: endKind, claim: claim(prev).total, fly: !!marketById[p.market]?.synthetic }, say);
+          // FRX 의뢰판(U-56): 이 판이 의뢰를 끝냈으면 의뢰인의 사례금(U-65)
+          forestClose(g, { market: p.market, dir: p.dir, lev: p.lev, margin: p.margin0, pnl, roe: endKind === 'liq' ? -100 : (pnl / Math.max(1, p.margin0)) * 100, heldSec: run.tick - p.openTick, kind: endKind, claim: claim(prev).total, fly: !!marketById[p.market]?.synthetic }, say);
           const P2 = useProto.getState();
-          const before = rankOf(P2.frxStamps), stamps = P2.frxStamps + stampsOf(tierB?.lv ?? 0) + qStamps, after = rankOf(stamps);
           if (pnl > 0 && pnl > P2.bestWin) P2.patch({ bestTrade: { pnl: Math.round(pnl), market: p.market, lev: p.lev, dir: p.dir, roe: (pnl / Math.max(1, p.margin0)) * 100 } });
-          P2.patch({ frxStamps: stamps, bestWin: Math.max(P2.bestWin, pnl), rankUp: after.r > before.r ? { k: (P2.rankUp?.k ?? 0) + 1, r: after.r, name: after.name } : P2.rankUp });
-          // 이긴 판이 터지면 그 상자에 「승급」 칩이 같이 뜬다(장면이 덮기 전에 보이게). 아니면 0.7초 뒤 한 줄과 팡파르
-          if (after.r > before.r && tierB) later(900, () => play('goal_complete'));
-          // 승급 한 줄은 거래소 밖에서만(거래소에서는 승급 카드가 같은 말을 한다). 청산이면 도장이 걷힌 뒤에(회차 15: 승급 카드, 청산 도장, 알림이 세 겹)
-          if (after.r > before.r && !tierB && useProto.getState().tab !== 'phone') later(endKind === 'liq' ? LIQ_QUIET_MS + 300 : 700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 수수료를 깎아 드릴게요.`, 5500, true); });
+          P2.patch({ bestWin: Math.max(P2.bestWin, pnl) });
         }
         if (tierB) {
           const P0 = useProto.getState();
           const record = pnl > 0 && prevBest > 0 && pnl > prevBest; // 이번 생 가장 크게 딴 판(첫 이긴 판은 신기록이라 부르지 않는다)
-          const ru = P0.rankUp && rankOf(P0.frxStamps).r === P0.rankUp.r && rankOf(P0.frxStamps - stampsOf(tierB.lv)).r < P0.rankUp.r ? P0.rankUp.name : undefined;
           const c0 = claim(prev).total;
           const fire = () => {
             const P3 = useProto.getState();
-            P3.patch({ burst: { k: (P3.burst?.k ?? 0) + 1, tier: tierB, pnl, margin: p.margin0, streak: pnl > 0 ? P0.winStreak + 1 : 0, lev: p.lev, market: p.market, dir: p.dir, name: marketById[p.market]?.name ?? p.market, how: endKind === 'tp' ? 'tp' : endKind === 'sl' ? 'sl' : 'close', record, rankUp: ru },
+            P3.patch({ burst: { k: (P3.burst?.k ?? 0) + 1, tier: tierB, pnl, margin: p.margin0, streak: pnl > 0 ? P0.winStreak + 1 : 0, lev: p.lev, market: p.market, dir: p.dir, name: marketById[p.market]?.name ?? p.market, how: endKind === 'tp' ? 'tp' : endKind === 'sl' ? 'sl' : 'close', record },
               // 큰 등급의 상자는 2.6초보다 오래 남는다(U-52): 장면이 그 꼬리를 덮지 않게 숨을 늘린다
               beatUntil: Math.max(P3.beatUntil, Date.now() + burstMs(tierB.lv)) });
             winSound(tierB.lv);

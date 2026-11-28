@@ -59,7 +59,7 @@ import { WinBurst } from './Juice';
 import { play, playTap, later } from './audio';
 import { useOpenPositions } from './Lot';
 import { pushPop, treePing } from './popBus';
-import { rankOf, lookOf, rankName, stampsFor, CASE_COL } from './frxRank';
+import { rankOfRun, lookOf, rankName, goalShort, goalText, CASE_COL } from './frxRank';
 import { sprite } from './sprites';
 const heroFront = sprite('hero')!.src; // 포지션 카드의 주인공: 폰을 보는 새 그림(U-33)
 import './trade.css';
@@ -358,10 +358,10 @@ export function ProtoTrade() {
   /** 나무가 방금 판에 한 일(U-50): 머리의 「나무」 칩이 2.4초 반짝이며 한 줄을 말한다 */
   const ping = useProto((s0) => s0.treePing);
   const [pingOn, setPingOn] = useState(false);
-  /** FRX 회원 등급(U-51): 이번 생의 거래 도장. 오른 순간 칩이 튄다(이긴 판의 상자가 지나간 뒤) */
-  const frxStamps = useProto((s0) => s0.frxStamps);
+  /** FRX 회원 등급(U-65): 예탁금과 거래액으로(오른 등급은 이번 생 동안 지킨다). 오른 순간 칩이 튄다 */
+  const frxBest = useProto((s0) => s0.frxBest);
   const rankUp = useProto((s0) => s0.rankUp);
-  const rk = rankOf(frxStamps);
+  const rk = rankOfRun(run, frxBest);
   /** 등급의 폰(U-53): 케이스 색과 고리 색. 꾸밈뿐 */
   // 라이트 도감 20개의 덤(U-62): 새싹 등급의 청록 케이스 대신 만화 먹선 케이스
   const inkCase = useGame((s0) => isLite && litePerks(s0.g.family.liteBook).inkCase);
@@ -369,7 +369,7 @@ export function ProtoTrade() {
   const look = inkCase && look0.case === 'teal' ? { ...look0, case: 'ink', caseName: '먹선 만화' } : look0;
   const rankSeen = useProto((s0) => s0.rankSeen);
   /** 승급 축하(U-53): 폰을 보고 있을 때(이긴 판의 상자, 장면이 지나간 뒤), 아니면 다음에 폰을 열 때 한 번 */
-  const [rankCard, setRankCard] = useState<{ k: number; r: number } | null>(null);
+  const [rankCard, setRankCard] = useState<{ k: number; r: number; why?: string } | null>(null);
   const [rankUpOn, setRankUpOn] = useState(false);
   useEffect(() => { if (!rankUp) return; const t0 = window.setTimeout(() => setRankUpOn(true), useProto.getState().burst ? 400 : 700); const t1 = window.setTimeout(() => setRankUpOn(false), (useProto.getState().burst ? 400 : 700) + 3200); return () => { window.clearTimeout(t0); window.clearTimeout(t1); }; }, [rankUp?.k]);
   useEffect(() => { if (!ping) return; setPingOn(true); const t = window.setTimeout(() => setPingOn(false), 2400); return () => window.clearTimeout(t); }, [ping?.k]);
@@ -551,7 +551,7 @@ export function ProtoTrade() {
   useEffect(() => {
     if (!rankUp || rankUp.k <= rankSeen || talkingNow || burst || profitOn || tutSt !== 'done' || mode.mode !== 'orders') return;
     // 청산 도장이 떠 있으면 걷힌 뒤에(회차 15: 승급 카드, 청산 도장, 알림이 세 겹으로 쌓였다)
-    const t0 = window.setTimeout(() => { setRankCard({ k: rankUp.k, r: rankUp.r }); useProto.getState().patch({ rankSeen: rankUp.k }); play('paw_stamp'); }, Math.max(650, liqQuietLeft() + 250));
+    const t0 = window.setTimeout(() => { setRankCard({ k: rankUp.k, r: rankUp.r, why: rankUp.why }); useProto.getState().patch({ rankSeen: rankUp.k }); play('paw_stamp'); }, Math.max(650, liqQuietLeft() + 250));
     return () => window.clearTimeout(t0);
   }, [rankUp?.k, rankSeen, talkingNow, !!burst, profitOn, tutSt]);
   useEffect(() => { if (!rankCard) return; const t = window.setTimeout(() => setRankCard(null), 4200); return () => window.clearTimeout(t); }, [rankCard?.k]);
@@ -747,11 +747,11 @@ export function ProtoTrade() {
         <header className="pt-bar">
           <span className="logo"><Acorn size={17} /></span>
           <b data-short="FRX">{EXCHANGE_NAME}</b>
-          {/* FRX 회원 등급(U-51): 튜토리얼 뒤에는 「선물」 자리에. 누르면 도장과 다음 등급 */}
+          {/* FRX 회원 등급(U-51 → U-65): 튜토리얼 뒤에는 「선물」 자리에. 누르면 의뢰판(맨 위에 예탁금, 거래액, 다음 등급) */}
           {tutSt === 'done' ? (
-            <button key={rankUp ? 'rk' + rankUp.k : 'rk'} className={'pt-rank r' + Math.min(rk.r, 5) + (rk.r > 5 ? ' rX' : '') + (rankUpOn ? ' up' : '')} data-rank={rk.r} aria-label={`FRX ${rk.name} 회원, ${rankFeeText(rk.r)}, 거래 도장 ${frxStamps}개, 다음 ${rk.next}까지 ${rk.need - rk.have}개`}
+            <button key={rankUp ? 'rk' + rankUp.k : 'rk'} className={'pt-rank r' + Math.min(rk.r, 5) + (rk.r > 5 ? ' rX' : '') + (rankUpOn ? ' up' : '')} data-rank={rk.r} aria-label={`FRX ${rk.name} 회원, ${rankFeeText(rk.r)}, ${goalText(rk)}`}
               onClick={() => { forestOpen('quest'); }}>
-              <span className="rn">{rk.name}<small data-rank-next>{rk.next}까지 {rk.need - rk.have}</small>{!(feeChipH && feeChipH.on) && <small className="fee" data-rank-fee>{rankFeeText(rk.r).replace('수수료 ', '')}</small>}</span><i aria-hidden="true"><u style={{ width: `${Math.round((rk.have / rk.need) * 100)}%` }} /></i>
+              <span className="rn">{rk.name}<small data-rank-next>{goalShort(rk)}</small>{!(feeChipH && feeChipH.on) && <small className="fee" data-rank-fee>{rankFeeText(rk.r).replace('수수료 ', '')}</small>}</span><i aria-hidden="true"><u style={{ width: `${Math.round(rk.frac * 100)}%` }} /></i>
               {rankUpOn && <span className="ru" aria-hidden="true">{rk.name} 승급!</span>}
             </button>
           ) : <em>선물</em>}
@@ -1226,19 +1226,20 @@ export function ProtoTrade() {
   const unbig = bigOn ? <button className="pt-unbig" data-unbig onClick={() => setBigChart(false)}>주문으로 돌아가기</button> : null;
   const rankCardEl = rankCard ? (() => {
     const lk = lookOf(rankCard.r), nx = lookOf(rankCard.r + 1);
-    const need = rk.r === rankCard.r ? rk.need - rk.have : stampsFor(rankCard.r + 1) - stampsFor(rankCard.r);
     return (
       <div className="pt-rankcard" data-rankcard={rankCard.r} role="status" onClick={() => setRankCard(null)}>
         <div className="rc-in">
           <small>FRX 숲거래소 회원 등급</small>
           <b>{rankName(rankCard.r)} 승급</b>
+          {rankCard.why && <p className="why" data-rankcard-why>{rankCard.why}</p>}
           <div className="rc-phone" style={{ ['--case' as string]: CASE_COL[lk.case], ['--bow' as string]: lk.bow }} aria-hidden="true">
             <i className={'ph' + (lk.case === 'gold' ? ' gold' : '')}><u /></i>
             <svg className="rc-bow" width="34" height="44" viewBox="0 0 34 44"><path d="M17 0v19" stroke="#4A4640" strokeWidth="2" strokeLinecap="round" /><path d="M17 24 6 17.5v13z M17 24l11-6.5v13z" fill="var(--bow)" stroke="#4A4640" strokeWidth="2" strokeLinejoin="round" /><path d="M15 26l-4 10 5-2.4z M19 26l4 10-5-2.4z" fill="var(--bow)" stroke="#4A4640" strokeWidth="1.8" strokeLinejoin="round" /><circle cx="17" cy="24" r="3.4" fill="var(--bow)" stroke="#4A4640" strokeWidth="2" /></svg>
           </div>
           <p className="gift">선물 <em>{lk.gift}</em></p>
           <p className="fee" data-rankcard-fee>이제 거래 {rankFeeText(rankCard.r)}{!isLite && rankCard.r > 0 && rankFeePct(rankCard.r) < rankFeePct(rankCard.r - 1) ? <small> (전 {+rankFeePct(rankCard.r - 1).toFixed(4)}%)</small> : null}</p>
-          <p className="nx">다음 {rankName(rankCard.r + 1)}까지 도장 {need}개, 선물은 {nx.gift}</p>
+          <p className="ms" data-rankcard-ms>예탁금 {comma(rk.dep)}<br />거래액 {comma(rk.vol)}</p>
+          <p className="nx">{rk.r === rankCard.r ? goalShort(rk) : `다음 ${rankName(rankCard.r + 1)}`}, 선물은 {nx.gift}</p>
         </div>
       </div>
     );

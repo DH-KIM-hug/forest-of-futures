@@ -52,7 +52,7 @@ describe('등급의 폰', () => {
     }
   });
   it('새싹은 원래 폰이다', () => {
-    expect(lookOf(rankOf(0).r)).toBe(RANK_LOOKS[0]);
+    expect(lookOf(rankOf(0, 0).r)).toBe(RANK_LOOKS[0]);
     expect(RANK_LOOKS[0].case).toBe('teal');
   });
 });

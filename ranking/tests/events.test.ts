@@ -51,7 +51,7 @@ describe('U-59 라이트 생의 자산 상한', () => {
     expect(LIFE.liteStart).toBe(-290_000);
     const life = { lifeNo: 3, settles: 1, peak: 0, trades: [win], lite: true };
     // −290,000 + 15,500 × 1.1 + 1 × 18,000 = −254,950 이 상한(값은 0 보다 커야 하지만, 여기서는 상한 셈만 본다)
-    const bound = -290_000 + 15_500 * 1.1 + 18_000;
+    const bound = -290_000 + 15_500 * 1.1 + 18_000 + LIFE.questMaxPerLife; // U-65 의뢰 사례금 상한
     expect(checkLifeAgainstCandles(life, bound - 1, () => cs)).toBeNull();
     expect(checkLifeAgainstCandles({ ...life, lite: undefined } as any, bound - 1, () => cs)).toMatch(/tooHigh/); // 본편 다음 생이면 −40만에서
   });
