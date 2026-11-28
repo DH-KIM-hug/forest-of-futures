@@ -50,10 +50,10 @@ export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: b
     id: 'x', src: pg7, ar: PAGE7_AR, alt: '밤의 나무 밑동 집, 어두운 나무 벽. 책상 위 폰 불빛 하나가 아래에서 비추고, 다로미가 두 손으로 머리를 감싸 쥐고 눈물을 줄줄 흘리며 이를 악문다.',
     balloons: [],
     words: [
-      { x: 2, y: 2, w: 33, h: 16, t: '시간을\n되돌려\n주세요', k: 'white', fs: 7, d: 0.2 },
+      { x: 2, y: 2, w: 33, h: 16, t: '시간을\n되돌려\n주세요', k: 'white', fs: 7, d: 0.9 },
       { x: 14.5, y: 20.5, w: 13, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 0.5 },
       { x: 5.5, y: 41, w: 10.5, h: 9.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 0.7 },
-      { x: 86, y: 2, w: 12, h: 22, t: '딱 한 번만', k: 'white', v: true, fs: 5, d: 0.9 },
+      { x: 86, y: 2, w: 12, h: 22, t: '딱 한 번만', k: 'white', v: true, fs: 5, d: 0.2 },
       { x: 79.5, y: 27, w: 12, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 1.1 },
       { x: 86, y: 48, w: 9.5, h: 10.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 1.3 },
       { x: 13, y: 73.6, w: 25, h: 9.6, t: nar[0], k: 'tag', fs: 3.2, d: 1.6 },
