@@ -1,5 +1,6 @@
 // 시제품 그림 부품: 와이어프레임 v3.1(wf.html)의 아이소 그림을 React SVG 로 옮겼다. 새 이미지 생성 없음.
 // 규칙(§11): 아이소 2:1, 외곽선 #4A4640, 평면 파스텔, 왼쪽 위 빛(윗면 100%, 왼쪽 86%, 오른쪽 72%).
+import { GIcon, iconHtml } from './icons';
 import type { ReactNode } from 'react';
 
 export const O = '#4A4640';
@@ -171,15 +172,10 @@ export const Device = ({ x, y, k = 1 }: { x: number; y: number; k?: number }) =>
     <rect className="pa-blink" x={-6} y={-2} width={12} height={8} rx={2} fill={C.mint} stroke={O} strokeWidth={1.5} />
   </g>
 );
-export const Acorn = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-    <ellipse cx="12" cy="14.5" rx="7.5" ry="8" fill={C.dtc} stroke={O} strokeWidth="2.2" />
-    <path d="M3.5 10.5 q8.5 -9 17 0 q-8.5 2.5 -17 0z" fill="#6B4A35" stroke={O} strokeWidth="2.2" strokeLinejoin="round" />
-    <path d="M12 3.2 v-2" stroke={O} strokeWidth="2.2" strokeLinecap="round" />
-    <ellipse cx="9" cy="14" rx="1.6" ry="2.6" fill="#D6A877" />
-  </svg>
-);
-export const acornSvg = (size = 20) =>
+/** 도토리: 그림 아이콘(U-67). 공유 카드(캔버스)만 아래 acornVecSvg 를 쓴다 */
+export const Acorn = ({ size = 22 }: { size?: number }) => <GIcon name="acorn" size={size} />;
+export const acornSvg = (size = 20) => iconHtml('acorn', size);
+export const acornVecSvg = (size = 20) =>
   `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><ellipse cx="12" cy="14.5" rx="7.5" ry="8" fill="${C.dtc}" stroke="${O}" stroke-width="2.2"/><path d="M3.5 10.5 q8.5 -9 17 0 q-8.5 2.5 -17 0z" fill="#6B4A35" stroke="${O}" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 3.2 v-2" stroke="${O}" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
 // ── 줄·카드·탭 아이콘(작은 그림) ─────────────────────────────────────────
@@ -211,7 +207,7 @@ export function RowIcon({ kind, size = 44 }: { kind: string; size?: number }) {
     case 'farm':
       return <Ico size={size}><Room cx={25} cy={47} hw={22} h={18} wall="#B98552" floor={C.dirt} /><Wheel cx={25} cy={40} w={18} col={C.sms} /></Ico>;
     case 'phone':
-      return <Ico size={size}><rect x={15} y={6} width={20} height={36} rx={5} fill={C.mint} stroke={O} strokeWidth={2.2} /><rect x={19} y={11} width={12} height={20} rx={2} fill="#E6F4EF" stroke={O} strokeWidth={1.5} /><path d="M33 38 l5 6" stroke={O} strokeWidth={1.6} /><path d="M34 44 l4 -2 l1 4z M38 44 l5 -2 l-1 4z" fill="#C2413B" stroke={O} strokeWidth={1.2} /></Ico>;
+      return <GIcon name="phone" size={size} />;
     case 'map':
       return <Ico size={size}><Poly p={[[7, 14], [19, 9], [31, 14], [43, 9], [43, 37], [31, 42], [19, 37], [7, 42]]} fill={C.paper} sw={2.2} /><path d="M19 9 v28 M31 14 v28" stroke={O} strokeWidth={1.5} /><path d="M11 30 q8 -10 16 -4 t12 -10" fill="none" stroke={C.red} strokeWidth={2} strokeDasharray="3 3" strokeLinecap="round" /></Ico>;
     case 'people':

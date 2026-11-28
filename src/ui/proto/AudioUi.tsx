@@ -1,4 +1,5 @@
 // 소리 화면 쪽: 첫 탭 해제, 배경음 감독(장면 → 곡), HUD 소리 스티커, 오디션 페이지(?pdev=sounds).
+import { GIcon } from './icons';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
@@ -55,13 +56,7 @@ export function useAudioDirector(near: boolean, danger = 0): void {
   }, [step]);
 }
 
-const Speaker = ({ waves, x }: { waves: boolean; x: boolean }) => (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="#4A4640" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#F3E7C6" />
-    {waves && <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />}
-    {x && <path d="M16 9.5l5 5M21 9.5l-5 5" />}
-  </svg>
-);
+const Speaker = ({ waves }: { waves: boolean; x: boolean }) => <GIcon name={waves ? 'soundOn' : 'soundOff'} size={22} />;
 
 /** HUD 소리 스티커: 켬 → 음악만 끔 → 효과음만 끔 → 모두 끔 순환. 첫 탭 전에는 꺼진 모양. */
 export function SoundBtn() {

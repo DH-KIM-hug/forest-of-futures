@@ -1,0 +1,19 @@
+An icon sheet for a cozy forest-animal trading game: TWELVE separate small UI icons laid out in a neat grid of 4 columns and 3 rows, each icon centred in its own cell with generous empty space between cells, nothing touching or overlapping.
+
+Style for every icon, identical across the sheet: the same hand-drawn style as the reference coin and character, a bold clean dark warm-brown outline (#3A2A20) of the same thickness on every icon, flat warm colours with one soft shade on the lower-right side (light comes from the upper left on every icon), slight paper grain, chunky simple silhouettes that stay readable at 24 px. Front view, no perspective tricks, no drop shadows, no glow. Warm acorn-forest palette: acorn brown, cream paper, leaf green, warm red, honey gold, soft mint.
+
+The twelve icons, in reading order (left to right, top row first):
+1. A chunky smartphone, soft mint body, cream screen showing a tiny rising zig-zag line, a small red bow charm hanging from its corner.
+2. A cream paper contract with a folded top-right corner, three short dark lines of writing, and a round red ink seal stamp at the bottom right.
+3. A small wooden notice board on two short wooden legs, its cream face showing a bold rising zig-zag line with an arrow tip.
+4. An open book seen from above, warm acorn-brown cover, cream pages, a green ribbon bookmark.
+5. A folded newspaper, cream paper, a thick dark headline bar and a few short grey lines, slightly rolled at one side.
+6. A cream speaker (loudspeaker) facing right with two curved sound waves coming out of it.
+7. The same cream speaker facing right, with a bold red X beside it instead of the waves (sound off).
+8. A single plump acorn, warm brown nut with a darker textured cap and a short stem, a small light highlight on the upper left.
+9. A closed padlock, honey-gold body, dark-grey shackle, a small dark keyhole.
+10. The same padlock but OPEN: the shackle lifted and swung to the side.
+11. A single cream six-sided die in three-quarter view, dark round pips.
+12. A single round red berry fruit with one green leaf on a tiny stem, a small white shine on the upper left.
+
+No letters, no numbers, no words, no text anywhere. No cell borders or grid lines drawn. Plain flat background.

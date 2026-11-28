@@ -4,6 +4,7 @@ import { useProto } from '../protoStore';
 import { useOpenPositions } from '../Lot';
 import { Money } from '../Money';
 import { Acorn } from '../art';
+import { GIcon } from '../icons';
 import { SoundBtn } from '../AudioUi';
 import { LiveBadge } from '../../../net/hlDirect/LiveBadge';
 import { clockText, useClock } from '../fx';
@@ -23,17 +24,16 @@ import { useUnlock } from '../rankUnlock';
 /** 머리의 작은 아이콘 셋(U-61): 전광판, 엔딩 도감, 도토리일보 */
 function HudIcons({ onBook }: { onBook: () => void }) {
   const locked = useUnlock((s) => !s.rec);
-  const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
     <span className="lt-icons">
       <button className={locked ? 'locked' : ''} data-hud-rank onClick={() => { play('ui_tap'); openBoard(); }} aria-label={locked ? '숲 전광판, 잠김' : '숲 전광판'}>
-        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3" width="15" height="10" {...stroke} /><path d="M6 17v-4M14 17v-4M5.5 9.5l3-3 2.5 2 3.5-3.5" {...stroke} /></svg>
+        <GIcon name="board" size={24} />
       </button>
       <button data-hud-book onClick={() => { play('ui_tap'); onBook(); }} aria-label="엔딩 도감">
-        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5c2.5-1 5-1 7 .8 2-1.8 4.5-1.8 7-.8v11c-2.5-1-5-1-7 .8-2-1.8-4.5-1.8-7-.8z M10 5.3v11" {...stroke} /></svg>
+        <GIcon name="book" size={24} />
       </button>
       <button data-hud-news onClick={() => { play('ui_tap'); dayNoteOpen(true); }} aria-label="도토리일보">
-        <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="13" height="12.5" {...stroke} /><path d="M15.5 7.5h2v7.5a1.5 1.5 0 0 1-3 0 M5.5 7.5h7M5.5 10.5h7M5.5 13.5h4" {...stroke} /></svg>
+        <GIcon name="news" size={24} />
       </button>
     </span>
   );

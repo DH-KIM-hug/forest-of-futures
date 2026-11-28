@@ -2,7 +2,7 @@
 import QRCode from 'qrcode';
 import heroFront from './img/hero_front.png';
 import heroHappyImg from './img/v5/c_hero_happy.webp';
-import { acornSvg } from './art';
+import { acornVecSvg } from './art';
 import { coinLogo } from './coins';
 
 // 시세 출처 주소 검사(AC-v2-138)가 '프로토콜://' 글자를 막으므로, 우리 앱 주소는 조각으로 잇는다.
@@ -75,7 +75,7 @@ export async function renderCard(d: CardData): Promise<HTMLCanvasElement> {
   }
   // 도토리 비(U-49): 가장자리에 흩어진 도토리 열두 알(판마다 같은 자리)
   try {
-    const ac = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(acornSvg(24).replace('<svg ', `<svg xmlns="${SVG_NS}" `)));
+    const ac = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(acornVecSvg(24).replace('<svg ', `<svg xmlns="${SVG_NS}" `)));
     const spots: [number, number, number, number][] = [[1008, 330, 42, 25], [985, 575, 54, 15], [760, 600, 38, -20], [1012, 450, 30, 40], [880, 645, 30, 8], [470, 336, 26, -30], [960, 250, 34, -12], [640, 588, 28, 28], [740, 338, 24, 18], [1010, 700, 30, -25], [560, 650, 24, 10], [960, 1000, 30, 22]];
     const n = Math.min(spots.length, 4 + Math.floor(Math.max(0, d.roe) / 40));
     c.globalAlpha = 0.85;

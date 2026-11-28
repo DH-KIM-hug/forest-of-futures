@@ -1,4 +1,5 @@
 // 오소리 사무소 차용증(첫 이름 적기, loanSign.ts). 크림 종이 서류 한 장: 대부 반신과 한마디, 서명 칸, 별명 칩, 깨알 글씨, [발도장 찍기].
+import { GIcon } from './icons';
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
@@ -106,7 +107,7 @@ function SignPaper({ lite }: { lite: boolean }) {
           {!stamped && (
             <div className="sg-chips" aria-label="별명 고르기">
               {chips.map((c) => <button type="button" key={c} className={'sg-chip' + (v === c ? ' on' : '')} data-sign-chip={c} onClick={() => { play('ui_tap'); setV(c); setErr(null); }}>{c}</button>)}
-              <button type="button" className="sg-chip more" data-sign-more onClick={() => { play('ui_tap'); setChips((x) => pickSuggest(CHIP_COUNT, Math.random, x)); }} aria-label="다른 별명 섞기"><span aria-hidden="true">🎲</span> 섞기</button>
+              <button type="button" className="sg-chip more" data-sign-more onClick={() => { play('ui_tap'); setChips((x) => pickSuggest(CHIP_COUNT, Math.random, x)); }} aria-label="다른 별명 섞기"><GIcon name="dice" size={20} />섞기</button>
             </div>
           )}
           <button type="submit" className={'buy wide' + (stamped ? '' : ' on')} data-sign-stamp disabled={!!stamped}><span>{stamped ? '찍었다' : '발도장 찍기'}</span></button>

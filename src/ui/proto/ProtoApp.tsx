@@ -1,4 +1,5 @@
 import '@fontsource/jua/korean-400.css';
+import { GIcon } from './icons';
 import '@fontsource/jua/latin-400.css';
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../../store/gameStore';
@@ -40,7 +41,7 @@ import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
 import { pdev, isLite } from './config';
 import { LiteHud } from './lite/LiteHud';
-import { LiteLoan, LoanIcon } from './lite/LiteLoan';
+import { LiteLoan } from './lite/LiteLoan';
 import { LiteManga } from './lite/LiteManga';
 import { MangaCut } from './lite/MangaCut';
 import { LiteCuts } from './lite/LiteCuts';
@@ -197,7 +198,7 @@ function TabBar() {
           <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '') + (point === t.id && ok && !on ? ' point' : '') + (force && t.id === 'map' ? ' dim' : '')} aria-current={on ? 'page' : undefined}
             onClick={() => { if (useProto.getState().scenes.length > 0) return; /* 장면이 떠 있거나 뜨려는 중(U-55): 닫을 때까지 탭은 바뀌지 않는다 */ if (ok && force && t.id === 'map') { say(FORCE_NUDGE); setShake(t.id); window.setTimeout(() => setShake(null), 400); return; } if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
             {on && <i className="base" />}
-            <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? (isLite && t.id === 'map' ? <LoanIcon size={26} /> : <RowIcon kind={t.id} size={isLite ? 28 : t.id === 'lot' ? 44 : on ? 38 : 32} />) : '?'}</span>
+            <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? (isLite && t.id === 'map' ? <GIcon name="loan" size={28} /> : <RowIcon kind={t.id} size={isLite ? 28 : t.id === 'lot' ? 44 : on ? 38 : 32} />) : '?'}</span>
             <small>{ok ? t.label : ''}</small>
             {ok && !visited[t.id] && <i className="dot" />}
             {b && <i className={'bdg' + (b.hot ? ' hot' : '')}>{b.t}</i>}

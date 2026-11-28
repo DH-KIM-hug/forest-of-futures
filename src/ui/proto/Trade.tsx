@@ -5,6 +5,7 @@ import { isNearLiq } from './model';
 //   - 손익(ROE)이 화면에서 가장 큰 글자, 바로 옆에 `청산까지`.
 //   - 주문 조건은 주문할 때만 올라오는 시트(§5.2). 진입은 두 번 누르면 끝난다.
 //   - 정리는 한 번 누르기(U-56 ①). 카드가 막 뜬 0.3초 안의 누름만 흘린다.
+import { GIcon } from './icons';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
@@ -109,12 +110,7 @@ const Chev = ({ dir = 'r', size = 12 }: { dir?: 'l' | 'r'; size?: number }) => (
     <path d="M4 2l4.4 4L4 10" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-const Lock = ({ size = 13 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
-    <path d="M4.2 6.4V4.6a2.8 2.8 0 0 1 5.6 0v1.8" fill="none" stroke="#4A4640" strokeWidth="1.8" strokeLinecap="round" />
-    <rect x="2.6" y="6.2" width="8.8" height="6.2" rx="1.8" fill="#E8C24A" stroke="#4A4640" strokeWidth="1.6" />
-  </svg>
-);
+const Lock = ({ size = 13 }: { size?: number }) => <GIcon name="lock" size={size + 3} />;
 /** 나무 칩의 잎사귀(U-50) */
 const Leaf = () => (
   <svg className="leaf" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10.5C2 5 5.5 2 10.5 1.5C10.5 6.5 7.5 10 2 10.5Z" fill="#7FB069" stroke="#3E5B2E" strokeWidth="1.3" strokeLinejoin="round" /><path d="M2.4 10.1L7.6 4.6" stroke="#3E5B2E" strokeWidth="1.1" strokeLinecap="round" /></svg>
