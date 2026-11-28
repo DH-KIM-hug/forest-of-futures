@@ -53,7 +53,7 @@ export const FT_STEPS: FtStep[] = [
   // ── 1. 날다람쥐코인이 무엇인가 ──
   { id: 'hi', kind: 'text', phase: 'pre', who: 'boss', line: () => '어서 와요, 다로미 씨. 제 거래소 구경 좀 하죠.' },
   { id: 'fly', kind: 'text', phase: 'pre', who: 'boss', target: 'flyTab', line: () => '이게 날다람쥐코인. 제가 숲에서 만든 밈코인이에요.' },
-  { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '바깥 진짜 시세랑은 상관없어요. 값은 숲 바람이 정해요.' },
+  { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '백서도 실체도 없어요. 그래도 다들 사니까 값이 붙죠. 바람 부는 대로.' },
   { id: 'shape', kind: 'text', phase: 'pre', who: 'boss', target: 'wind', line: () => `빠르고, 교과서 모양을 그려요. 열에 ${tenth}은 속임수지만.` },
   // ── 2. 차트 읽기 ──
   { id: 'chart', kind: 'text', phase: 'pre', who: 'boss', target: 'chart', line: (c) => (c.candles ? '봉 하나가 잠깐 동안의 값. 오른쪽 끝이 지금 값이에요.' : '이 선이 값이에요. 오른쪽 끝 점이 지금 값.') },
