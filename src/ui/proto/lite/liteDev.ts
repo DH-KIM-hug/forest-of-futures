@@ -5,6 +5,7 @@ import { clone, stepMut } from '../../../engine/game';
 import { balance } from '../../../engine/data';
 import { useUI } from '../../uiStore';
 import { pdev } from '../config';
+import { openLoan } from './LiteLoan';
 import { liteEndingById, liteEndings } from '../../../engine/liteEndings';
 import type { GameState } from '../../../engine/types';
 import type { Action } from '../../../engine/actions';
@@ -17,7 +18,7 @@ const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.se
 /** 새 게임이면 만화부터(이어 하는 생은 protoPersist 가 먼저 돌려 여기까지 오지 않는다). 장면 건너뛰기와 &prologue=0 은 생략. &pmanga=1 은 확인용 */
 export const mangaWanted = (): boolean => q.get('pmanga') === '1' || (!pdev && q.get('prologue') !== '0');
 
-/** 라이트의 첫 생 화면 상태: 도입 만화가 첫 대출까지 보여 준 뒤다(LITE_CONTI 컷 7). 탭은 지도와 거래소, 거래소가 집이다.
+/** 라이트의 첫 생 화면 상태: 도입 만화가 첫 대출까지 보여 준 뒤다(LITE_CONTI 컷 7). 탭은 없고 거래소가 한 화면이다(빌리고 갚기는 거래소 안 「대출」, U-61).
  *  짜 둔 시세는 없다(첫 판은 FRX 첫 실전 카드가 날다람쥐코인으로 맞춰 줄 뿐, 값은 진짜). afterManga = 만화를 막 덮었다: 대부의 한마디(장면 A) */
 export function liteBoot(afterManga = false): void {
   useProto.getState().patch({ tab: 'phone', everUnlocked: { map: true, phone: true }, visited: { map: true, phone: true }, loanTaken: true, tutorial: 'done', firstTry: 3, seen: { ...useProto.getState().seen, office: true } });
@@ -50,6 +51,10 @@ export function liteScene(name: string, base: GameState): GameState {
   const P = useProto.getState();
   switch (name) {
     case 'lite_trade': { const g = ready(base); useUI.getState().setTrade({ market: 'FLY' }); return g; }
+    // U-61 대출: lite_loan = 거래소 안의 「대출」을 연 자리(캐피탈 문자도 받았다). lite_quick = 손의 돈이 적어 증거금이 모자라다(빌리기 말풍선), lite_quick_settle = 정산 8초 전인데 모자라다
+    case 'lite_loan': { const g = ready(base); P.patch({ seen: { ...useProto.getState().seen, capitalSms: true } }); window.setTimeout(() => openLoan(), 600); return g; }
+    case 'lite_quick': { const g = ready(base); g.run.cash = 2400; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
+    case 'lite_quick_settle': { const g = ready(base); g.run.cash = 2400; g.run.settleIn = 9; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_tut': case 'lite_sign': {
       // lite_sign = 같은 자리에 차용증(이름 적기)이 먼저 뜬다(이름이 있어도, 찍어도 저장하지 않는다, loanSign.ts)
       // 프롤로그를 막 덮은 자리의 날다람쥐코인 길잡이(확인용). 판은 첫 대출 뒤, 첫 실전 카드가 뜬다. &pftskip=1 이면 끝까지 본 적이 있는 기기(건너뛰기가 보인다)

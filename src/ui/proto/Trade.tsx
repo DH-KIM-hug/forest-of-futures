@@ -62,6 +62,9 @@ import './tradeArt.css';
 import './tradeManga.css';
 import mgaNear from './img/manga/cut_near.webp';
 import mgaWin from './img/manga/cut_win.webp';
+import { isLite } from './config';
+import { quickBorrowWhy } from './loanActs';
+import { QuickBorrow } from './lite/LiteLoan';
 import coinInfoJson from '../../../data/coin_info.json';
 
 export const EXCHANGE_NAME = 'FRX 숲거래소';
@@ -1061,6 +1064,8 @@ export function ProtoTrade() {
     </div>
   ) : null;
 
+  // 라이트: 급할 때 빌리기 말풍선(U-61). 증거금이 모자라 주문이 막혔거나, 정산이 10초 안인데 손의 돈이 모자라다
+  const quickWhy = isLite && tutSt === 'done' && !result ? quickBorrowWhy(g, { orderShort: (!pos || addOpen) && !!prev.reason && /증거금이 모자|현금 부족|모자란다/.test(prev.reason) }) : null;
   const ordersRow = (
     <div className={'pt-orders' + (firstSet ? ' first-go' : '')} data-hl={pos ? undefined : 'orders'}>
       {pos ? (
@@ -1202,6 +1207,7 @@ export function ProtoTrade() {
         </div>
         )}
         {noteLine}
+        {quickWhy && <QuickBorrow why={quickWhy} />}
         {ordersRow}
       </>
     );

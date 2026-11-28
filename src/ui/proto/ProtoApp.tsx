@@ -40,6 +40,8 @@ import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
 import { pdev, isLite } from './config';
 import { LiteHud } from './lite/LiteHud';
+import { LiteLoan, openLoan } from './lite/LiteLoan';
+import type { LenderId } from '../../engine/types';
 import { LiteManga } from './lite/LiteManga';
 import { MangaCut } from './lite/MangaCut';
 import { LiteCuts } from './lite/LiteCuts';
@@ -62,7 +64,8 @@ const TABS: { id: Tab; label: string; col: string }[] = [
 const LITE_TABS = TABS.filter((t) => t.id !== 'lot');
 /** 탭 그림(GPT, docs/art/v5/ui/pair_icons.png): 지도와 거래소. 집은 아직 코드 그림 */
 /** 라이트에서 집 탭으로 가라는 말(장면 끝, 고르는 단추 등)은 거래소로(폰이 없으면 지도로) 바꿔 듣는다 */
-const liteTab = (t: Tab, futuresOpen: boolean): Tab => (isLite && t === 'lot' ? (futuresOpen ? 'phone' : 'map') : t);
+// U-61: 라이트에는 지도 탭이 없다. 지도로 가라는 말(사무소로 간다, 갚으러 간다)은 거래소 안의 「대출」을 연다(폰이 아직 없으면 예전 지도)
+const liteTab = (t: Tab, futuresOpen: boolean): Tab => (isLite && (t === 'lot' || t === 'map') ? (futuresOpen ? 'phone' : 'map') : t);
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 function Hud() {
@@ -302,7 +305,7 @@ function useGuide(): Guide | null {
   const r = g.run;
   const extras = r.equipment.filter((u) => u.tier === EXTRA_WHEEL);
   // 라이트: 이끄는 길은 첫 대출 한 걸음뿐(추심원 → 사무소 → 빌리기). 그 뒤 첫 판은 FRX 첫 실전 카드가 맞춰 준다
-  if (isLite) return P.loanTaken || P.prologue || !P.waiting ? null : P.tab === 'map' ? { step: 'borrow', allow: ['[data-borrow="shark1"]', '[data-choice="go"]'] } : { step: 'toMap', allow: ['[data-choice="go"]', '[data-tab="map"]'] };
+  if (isLite) return P.loanTaken || P.prologue || !P.waiting ? null : { step: 'borrow', allow: ['[data-borrow="shark1"]', '[data-choice="go"]', '[data-loan-open]', '[data-loan]'] };
   return guideStep({ life: lifeNo(g), ...P, momStaffed: !!r.coinWheels.DTC?.staffed, extras: extras.length, extrasStaffed: extras.filter((u) => u.staffed).length, canPlace: r.cash >= nextTierCost(r, EXTRA_WHEEL) });
 }
 
@@ -311,7 +314,11 @@ export function ProtoApp() {
   const futOpen = useGame((s) => s.g.run.futures.open);
   const tab = liteTab(tab0, futOpen);
   // 라이트: 집 탭으로 가라는 말이 오면 저장된 탭도 바로 고친다(그 사이 한 번은 위의 liteTab 이 막는다)
-  useEffect(() => { if (tab !== tab0) useProto.getState().setTab(tab); }, [tab, tab0]);
+  useEffect(() => {
+    if (tab === tab0) return;
+    if (isLite && tab0 === 'map' && tab === 'phone') { const f = useProto.getState().mapFocus; openLoan((f as LenderId | null) ?? null); useProto.getState().patch({ mapFocus: null }); }
+    useProto.getState().setTab(tab);
+  }, [tab, tab0]);
   const toast = useProto((s) => s.toast);
   const prologue = useProto((s) => s.prologue);
   const [skip] = useState(() => (isLite ? mangaSeen() : prologueSeen()));
@@ -389,7 +396,8 @@ export function ProtoApp() {
         {/* 거래소에서는 알림이 차트 안의 말 자리로 간다(PhoneLane, U-46) — 종목 줄을 덮지 않게 */}
         {toast && tab !== 'phone' && <div className="pr-toast" role="status">{toast}</div>}
       </main>
-      <TabBar />
+      {!isLite && <TabBar />}
+      {isLite && <LiteLoan />}
       <CutIn />
       <LiqStamp onShake={shake} />
       {isLite && <MangaCut />}

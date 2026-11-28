@@ -43,7 +43,7 @@ const TARGETS: Record<FtTarget, string | (() => Element | null)> = {
   posLiq: '[data-hl="posLiq"]',
   close: '.pt-btn.close',
   settle: '[data-lite-settle]',
-  mapTab: '[data-tab="map"]',
+  loan: '[data-loan-open]',
 };
 const find = (t: FtTarget | undefined): Element | null => {
   if (!t) return null;
@@ -143,7 +143,7 @@ function FlyTutorialOn() {
     tapped.current = false;
     at.current = performance.now();
     const el = find(step?.target);
-    if (el && step?.target !== 'settle' && step?.target !== 'mapTab') (el as HTMLElement).scrollIntoView?.({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
+    if (el && step?.target !== 'settle' && step?.target !== 'loan') (el as HTMLElement).scrollIntoView?.({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
   }, [i]);
 
   // 자리 재기: 비춘 곳, 종목 줄, 정리하기, 차트(청산선 미리 보기)

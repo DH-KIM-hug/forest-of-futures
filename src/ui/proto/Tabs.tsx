@@ -13,6 +13,7 @@ import { lenderById } from '../../engine/data';
 import { interestDue, lenderLimit, nextBorrowRate } from '../../engine/selectors';
 import type { LenderId } from '../../engine/types';
 import { ProtoTrade } from './Trade';
+import { manTxt } from './loanActs';
 import { PLACE, STORY } from './text';
 import { forecast } from '../../engine/settlement';
 import { ledgerRows, goldStamps, repaidOffice, repayBuys, STAMP_STEP } from './ledger';
@@ -23,7 +24,7 @@ import { journeyOf } from './stops';
 import { claim } from './model';
 import { RankSign } from './RankingBoard';
 import { isLite } from './config';
-import { temptOnBorrow } from './lite/liteBeats';
+import { borrowAt, payAt, payAllWarn } from './loanActs';
 
 /** 가게 안 그림 한 띠(U-40): 그 가게의 방과 거기 서 있는 사람. 지도 카드 맨 위에 붙는다. */
 function PlaceArt({ id }: { id: string }) {
@@ -38,8 +39,6 @@ function PlaceArt({ id }: { id: string }) {
   );
 }
 import { play } from './audio';
-import { needsSign, openMainSign } from './loanSign';
-import { useRank } from './ranking';
 
 /** 지도 탭: 추심원이 꽂고 간 쪽지. 처음엔 오소리 사무소만 그려져 있다. 빌리고 갚는 곳. */
 export function MapTab() {
@@ -62,33 +61,9 @@ export function MapTab() {
   // 폰을 받기 전에는 쪽지에 그려진 오소리 사무소뿐. 폰이 생기면 다른 곳도 보인다.
   // 다른 돈줄은 사건으로 지도에 그려진다(U-38): 숲속 캐피탈·조합 = 캐피탈의 문자를 받은 뒤, 뒷골목 = 모르는 번호의 문자를 받은 뒤
   const ids = (['shark1', 'capital', 'bank', 'shark2'] as const).filter((id) => id === 'shark1' || (loanTaken && (id === 'shark2' ? viperKnown && run.shark2Open : capitalKnown)));
-  const doBorrow = (id: LenderId, agreed = false) => {
-    const before = useGame.getState().g;
-    const firstAt = ((before.run.stats[`borrow.${id}`] as number | undefined) ?? 0) === 0;
-    // 뒷골목의 첫 대출은 독사 대부가 조건을 먼저 말한다: 적는 돈과 받는 돈이 다르다(선이자). 듣고 나서 고른다.
-    if (id === 'shark2' && firstAt && !agreed) {
-      const l2 = lenderById.shark2;
-      const unit = Math.min(l2.borrowUnit!, Math.max(0, lenderLimit(before, 'shark2') - before.run.debts.shark2.principal));
-      const got = Math.floor(unit * (1 - (l2.upfront ?? 0)));
-      useProto.getState().pushScene({ id: 'viperOffer', again: true, lines: STORY.viperOffer({ unit, got, ratePct: ratePct(l2.rate) }),
-        choices: [
-          { id: 'take', label: `${manTxt(got)} 받기`, sub: `빚 +${manTxt(unit)}`, primary: true, run: () => doBorrow('shark2', true) },
-          { id: 'leave', label: '돌아선다', run: () => setMsg('뒷골목: 등 뒤로 문고리가 제자리로 돌아간다.') },
-        ] });
-      return;
-    }
-    // 처음 오소리 사무소에서 빌린다: 이름이 없으면 차용증에 발도장부터(loanSign.ts). 찍으면 그대로 빌린다
-    if (id === 'shark1' && !useProto.getState().loanTaken && !agreed && needsSign(useRank.getState().name)) { play('ui_tap'); openMainSign(() => doBorrow('shark1', true)); return; }
-    const r = act({ type: 'borrow', lender: id, consent: true });
-    play(r.ok ? 'collector_paid' : 'insufficient');
-    setMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '지금은 처리할 수 없어요');
-    if (r.ok && id === 'shark1') onFirstOfficeLoan(before);
-    // 라이트: 이번 생 처음 빌리는 곳이면 빚의 유혹 만화(그 대출의 진짜 금액과 금리)
-    if (r.ok && isLite) temptOnBorrow(before, id, r.amount ?? 0);
-    // 숲속 캐피탈에서 처음 빌렸다: 창구 너구리가 조건을 말한다(한도가 왜 그 숫자인지, 밀리면 어떻게 되는지)
-    if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: ratePct(lenderById.capital.rate) }) });
-  };
-  const doPay = (id: LenderId, mult: number | 'all') => { const r = act({ type: 'stamp', lender: id, mult }); play(r.ok ? 'collector_paid' : 'insufficient'); setMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족해요' : r.msg ?? '지금은 처리할 수 없어요'); };
+  // 빌리기와 갚기는 loanActs.ts(라이트 거래소의 「대출」과 같은 길, U-61)
+  const doBorrow = (id: LenderId) => borrowAt(id, setMsg);
+  const doPay = (id: LenderId, mult: number | 'all') => payAt(id, mult, setMsg);
   const fcN = forecast(g);
   const dueNext = fcN.interest + fcN.living + fcN.wages;
   const keepPay = repayBuys(g, dueNext);
@@ -136,16 +111,9 @@ export function MapTab() {
             </div>
             {/* 전부 갚기 경고(회차 15 평가): 전부 갚으면 다음 정산에 낼 돈이 손에 안 남을 때 한 줄. 갚는 원금만큼 이자도 준다 */}
             {(() => {
-              if (d.principal <= 0 || !loanTaken) return null;
-              const all = Math.min(d.principal, Math.floor(run.cash));
-              const left = Math.floor(run.cash) - all;
-              if (all <= 0 || left >= dueNext) return null;
-              // 갚은 뒤 바로 정산이 온다면 모자라는가(엔진 셈 그대로, 갚은 원금만큼 이자도 준다)
-              const g2 = clone(g);
-              if (!engineAct(g2, { type: 'stamp', lender: id, mult: 'all' }).ok) return null;
-              const short = shortAtSettle(g2);
-              if (short <= 0) return null;
-              return <p className="pay-warn" data-pay-warn={short}>전부 갚으면 손에 {comma(left)}. {run.settleIn}초 뒤 정산에 {comma(short)} 모자라 연체</p>;
+              if (!loanTaken) return null;
+              const w = payAllWarn(g, id);
+              return w ? <p className="pay-warn" data-pay-warn={w.short}>전부 갚으면 손에 {comma(w.left)}. {run.settleIn}초 뒤 정산에 {comma(w.short)} 모자라 연체</p> : null;
             })()}
             {/* 정산 빼고 갚기(U-42): 다음 정산에 낼 돈은 손에 남기고 갚는다. [전부]는 그 돈까지 갚아 버린다 — 둘의 차이가 단추에 보인다 */}
             {id === 'shark1' && loanTaken && keepPay && keepPay.amount > payAmt && keepPay.amount < Math.min(d.principal, Math.floor(run.cash)) && (
@@ -164,7 +132,6 @@ export function MapTab() {
 
 /** 지도 그림에서 잘라 보여 주는 세로 구간(위 4% · 아래 12%는 숲뿐이다) */
 const MAP_CROP = { top: 0.04, h: 0.84 };
-const manTxt = (x: number) => (x >= 10000 && x % 10000 === 0 ? `${x / 10000}만` : comma(x));
 /** 누를 수 있는 마을 지도(U-41): 빈터 다섯에 이름표. 아는 곳을 누르면 그 가게의 카드로 내려가고, 내 집을 누르면 집 탭으로 간다. 모르는 곳은 물음표다. */
 function VillageMap({ known, onPick }: { known: readonly string[]; onPick: (id: string) => void }) {
   const g = useGame((s) => s.g);
@@ -228,7 +195,7 @@ function Ledger() {
 }
 
 /** 숲속 캐피탈의 조건(U-39 ⑩): 싸게 빌리는 길을 막지 않되, 값과 조건이 카드에서 읽히게 한다. 숫자는 전부 엔진 값이다. */
-function CapitalTerms({ room }: { room: number }) {
+export function CapitalTerms({ room }: { room: number }) {
   const g = useGame((s) => s.g);
   const l = lenderById.capital;
   const unit = Math.min(l.borrowUnit!, Math.max(room, 0)) || l.borrowUnit!;

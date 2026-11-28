@@ -745,7 +745,7 @@ export function startWatch(): void {
           const fcW = forecast(g);
           const buys = repayBuys(g, fcW.interest + fcW.living + fcW.wages);
           const repayChoices = (keepSub: string) => (debt > 0 ? [
-            { id: 'repay', label: '갚으러 간다', sub: buys ? buys.text : '지도 → 오소리 사무소', run: () => { cheerOn(pnl, pnl / c); useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); } },
+            { id: 'repay', label: '갚으러 간다', sub: buys ? buys.text : isLite ? '대출 → 오소리 사무소' : '지도 → 오소리 사무소', run: () => { cheerOn(pnl, pnl / c); useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); } },
             { id: 'keep', label: '쥐고 있는다', sub: keepSub, run: () => { cheerOn(pnl, pnl / c); } },
           ] : undefined);
           if (re?.key === 'winClaim1') {

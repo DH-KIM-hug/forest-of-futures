@@ -12,9 +12,9 @@ const ctxs: FtCtx[] = [
 ];
 
 describe('날다람쥐 길잡이 걸음', () => {
-  it('가르치는 순서: 날다람쥐 → 차트 → 롱 숏 → 배율과 청산선 → 증거금 → 익절 손절 → 주문 → 손익 → 닫기 → 정산 → 지도', () => {
+  it('가르치는 순서: 날다람쥐 → 차트 → 롱 숏 → 배율과 청산선 → 증거금 → 익절 손절 → 주문 → 손익 → 닫기 → 정산 → 대출', () => {
     const at = (id: string) => FT_IDS.indexOf(id);
-    const order = ['fly', 'fake', 'shape', 'chart', 'color', 'dir', 'lev', 'lev200', 'liq', 'mg', 'stops', 'order', 'pnl', 'posLiq', 'wait', 'result', 'settle', 'map', 'bye'];
+    const order = ['fly', 'fake', 'shape', 'chart', 'color', 'dir', 'lev', 'lev200', 'liq', 'mg', 'stops', 'order', 'pnl', 'posLiq', 'wait', 'result', 'settle', 'loan', 'bye'];
     for (const id of order) expect(at(id), id).toBeGreaterThanOrEqual(0);
     for (let k = 1; k < order.length; k++) expect(at(order[k]), order[k]).toBeGreaterThan(at(order[k - 1]));
     expect(FT_IDS[FT_IDS.length - 1]).toBe('bye');
