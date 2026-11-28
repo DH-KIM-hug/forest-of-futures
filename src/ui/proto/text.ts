@@ -254,7 +254,7 @@ export const STORY = {
   /** 장면 20 한 판에 이자와 생활비 한 번 치를 벌었다(이번 생 처음): 추심원 → 다로미. 숫자는 전부 그 거래와 지금 살림의 것 */
   winClaim: (o: { first: string; pnl: number; claim: number; spins: number | null; stampLeft: number | null; momLeft: number }): Line[] => [
     L('collector', o.first, 'smile'),
-    L('hero', o.spins !== null && o.spins >= 2 ? `+${n(o.pnl)}. 바퀴 한 대로 ${o.spins}번 정산할 돈이다.` : `+${n(o.pnl)}. 이자와 생활비 한 번 치다.`),
+    L('hero', o.spins !== null && o.spins >= 2 ? `+${n(o.pnl)}. 바퀴 한 대로 ${o.spins}번 정산할 돈이다.` : `+${n(o.pnl)}. 손가락 한 번이다.`),
     L('hero', '지금 갚으면 다음번엔 덜 내겠지.'),
     ...(o.momLeft > 0 && o.stampLeft !== null ? [L('hero', `황금 도토코인까지 ${n(o.stampLeft)}.`)] : []),
   ],

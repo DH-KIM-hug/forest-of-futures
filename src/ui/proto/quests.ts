@@ -38,7 +38,7 @@ export interface QuestDef {
 }
 
 export const QUESTS: QuestDef[] = [
-  { id: 'short', who: 'weasel', name: '족제비 상인', title: '숏으로 한 판에 이자 한 번 치 벌기', line: '남이 망할 때 버는 돈이 제일 달아.', need: 1, tip: 2, trophy: '족제비의 숏 증서' },
+  { id: 'short', who: 'weasel', name: '족제비 상인', title: '숏으로 한 판에 +50% 넘게', line: '남이 망할 때 버는 돈이 제일 달아.', need: 1, tip: 2, trophy: '족제비의 숏 증서' },
   { id: 'hold50', who: 'viper', name: '독사 대부', title: '50배 넘게, 30초 넘게 들고 이익으로 닫기', line: '버티는 놈이 먹어. 대개는 못 버티지만.', need: 1, tip: 2, trophy: '독사의 모래시계', minCap: 50 },
   { id: 'flytp', who: 'raccoon', name: '창구 너구리', title: '날다람쥐코인 익절에 닿기', line: '날다람쥐는 회사 돈으로 하면 더 재밌어요. 손님 돈이면 더더욱.', need: 1, tip: 1, trophy: '너구리의 날다람쥐 깃털' },
   { id: 'three', who: 'raccoon', name: '창구 너구리', title: '서로 다른 세 종목에서 이익 한 판씩', line: '분산 투자 몰라요? 저는 망할 때도 나눠서 망해요.', need: 3, tip: 2, trophy: '너구리의 분산 바구니' },
@@ -46,7 +46,7 @@ export const QUESTS: QuestDef[] = [
   { id: 'double', who: 'boss', name: '오소리 대부', title: '넣은 돈을 한 판에 두 배로', line: '두 배로 불려 와. 그럼 이자도 두 배로 받아 주지.', need: 1, tip: 3, trophy: '오소리의 두 배 영수증' },
   { id: 'streak', who: 'weasel', name: '족제비 상인', title: '세 판 연달아 이익(지면 처음부터)', line: '세 번 연달아 이기면 다들 천재라고 불러. 네 번째에 다 잃지.', need: 3, tip: 2, trophy: '족제비의 3연승 리본' },
   { id: 'quick', who: 'viper', name: '독사 대부', title: '20초 안에 +20% 넘게 닫기', line: '빠른 돈이 깨끗한 돈이야. 아무도 못 봤으니까.', need: 1, tip: 2, trophy: '독사의 번개 영수증' },
-  { id: 'long2', who: 'owl', name: '부엉이 지점장', title: '롱으로 한 판에 이자 두 번 치', line: '길게 보고 롱. 조합 전단지에는 늘 오른다고 적혀 있죠.', need: 1, tip: 3, trophy: '부엉이의 롱 지팡이' },
+  { id: 'long2', who: 'owl', name: '부엉이 지점장', title: '롱으로 한 판에 +200% 넘게', line: '길게 보고 롱. 조합 전단지에는 늘 오른다고 적혀 있죠.', need: 1, tip: 3, trophy: '부엉이의 롱 지팡이' },
   { id: 'lev100', who: 'viper', name: '독사 대부', title: '100배 넘게 걸고 이익으로 닫기', line: '100배 아래는 거래가 아니라 저금이야.', need: 1, tip: 2, trophy: '독사의 100배 송곳니', minCap: 100 },
   { id: 'five', who: 'weasel', name: '족제비 상인', title: '판 다섯 번 닫기(이기든 지든)', line: '수수료는 내가 먹는 게 아니야. 그래도 많이 내 줘.', need: 5, tip: 1, trophy: '족제비의 수수료 장부' },
   { id: 'comeback', who: 'boss', name: '오소리 대부', title: '청산 맞은 다음 판을 이익으로', line: '청산 맞고 바로 다시 들어오는 놈이 내 단골이지.', need: 1, tip: 2, trophy: '오소리의 단골 카드' },
@@ -104,7 +104,7 @@ export function fitBoard(b: Board, cap: number): Board {
 export function judge(id: string, c: CloseInfo, slot: Slot): { add: number; reset?: boolean; set?: string[]; armed?: boolean } {
   const win = c.pnl > 0;
   switch (id) {
-    case 'short': return { add: c.dir === -1 && c.claim > 0 && c.pnl >= c.claim ? 1 : 0 };
+    case 'short': return { add: c.dir === -1 && c.pnl > 0 && c.roe >= 50 ? 1 : 0 };
     case 'hold50': return { add: c.lev >= 50 && c.heldSec >= 30 && win ? 1 : 0 };
     case 'flytp': return { add: c.fly && c.kind === 'tp' && win ? 1 : 0 };
     case 'three': { const set = slot.set ?? []; return win && !set.includes(c.market) ? { add: 1, set: [...set, c.market] } : { add: 0 }; }
@@ -112,7 +112,7 @@ export function judge(id: string, c: CloseInfo, slot: Slot): { add: number; rese
     case 'double': return { add: c.roe >= 100 ? 1 : 0 };
     case 'streak': return win ? { add: 1 } : c.pnl < 0 ? { add: 0, reset: true } : { add: 0 };
     case 'quick': return { add: c.heldSec <= 20 && c.roe >= 20 ? 1 : 0 };
-    case 'long2': return { add: c.dir === 1 && c.claim > 0 && c.pnl >= c.claim * 2 ? 1 : 0 };
+    case 'long2': return { add: c.dir === 1 && c.pnl > 0 && c.roe >= 200 ? 1 : 0 };
     case 'lev100': return { add: c.lev >= 100 && win ? 1 : 0 };
     case 'five': return { add: 1 };
     case 'comeback': return c.kind === 'liq' ? { add: 0, armed: true } : slot.armed && win ? { add: 1, armed: false } : { add: 0, armed: false };

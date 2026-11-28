@@ -186,11 +186,11 @@ describe('펀딩비까지 넣은 출구 (U-41: 실시간 판에서 +7,750 익절
 });
 
 describe('이번 생의 길 (U-41)', () => {
-  it('거래가 벌어 온 돈을 이자 몇 번 치로 읽는다', () => {
+  it('거래가 벌어 온 돈을 돈으로만 읽는다(U-67: 「이자 n번 치」는 뺐다)', () => {
     const j = journeyOf({ tradeNet: 31_000, claim: 15_500, settles: 14, paid: 85_400, claimWins: 1 });
     expect(j.share).toBe(2);
-    expect(j.text).toBe('이번 생 낸 돈 85,400, 거래로 +31,000 (이자 2.0번 치)');
-    expect(journeyOf({ tradeNet: -8_000, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).text).toBe('이번 생 낸 돈 18,300, 거래로 −8,000 (이자 −0.5번 치)');
+    expect(j.text).toBe('이번 생 낸 돈 85,400, 거래로 +31,000');
+    expect(journeyOf({ tradeNet: -8_000, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).text).toBe('이번 생 낸 돈 18,300, 거래로 −8,000');
     expect(journeyOf({ tradeNet: 500, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).short).toBe('거래 +500');
   });
   it('한 판에 이자 한 번 치(이번 생 처음)의 장면: 오소리 대부 → 추심원 → 주인공, 숫자는 받은 것 그대로', () => {

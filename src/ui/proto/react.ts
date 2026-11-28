@@ -51,15 +51,15 @@ export function tradeReaction(t: TradeEnd, c: TradeCtx): Reaction | null {
   if (t.pnl >= claim * 3) { const r = R('bigWin', 'boss', ['많이 버셨네요. 그중에 얼마쯤 장부에서 지워 드릴까요?'], true); if (r) return r; }
   if (t.pnl >= claim) {
     // 한 판에 이자와 생활비 한 번 치: 이번 생 처음은 장면(추심원, 다로미), 그 뒤로는 번갈아 한 줄
-    const first = R('winClaim1', 'collector', [`${josa(n(claim), '은', '는')} 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.`], true);
+    const first = R('winClaim1', 'collector', ['많이 버셨네요. 종 칠 때 들를게요.'], true);
     if (first) return first;
     const k = c.claimWins ?? 2;
     const pick = k % 3;
     return pick === 2 ? R('winClaim', 'boss', ['오늘 갚으실 거면 제가 아직 사무소에 있어요.'], false, false)
-      : pick === 0 ? R('winClaimC', 'collector', [`이번 이자랑 생활비 ${n(claim)}, 다 나왔네요.`], false, false)
-      : R('winClaimH', 'hero', [c.wheelNet > 0 ? '바퀴는 아직 한 바퀴도 안 돌았는데.' : '손가락 한 번에 이자 한 번.'], false, false);
+      : pick === 0 ? R('winClaimC', 'collector', ['오늘은 웃으시네요. 종은 예정대로 쳐요.'], false, false)
+      : R('winClaimH', 'hero', [c.wheelNet > 0 ? '바퀴는 아직 한 바퀴도 안 돌았는데.' : '손가락 한 번에 이만큼.'], false, false);
   }
-  if (t.pnl <= -claim) return R('lossClaim', 'collector', ['그 돈이면 이자랑 생활비 한 번 냈겠네요.'], false, false);
+  if (t.pnl <= -claim) return R('lossClaim', 'collector', ['아까운 돈이네요. 종은 예정대로 쳐요.'], false, false);
   if (c.tinyStreak >= 3 && c.feesLife >= 1) { const r = R('feeBleed', 'collector', [`지금까지 수수료만 ${josa(n(c.feesLife), '이', '가')} 나갔어요.`]); if (r) return r; }
   if (t.pnl > 0 && t.pnl >= claim * 0.1) { const r = R('firstWin', 'boss', [c.wheelNet > 0 ? '바퀴로 벌 때보다 손맛이 있죠?' : '숫자가 한 번에 바뀌죠? 그게 손맛이에요.']); if (r) return r; }
   if (t.pnl < 0 && -t.pnl >= claim * 0.1) { const r = R('firstLoss', 'collector', ['오늘은 종 칠 때 들를게요.']); if (r) return r; }

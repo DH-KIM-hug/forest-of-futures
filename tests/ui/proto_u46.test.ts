@@ -47,9 +47,9 @@ describe('말이 되는 줄 (U-46)', () => {
   it('엄마의 줄은 오소리 장부의 것: 캐피탈 창구 장면 뒤에 떠도 어느 장부인지 말한다', () => {
     expect(STORY.momClue('mirror')[0].text.startsWith('대부가 장부를 넘기자')).toBe(true);
   });
-  it('추심원은 걷는 돈을 "다음 수금"이라 한다(정산 때 나가는 돈 전부와 헷갈리지 않게)', () => {
+  it('크게 딴 판에 추심원은 이자 단위로 말하지 않는다(U-67)', () => {
     const r = tradeReaction({ pnl: 22000, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { claim: 12500, wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} });
-    expect(r?.lines[0]).toBe('12,500은 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.');
+    expect(r?.lines[0]).toBe('많이 버셨네요. 종 칠 때 들를게요.');
   });
   it('세 판째 본전: 서로 다른 종목이어도 맞는 말(수수료가 공짜였던 것만 말한다)', () => {
     const r = tradeReaction({ pnl: 0, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { claim: 15500, wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 3, feesLife: 0, seen: {} });

@@ -12,7 +12,6 @@ import { forecast } from '../../../engine/settlement';
 import { flySeconds } from '../../../engine/feed/fly';
 import { flySecOf } from '../flyWind';
 import { chartModel, fmtPrice, marketTabs } from '../../vm/trade';
-import { claim } from '../model';
 import { closedMath } from '../watch';
 import { sprite } from '../sprites';
 import { play } from '../audio';
@@ -176,9 +175,8 @@ function FlyTutorialOn() {
     const fc = forecast(g);
     const t = marketTabs(g).find((x) => x.id === 'FLY');
     const net = t?.posNet ?? null;
-    const cl = claim(g);
     return {
-      lev: FT_LEV, liqPct: (1 / FT_LEV - MR) * 100, interest: Math.round(fc.interest), living: Math.round(fc.living), claim: Math.round(cl.total),
+      lev: FT_LEV, liqPct: (1 / FT_LEV - MR) * 100, interest: Math.round(fc.interest), living: Math.round(fc.living),
       up: t ? t.pct >= 0 : null, pc: g.settings.priceColors === 'intl' ? 'intl' : 'kr',
       candles: !!document.querySelector('.pt-chart [data-candle], .pt-chart .candle'),
       net: net === null ? null : Math.round(net), closed, settled: run.settleNo > settle0.current,

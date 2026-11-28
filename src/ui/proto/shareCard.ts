@@ -25,13 +25,13 @@ export interface CardData {
 /** 자랑 한 줄(U-49): 판의 크기 · 배율 · 버틴 시간에서 고른다. 같은 판이면 늘 같은 줄 */
 export function brag(d: Pick<CardData, 'roe' | 'lev' | 'heldSec' | 'pnl' | 'coin'>): string {
   const pick = (...v: string[]) => v[Math.abs(Math.round(d.pnl)) % v.length];
-  if (d.roe >= 1000) return pick('이 판 하나로 이자 몇 달 치. 다음 판은 생각 안 함.', '전설은 한 번이면 된다. 두 번은 청산이다.');
+  if (d.roe >= 1000) return pick('이 판 하나로 몇 달은 산다. 다음 판은 생각 안 함.', '전설은 한 번이면 된다. 두 번은 청산이다.');
   if (d.roe >= 300) return pick('손이 떨려서 닫았는데 그게 고점이었다.', '오늘 저녁은 도토리 말고 밤이다.');
   if (d.lev >= 200 && d.heldSec < 60) return pick(`${d.coin} 200배, ${Math.max(1, Math.round(d.heldSec))}초. 숨도 안 쉬었다.`, '200배는 용기가 아니라 손가락 운동이다.');
   if (d.lev >= 100) return pick('청산가가 코앞이었는데 안 닿았다. 실력이다.', '배율은 높게, 기대는 더 높게.');
   if (d.roe >= 100) return pick('넣은 돈이 두 배가 됐다. 빚은 그대로다.', '오소리 대부한테는 비밀로 해 주세요.');
   if (d.heldSec >= 600) return pick('버티는 것도 실력이다. 추심원이 증인이다.', '정산 종이 몇 번을 울려도 안 닫았다.');
-  return pick('오늘은 숲이 내 편이었다.', '이자 낼 돈, 시장이 대신 내 줬다.', '추심원보다 먼저 웃었다.');
+  return pick('오늘은 숲이 내 편이었다.', '오늘 낼 돈, 시장이 대신 내 줬다.', '추심원보다 먼저 웃었다.');
 }
 
 const O = '#4A4640';

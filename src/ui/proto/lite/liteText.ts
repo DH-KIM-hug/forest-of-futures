@@ -101,7 +101,7 @@ export const LITE_STORY: Partial<typeof STORY> = {
   ],
   winClaim: (o) => [
     L('collector', o.first, 'smile'),
-    L('hero', `+${n(o.pnl)}. 1분 이자를 손가락 한 번으로 벌었다.`),
+    L('hero', `+${n(o.pnl)}. 손가락 한 번이었다.`),
     L('hero', '지금 갚으면 다음번엔 덜 내겠지.'),
     ...(o.stampLeft !== null ? [L('hero', `금박 도장까지 ${n(o.stampLeft)}.`)] : []),
   ],

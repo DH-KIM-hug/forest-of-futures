@@ -26,7 +26,7 @@ describe('FRX 의뢰판', () => {
   });
   it('끝낸 의뢰는 사례금을 주고 그 자리에 다음 의뢰가 붙는다', () => {
     const b = { ...newBoard(3, 200), slots: [{ id: 'short', prog: 0 }, { id: 'five', prog: 4 }, { id: 'sl', prog: 0 }] };
-    const r = applyClose(b, C({ dir: -1, pnl: 5000 }), 200);
+    const r = applyClose(b, C({ dir: -1, pnl: 5000, roe: 55 }), 200); // U-67: 숏 의뢰는 한 판에 +50% 넘게
     expect(r.finished.sort()).toEqual(['five', 'short']);
     expect(r.tips.reduce((a, t) => a + t.amount, 0)).toBe(tipOf(questById.short, 4200) + tipOf(questById.five, 4200));
     expect(r.board.slots).toHaveLength(3);

@@ -20,7 +20,6 @@ export interface FtCtx {
   /** 첫 판 배율 */ lev: number;
   /** 그 배율로 반대로 이만큼(%) 가면 청산 */ liqPct: number;
   /** 다음 정산의 이자와 생활비 */ interest: number; living: number;
-  /** 첫 판 익절, 손절 폭(도토리) = 이자 한 번 치 */ claim: number;
   /** 지금 날다람쥐가 기준가보다 올랐나(null = 모름) */ up: boolean | null;
   /** 값 색 규칙: kr = 오르면 빨강, intl = 오르면 초록 */ pc: 'kr' | 'intl';
   /** 차트가 봉(캔들)으로 그려져 있나 */ candles: boolean;
@@ -40,8 +39,10 @@ const n = (x: number) => Math.round(Math.abs(x)).toLocaleString('ko-KR');
 const upWord = (c: FtCtx) => (c.pc === 'intl' ? '초록' : '빨강');
 const downWord = (c: FtCtx) => (c.pc === 'intl' ? '빨강' : '파랑');
 
-/** 첫 판: 50배, 넣는 돈 25%, 익절과 손절은 이자 한 번 치(FRX 첫 실전 카드와 같은 값) */
+/** 첫 판: 50배, 넣는 돈 25%, 익절 +50% 손절 −25%(넣은 돈의 몇 배, FRX 첫 실전 카드와 같은 값, U-67) */
 export const FT_LEV = 50;
+export const FT_TP_K = 0.5;
+export const FT_SL_K = 0.25;
 export const FT_PCT = 25;
 export const FT_SHOW_LEV = 200;
 
@@ -87,7 +88,7 @@ function resultLine(c: FtCtx): string {
   const r = c.closed;
   if (!r) return '닫혔네요.';
   if (r.kind === 'liq') return '청산. 건 돈은… 잘 받았어요.';
-  if (r.kind === 'tp') return `익절. +${n(r.pnl)}. 이자 한 번 치 벌었네요.`;
+  if (r.kind === 'tp') return `익절. +${n(r.pnl)}. 이게 손맛이에요.`;
   if (r.kind === 'sl') return `손절. −${n(r.pnl)}. 그런 날도 있죠. 딱 정한 만큼만.`;
   return r.pnl >= 0 ? `정리. +${n(r.pnl)}. 챙길 땐 챙기는 거죠.` : `정리. −${n(r.pnl)}. 그런 날도 있죠.`;
 }
@@ -105,7 +106,7 @@ export function ftActDone(id: string, u: FtUi, tapped: boolean): boolean {
   switch (id) {
     case 'lev': return tapped && u.lev === FT_LEV;
     case 'mg': return tapped && u.pct === FT_PCT && !u.keep;
-    case 'stops': return tapped && u.tpK === 1 && u.slK === 1;
+    case 'stops': return tapped && u.tpK === FT_TP_K && u.slK === FT_SL_K;
     case 'order': return u.hasPos || u.closed; // 누르는 순간 판이 열린다(눌린 단추만 받으니 tapped 와 같다)
     case 'wait': return u.closed;
     default: return true;

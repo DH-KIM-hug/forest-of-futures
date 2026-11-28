@@ -27,10 +27,11 @@ describe('거래에 대한 반응 (tradeReaction)', () => {
     expect(tradeReaction(T({ pnl: 2000 }), C({ seen: { firstWin: true } }))).toBeNull();
     expect(tradeReaction(T({ pnl: -2000 }), C())!.key).toBe('firstLoss');
   });
-  it('이자 한 번 치를 따거나 잃으면 그 크기를 말한다(쳇바퀴로 치면 얼마)', () => {
+  it('크게 따거나 잃으면 한마디 한다(U-67: 이자 단위로 말하지 않는다)', () => {
     const w = tradeReaction(T({ pnl: 20000 }), C())!;
     expect(w.who).toBe('collector'); // 개정 대본 장면 20: 추심원이 청구액만큼 따로 두라고 한다
-    expect(w.lines[0]).toContain('15,500은 따로 두세요');
+    expect(w.lines[0]).toBe('많이 버셨네요. 종 칠 때 들를게요.');
+    expect(w.lines.join(' ')).not.toMatch(/이자/);
     // U-44: 쳇바퀴로 치면 얼마는 결과 카드의 꼬리표와 주인공의 속마음이 말한다(대부가 되풀이하지 않는다)
     expect(wheelWorth(20000, 4667)).toBe('쳇바퀴 한 대 4.3정산치');
     // U-41: 이번 생 처음은 장면(한 번), 그 뒤로는 오소리 대부 · 추심원 · 족제비가 번갈아 한 줄(되풀이)

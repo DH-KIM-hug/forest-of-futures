@@ -121,15 +121,18 @@ export function carryOf(o: { cash: number; income: number; due: number; settleIn
   return { due: Math.round(o.due), left, funding, text: `${mm} 뒤 정산 −${n(o.due)}, 포지션은 그대로, ${n(left)} 남음` };
 }
 
-/** 이번 생에 거래가 벌어 온 돈을 "정산 몇 번 치"로(집 판 · 장부의 한 줄). claim = 지금 정산 한 번에 걷어 가는 돈 */
+/** 출구 칩(U-67, 사용자: "이자 한 번 치는 빼 걍"): 넣은 돈의 몇 배를 벌면 익절, 잃으면 손절. 0.5 = +50%. 1~200배 어디서나 같은 뜻이다 */
+export const EXIT_PRESETS: Record<'tp' | 'sl', number[]> = { tp: [0.2, 0.5, 1, 2], sl: [0.1, 0.25, 0.5] };
+
+/** 이번 생에 거래가 벌어 온 돈(집 판 · 장부의 한 줄)(집 판 · 장부의 한 줄). claim = 지금 정산 한 번에 걷어 가는 돈 */
 export function journeyOf(o: { tradeNet: number; claim: number; settles: number; paid: number; claimWins: number }): { share: number; text: string; short: string } {
   const share = o.claim > 0 ? o.tradeNet / o.claim : 0;
-  const k = `${share >= 0 ? '' : '−'}${Math.abs(share) >= 10 ? Math.round(Math.abs(share)) : Math.abs(share).toFixed(1)}`;
   const sign = o.tradeNet >= 0 ? '+' : '−';
   return {
     share,
-    short: `거래 ${sign}${n(o.tradeNet)}${o.claim > 0 && Math.abs(share) >= 0.1 ? `, 이자 ${k}번 치` : ''}`,
-    text: `이번 생 낸 돈 ${n(o.paid)}, 거래로 ${sign}${n(o.tradeNet)}${o.claim > 0 && Math.abs(share) >= 0.1 ? ` (이자 ${k}번 치)` : ''}`,
+    // U-67(사용자: "이자 한 번 버는 거 의미 없어"): 「이자 n번 치」로 읽어 주던 꼬리를 뺐다. 돈만 적는다
+    short: `거래 ${sign}${n(o.tradeNet)}`,
+    text: `이번 생 낸 돈 ${n(o.paid)}, 거래로 ${sign}${n(o.tradeNet)}`,
   };
 }
 

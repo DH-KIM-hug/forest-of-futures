@@ -62,12 +62,14 @@ export function tensionOf(liqDistPct: number, hist: number[]): Tension {
   return { rangePct, steps, reach, dots, sec, text };
 }
 
-/** 이긴 판의 등급(U-48)에 「이자 벌었다」를 더한 것: 넣은 돈에 견주면 작아도 이번 수금(이자 + 생활비)을 넘게 벌었으면 그것도 한 방이다. 터지지 않으면 null */
+/** 이긴 판의 등급(U-48). 터지지 않으면 null. claimTotal 은 예전 「이자 벌었다」 자리(U-67 에 뺐다, 부르는 곳을 그대로 두려고 받기만 한다) */
 export function burstTier(pnl: number, margin: number, claimTotal: number): WinTier | null {
   if (!(pnl > 0)) return null;
   const t = winTier((pnl / Math.max(1, margin)) * 100);
   if (t.lv > 0) return t;
-  return claimTotal > 0 && pnl >= claimTotal ? { lv: 1, word: '이자 벌었다', rain: 12 } : null;
+  // U-67(사용자: "이자 한 번 버는 거 의미 없어"): 「이자 벌었다」 등급은 뺐다. 터지는 판은 ROE 등급뿐이다
+  void claimTotal;
+  return null;
 }
 
 export interface Odds {
@@ -78,7 +80,7 @@ export interface Odds {
   text: string;
   /** 청산이 평소 1분 폭 안이면 한 줄 경고(U-49) */ tight: string | null;
 }
-/** 들어가기 전의 셈: 이 증거금 · 이 배율이면 이자 한 번 치까지 시세가 얼마나 가야 하는가. 거짓 약속이 아니라 나눗셈이다. */
+/** 들어가기 전의 셈: 이 증거금 · 이 배율이면 claim(목표 돈: 익절, 없으면 넣은 돈의 반, U-67)까지 시세가 얼마나 가야 하는가. 거짓 약속이 아니라 나눗셈이다. */
 export function orderOdds(o: { margin: number; lev: number; claim: number; feeRate: number; maintenanceRate: number; hist: number[] }): Odds | null {
   const notional = o.margin * o.lev;
   if (!(notional > 0) || !(o.claim > 0)) return null;
@@ -89,22 +91,16 @@ export function orderOdds(o: { margin: number; lev: number; claim: number; feeRa
   const liqFirst = needPct >= liqPct;
   const pc = (x: number) => (x >= 10 ? x.toFixed(0) : x >= 1 ? x.toFixed(1) : x.toFixed(2));
   const text = liqFirst
-    ? `이자와 생활비 ${n(o.claim)}을 벌려면 유리한 쪽으로 ${pc(needPct)}%, 반대쪽 ${pc(liqPct)}%에 청산`
-    : `다음 이자와 생활비 ${n(o.claim)}을 벌려면 유리한 쪽으로 ${pc(needPct)}%${needSteps !== null ? ` (최근 1분 폭의 ${times(needSteps)})` : ''}, 청산까지 ${pc(liqPct)}%`;
+    ? `+${n(o.claim)} 벌려면 유리한 쪽으로 ${pc(needPct)}%, 반대쪽 ${pc(liqPct)}%에 청산`
+    : `+${n(o.claim)} 벌려면 유리한 쪽으로 ${pc(needPct)}%${needSteps !== null ? ` (최근 1분 폭의 ${times(needSteps)})` : ''}, 청산까지 ${pc(liqPct)}%`;
   // 청산 거리가 평소 1분 폭보다 좁다(U-49: 200배 날다람쥐): 배율 상한은 그대로 두고, 들어가기 전에 있는 그대로 말한다
   const tight = liqSteps !== null && liqSteps < 1
-    ? `청산 ${pc(liqPct)}%가 평소 1분 폭(${pc(r!)}%) 안이다, ${soonText(reachSecOf(liqSteps))}. 이자 ${n(o.claim)}까지는 ${pc(needPct)}%`
+    ? `청산 ${pc(liqPct)}%가 평소 1분 폭(${pc(r!)}%) 안이다, ${soonText(reachSecOf(liqSteps))}. +${n(o.claim)}까지는 ${pc(needPct)}%`
     : null;
   return { needPct, liqPct, needSteps, liqSteps, liqFirst, text, tight };
 }
 
-/** 지금 손익이 이자 한 번 치의 몇 %인가(포지션 카드의 한 줄). 너무 작으면 null */
-export function claimShare(pnl: number, claim: number): string | null {
-  if (!(claim > 0)) return null;
-  const k = (pnl / claim) * 100;
-  if (Math.abs(k) < 3) return null;
-  return `이자의 ${k >= 0 ? '+' : '−'}${Math.round(Math.abs(k))}%`;
-}
+// 「이자의 ±N%」(claimShare, 포지션 카드의 한 줄)는 뺐다(U-67, 사용자: "이자 한 번 버는 거 의미 없어")
 
 // ── 주인공의 몸 ──────────────────────────────────────────────────────────
 /** idle = 포지션 없음, phone = 폰만 본다, pace = 쳇바퀴 옆을 서성인다(잃는 중), hop = 들썩인다(따는 중), frozen = 굳었다(청산이 흔들리는 폭 안) */
@@ -140,7 +136,7 @@ export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): H
     ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '저 선까지만은 오지 마라.') : null)
     ?? (s.squeezed ? B('squeeze', '종 칠 텐데. 꺼내려면 지금 닫아야 해.') : null)
     ?? (s.roe >= 100 ? B('double', '건 돈만큼 벌었다. 손가락만 떼면 내 건데.') : null)
-    ?? (s.pnl >= claim ? B('claim', `지금 닫으면 ${n(s.pnl)}. 이번 이자랑 생활비다.`) : null)
+    ?? (s.pnl >= claim ? B('claim', `지금 닫으면 ${n(s.pnl)}. 손가락만 떼면 내 거다.`) : null)
     ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `아까 +${n(s.peakPnl)} 떴을 때 왜 그냥 봤지.`) : null)
     ?? (s.roe <= -50 ? B('half', '반이나 없어졌어.') : null)
     ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '아까는 본전만 오면 나간다 그랬는데.') : null)

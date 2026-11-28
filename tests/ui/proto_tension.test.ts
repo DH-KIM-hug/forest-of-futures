@@ -1,6 +1,6 @@
 // 포지션을 들고 있는 동안의 긴장(U-39 ①)과 자리를 비운 사이 보고서(U-39 ④). 순수 함수 시험.
 import { describe, expect, it } from 'vitest';
-import { burstTier, claimShare, dotsOfSec, heroMood, holdBeat, orderOdds, reachOf, reachSecOf, recentRange, stepsOf, tensionOf, typicalRange, type HoldSnap } from '../../src/ui/proto/tension';
+import { burstTier, dotsOfSec, heroMood, holdBeat, orderOdds, reachOf, reachSecOf, recentRange, stepsOf, tensionOf, typicalRange, type HoldSnap } from '../../src/ui/proto/tension';
 import { awayCard, awayDur } from '../../src/ui/proto/away';
 import type { AwayReport } from '../../src/engine/types';
 
@@ -49,7 +49,7 @@ describe('청산까지 = 지난 1분 폭의 몇 배', () => {
   });
 });
 
-describe('들어가기 전의 셈: 이자 한 번 치까지', () => {
+describe('들어가기 전의 셈: 목표 돈까지', () => {
   const base = { claim: 15500, feeRate: 0.0004, maintenanceRate: 0.001, hist: wave(68000, 0.04) };
   it('10배 · 2만 8천: 이자보다 청산이 가깝지는 않지만 시세가 5% 넘게 가야 한다', () => {
     const o = orderOdds({ ...base, margin: 28000, lev: 10 })!;
@@ -58,7 +58,7 @@ describe('들어가기 전의 셈: 이자 한 번 치까지', () => {
     expect(o.liqPct).toBeCloseTo(9.9, 5);
     expect(o.liqFirst).toBe(false);
     expect(o.needSteps!).toBeGreaterThan(100);
-    expect(o.text).toMatch(/이자와 생활비 15,500을 벌려면 유리한 쪽으로 5\.\d%.*청산까지 9\.9%/);
+    expect(o.text).toMatch(/\+15,500 벌려면 유리한 쪽으로 5\.\d%.*청산까지 9\.9%/);
   });
   it('200배 · 10만: 0.2%도 안 가면 이자 한 번 치, 청산은 0.4%', () => {
     const o = orderOdds({ ...base, margin: 100000, lev: 200 })!;
@@ -73,11 +73,6 @@ describe('들어가기 전의 셈: 이자 한 번 치까지', () => {
   });
   it('걸 돈이 없으면 셈이 없다', () => {
     expect(orderOdds({ ...base, margin: 0, lev: 10 })).toBeNull();
-  });
-  it('손익을 이자 한 번 치의 %로', () => {
-    expect(claimShare(7750, 15500)).toBe('이자의 +50%');
-    expect(claimShare(-3100, 15500)).toBe('이자의 −20%');
-    expect(claimShare(100, 15500)).toBeNull();
   });
 });
 
@@ -103,8 +98,8 @@ describe('들고 있는 동안의 속마음', () => {
   it('아무 일도 없으면 말이 없다', () => {
     expect(holdBeat(s, {})).toBeNull();
   });
-  it('이자 한 번 치를 넘으면 그 숫자를 말한다', () => {
-    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, {})).toEqual({ key: 'claim', text: '지금 닫으면 16,000. 이번 이자랑 생활비다.' });
+  it('크게 벌고 있으면 그 숫자를 말한다(U-67: 이자 단위 없이)', () => {
+    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, {})).toEqual({ key: 'claim', text: '지금 닫으면 16,000. 손가락만 떼면 내 거다.' });
   });
   it('같은 말은 포지션마다 한 번', () => {
     expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, { claim: true })).toBeNull();
@@ -192,10 +187,10 @@ describe('배율과 종목에 맞춘 게이지(U-49)', () => {
     const o10 = orderOdds({ claim: 5130, feeRate: 0.0001, maintenanceRate: 0.001, hist: wave(100, 0.6, 600), margin: 25000, lev: 10 })!;
     expect(o10.tight).toBeNull();
   });
-  it('이긴 판의 등급: 작아도 이번 수금을 넘으면 「이자 벌었다」', () => {
+  it('이긴 판의 등급: ROE 등급뿐(U-67: 「이자 벌었다」는 뺐다)', () => {
     expect(burstTier(-5, 100, 10)).toBeNull();
     expect(burstTier(3, 100, 10)).toBeNull();
-    expect(burstTier(12, 1000, 10)!.word).toBe('이자 벌었다');
+    expect(burstTier(12, 1000, 10)).toBeNull();
     expect(burstTier(120, 100, 10)!.lv).toBe(3);
   });
 });

@@ -119,7 +119,7 @@ export function usePosPops(): void {
         if (bon > 0) { treePing('R', `고비 보상 +${comma(bon)}`); later(180, () => flyAcorns(document.querySelector('.pt-pops .pop:last-child')?.getBoundingClientRect() ?? null, 4)); }
         continue;
       }
-      if (!mk.claim && cl > 0 && p.net >= cl) { mk.claim = true; pushPop(`이자 한 번 벌었다 +${comma(Math.round(cl))}`, 'up', p.market, () => play('buy')); continue; }
+      // 「이자 한 번 벌었다」 팝은 뺐다(U-67, 사용자: "이자 한 번 버는 거 의미 없어")
       // 청산 턱밑(들어간 거리의 70% 넘게 다가갔다)에서 본전 위로 돌아왔다: 한 번
       if (!mk.saved && mk.peakDanger >= 0.7 && p.net >= 0) { mk.saved = true; pushPop('살았다!', 'saved', p.market, () => play('saved_phew')); continue; }
       if (!mk.half && p.netRoe <= -50) { mk.half = true; pushPop('반 날아감', 'down', p.market); }

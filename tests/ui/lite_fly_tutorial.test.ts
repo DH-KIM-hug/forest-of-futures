@@ -1,9 +1,9 @@
 // 날다람쥐코인 길잡이(라이트, 프롤로그 뒤): 걸음 순서, 행동 걸음은 진짜 누름이 있어야 넘어감, 판이 닫히면 결과로, 저장 칸, 화면 글 규칙
 import { describe, it, expect } from 'vitest';
-import { FT_STEPS, FT_IDS, FT_LEV, FT_PCT, FT_RESULT, FT_FIRST_HOLD, ftActDone, ftNext, ftJump, ftResume, type FtCtx } from '../../src/ui/proto/lite/flyTutSteps';
+import { FT_STEPS, FT_IDS, FT_LEV, FT_PCT, FT_TP_K, FT_SL_K, FT_RESULT, FT_FIRST_HOLD, ftActDone, ftNext, ftJump, ftResume, type FtCtx } from '../../src/ui/proto/lite/flyTutSteps';
 import { PROTO_KEEP, pickProto } from '../../src/ui/proto/protoSave';
 
-const base: FtCtx = { lev: FT_LEV, liqPct: 1.9, interest: 4300, living: 1000, claim: 5300, up: true, pc: 'kr', candles: false, net: null, closed: null, settled: false };
+const base: FtCtx = { lev: FT_LEV, liqPct: 1.9, interest: 4300, living: 1000, up: true, pc: 'kr', candles: false, net: null, closed: null, settled: false };
 const allLines = (c: FtCtx) => FT_STEPS.map((s) => s.line(c));
 const ctxs: FtCtx[] = [
   base, { ...base, up: false, net: -1234 }, { ...base, net: 800, pc: 'intl', candles: true },
@@ -26,7 +26,7 @@ describe('날다람쥐 길잡이 걸음', () => {
     for (const s of FT_STEPS.filter((x) => x.kind !== 'text')) expect(s.target, s.id).toBeTruthy();
   });
   it('행동 걸음은 비춘 단추를 진짜로 눌러야 넘어간다(이미 맞는 값이어도)', () => {
-    const u = { lev: FT_LEV, pct: FT_PCT, keep: false, tpK: 1, slK: 1, hasPos: false, closed: false };
+    const u = { lev: FT_LEV, pct: FT_PCT, keep: false, tpK: FT_TP_K, slK: FT_SL_K, hasPos: false, closed: false };
     expect(ftActDone('lev', u, false)).toBe(false);
     expect(ftActDone('lev', u, true)).toBe(true);
     expect(ftActDone('lev', { ...u, lev: 10 }, true)).toBe(false);
