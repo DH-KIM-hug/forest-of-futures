@@ -5,7 +5,7 @@ import { useGame } from '../../store/gameStore';
 import { marketById } from '../../engine/data';
 import { pdev } from './config';
 import { play } from './audio';
-import { closeBoard, fetchMe, fetchTop, openBoard, rankOffReason, setRankName, useRank, type MeRow, type TopRow } from './ranking';
+import { closeBoard, fetchMe, fetchTop, myLedgerNo, openBoard, rankOffReason, setRankName, useRank, type MeRow, type TopRow } from './ranking';
 import { BOARDS, BOARD_LABEL, cleanName, detailText, valueText, type Board } from './rankingCore';
 import { endCheer, useUnlock } from './rankUnlock';
 import { acornSvg } from './art';
@@ -40,7 +40,7 @@ export function RankNameAsk({ compact }: { compact?: boolean }) {
   if (name && !edit) {
     return (
       <div className="rk-name" data-rank-name>
-        <span>장부에 적힌 이름 <b>{name}</b></span>
+        <span>장부에 적힌 이름 <b>{name} <small className="rk-no">#{myLedgerNo()}</small></b></span>
         <button className="rk-link" data-rank-rename onClick={() => { setV(name); setEdit(true); }}>고치기</button>
       </div>
     );
@@ -49,7 +49,7 @@ export function RankNameAsk({ compact }: { compact?: boolean }) {
   return (
     <form className={'rk-ask' + (compact ? ' compact' : '')} data-rank-ask onSubmit={(e) => { e.preventDefault(); save(); }}>
       <label htmlFor="rk-name-in">장부에 적을 이름</label>
-      <small>전광판에 붙는 이름. 1~12글자, 나중에 고칠 수 있다.</small>
+      <small>전광판에 붙는 이름. 1~12글자, 뒤에 장부 번호 #{myLedgerNo()} 가 붙는다. 나중에 고칠 수 있다.</small>
       <div className="row">
         <input id="rk-name-in" data-rank-input value={v} maxLength={24} autoComplete="off" placeholder="예: 도토리부자" onChange={(e) => setV(e.target.value)} />
         <button type="submit" className={'buy' + (ok ? ' on' : '')} disabled={!ok} data-rank-save><span>적는다</span></button>

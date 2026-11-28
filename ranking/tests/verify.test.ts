@@ -12,7 +12,8 @@ describe('랭킹 제출 검사', () => {
     expect(cleanName('칩멍크')).toBe('칩멍크');
     expect(cleanName('<b>a</b>')).toBe('ba/b');
     expect(cleanName('')).toBeNull();
-    expect(cleanName('가'.repeat(13))).toBeNull();
+    expect(cleanName('가'.repeat(19))).toBeNull();
+    expect(cleanName('몰빵다람쥐몰빵다람쥐몰빵 #0417')).toBe('몰빵다람쥐몰빵다람쥐몰빵 #0417');
   });
   it('모양: 이긴 거래만, pnl = 증거금 × roe', () => {
     expect(checkTradeShape(trade(), 'roe', 31, T0 + 200_000)).toBeNull();

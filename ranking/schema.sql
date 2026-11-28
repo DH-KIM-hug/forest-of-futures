@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS scores (
   board TEXT NOT NULL,           -- networth | roe | pnl
   device TEXT NOT NULL,          -- 익명 기기 번호(앱이 만든 무작위 값)
-  name TEXT NOT NULL,            -- 닉네임(1~12자)
+  name TEXT NOT NULL,            -- 닉네임(1~18자: 별명 12자 + 장부 번호 " #0417")
   value REAL NOT NULL,
   detail TEXT NOT NULL,          -- JSON: 거래 요약 또는 생 요약
   created_at INTEGER NOT NULL,

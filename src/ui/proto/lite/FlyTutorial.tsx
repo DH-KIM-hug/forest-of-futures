@@ -23,6 +23,7 @@ import { FT_STEPS, FT_LEV, FT_PCT, FT_SHOW_LEV, ftActDone, ftNext, ftJump, ftRes
 import type { Position } from '../../../engine/types';
 import faceThink from '../img/manga/face_think.webp';
 import faceHappy from '../img/manga/face_happy.webp';
+import { useLiteSignOn } from '../NameSign';
 import './flyTutorial.css';
 
 const MR = balance.trading.maintenanceRate as number;
@@ -91,6 +92,8 @@ function FlyTutorialOn() {
   const scenes = useProto((s) => s.scenes.length);
   const tab = useProto((s) => s.tab);
   const prologue = useProto((s) => s.prologue);
+  // 차용증(이름 적기)이 먼저: 찍을 때까지 길잡이는 숨어 기다린다
+  const signing = useLiteSignOn();
   const run = g.run;
   const rawPos = run.positions.FLY as Position | undefined;
   const [root, setRoot] = useState<HTMLElement | null>(null);
@@ -107,7 +110,7 @@ function FlyTutorialOn() {
   const [closed, setClosed] = useState<FtCtx['closed']>(null);
   const settle0 = useRef(run.settleNo);
   const step = FT_STEPS[i];
-  const hidden = scenes > 0 || prologue || tab !== 'phone';
+  const hidden = scenes > 0 || prologue || signing || tab !== 'phone';
 
   useEffect(() => { setRoot(document.querySelector('.pr') as HTMLElement | null); }, []);
   // 오픈 기념 문자가 길잡이와 같은 때 떴으면 내려 두었다가 끝난 뒤에 다시 뜨게 한다(seen.ftHeldSms)

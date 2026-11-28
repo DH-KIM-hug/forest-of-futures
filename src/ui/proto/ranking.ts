@@ -16,7 +16,7 @@ import { lenderDebtTotal, totalDebt, walletValue } from '../../engine/selectors'
 import type { GameState } from '../../engine/types';
 import type { NetInfo } from '../../store/gameStore';
 import {
-  BOARD_LABEL, cleanName, emptyQueue, enqueue, isWinningEntry, eligible, lifeDetail, lifeNetWorth, newDeviceId, pumpOnce, tradeDetail,
+  BOARD_LABEL, cleanName, emptyQueue, ledgerNo, withLedgerNo, enqueue, isWinningEntry, eligible, lifeDetail, lifeNetWorth, newDeviceId, pumpOnce, tradeDetail,
   type Board, type ClosedTrade, type OpenMeta, type QueueState, type Sender, type TradeDetail,
 } from './rankingCore';
 
@@ -43,10 +43,14 @@ export function deviceId(): string {
   if (!id || !/^[A-Za-z0-9_-]{8,64}$/.test(id)) { id = newDeviceId(); ls.set(K.device, id); }
   return id;
 }
-/** 장부에 적은 이름(아직 안 적었으면 null) */
+/** 장부에 적은 별명(아직 안 적었으면 null). 장부 번호는 붙이지 않은 채 저장한다 */
 export const savedName = (): string | null => { const n = ls.get(K.name); return n ? cleanName(n) : null; };
-/** 이름을 적기 전에 올라가는 기록의 이름: "다람쥐 K3F9" */
-export const fallbackName = (): string => `다람쥐 ${deviceId().slice(-4).toUpperCase()}`;
+/** 이 기기의 장부 번호 "0417" */
+export const myLedgerNo = (): string => ledgerNo(deviceId());
+/** 이름을 적기 전에 올라가는 기록의 이름: "다람쥐 #0417" */
+export const fallbackName = (): string => withLedgerNo('다람쥐', deviceId());
+/** 전광판과 소식에 보내는 이름: 별명 + 장부 번호 "몰빵다람쥐 #0417" */
+export const sendName = (): string => withLedgerNo(savedName() ?? '다람쥐', deviceId());
 
 // ── 전광판 화면 상태 ─────────────────────────────────────────────────────
 interface RankUi { open: boolean; tab: Board; name: string | null; rejected: number; posts: number; queued: number }
@@ -102,7 +106,7 @@ async function pump(): Promise<void> {
   if (pumping) return;
   pumping = true;
   try {
-    const out = await pumpOnce(queue, sender, { deviceId: deviceId(), name: savedName() ?? fallbackName() }, () => Date.now());
+    const out = await pumpOnce(queue, sender, { deviceId: deviceId(), name: sendName() }, () => Date.now());
     if (out.kind === 'ok') {
       sent[out.board] = { value: out.item.value, detail: out.item.detail };
       // 순위가 올랐다: 짧게 한 줄(주인공 목소리)
@@ -234,7 +238,7 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     L.done = true;
     submitLife(L);
     // 파산(은퇴가 아니다): 이름을 적은 기기만 소식을 올린다
-    if (g.run.bankruptcy && g.pendingEnding?.cause !== 'RETIRE' && isRankUnlocked() && !noEvents) { const ev = bustFromGame(g, L.last ?? null, savedName(), deviceId()); if (ev) postBust(ev, eventSender); }
+    if (g.run.bankruptcy && g.pendingEnding?.cause !== 'RETIRE' && isRankUnlocked() && !noEvents) { const n = savedName(); const ev = bustFromGame(g, L.last ?? null, n ? sendName() : null, deviceId()); if (ev) postBust(ev, eventSender); }
   }
   saveLife();
 }

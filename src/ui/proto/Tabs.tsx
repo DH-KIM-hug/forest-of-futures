@@ -38,6 +38,8 @@ function PlaceArt({ id }: { id: string }) {
   );
 }
 import { play } from './audio';
+import { needsSign, openMainSign } from './loanSign';
+import { useRank } from './ranking';
 
 /** 지도 탭: 추심원이 꽂고 간 쪽지. 처음엔 오소리 사무소만 그려져 있다. 빌리고 갚는 곳. */
 export function MapTab() {
@@ -75,6 +77,8 @@ export function MapTab() {
         ] });
       return;
     }
+    // 처음 오소리 사무소에서 빌린다: 이름이 없으면 차용증에 발도장부터(loanSign.ts). 찍으면 그대로 빌린다
+    if (id === 'shark1' && !useProto.getState().loanTaken && !agreed && needsSign(useRank.getState().name)) { play('ui_tap'); openMainSign(() => doBorrow('shark1', true)); return; }
     const r = act({ type: 'borrow', lender: id, consent: true });
     play(r.ok ? 'collector_paid' : 'insufficient');
     setMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '지금은 처리할 수 없어요');

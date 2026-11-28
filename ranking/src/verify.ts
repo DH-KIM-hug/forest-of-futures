@@ -41,7 +41,8 @@ export interface Submit {
 export interface Candle { t: number; h: number; l: number }
 
 export const LIMITS = {
-  nameMax: 12,
+  /** 별명 12글자 + 장부 번호 " #0417"(6글자). 게임이 번호를 붙여 보낸다 */
+  nameMax: 18,
   maxLev: 200,
   maxMargin: 2e8,
   maxNetworth: 3e9, // 마을 사다리 꼭대기(30억)

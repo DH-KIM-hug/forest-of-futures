@@ -161,6 +161,12 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
   };
   switch (name) {
     case 'ready': return ready();
+    case 'sign': {
+      // 첫 이름 적기(본편): 추심원이 기다리는 동안 오소리 사무소에서 처음 [빌리기]를 누른 자리. 차용증이 뜬다(이름이 있어도, 찍어도 저장하지 않는다)
+      P.patch({ loanTaken: false, tutorial: 'none', waiting: true, tab: 'map', everUnlocked: { map: true }, visited: { map: true }, seen: { ...seen, office: false } });
+      window.setTimeout(() => (document.querySelector('[data-borrow="shark1"]') as HTMLButtonElement | null)?.click(), 900);
+      return base;
+    }
     // ── U-50 화면 확인용 ──
     case 'first': {
       // 튜토리얼이 막 끝난 첫 생(손에 10만, 실전 거래 0건): 「첫 실전 한 판」 카드

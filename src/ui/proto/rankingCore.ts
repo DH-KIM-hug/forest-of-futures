@@ -183,12 +183,21 @@ export const BOARD_LABEL: Record<Board, { tab: string; title: string; toast: str
   networth: { tab: '최고 자산', title: '한 생에 가장 많이 모은 자산(빚을 뺀 것)', toast: '자산' },
 };
 
-/** 이름: 1~12글자, 꺾쇠 · 제어 문자는 뺀다(서버 cleanName 과 같다) */
-export function cleanName(s: string): string | null {
+/** 별명: 1~12글자, 꺾쇠 · 제어 문자는 뺀다. 서버(cleanName)는 장부 번호를 붙인 18글자까지 받는다 */
+export const BASE_NAME_MAX = 12;
+export function cleanName(s: string, max = BASE_NAME_MAX): string | null {
   const t = s.normalize('NFC').replace(/[\u0000-\u001f\u007f<>]/g, '').trim();
-  if (t.length < 1 || [...t].length > 12) return null;
+  if (t.length < 1 || [...t].length > max) return null;
   return t;
 }
+/** 장부 번호: 기기 번호에서 뽑은 네 자리(기기마다 늘 같다, &new=1 로도 바뀌지 않는다). 같은 별명을 가려 준다 */
+export function ledgerNo(deviceId: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < deviceId.length; i++) { h ^= deviceId.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return String((h >>> 0) % 10000).padStart(4, '0');
+}
+/** 전광판과 소식에 붙는 이름: "몰빵다람쥐 #0417" */
+export const withLedgerNo = (base: string, deviceId: string): string => `${base} #${ledgerNo(deviceId)}`;
 /** 기기 번호: 아무 뜻 없는 무작위 글자(개인 정보 없음) */
 export function newDeviceId(rand: () => number = Math.random): string {
   const abc = 'abcdefghijklmnopqrstuvwxyz0123456789';

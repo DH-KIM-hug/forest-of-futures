@@ -131,7 +131,7 @@ describe('U-59 파산 소식', () => {
     store.set('fof.rank.name', '도토리부자');
     bust(base());
     expect(posted.length).toBe(1);
-    expect(posted[0]).toMatchObject({ name: '도토리부자', cause: 'liq', lite: false });
+    expect(posted[0].name).toMatch(/^도토리부자 #\d{4}$/); expect(posted[0]).toMatchObject({ cause: 'liq', lite: false });
     expect(typeof posted[0].deviceId).toBe('string');
   });
   it('이름이 없으면 올리지 않는다', () => {

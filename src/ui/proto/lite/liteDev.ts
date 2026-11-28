@@ -50,7 +50,8 @@ export function liteScene(name: string, base: GameState): GameState {
   const P = useProto.getState();
   switch (name) {
     case 'lite_trade': { const g = ready(base); useUI.getState().setTrade({ market: 'FLY' }); return g; }
-    case 'lite_tut': {
+    case 'lite_tut': case 'lite_sign': {
+      // lite_sign = 같은 자리에 차용증(이름 적기)이 먼저 뜬다(이름이 있어도, 찍어도 저장하지 않는다, loanSign.ts)
       // 프롤로그를 막 덮은 자리의 날다람쥐코인 길잡이(확인용). 판은 첫 대출 뒤, 첫 실전 카드가 뜬다. &pftskip=1 이면 끝까지 본 적이 있는 기기(건너뛰기가 보인다)
       const g = ready(base);
       P.patch({ firstTry: 3, cutCount: 0, seen: { office: true }, flyTut: 'run' });

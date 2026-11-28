@@ -18,7 +18,7 @@ describe('U-59 파산 소식 모양', () => {
   it('이상한 값은 거절: 기기 번호, 이름, 원인, 종목, 방향, 배율', () => {
     expect(parseEvent({ ...ok, deviceId: 'x' })).toEqual({ ok: false, why: 'deviceId' });
     expect(parseEvent({ ...ok, name: '' })).toEqual({ ok: false, why: 'name' });
-    expect(parseEvent({ ...ok, name: '가'.repeat(13) })).toEqual({ ok: false, why: 'name' });
+    expect(parseEvent({ ...ok, name: '가'.repeat(19) })).toEqual({ ok: false, why: 'name' });
     expect(parseEvent({ ...ok, cause: 'murder' })).toEqual({ ok: false, why: 'cause' });
     expect(parseEvent({ ...ok, coin: 'XXX' })).toEqual({ ok: false, why: 'coin' });
     expect(parseEvent({ ...ok, dir: 2 })).toEqual({ ok: false, why: 'dir' });

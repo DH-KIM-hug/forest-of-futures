@@ -22,6 +22,7 @@ import { WalletSheet } from './Wallet';
 import { DayNoteSheet } from './NewsSheet';
 import { RankBoard, RankUnlockCheer } from './RankingBoard';
 import { ForestBoard } from './ForestBoard';
+import { NameSign } from './NameSign';
 import { startRanking } from './ranking';
 import { dayBars } from './daynote';
 import { tutorialEnd } from './tutorial';
@@ -406,6 +407,7 @@ export function ProtoApp() {
       <RankUnlockCheer />
       <RankBoard />
       <ForestBoard />
+      <NameSign />
       {prologue && (isLite ? <LiteManga onDone={endPrologue} canSkip={skip} /> : <Prologue onDone={endPrologue} canSkip={skip} />)}
       {pdev === 'sounds' && <SoundLab />}
     </div>
