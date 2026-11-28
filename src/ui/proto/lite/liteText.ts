@@ -35,7 +35,7 @@ export const LITE_STORY: Partial<typeof STORY> = {
     L('boss', `자, ${man(o.lend)}. 세어 보세요.`, 'smile'),
     L('boss', `오늘 이자는 ${won(o.newInterest, '이고요', '고요')}. 문 앞에 추심원이 기다려요.`, 'smile'),
     L('boss', '폰 좀 줘 보세요. 「FRX 숲거래소」 깔아 드릴게요.', 'smile'),
-    L('note', '대부가 폰을 두 번 톡톡 치고 돌려준다. 화면에 날다람쥐코인이 오르락내리락한다.'),
+    L('note', '대부가 폰을 두 번 톡톡 치고 돌려준다. 화면의 숫자가 오르락내리락한다.'),
     L('boss', '현물로 잃은 건 선물로 찾는 거예요. 오르든 내리든 벌 수 있어요.', 'smile'),
     L('hero', '…내리면 어떻게 벌어요?'),
     L('boss', '숏이요. 반대로 거는 거. 해 보시면 압니다.', 'smile'),

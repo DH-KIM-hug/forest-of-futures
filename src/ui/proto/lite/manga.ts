@@ -231,7 +231,7 @@ export function prologuePages(): Panel[] {
         { x: 1.5, y: 40, w: 16, h: 57, t: '이겨주겠어!', k: 'out', v: true, fs: 10.5, d: 2.4 },
         { x: 76, y: 50, w: 22, h: 6.5, t: '반드시', k: 'out', fs: 6.6, d: 2.9 },
         { x: 61, y: 79.4, w: 14, h: 4, t: '목표!', k: 'sfx', fs: 4.4, rot: -4, cls: 'ink', d: 3.2 },
-        { x: 61, y: 84.5, w: 25, h: 7, t: `날다람쥐코인 200배\n빚 ${n(d.left + f.unit)} 다 갚기`, k: 'box', fs: 2.6, d: 3.3 },
+        { x: 61, y: 84.5, w: 25, h: 7, t: `200배로\n빚 ${n(d.left + f.unit)} 다 갚기`, k: 'box', fs: 2.6, d: 3.3 },
         { x: 22.5, y: 89.5, w: 35, h: 9.5, t: `다로미\nFRX 잔액\n${n(f.unit)} 도토리`, k: 'box', fs: 3.2, d: 3.6 },
         { x: 8, y: 92, w: 12, h: 6, t: '꽉!', k: 'sfx', fs: 5, rot: -12, d: 3.9 },
       ],
