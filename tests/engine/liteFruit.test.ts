@@ -22,7 +22,7 @@ afterEach(() => { act1(false); liteDevPick.id = null; });
 /** 연체 파산 한 번(엔딩을 고를 수 있다) */
 function dieLite(g: GameState, pick?: string): void {
   if (pick) liteDevPick.id = pick;
-  settleOnce(g); settleOnce(g);
+  for (let i = 0; i < 6 && !g.run.over; i++) settleOnce(g); // 소개의 사다리(U-65): 캐피탈, 까마귀, 파산
   expect(g.run.over).toBe(true);
 }
 /** 도감에 미리 n개(LE40 부터 거꾸로, except 는 뺀다) */
@@ -106,7 +106,7 @@ describe('공짜 가지(죽은 모양에 맞는 노드)', () => {
     dieLite(g, 'LE02');
     const r = g.pendingEnding!.lite!.reward!;
     expect(r.gift).toMatchObject({ node: 'B1', kind: 'open', level: 1 });
-    expect(giftText(r.gift!)).toBe('「한 번 버티기」 가지가 열렸다');
+    expect(giftText(r.gift!)).toBe('「한 번 버티기」 열림');
     expect(g.family.skill.B1).toBe(1);
     expect(g.family.fruit).toBe(1); // 열매는 따로
     const h = createLiteGame();
@@ -128,7 +128,7 @@ describe('도감 보상', () => {
     expect(MILESTONES.map((m) => m.at)).toEqual([5, 10, 20, 30, 40]);
     expect(MILESTONES.at(-1)!.at).toBe(LITE_ENDING_TOTAL);
     expect(nextMilestone(3)!.left).toBe(2);
-    expect(nextText(8)).toBe('다음 보상까지 2');
+    expect(nextText(8)).toBe('2개 더 보면 이자 할인');
     expect(nextMilestone(40)).toBeNull();
   });
   it('다섯 번째 새 엔딩: 열매 1 + 보상 1, 다음 생 손에 +1만', () => {
@@ -154,7 +154,7 @@ describe('도감 보상', () => {
     preseed(g, 10);
     liteAfterLoan(g);
     expect(totalDebt(g.run)).toBe(400_000);
-    expect(g.run.debts.shark1.rateCap).toBeCloseTo(0.009, 9);
+    expect(g.run.debts.shark1.rateCap).toBeCloseTo(0.0072, 9);
     expect(interestDue(g, 'shark1')).toBeLessThan(interestDue(base, 'shark1'));
   });
   it('스무 개 케이스, 서른 개 칭호, 마흔 개 = 도감 완성(특별한 결말이 같이 적힌다)', () => {

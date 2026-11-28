@@ -11,7 +11,7 @@ import { play } from '../audio';
 import { reduced } from '../fx';
 import { sprite } from '../sprites';
 import { FruitIcon } from './Fruit';
-import { giftText, nextDetail, nextText } from './fruitText';
+import { giftText, milestoneShort, nextText } from './fruitText';
 import './liteEnding.css';
 
 const IMGS = import.meta.glob('../img/endings/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
@@ -27,8 +27,8 @@ function Miles({ seen }: { seen: number }) {
         <u style={{ width: `${Math.min(100, (seen / LITE_ENDING_TOTAL) * 100)}%` }} />
         {MILESTONES.map((m) => <i key={m.at} className={seen >= m.at ? 'on' : ''} style={{ left: `${(m.at / LITE_ENDING_TOTAL) * 100}%` }} data-mile={m.at}>{m.at}</i>)}
       </div>
-      <div className="le-mnames">{MILESTONES.map((m) => <span key={m.at} className={seen >= m.at ? 'on' : ''}><b>{m.at}</b>{m.name}</span>)}</div>
-      <small className="le-mnext" data-next-left={seen}>{nextText(seen)}. {nextDetail(seen)}</small>
+      <div className="le-mnames">{MILESTONES.map((m) => <span key={m.at} className={seen >= m.at ? 'on' : ''}><b>{m.at}</b>{milestoneShort(m)}</span>)}</div>
+      <small className="le-mnext" data-next-left={seen}>{nextText(seen)}</small>
     </div>
   );
 }
@@ -48,7 +48,6 @@ export function LiteBook({ onClose, hi }: { onClose: () => void; hi?: string }) 
     return (
       <button key={id} className={'le-tile' + (have ? ' got' : '') + (id === hi ? ' hi' : '')} data-tile={id} disabled={!have} onClick={() => { play('ui_tap'); setSel(id); }} aria-label={have ? title : `${label}, 아직 못 봄`}>
         {have && endingImg(id) ? <img src={endingImg(id)} alt="" loading="lazy" /> : <i>{i !== undefined ? i + 1 : '★'}</i>}
-        {gift && <em className={'le-gtag' + (have ? ' on' : '')} aria-label="가지가 열리는 엔딩">가지</em>}
         <span>{have ? title : '????'}</span>
       </button>
     );
@@ -63,7 +62,7 @@ export function LiteBook({ onClose, hi }: { onClose: () => void; hi?: string }) 
           {endingImg(s.id) && <img src={endingImg(s.id)} alt="" />}
           <b>{s.title}</b>
           {s.lines.map((l, i) => <p key={i}>{l}</p>)}
-          {sGift && <p className="le-bgift">「{skillById[sGift.node]?.name}」 가지를 연 엔딩. {sGift.line}</p>}
+          {sGift && <p className="le-bgift">「{skillById[sGift.node]?.name}」 열림</p>}
           <small>{book[s.id]?.count ?? 0}번 봤다</small>
         </div>
       )}
@@ -100,7 +99,7 @@ export function LiteEndingCard({ onNext }: { onNext: () => void }) {
       {r && r.fruit > 0 && (
         <div className="le-reward" data-fruit-gain={r.fruit} role="status">
           <span className="le-fruit"><FruitIcon size={26} /><b>열매 +{r.fruit}</b><small>나무에 쓴다</small></span>
-          {r.gift && <span className="le-gift" data-gift={r.gift.node} data-gift-kind={r.gift.kind}><b>{giftText(r.gift)}</b><small>{r.gift.line}</small></span>}
+          {r.gift && <span className="le-gift" data-gift={r.gift.node} data-gift-kind={r.gift.kind}><b>{giftText(r.gift)}</b></span>}
           {r.milestone && <span className="le-mile" data-milestone={r.milestone.at}><b>도감 {r.milestone.at}개! {r.milestone.name}</b><small>{r.milestone.text}, 열매 +{r.milestone.fruit}</small></span>}
         </div>
       )}

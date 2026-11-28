@@ -4,20 +4,27 @@ import { CLEAR_ID, FRUIT_PER_NEW, nextMilestone, liteSeenCount } from '../../../
 
 /** 공짜 가지 한 줄: 「한 번 버티기」 가지가 열렸다 */
 export function giftText(gift: NonNullable<LiteReward['gift']>): string {
-  if (gift.kind === 'open') return `「${gift.name}」 가지가 열렸다`;
-  if (gift.kind === 'level') return `「${gift.name}」 가지가 한 마디 자랐다, Lv${gift.level}`;
-  return `「${gift.name}」 가지는 다 자라서 열매 +1`;
+  if (gift.kind === 'open') return `「${gift.name}」 열림`;
+  if (gift.kind === 'level') return `「${gift.name}」 Lv${gift.level}`;
+  return `열매 +1`;
 }
 
-/** 다음 도감 보상까지: 「다음 보상까지 2」 */
+/** 도감 보상의 짧은 이름(사용자: 「새 생마다…」 같은 긴 말은 별로). 칸 이름과 다음 보상 줄에 쓴다 */
+export function milestoneShort(m: { perk?: string; value?: number; name?: string }): string {
+  if (m.perk === 'cash') return `+${Math.round((m.value ?? 0) / 10000)}만`;
+  if (m.perk === 'rate') return '이자 할인';
+  if (m.perk === 'case') return '폰 케이스';
+  if (m.perk === 'title') return '칭호';
+  if (m.perk === 'complete') return '???';
+  return m.name ?? '';
+}
+/** 다음 도감 보상까지: 「5개 더 보면 +1만」 */
 export function nextText(seen: number): string {
   const nx = nextMilestone(seen);
-  return nx ? `다음 보상까지 ${nx.left}` : '도감 보상을 다 받았다';
+  return nx ? `${nx.left}개 더 보면 ${milestoneShort(nx.m)}` : '보상을 다 받았다';
 }
-export function nextDetail(seen: number): string {
-  const nx = nextMilestone(seen);
-  return nx ? `도감 ${nx.at}개: ${nx.text}` : '마흔 가지를 다 봤다';
-}
+/** (옛 자리 호환) 따로 붙이던 긴 설명은 뺀다 */
+export function nextDetail(_seen: number): string { return ''; }
 
 /** 환생 화면의 열매 줄: 이번 생의 새 엔딩과 받은 열매, 없으면 다른 죽음을 권한다 */
 export function rebirthFruit(p: PendingEnding | null): { main: string; sub: string[]; fruit: number } {
@@ -25,7 +32,7 @@ export function rebirthFruit(p: PendingEnding | null): { main: string; sub: stri
   if (!r || r.newCount <= 0) return { main: '새 엔딩 없음', sub: ['다른 데서 망해 보자. 다른 코인, 다른 배율, 다른 돈줄, 다른 시각.'], fruit: 0 };
   const sub: string[] = [];
   if (r.gift) sub.push(giftText(r.gift));
-  if (r.milestone) sub.push(`도감 ${r.milestone.at}개 보상: ${r.milestone.text}, 열매 +${r.milestone.fruit}`);
+  if (r.milestone) sub.push(`도감 ${r.milestone.at}개 보상, 열매 +${r.milestone.fruit}`);
   return { main: `이번 생에 새 엔딩 ${r.newCount}개 → 열매 +${r.fruit}`, sub, fruit: r.fruit };
 }
 
@@ -38,7 +45,7 @@ export function retireSubLite(g: GameState): string {
 export const seenOf = (g: GameState): number => liteSeenCount(g.family.liteBook);
 
 const TAG_CLUE: Record<string, string> = {
-  'lender:shark1': '오소리 대부 빚이 제일 많은 채', 'lender:shark2': '독사 대부 빚이 제일 많은 채', 'lender:capital': '숲속 캐피탈 빚이 제일 많은 채', 'lender:bank': '조합 빚이 제일 많은 채',
+  'lender:shark1': '오소리 대부 빚이 제일 많은 채', 'lender:shark2': '독사 대부 빚이 제일 많은 채', 'lender:capital': '숲속 캐피탈 빚이 제일 많은 채', 'lender:bank': '조합 빚이 제일 많은 채', 'lender:crow': '반짝 전당포 빚이 제일 많은 채',
   'clock:night': '밤에', 'clock:dawn': '새벽에', 'clock:morning': '아침에', 'clock:day': '평일 한낮에',
   'life:short': '5분 안에', 'life:mid': '적당히 버티다', 'life:long': '20분 넘게 버티다',
   'lev:high': '100배 넘게 걸고', 'lev:low': '20배 이하로 조심조심', 'lev:mid': '어중간한 배율로',
