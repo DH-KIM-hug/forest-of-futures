@@ -3,7 +3,7 @@
 원본 콘티는 `docs/gdd/LITE_CONTI.md` 이다. 이 문서는 그 콘티가 화면에 어떻게 들어갔는지, 그림 파일과 풍선 자리, 숫자의 출처, 컷이 뜨는 조건을 적는다.
 
 - 주소: `?proto=1&lite=1` (라이트가 아닐 때는 지금 게임 그대로)
-- 그림: sprite-gen codex 컬러 만화 컷. 참고 그림은 `docs/art/v5/manga/p1_color.png`(첫째), `docs/art/v5/golden/hero_phone.png`, 대부업자가 나오는 컷은 그 인물의 `docs/art/v5/raw/c_*.png`. 프롬프트는 `docs/art/v5/prompts/manga_*.txt`, 원본 PNG 는 `docs/art/v5/manga/`, 게임에 들어가는 웹 사본은 `src/ui/proto/img/manga/*.webp`(1080×720).
+- 그림: sprite-gen codex 컬러 만화 컷. 참고 그림은 `docs/art/v5/manga/p1_color.png`(첫째), `docs/art/v5/golden/hero_phone.png`, 대부업자가 나오는 컷은 그 인물의 `docs/art/v5/raw/c_*.png`. 오소리 대부는 v2 로 고정(`docs/art/v5/golden/BOSS_V2.md`, 기준 `boss_v2_ref.png`, 모델 시트 `boss_v2.png`). 프롬프트는 `docs/art/v5/prompts/manga_*.txt`, 원본 PNG 는 `docs/art/v5/manga/`, 게임에 들어가는 웹 사본은 `src/ui/proto/img/manga/*.webp`(1080×720).
 - 말풍선은 비워서 그렸다. 한글 대사, 효과음, 숫자는 전부 화면이 HTML/SVG 로 얹는다(`src/ui/proto/lite/manga.ts` 의 % 자리).
 - 효과음 글씨: 굵은 검정 글자에 흰 외곽선, 살짝 기울임, 통통 또는 떨림. 움직임 줄이기면 흔들지 않고 나타나기만 한다.
 - 프롤로그: 한 쪽씩 화면에 맞춰 띄우고 누르면 다음 쪽. [건너뛰기]는 두 번째로 볼 때부터만 보인다. 세로 쪽(2:3, 정사각)은 390 폭 폰에서 쪽 전체가 한 화면에 들어간다(약 366×550). 가로 펼침면(7쪽)은 세로 화면에서 높이를 62dvh 로 채우고 7초 동안 왼쪽에서 오른쪽으로 훑는다(움직임 줄이기면 폭에 맞춰 멈춰 있다).
@@ -13,8 +13,9 @@
 
 주인 지시: 「프롤로그 6번으로 시작. 이건 패러디라 저 짤과 완전 동일해야 함(등장인물만 다람쥐, 시점만 어느 날). 그다음 1 2 7 5 4 3 으로 프롤로그 끝. 바로 선물 시작(튜토리얼 시작)」. 번호는 주인이 보낸 원작 FX 개그 만화 일곱 쪽의 번호다. 원작 쪽은 저장소 밖에만 두고(저작권), 저장소에는 우리가 다시 그린 그림과 프롬프트만 넣는다.
 
-- 그림: `docs/art/v5/manga/parody_N.png`(N = 원작 쪽 번호), 웹 사본 `src/ui/proto/img/manga/parody_N.webp`. 프롬프트 `docs/art/v5/prompts/manga_parody_N.txt`. sprite-gen codex 에 원작 쪽을 첫째 참고(구도), `golden/hero_phone.png` 를 둘째(칩멍크), 5쪽은 `raw/c_boss.png`(오소리 대부)를 셋째로 넣었다. 3쪽과 7쪽은 두 번째 뽑기를 썼다(첫 판은 `parody_3_try1.png`, `parody_7_try1.png`: 3쪽은 원작의 가타카나 모양 속 빈 글자가 남았고, 7쪽은 머리가 작고 멀었다).
-- 색: 원작 그대로. 6쪽과 7쪽은 컬러, 1 2 3 4 5쪽은 흑백 스크린톤(「완전 동일」이 가장 최근 지시라서). 컬러로 바꾸려면 해당 프롬프트의 첫 줄만 컬러로 바꿔 다시 뽑으면 된다.
+- 그림: `docs/art/v5/manga/parody_N.png`(N = 원작 쪽 번호), 웹 사본 `src/ui/proto/img/manga/parody_N.webp`. 프롬프트 `docs/art/v5/prompts/manga_parody_N.txt`. sprite-gen codex 참고 순서: 원작 쪽(구도), `manga/p1_color.png`(우리 그림체), `golden/hero_phone.png`(칩멍크), 5쪽은 `golden/boss_v2_ref.png` 와 `golden/boss_v2.png`(오소리 대부 v2). 3쪽은 휴대폰 캡처에서 쪽만 잘라 넣었고, 7쪽은 원작의 인물 부분을 잘라 자세 참고로 하나 더 넣었다.
+- 색 (2026-11-28 2차): 주인 지시 「올 컬러에 우리 스타일」. 일곱 쪽 전부 우리 컬러 만화체(굵은 검은 먹선, 부드러운 셀 색, 따뜻한 파스텔, 그림자에만 옅은 스크린톤)로 다시 뽑았다. 예전 흑백 1~5쪽은 `parody_N_bw.png`, 예전 컬러 6, 7쪽은 `parody_N_v1.png`, 프롬프트는 `manga_parody_N_bw.txt`/`_v1.txt` 로 남겼다. 고르지 않은 판은 `parody_4_ctry1.png`(왼쪽에 잡지 광고 띠가 남음), `parody_7_ctry1.png`(똑바로 앉아 볼을 감쌈), `parody_7_ctry3.png`. 4쪽과 5쪽은 칸 바깥 흰 여백을 잘라 냈다(5쪽 원본은 `parody_5_ctry1.png`).
+- 2쪽과 5쪽의 칩멍크는 `hero_phone.png` 와 같은 둥근 칩멍크(주황 털, 크림 얼굴과 배, 머리에서 등으로 내려가는 갈색 줄 하나)로 다시 그렸다. 7쪽은 원작처럼 책상 위로 몸을 숙이고 두 손으로 머리 위쪽을 움켜쥔다.
 - 글: 그림에는 글자가 없다. 대사, 효과음, 숫자는 `manga.ts` 의 `prologuePages()` 가 % 자리로 얹는다(가로쓰기와 세로쓰기, 흰 테 두른 검은 글, 검은 테 흰 글, 속 빈 효과음, 공책 손글씨, 물결 선).
 
 | 순서 | 원작 쪽 | 그림 | 얹는 글 |
@@ -66,7 +67,7 @@
 `manga.ts` 에 컷마다 적혀 있다. 그림을 다시 뽑으면 풍선 자리도 다시 재야 한다. 빈 칸의 자리:
 
 - `parody_N`: 쪽마다 `prologuePages()` 에 적혀 있다(그림을 다시 뽑으면 다시 잰다). `parody_7`: 하아 풍선 24~33 x 7.5~26, 15~22.5 x 39~57, 70.5~79 x 15~37, 76~85 x 52~72. 계단 해설 칸 10.4~19.4 x 57.8~69.4, 3~13.8 x 76.6~94.2. 로고 66~99 x 73~98.
-- `t_boss`: 풍선 4~24% x 11~33%, 3.5~21.5% x 49~69%. `t_silent`: 10~39% x 6~26%, 60~90% x 6~26%. `t_grab`: 6~29% x 8~26%.
+- `t_boss`(대부 v2): 풍선 2~27% x 4~40%, 1~23% x 41~75%. `t_silent`: 6~44% x 2~33%, 57~90% x 2~32%. `t_grab`: 2~34% x 2~31%.
 - `t_raccoon`: 5~22% x 7~27%, 27~42% x 7~27%, 82~95% x 79~93%. `t_viper`: 5~22% x 6~27%, 31~48% x 5~23%, 83~96% x 80~94%.
 - `c_near`: 차트 칸 52~96% x 10~92%. `c_liq`: 위쪽 띠 0~29%, 생각 풍선 72~96% x 6~28%. `c_win`: 위쪽 띠 0~29%. `c_lev`: 오른쪽 60~100%. `c_first`: 왼쪽 띠 0~17.5%, WIN 상자 67.5~98% x 66~97%.
 - `d_chart`: 날짜 상자 71~98% x 3~29%, 숨 풍선 1~19% x 1~29%, 1~15% x 39~63%. `d_back`: 풍선 7~33% x 9~33%, 66~93% x 9~34%.

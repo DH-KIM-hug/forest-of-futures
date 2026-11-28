@@ -42,6 +42,7 @@
 - 죽음의 암시는 3개(7.5%): 빈 부두의 드럼통과 빨간 리본, 돌아오지 않은 배, 뒷산의 새싹. 빈자리와 남은 물건으로만.
 - 금지: 피, 상처, 부상, 시신, 죽는 순간, 자살이나 자해로 읽힐 것. 시험이 금지어와 가운데점을 거른다.
 - 그림: sprite-gen codex, 컬러 만화(첫째 참고 `docs/art/v5/manga/p1_color.png`, 둘째 `docs/art/v5/golden/hero_phone.png`, 대부업자가 나오면 `docs/art/v5/raw/c_*.png`). 세로 4:5, 글씨 없음. 프롬프트 `docs/art/v5/prompts/endings_lite/LE*.txt`(만드는 스크립트 `make_prompts.py`, 이어 뽑기 `run_jobs.sh`, 웹 사본 `to_webp.py` 640×800, 연락 시트 `make_sheet.py`, 이 표 `make_doc.py`).
+- 오소리 대부 v2 (2026-11-28): 대부가 나오는 LE01, LE04, LE07, LE14, LE21, LE25, LE32, LE33 은 `docs/art/v5/golden/BOSS_V2.md` 의 생김새로 다시 그렸다(구도는 예전 그림을 첫째 참고로). 프롬프트 `docs/art/v5/prompts/boss_v2/LE*.txt`, 뽑기 `prompts/boss_v2/run.sh`, 예전 그림 `docs/art/v5/endings_lite/boss_v1/`.
 
 ## 엔딩 40개
 
