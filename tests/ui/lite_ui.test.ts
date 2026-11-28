@@ -8,7 +8,7 @@ import { protoSaveKey } from '../../src/ui/proto/protoSave';
 import { lenderById } from '../../src/engine/data';
 import { LITE } from '../../src/engine/lite';
 
-const textsOf = (ps: ReturnType<typeof prologuePages>) => ps.flatMap((p) => [...p.balloons.map((b) => b.text), ...(p.sfx ?? []).map((s) => s.text), p.card ?? '', ...(p.words ?? []).map((w) => w.t)]);
+const textsOf = (ps: ReturnType<typeof prologuePages>) => ps.flatMap((p) => [...p.balloons.map((b) => b.text), ...(p.sfx ?? []).map((s) => s.text), p.card ?? '', ...(p.words ?? []).map((w) => w.t), ...(p.twist ? [p.twist.beat, p.twist.stamp, ...p.twist.lines] : [])]);
 
 describe('라이트 도입 만화(패러디 일곱 쪽)', () => {
   const ps = prologuePages();
@@ -40,6 +40,19 @@ describe('라이트 도입 만화(패러디 일곱 쪽)', () => {
   it('화면 글에 가운데점이 없고, 엄마 이야기와 일본어가 없다', () => {
     const all = [...textsOf(ps), ...textsOf(rebirthPanels()), ...textsOf(temptPanels({ lender: 'capital', unit: 50_000, got: 50_000, perSettle: 335, ratePct: 0.67 })), ...textsOf(temptPanels({ lender: 'shark2', unit: 100_000, got: 90_000, perSettle: 2_700, ratePct: 2.7 }))];
     for (const t of all) { expect(t).not.toMatch(/·/); expect(t).not.toMatch(/엄마|어머님/); expect(t).not.toMatch(/[\u3040-\u30ff円]/); }
+  });
+  it('5쪽의 「빌렸다」는 그림 위 글이 아니라 넘길 때 뜨는 반전 카드(엔진 숫자)', () => {
+    const p5 = ps.find((p) => p.id === 'p5')!;
+    const unit = lenderById.shark1.borrowUnit!;
+    expect(p5.words?.some((w) => /빌렸다/.test(w.t))).toBe(false);
+    expect(p5.twist?.stamp).toBe('빌렸다.');
+    expect(p5.twist?.lines).toEqual([`빌린 돈 +${unit.toLocaleString('ko-KR')}`, `정산마다 이자 +${Math.ceil(unit * lenderById.shark1.rate).toLocaleString('ko-KR')}`]);
+    expect(ps.filter((p) => p.twist).map((p) => p.id)).toEqual(['p5']);
+  });
+  it('한글은 세로쓰기를 하지 않고(세로 표지 띠 없음), 마침표는 한국식', () => {
+    const all = textsOf(ps).join('\n') + textsOf([despairPanel({ sub: '제2화 파산', nar: ['a', 'b'] })]).join('\n');
+    expect(all).not.toMatch(/。/);
+    expect(all).not.toContain('어리바리 다람쥐의');
   });
   it('200배의 청산 거리는 엔진 식으로 0.4%', () => {
     expect(liqPctAt(200)).toBeCloseTo(0.4, 6);

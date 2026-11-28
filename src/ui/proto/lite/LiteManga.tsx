@@ -2,7 +2,7 @@
 // 짧은 시퀀스(LiteSeqHost: 빚의 유혹, 파산의 표제지, 환생)는 한 컷씩, 세로 화면에서는 컷이 쌓인다. 움직임 줄이기면 그냥 바뀐다.
 // 글은 그림의 빈 풍선 자리에 얹는다(manga.ts).
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { prologuePages, type Balloon, type Panel, type Word } from './manga';
+import { prologuePages, type Balloon, type Panel, type Twist, type Word } from './manga';
 import { useLite, endSeq } from './liteStore';
 import { play } from '../audio';
 import { reduced } from '../fx';
@@ -39,7 +39,7 @@ function WordView({ w }: { w: Word }) {
       </svg>
     );
   }
-  const cls = 'lp-w ' + w.k + (w.v ? ' v' : '') + (w.cls ? ' ' + w.cls : '');
+  const cls = 'lp-w ' + w.k + (w.cls ? ' ' + w.cls : '');
   return <b className={cls} style={{ ...box, ['--fs' as string]: `${w.fs}cqw`, ['--rot' as string]: `${w.rot ?? 0}deg`, ...(w.c ? { color: w.c } : {}) }} aria-hidden="true">{w.t}</b>;
 }
 
@@ -90,18 +90,44 @@ export function MangaReader({ panels, onDone, canSkip, label, endHint = '눌러�
   );
 }
 
+/** 쪽을 넘기기 전에 어두운 쪽 위로 뜨는 반전 카드: 「그리고…」 다음 크게 찍히는 「빌렸다.」, 아래 엔진 숫자 */
+function TwistCard({ t }: { t: Twist }) {
+  return (
+    <div className="lp-twist" data-twist role="status" aria-label={`${t.beat} ${t.stamp} ${t.lines.join(', ')}`}>
+      <div className="lt-card">
+        <p className="lt-beat" aria-hidden="true">{t.beat}</p>
+        <div className="lt-stamp" aria-hidden="true">
+          <b>{t.stamp}</b>
+          <svg className="lt-paw" viewBox="0 0 40 40" aria-hidden="true"><g fill="#C8302A"><ellipse cx="20" cy="27" rx="10" ry="8.5" /><ellipse cx="8" cy="15" rx="4" ry="5" /><ellipse cx="16" cy="9" rx="4" ry="5.2" /><ellipse cx="25" cy="9" rx="4" ry="5.2" /><ellipse cx="33" cy="15" rx="4" ry="5" /></g></svg>
+        </div>
+        <ul className="lt-lines" aria-hidden="true">{t.lines.map((l) => <li key={l}>{l}</li>)}</ul>
+      </div>
+    </div>
+  );
+}
+
 /** 프롤로그: 패러디 일곱 쪽(6 1 2 7 5 4 3)을 한 쪽씩. 끝나면 바로 첫 거래(튜토리얼). [건너뛰기]는 두 번째로 볼 때부터 */
 export function LiteManga({ onDone, canSkip }: { onDone: () => void; canSkip: boolean }) {
   const [pages] = useState(prologuePages);
   const [i, setI] = useState(0);
+  const [tw, setTw] = useState(false);
   const at = useRef(performance.now());
   const p = pages[i];
   const last = i === pages.length - 1;
   useEffect(() => { at.current = performance.now(); play(pages[i]?.id === 'x' ? 'liq_gavel' : 'ui_tap'); }, [i, pages]);
+  // 반전 카드: 도장이 찍히는 때에 발도장 소리
+  useEffect(() => {
+    if (!tw) return;
+    at.current = performance.now();
+    const t = window.setTimeout(() => play('paw_stamp'), reduced() ? 0 : 560);
+    return () => window.clearTimeout(t);
+  }, [tw]);
   // 다음 쪽 그림을 미리 받아 둔다
   useEffect(() => { const n = pages[i + 1]; if (n?.src) { const im = new Image(); im.src = n.src; } }, [i, pages]);
   const next = () => {
     if (performance.now() - at.current < 380) return; // 연타가 쪽을 건너뛰지 않게
+    if (p?.twist && !tw) { setTw(true); return; } // 넘기기 전에 반전 카드부터
+    setTw(false);
     if (last) { onDone(); return; }
     setI((x) => x + 1);
   };
@@ -122,6 +148,7 @@ export function LiteManga({ onDone, canSkip }: { onDone: () => void; canSkip: bo
           {last && <b className="lp-start" data-game-start aria-hidden="true"><span>GAME</span><span>START!</span></b>}
         </div>
       </div>
+      {tw && p.twist && <TwistCard t={p.twist} />}
       <p className="lm-hint" aria-hidden="true">{last ? '눌러서 첫 거래' : '눌러서 넘기기'}</p>
     </div>
   );

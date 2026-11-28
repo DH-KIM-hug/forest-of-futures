@@ -45,8 +45,8 @@ export function readPattern(run: GameState['run'], p: Position, heldSec: number)
   return e ? e.label : null;
 }
 
-function Fx({ t, x, y, fs, rot = 0, cls = '', v = false }: { t: string; x: number; y: number; fs: number; rot?: number; cls?: string; v?: boolean }) {
-  return <b className={'mc-sfx ' + cls + (v ? ' v' : '')} style={{ left: `${x}%`, top: `${y}%`, ['--fs' as string]: `${fs}cqw`, ['--rot' as string]: `${rot}deg` }} aria-hidden="true">{t}</b>;
+function Fx({ t, x, y, fs, rot = 0, cls = '' }: { t: string; x: number; y: number; fs: number; rot?: number; cls?: string }) {
+  return <b className={'mc-sfx ' + cls + (t.includes('\n') ? ' nl' : '')} style={{ left: `${x}%`, top: `${y}%`, ['--fs' as string]: `${fs}cqw`, ['--rot' as string]: `${rot}deg` }} aria-hidden="true">{t}</b>;
 }
 
 export function LiteCuts() {

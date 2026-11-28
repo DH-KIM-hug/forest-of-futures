@@ -79,8 +79,9 @@ function InkChart({ market, liq, dir }: { market: string; liq: number; dir: 1 | 
   );
 }
 
-function Lt({ t, x, y, fs, rot = 0, cls = '', v = false }: { t: string; x: number; y: number; fs: number; rot?: number; cls?: string; v?: boolean }) {
-  return <b className={'mc-sfx ' + cls + (v ? ' v' : '')} style={{ left: `${x}%`, top: `${y}%`, ['--fs' as string]: `${fs}cqw`, ['--rot' as string]: `${rot}deg` }} aria-hidden="true">{t}</b>;
+function Lt({ t, x, y, fs, rot = 0, cls = '' }: { t: string; x: number; y: number; fs: number; rot?: number; cls?: string }) {
+  // 한글은 세로쓰기를 하지 않는다: 여러 줄이면 \n 으로 짧은 가로 줄
+  return <b className={'mc-sfx ' + cls + (t.includes('\n') ? ' nl' : '')} style={{ left: `${x}%`, top: `${y}%`, ['--fs' as string]: `${fs}cqw`, ['--rot' as string]: `${rot}deg` }} aria-hidden="true">{t}</b>;
 }
 /** 그림 위 말풍선 자리의 글 */
 function Say({ t, x, y, w, h, fs }: { t: string; x: number; y: number; w: number; h: number; fs: number }) {
@@ -223,9 +224,9 @@ export function MangaCut() {
           <Lt t="딸깍" x={66} y={46} fs={4} rot={-6} />
         </div>
         <div className="mc-panel s3 pink">
-          <b className="mc-v l">절대로 날리지 않을 거예요……!</b>
+          <b className="mc-v l">{'절대로\n날리지\n않을\n거예요…!'}</b>
           <div className="mc-eval"><small>평가손익</small><b>{livePnl >= 0 ? '+' : '−'}{comma(Math.abs(Math.round(livePnl)))}</b></div>
-          <b className="mc-v r">이 돈은</b>
+          <b className="mc-v r">{'이\n돈은'}</b>
         </div>
       </div>
     </div>
@@ -239,7 +240,7 @@ export function MangaCut() {
         <img src={img} alt="" draggable={false} />
         {cut.kind === 'near' && <>
           <div className="mc-chartbox">{raw ? <InkChart market={cut.market} liq={liqPrice(raw)} dir={raw.dir} /> : null}</div>
-          <Lt t="스~~윽" x={90} y={12} fs={5.2} v cls="slide" />
+          <Lt t="스~~윽" x={66} y={12} fs={5.2} rot={18} cls="slide" />
           <Lt t="멈칫…" x={6} y={6} fs={3.6} rot={-8} />
           <Lt t="??" x={38} y={44} fs={9} rot={8} cls="pop late" />
           <Lt t="쿵덕 쿵덕!!" x={2} y={76} fs={7.4} rot={-6} cls="heart" />
@@ -258,11 +259,11 @@ export function MangaCut() {
           {cut.pnl !== undefined && <b className="mc-pnl">+{comma(Math.round(cut.pnl))}</b>}
         </>}
         {cut.kind === 'lev' && <>
-          <Lt t="간다…!" x={76} y={8} fs={9} v cls="pop" />
+          <Lt t="간다…!" x={63} y={26} fs={9} rot={-8} cls="pop" />
           <Lt t="꿀꺽" x={58} y={70} fs={3.6} rot={10} />
         </>}
         {cut.kind === 'first' && w && <>
-          <b className="mc-vow" aria-hidden="true">이 빚, 반드시 갚는다!</b>
+          <b className="mc-vow" aria-hidden="true">{'이 빚,\n반드시\n갚는다!'}</b>
           {[['흑', 25, 6, -10], ['흐끅', 54, 3, 8], ['아하핫', 70, 12, -6], ['하하!', 82, 34, 10], ['아핫!!', 20, 46, -12]].map(([t, x, y, r], i) => (
             <b key={i} className="mc-sob" style={{ left: `${x}%`, top: `${y}%`, ['--rot' as string]: `${r}deg`, animationDelay: `${0.1 + i * 0.12}s` }} aria-hidden="true">{t}</b>
           ))}

@@ -66,7 +66,7 @@ export function NotePaper({ page }: { page: 0 | 1 }) {
           <text x={46} y={226} className="ln-t sm">{fly !== null ? `${flyName}, 지난 1분에 ${fmt(fly)}% 움직였다` : `${josa(flyName, '은', '는')} 평소 1분에 그쯤 움직인다`}</text>
         </>}
       </svg>
-      <b className="ln-vert" aria-hidden="true">{flip ? '안 내려가면 되지.' : '판돈을 늘려서 작은 움직임에도 이익을…!'}</b>
+      <b className="ln-vert" aria-hidden="true">{flip ? '안 내려가면\n되지.' : '판돈을\n늘려서\n작은\n움직임에도\n이익을…!'}</b>
       <img className="ln-face" src={flip ? faceHappy : faceThink} alt="" draggable={false} />
       <span className="ln-sr">{flip ? `${LEV}배는 반대로 ${fmt(liqPct)}% 움직이면 넣은 돈을 전부 잃습니다.` : `1배로 ${fmt(same)}% 오른 이익과 ${LEV}배로 ${fmt(SMALL)}% 오른 이익이 같습니다.`}</span>
     </div>
