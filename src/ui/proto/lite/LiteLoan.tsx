@@ -5,14 +5,14 @@ import { useEffect, useState } from 'react';
 import { useGame } from '../../../store/gameStore';
 import { useProto } from '../protoStore';
 import { lenderById } from '../../../engine/data';
-import { interestDue, nextBorrowRate } from '../../../engine/selectors';
+import { interestDue } from '../../../engine/selectors';
+import { settleSec } from '../../../engine/pace';
 import type { LenderId } from '../../../engine/types';
 import { comma } from '../../../engine/util';
-import { ratePct } from '../model';
 import { PLACE, STORY } from '../text';
 import { sprite, type SpriteId } from '../sprites';
 import { say } from '../watch';
-import { LENDER_IDS, borrowAt, borrowRoom, cheapestOpen, knownLenders, manTxt, payAllWarn, payAt, type QuickWhy } from '../loanActs';
+import { LENDER_IDS, borrowAt, borrowExtra, borrowRoom, payAllLabel, cheapestOpen, knownLenders, manTxt, payAllWarn, payAt, type QuickWhy } from '../loanActs';
 import './liteLoan.css';
 
 /** 대출 탭으로 간다. focus 가 있으면 그 돈줄의 칸으로 굴리고 잠깐 빛낸다(사무소로 간다, 갚으러 간다, 정산 추심원) */
@@ -66,6 +66,8 @@ export function LiteLoan() {
   const known = knownLenders(g, { loanTaken, capitalKnown, viperKnown });
   const total = LENDER_IDS.reduce((a, id) => a + run.debts[id].principal, 0);
   const od = LENDER_IDS.reduce((a, id) => a + run.debts[id].overdue, 0);
+  const sec = settleSec(run);
+  const per = sec % 60 === 0 ? `${sec / 60}분마다` : `${sec}초마다`;
   return (
     <section className="lt-loan" aria-label="대출" data-loan>
       <header className="ll-head">
@@ -92,21 +94,23 @@ export function LiteLoan() {
           }
           const payAmt = Math.min(l.stampUnit, d.principal);
           const w = loanTaken ? payAllWarn(g, id) : null;
+          const more = borrowExtra(g, id);
           return (
             <div key={id} className={'ll-row' + (focus === id ? ' focus' : '') + (d.overdue > 0 ? ' od' : '')} data-loan-row={id}>
               {face && <img className="ll-face" src={face.src} alt="" />}
               <div className="ll-mid">
                 <b>{pl.name} <small>{pl.npc}</small></b>
                 <p className="ll-debt"><em>빚 {comma(d.principal)}</em>{d.overdue > 0 && <i className="ll-od" data-loan-od={d.overdue}>연체 {d.overdue}회</i>}</p>
-                <p>정산마다 이자 {comma(interestDue(g, id))}</p>
-                <p>다음 금리 {ratePct(nextBorrowRate(g, id))}%, 남은 한도 {comma(b.room)}{l.upfront ? `, 선이자 ${l.upfront * 100}%` : ''}</p>
+                <p data-loan-int={interestDue(g, id)}>이자 {per} {comma(interestDue(g, id))}</p>
+                {more && <p data-loan-more={more.extra}>더 빌리면 {manTxt(more.amt)}에 이자 +{comma(more.extra)}{l.upfront ? `, 선이자 ${l.upfront * 100}%` : ''}</p>}
+                {more && <p data-loan-room={b.room}>남은 한도 {comma(b.room)}</p>}
               </div>
               <div className="ll-btns">
                 <button className="borrow" disabled={b.amt <= 0} data-borrow={id} onClick={() => borrowAt(id, setMsg)}><span>{b.amt > 0 ? '빌리기' : '한도 다 씀'}</span><small>{b.amt > 0 ? '+' + comma(b.got) : ''}</small></button>
                 <button className="pay" disabled={d.principal <= 0} data-pay={id} onClick={() => payAt(id, 1, setMsg)}><span>갚기</span><small>−{comma(payAmt)}</small></button>
-                <button className="pay all" disabled={d.principal <= 0} data-payall={id} onClick={() => payAt(id, 'all', setMsg)}><span>전부 갚기</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
+                <button className="pay all" disabled={d.principal <= 0} data-payall={id} onClick={() => payAt(id, 'all', setMsg)}><span>{payAllLabel(g, id)}</span><small>−{comma(Math.min(d.principal, Math.floor(run.cash)))}</small></button>
               </div>
-              {w && <p className="ll-warn" data-pay-warn={w.short}>다 갚으면 정산에 {comma(w.short)} 모자라요.</p>}
+              {w && <p className="ll-warn" data-pay-warn={w.short}>다 내면 정산 때 {comma(w.short)} 모자라요</p>}
             </div>
           );
         })}

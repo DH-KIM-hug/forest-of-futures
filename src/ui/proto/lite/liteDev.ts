@@ -57,6 +57,15 @@ export function liteScene(name: string, base: GameState): GameState {
     case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
     // U-63 대출 탭: lite_loan_od = 오소리 사무소에 연체 1회, 대출 탭을 보는 자리
     case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
+    // 대출 계산 확인(LITE_LOANS.md): 캐피탈을 한도(20만)까지, 오소리 사무소는 1만씩 20번 갚아 20만, 손에 118,516, 정산 49초 전
+    case 'lite_loan_math': {
+      const g = ready(base);
+      for (let i = 0; i < 4; i++) A(g, { type: 'borrow', lender: 'capital' });
+      for (let i = 0; i < 20; i++) A(g, { type: 'stamp', lender: 'shark1', mult: 1 });
+      g.run.cash = 118516; g.run.settleIn = 49;
+      P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: null });
+      return g;
+    }
     case 'lite_quick': { const g = ready(base); g.run.cash = 2400; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_quick_settle': { const g = ready(base); g.run.cash = 2400; g.run.settleIn = 9; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_tut': case 'lite_sign': {

@@ -92,8 +92,21 @@ export function borrowAt(id: LenderId, onMsg: (m: string) => void, agreed = fals
 export function payAt(id: LenderId, mult: number | 'all', onMsg: (m: string) => void): void {
   const r = useGame.getState().act({ type: 'stamp', lender: id, mult });
   play(r.ok ? 'collector_paid' : 'insufficient');
-  onMsg(r.ok ? `${PLACE[id].name}: 원금 ${comma(r.paid ?? 0)} 갚았다` : r.msg === '현금 부족' ? '도토리가 부족해요' : r.msg ?? '지금은 처리할 수 없어요');
+  const left = useGame.getState().g.run.debts[id].principal;
+  onMsg(r.ok ? `${PLACE[id].name}에 ${comma(r.paid ?? 0)} 갚았다. 남은 빚 ${comma(left)}` : r.msg === '현금 부족' ? '도토리가 부족해요' : r.msg ?? '지금은 처리할 수 없어요');
 }
+
+/** 더 빌리면 늘어나는 이자(LITE_LOANS.md): 한 단위를 빌린 판을 엔진으로 돌려 본 이자 차이. 오소리의 두 번째부터 붙는 비싼 몫, 원한 금리, 금리 사건까지 그대로 */
+export function borrowExtra(g: GameState, id: LenderId): { amt: number; extra: number } | null {
+  const b = borrowRoom(g, id);
+  if (b.amt <= 0) return null;
+  const g2 = clone(g);
+  if (!engineAct(g2, { type: 'borrow', lender: id, consent: true }).ok) return null;
+  return { amt: b.amt, extra: interestDue(g2, id) - interestDue(g, id) };
+}
+
+/** 「전부 갚기」는 손의 돈으로 그 빚을 다 갚을 수 있을 때만. 모자라면 「있는 만큼 갚기」 */
+export const payAllLabel = (g: GameState, id: LenderId): string => (Math.floor(g.run.cash) >= g.run.debts[id].principal ? '전부 갚기' : '있는 만큼 갚기');
 
 /** 전부 갚기 경고(회차 15): 전부 갚으면 다음 정산에 모자라 연체가 되는가. 모자라는 돈, 아니면 null */
 export function payAllWarn(g: GameState, id: LenderId): { left: number; short: number } | null {
