@@ -67,7 +67,7 @@ export function Stage() {
       {m.stage === 0 && (
         <button className="stage-tap" aria-label="쳇바퀴가 없다" onPointerDown={(e) => { e.preventDefault(); doTap(undefined, 50); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doTap(); } }}>
           {[8, 22, 36, 66, 80, 91].map((l, i) => <i key={i} className="ac" style={{ left: l + '%', bottom: 8 + (i % 3) * 10 }} />)}
-          <Art id={heroArt(pose === 'idle' && !tapping ? 'pick' : pose)} className={'hero' + (tapping ? ' bn' : '')} alt="칩멍크" />
+          <Art id={heroArt(pose === 'idle' && !tapping ? 'pick' : pose)} className={'hero' + (tapping ? ' bn' : '')} alt="다로미" />
         </button>
       )}
       {hasWheels && (
@@ -84,7 +84,7 @@ export function Stage() {
             >
               <span className="wsign"><b>{GLYPH[wl.sign] ?? '●'}</b> {wl.short}</span>
               <Art id={WHEEL_ART[wl.coin]} className="wimg" label={wl.short} />
-              {wl.riding && <Art id={heroArt(pose === 'idle' || pose === 'pick' ? 'run' : pose)} className={'hero in' + (tapping ? ' spin' : '')} alt="칩멍크" />}
+              {wl.riding && <Art id={heroArt(pose === 'idle' || pose === 'pick' ? 'run' : pose)} className={'hero in' + (tapping ? ' spin' : '')} alt="다로미" />}
               {wl.units > 0 && <span className="wunits">설비 {wl.units}{wl.riding && m.props[0] ? ` · ${m.props[0]}` : ''}</span>}
               {wl.reverse && <span className="rev-sticker">역마진</span>}
               {wl.tagBy && <span className="gar-tag">가압류</span>}

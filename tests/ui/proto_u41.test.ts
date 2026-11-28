@@ -195,7 +195,7 @@ describe('이번 생의 길 (U-41)', () => {
   });
   it('한 판에 이자 한 번 치(이번 생 처음)의 장면: 오소리 대부 → 추심원 → 주인공, 숫자는 받은 것 그대로', () => {
     const L = STORY.winClaim({ first: '15,500은 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.', pnl: 15_812, claim: 15_500, spins: 3, stampLeft: 50_000, momLeft: 300_000 });
-    expect(L.map((l) => l.who)).toEqual(['collector', 'hero', 'hero', 'hero']); // 개정 대본 장면 20: 추심원 → 칩멍크
+    expect(L.map((l) => l.who)).toEqual(['collector', 'hero', 'hero', 'hero']); // 개정 대본 장면 20: 추심원 → 다로미
     expect(L[0].text).toContain('15,500');
     expect(L[1].text).toContain('15,812');
     expect(L[3].text).toContain('황금 도토코인까지 50,000');

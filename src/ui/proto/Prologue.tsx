@@ -193,9 +193,9 @@ export function Prologue({ onDone, canSkip }: { onDone: () => void; canSkip: boo
                 <g ref={colRef}><Alive id="cCollector" seed="collector" x={COLX} y={COLY} h={74} /></g>
                 <g className={'pa-bubble' + (talk > 0 ? ' now' : '')} key={talk}>
                   <rect x={22} y={COLY - 192} width={346} height={84} rx={20} fill="#fff" stroke={O} strokeWidth={2.6} />
-                  {/* 꼬리는 말하는 쪽을 가리킨다(추심원 또는 칩멍크) */}
+                  {/* 꼬리는 말하는 쪽을 가리킨다(추심원 또는 다로미) */}
                   {(() => { const tx = Math.max(48, Math.min(330, TALK[talk].who === 'hero' ? HEROX : COLX)); return <><path d={`M${tx - 14} ${COLY - 110} l14 22 l8 -22z`} fill="#fff" stroke={O} strokeWidth={2.6} strokeLinejoin="round" /><rect x={tx - 16} y={COLY - 116} width={26} height={6} fill="#fff" /></>; })()}
-                  <foreignObject x={32} y={COLY - 188} width={326} height={76}><div className={'pp-say' + (TALK[talk].who === 'hero' ? ' by-hero' : '')} data-who={TALK[talk].who}><span>{TALK[talk].who === 'hero' && <b className="pp-who">칩멍크</b>}<Typed text={TALK[talk].text} shown={sp.shown} /></span></div></foreignObject>
+                  <foreignObject x={32} y={COLY - 188} width={326} height={76}><div className={'pp-say' + (TALK[talk].who === 'hero' ? ' by-hero' : '')} data-who={TALK[talk].who}><span>{TALK[talk].who === 'hero' && <b className="pp-who">다로미</b>}<Typed text={TALK[talk].text} shown={sp.shown} /></span></div></foreignObject>
                 </g>
                 <rect x={COLX - 65} y={COLY + 6} width={130} height={24} rx={12} fill={O} /><text x={COLX} y={COLY + 23} textAnchor="middle" fontSize={14} fontWeight={700} fill="#fff">오소리 추심원</text>
               </g>

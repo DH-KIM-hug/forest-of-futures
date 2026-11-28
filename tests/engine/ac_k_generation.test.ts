@@ -12,7 +12,7 @@ import type { GameState } from '../../src/engine/types';
 const IDS = endings.map((e) => e.id);
 const fakeLedger = (g: GameState, n: number) => {
   g.family.ledger = {};
-  for (let i = 0; i < n; i++) g.family.ledger[IDS[i]] = { count: 1, holders: [{ gen: 2, name: '칩멍크' }], firstAt: 2, scenes: [] };
+  for (let i = 0; i < n; i++) g.family.ledger[IDS[i]] = { count: 1, holders: [{ gen: 2, name: '다로미' }], firstAt: 2, scenes: [] };
 };
 /** 파산시켜 엔딩 카드 단계로 만든다. */
 function bust(g: GameState, o: { peak?: number; mined?: number; immediate?: boolean; lastLender?: any } = {}) {

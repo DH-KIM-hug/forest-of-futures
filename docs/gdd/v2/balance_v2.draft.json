@@ -84,11 +84,11 @@
       },
       {
         "id": "helper",
-        "name": "알바 칩멍크",
+        "name": "알바 다로미",
         "cost": 60000,
         "perSec": 24.5,
         "needHouse": 0,
-        "seenAs": "알바 칩멍크가 옆 쳇바퀴를 돌린다",
+        "seenAs": "알바 다로미가 옆 쳇바퀴를 돌린다",
         "perSettle": 4410
       },
       {

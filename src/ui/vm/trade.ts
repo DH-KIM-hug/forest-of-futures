@@ -173,7 +173,7 @@ export function tradeMode(g: GameState) {
   return { mode: gate.mode, text: gate.text, lines, ready: lines.length > 0 && lines.every((l) => l.ok), cap: levCapNow(g.run), waiver: waiverAvailable(g.run) };
 }
 
-// ── 처음 세 번의 거래 설명(차트 밖 칩멍크 말) ───────────────────────────
+// ── 처음 세 번의 거래 설명(차트 밖 다로미 말) ───────────────────────────
 const TUT = [
   '배율을 올리면 이길 때도 질 때도 그만큼 커집니다.',
   '청산가에 닿으면 증거금을 전부 잃습니다. 손절은 그 앞에 걸어 두는 선입니다.',

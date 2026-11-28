@@ -47,7 +47,7 @@ describe('튜토리얼 대사 (U-32): 모든 줄이 풀린다', () => {
     }
     for (const k of used) expect(Object.keys(HL)).toContain(k);
   });
-  it('말투(개정 대본): 늘이는 "~요오"와 물결은 없고, 가운데점도 없다. 프롤로그는 추심원과 칩멍크가 주고받는다', () => {
+  it('말투(개정 대본): 늘이는 "~요오"와 물결은 없고, 가운데점도 없다. 프롤로그는 추심원과 다로미가 주고받는다', () => {
     for (const id of TIP_IDS) {
       const l = T(id, ARGS);
       expect(l.text, id).not.toMatch(/요오|~|·/);

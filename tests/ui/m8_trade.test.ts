@@ -142,7 +142,7 @@ describe('포지션 줄·숏 보험 줄·처음 세 번 설명', () => {
     expect(shortLine(g, 'DTC')).toBe('지갑 도토코인 12,400어치 — 숏으로 지킨 비율 0%');
     expect(shortLine(g, 'JQQ')).toBeNull();
   });
-  it('끝난 거래가 3건이 되기 전까지만 칩멍크 설명', () => {
+  it('끝난 거래가 3건이 되기 전까지만 다로미 설명', () => {
     const g = bare();
     expect(tutorialLine(g)).toBeNull();
     openFutures(g, 10);

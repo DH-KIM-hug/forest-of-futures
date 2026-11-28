@@ -38,7 +38,7 @@ export const ART_FALLBACK: Record<ArtId, { label: string; color: string }> = {
   house_0_tent: { label: '텐트', color: '#e8dcc0' }, house_1_cabin: { label: '오두막', color: '#d9b98b' }, house_2_warehouse: { label: '창고', color: '#e0c48a' },
   house_3_villa: { label: '별장', color: '#f1e3c2' }, house_4_mansion: { label: '저택', color: '#f5cf5b' },
   wheel_DTC: { label: '도토코인', color: '#8B5E3C' }, wheel_BTH: { label: '밤더리움', color: '#7A5BB5' }, wheel_MDT: { label: '멍도토', color: '#E0B52E' }, wheel_SMS: { label: '삼솔전자', color: '#3F7CC4' },
-  hero_idle: { label: '칩멍크', color: '#f2b36b' }, hero_pick: { label: '줍기', color: '#f2b36b' }, hero_run: { label: '달리기', color: '#f2b36b' },
+  hero_idle: { label: '다로미', color: '#f2b36b' }, hero_pick: { label: '줍기', color: '#f2b36b' }, hero_run: { label: '달리기', color: '#f2b36b' },
   hero_joy: { label: '환희', color: '#f6c97f' }, hero_sweat: { label: '식은땀', color: '#e8b08a' }, hero_greed: { label: '탐욕', color: '#f0a05a' }, hero_dazed: { label: '멍', color: '#cdbba0' },
   npc_owl: { label: '부엉이', color: '#d9cdb0' }, npc_weasel: { label: '족제비', color: '#e8c58a' }, npc_badger: { label: '오소리', color: '#c0bab0' }, npc_viper: { label: '독사', color: '#a9c28f' },
   npc_squirrel: { label: '다람쥐', color: '#e8b98a' }, npc_raccoon: { label: '너구리', color: '#bdb6ae' }, npc_rabbit: { label: '토끼', color: '#f1e6e0' }, npc_fox: { label: '여우', color: '#f0a56a' }, npc_bear: { label: '곰', color: '#b88a62' },

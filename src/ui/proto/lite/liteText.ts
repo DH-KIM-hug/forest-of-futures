@@ -1,4 +1,4 @@
-// 라이트 모드의 대사(docs/gdd/LITE_MANGA.md). 엄마 이야기는 없다: 칩멍크는 오소리 사무소 돈 30만으로 날다람쥐코인을 샀다가 반 토막을 맞았다.
+// 라이트 모드의 대사(docs/gdd/LITE_MANGA.md). 엄마 이야기는 없다: 다로미는 오소리 사무소 돈 30만으로 날다람쥐코인을 샀다가 반 토막을 맞았다.
 // 쳇바퀴, 알바, 족제비, 엄마의 단서는 나오지 않는다. 라이트일 때만 STORY 의 몇 장면을 이 글로 바꿔 끼운다(applyLiteText). 숫자는 엔진 값을 받는다.
 import { STORY } from '../text';
 import type { Line, Who } from '../protoStore';

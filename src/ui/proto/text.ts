@@ -9,7 +9,7 @@ export const BOSS_NAME = '오소리 대부';
 export const HOME_WHEEL_NAME = '엄마의 쳇바퀴';
 
 export const WHO_NAME: Record<Who, string> = {
-  collector: COLLECTOR_NAME, boss: BOSS_NAME, weasel: '족제비 상인', hero: '칩멍크', sms: '문자', note: '',
+  collector: COLLECTOR_NAME, boss: BOSS_NAME, weasel: '족제비 상인', hero: '다로미', sms: '문자', note: '',
   raccoon: '창구 너구리', viper: '독사 대부', owl: '부엉이 지점장', news: '도토리일보',
 };
 
@@ -25,7 +25,7 @@ const n = (x: number) => Math.round(x).toLocaleString('ko-KR');
 const man = (x: number) => (x % 10000 === 0 ? `${x / 10000}만` : n(x));
 const L = (who: Who, text: string, mood?: Line['mood']): Line => ({ who, text, mood });
 
-/** 프롤로그 P3: 열쇠를 받으러 온 추심원과 칩멍크가 주고받는다. 엄마의 빚 30만을 칩멍크가 자기 이름으로 맡는다(개정 대본 장면 3) */
+/** 프롤로그 P3: 열쇠를 받으러 온 추심원과 다로미가 주고받는다. 엄마의 빚 30만을 다로미가 자기 이름으로 맡는다(개정 대본 장면 3) */
 export interface TalkLine { who: 'collector' | 'hero'; text: string }
 export const prologueTalk = (o: { debt: number; interest: number }): TalkLine[] => [
   { who: 'collector', text: '오소리 사무소에서 나왔습니다. 짐은 낮에 다 뺐고요.' },
@@ -81,18 +81,18 @@ export const STORY = {
     L('hero', '아까 일꾼 얘기를 들었는데, 어디서 구해요?'),
     L('boss', '이거 하나 가져가세요. 족제비 번호 들어 있어요.', 'smile'),
     L('boss', '오늘은 제가 전화해 놓죠.', 'smile'),
-    L('note', '칩멍크가 폰을 집어 든다. 화면 한구석에 낯익은 도토코인 그림이 있다.'),
+    L('note', '다로미가 폰을 집어 든다. 화면 한구석에 낯익은 도토코인 그림이 있다.'),
     L('note', '그 옆의 숫자가 한 칸 내려간다.'),
     L('hero', '우리 집 기계에 그려진 거다. 이 숫자가 한 개 값이에요?'),
     L('boss', '네, 하나 팔면 그만큼 받아요. 어머님도 그 값부터 물으셨어요.', 'smile'),
     L('note', '앱 이름은 「FRX 숲거래소」. 도토코인 값이 그 옆에서 쉬지 않고 바뀐다.'),
     L('boss', '사무소 폰이라 내역은 저한테도 와요. 막히면 이 번호로 전화하세요.', 'smile'),
-    L('note', '대부가 족제비에게 전화를 거는 동안 칩멍크는 폰 고리에 엄마의 리본을 두 번 묶는다.'),
+    L('note', '대부가 족제비에게 전화를 거는 동안 다로미는 폰 고리에 엄마의 리본을 두 번 묶는다.'),
   ],
   /** 장면 10 빌린 뒤 첫 정산: 오늘 건 다 냈다 */
   firstSettle: (interest: number, A: TipArgs): Line[] => [
     L('collector', `이자 ${n(interest)}, 생활비 ${n(A.living)}. 네, 맞아요. 오늘 건 다 냈어요.`),
-    L('note', '칩멍크가 막 받아 온 돈을 다시 센다. 종이 띠 자국이 아직 남아 있다.'),
+    L('note', '다로미가 막 받아 온 돈을 다시 센다. 종이 띠 자국이 아직 남아 있다.'),
   ],
   /** 다음 생의 첫 정산 */
   rebornSettle: (interest: number): Line[] => [
@@ -119,7 +119,7 @@ export const STORY = {
     L('note', '알림을 닫자 그 밑에 사무소에서 봤던 도토코인 값이 떠 있다.'),
     L('hero', '아까 팔 때도 이 값이었나?'),
   ],
-  /** 장면 14 첫 주문: 가진 돈 전부가 걸려 있다. 칩멍크가 사무소에 전화를 건다 */
+  /** 장면 14 첫 주문: 가진 돈 전부가 걸려 있다. 다로미가 사무소에 전화를 건다 */
   tutIntro: (margin: number, _lev: number, A: TipArgs): Line[] => [
     L('hero', '값이 떨어지면 내가 캔 것도 싸지는데. 여기선 어떻게 번다는 거지?'),
     L('note', `첫 주문 칸에 가진 도토리 ${won(margin, '이', '가')} 전부 적혀 있다. 사무소에 전화를 건다.`),
@@ -169,7 +169,7 @@ export const STORY = {
     : [L('note', '대부가 서랍에서 작은 액자를 꺼내 빈 못에 건다. 그림 쪽이 벽을 향한다. 뒷판에 「완납 때 돌려줄 것」.')],
   /** 장면 34 모든 빚 0: 이 생을 닫을지 고른다. 고르는 단추는 watch.ts 가 붙인다 */
   clear: (): Line[] => [
-    L('note', '칩멍크는 습관처럼 문을 조금 열어 둔다. 이제 정산 시각에 문간에 올 사람이 없다.'),
+    L('note', '다로미는 습관처럼 문을 조금 열어 둔다. 이제 정산 시각에 문간에 올 사람이 없다.'),
     L('hero', '오늘은 이 문, 내가 닫아도 되네.'),
   ],
   /** 장면 36 [계속 산다]를 고른 뒤: 2막의 문턱(족제비의 할부 책자). 2막 자체는 아직 없다 */
@@ -212,7 +212,7 @@ export const STORY = {
       L('collector', `${n(o.off)}만큼 원금에서 뺐습니다.`, 'flat'),
       L('collector', '…잠시만요. 이쪽으로 빼는 거 맞아요? 문에 걸리는데.', 'flat'),
       L('hero', '그쪽 말고요. 이쪽으로 기울여야 나가요.'),
-      L('note', '바퀴가 지나가자 칩멍크가 문턱에 앉아 리본 매듭을 만진다.'),
+      L('note', '바퀴가 지나가자 다로미가 문턱에 앉아 리본 매듭을 만진다.'),
     ] : o.what === 'wallet' ? [
       L('collector', `지갑은 안에 든 거까지 ${won(o.off, '이에요', '예요')}. 그만큼 빚에서 뺄게요.`, 'flat'),
     ] : [
@@ -251,7 +251,7 @@ export const STORY = {
     L('sms', `[FRX 숲거래소] 새 계좌가 열렸어요 ♥ 앞으로 정산 ${o.left}번 동안 거래 수수료 무료.`),
     L('hero', o.reborn ? `이 문자는 또 ${o.left}번을 다 주네.` : '무료라는 글씨가 금액보다 크네.'),
   ],
-  /** 장면 20 한 판에 이자와 생활비 한 번 치를 벌었다(이번 생 처음): 추심원 → 칩멍크. 숫자는 전부 그 거래와 지금 살림의 것 */
+  /** 장면 20 한 판에 이자와 생활비 한 번 치를 벌었다(이번 생 처음): 추심원 → 다로미. 숫자는 전부 그 거래와 지금 살림의 것 */
   winClaim: (o: { first: string; pnl: number; claim: number; spins: number | null; stampLeft: number | null; momLeft: number }): Line[] => [
     L('collector', o.first, 'smile'),
     L('hero', o.spins !== null && o.spins >= 2 ? `+${n(o.pnl)}. 바퀴 한 대로 ${o.spins}번 정산할 돈이다.` : `+${n(o.pnl)}. 이자와 생활비 한 번 치다.`),
@@ -284,7 +284,7 @@ export const STORY = {
   ] : k === 1 ? [
     L('hero', '장부에서만 보던 숫자다. 이게 다 내 거라고?'),
   ] : [
-    L('note', '문간에서 발소리가 난다. 칩멍크가 일어선다.'),
+    L('note', '문간에서 발소리가 난다. 다로미가 일어선다.'),
     L('collector', '아, 일어나지 마세요. 오늘은 가방 두고 나왔어요.', 'smile'),
     L('hero', '차 한 잔 하고 가요. 문 열려 있어요.'),
   ],

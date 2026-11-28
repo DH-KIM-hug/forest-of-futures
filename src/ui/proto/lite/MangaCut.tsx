@@ -2,7 +2,7 @@
 //   pray  C1 평가손 기도: 증거금의 절반 넘게 잃은 채 들고 있다(청산이 아직 코앞은 아닐 때). 세로 세 칸, 진짜 날짜와 시각, 진짜 평가손익. 판마다 한 번
 //   near  C2 청산 직전(위험 0.7 이상): 질린 얼굴 + 진짜 시세로 그린 먹 차트 + 스~~윽, 멈칫…, ??, 쿵덕 쿵덕(심장 박동에 맞춰). 판마다 한 번
 //   liq   C3 강제 청산: 우는 얼굴, 붉은 번쩍, 주륵 주륵, 부들 부들, 쿵덕 쿵덕!!, 「진다는 건 있을 수 없어…!」, 청산 도장과 잃은 돈
-//   first C4 이번 생 처음 이긴 실전 판, 그 뒤로는 이번 생 신기록: 울다 웃는 칩멍크, 세로 다짐, 흑 흐끅 하하, 진짜 거래의 WIN 상자와 잔액
+//   first C4 이번 생 처음 이긴 실전 판, 그 뒤로는 이번 생 신기록: 울다 웃는 다로미, 세로 다짐, 흑 흐끅 하하, 진짜 거래의 WIN 상자와 잔액
 //   win   C5 대박 이상(넣은 돈의 네 배 이상): 별 눈, 번쩍!!, 두둥!!
 //   lev   장면 B 50배 넘게 걸 때, 생마다 처음 한 번: 간다…!
 // pray 와 near 는 누름이 그대로 지나간다([정리하기]를 가리지 않는다). 나머지는 누르면 닫힌다. 1.3~2.6초(first 만 4.5초), 서로 20초 간격, near 는 90초 pray 는 2분에 한 번. 움직임 줄이기면 흔들지 않는다.
@@ -273,7 +273,7 @@ export function MangaCut() {
             <div className="wb-m">{w.movePct >= 0 ? '▲' : '▼'}{Math.abs(w.movePct).toFixed(2)}% <small>×{w.lev}</small> → {w.roe >= 0 ? '+' : '−'}{Math.abs(w.roe).toFixed(0)}%</div>
             <div className="wb-g">이익 +{comma(Math.round(w.pnl))}</div>
           </div>
-          <div className="mc-bal" data-balance={Math.round(w.cash)}>칩멍크 FRX 잔액 <b>{comma(Math.round(w.cash))}</b></div>
+          <div className="mc-bal" data-balance={Math.round(w.cash)}>다로미 FRX 잔액 <b>{comma(Math.round(w.cash))}</b></div>
         </>}
       </div>
       {!pass && <small className="mc-hint" aria-hidden="true">눌러서 닫기</small>}

@@ -4,7 +4,7 @@ import { heroArt } from '../assets';
 import { comma } from '../../engine/util';
 import { endingCardModel } from '../vm/records';
 
-/** 엔딩 카드(8.7): 정적 → 붉은 '파산' 도장 → 수집 카드. 귀여운 것은 그림 속 칩멍크뿐이고 문구와 수치는 꾸미지 않는다. */
+/** 엔딩 카드(8.7): 정적 → 붉은 '파산' 도장 → 수집 카드. 귀여운 것은 그림 속 다로미뿐이고 문구와 수치는 꾸미지 않는다. */
 export function EndingCard() {
   const g = useGame((s) => s.g);
   const act = useGame((s) => s.act);

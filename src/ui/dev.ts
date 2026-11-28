@@ -67,8 +67,8 @@ export function buildScenario(name: string, base: GameState): GameState {
     case 'archive': case 'board': {
       stage1();
       const f = g.family;
-      endings.slice(0, 200).filter((_, i) => i % 5 === 0).forEach((e, i) => { f.ledger[e.id] = { count: 1 + (i % 3 === 0 ? 1 : 0), holders: [{ gen: 2, name: '칩멍크' }, ...(i % 3 === 0 ? [{ gen: 3, name: '칩멍크' }] : [])], firstAt: 2, scenes: [] }; });
-      f.lineage = [{ gen: 2, name: '칩멍크', endedBy: endings[0].id, branch: 'forced', peak: 420_000 }, { gen: 3, name: '칩멍크', endedBy: endings[5].id, branch: 'limited', peak: 1_250_000 }];
+      endings.slice(0, 200).filter((_, i) => i % 5 === 0).forEach((e, i) => { f.ledger[e.id] = { count: 1 + (i % 3 === 0 ? 1 : 0), holders: [{ gen: 2, name: '다로미' }, ...(i % 3 === 0 ? [{ gen: 3, name: '다로미' }] : [])], firstAt: 2, scenes: [] }; });
+      f.lineage = [{ gen: 2, name: '다로미', endedBy: endings[0].id, branch: 'forced', peak: 420_000 }, { gen: 3, name: '다로미', endedBy: endings[5].id, branch: 'limited', peak: 1_250_000 }];
       f.peakNetWorth = 1_250_000;
       f.generation = 4;
       f.tipBook = { fox: { said: 6, hit: 2 }, wire_break: { said: 9, hit: 6 }, weasel: { said: 3, hit: 0 } };

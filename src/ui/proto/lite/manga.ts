@@ -45,7 +45,7 @@ export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: b
   // 파산이면 진짜 숫자 두 줄을 읽히는 크기의 상자로(해설 칸은 그대로 두고, 폰 불빛 아래 책상 위에)
   const facts: Word[] = (o.nar ?? []).map((t, i) => ({ x: 40, y: 75.6 + i * 5.8, w: 58, h: 5.3, t, k: 'tag', fs: t.length > 22 ? 2.7 : 3.4, d: 2.6 + i * 0.3 }));
   return {
-    id: 'x', src: pg7, ar: PAGE7_AR, alt: '밤의 나무 밑동 집, 어두운 나무 벽. 책상 위 폰 불빛 하나가 아래에서 비추고, 칩멍크가 두 손으로 머리를 감싸 쥐고 눈물을 줄줄 흘리며 이를 악문다.',
+    id: 'x', src: pg7, ar: PAGE7_AR, alt: '밤의 나무 밑동 집, 어두운 나무 벽. 책상 위 폰 불빛 하나가 아래에서 비추고, 다로미가 두 손으로 머리를 감싸 쥐고 눈물을 줄줄 흘리며 이를 악문다.',
     balloons: [],
     words: [
       { x: 2, y: 2, w: 33, h: 16, t: '시간을\n되돌려\n주세요', k: 'white', fs: 7, d: 0.2 },
@@ -87,14 +87,14 @@ function temptBoss(unit: number, per: number): Panel[] {
       sfx: [{ x: 58, y: 56, text: 'ㅅ…!?', rot: -12, fs: 11 }, { x: 72, y: 80, text: '~~~', rot: 22, fs: 8 }],
     },
     {
-      id: 't2', src: tSilent, alt: '왼쪽은 곁눈질하며 땀 흘리는 칩멍크, 오른쪽은 빨대를 문 오소리 대부. 둘 다 말이 없다.',
+      id: 't2', src: tSilent, alt: '왼쪽은 곁눈질하며 땀 흘리는 다로미, 오른쪽은 빨대를 문 오소리 대부. 둘 다 말이 없다.',
       balloons: [
         { x: 9, y: 6, w: 32, h: 21, text: '……무슨 소리예요, 빌릴 리가 없잖아요…', kind: 'say', fs: 2.4 },
         { x: 60, y: 6, w: 28, h: 20, text: '……그래…?', kind: 'say', fs: 3.4 },
       ],
     },
     {
-      id: 't3', src: tGrab, alt: '눈이 금화가 된 칩멍크가 이미 돈 봉투와 계약서를 껴안았다. 뒤에서 오소리 대부의 미소가 귀까지 찢어진다.',
+      id: 't3', src: tGrab, alt: '눈이 금화가 된 다로미가 이미 돈 봉투와 계약서를 껴안았다. 뒤에서 오소리 대부의 미소가 귀까지 찢어진다.',
       balloons: [
         { x: 7, y: 7, w: 22, h: 18, text: '…얼마까지 돼요?', kind: 'shout', fs: 3.2 },
         { x: 33, y: 88, w: 42, h: 8.5, text: `빌린 돈 +${n(unit)} / 정산마다 이자 +${n(per)}`, kind: 'tag', fs: 2 },
@@ -106,7 +106,7 @@ function temptBoss(unit: number, per: number): Panel[] {
 
 /**
  * 도입 만화(1부): 원작 FX 개그 만화 일곱 쪽의 패러디. 6 → 1 → 2 → 7 → 5 → 4 → 3 순서로 한 쪽씩 넘긴다.
- * 그림은 원본 쪽의 구도 그대로 칩멍크와 오소리 대부로 다시 그렸다(docs/art/v5/manga/parody_N.png, 말풍선은 비어 있다).
+ * 그림은 원본 쪽의 구도 그대로 다로미와 오소리 대부로 다시 그렸다(docs/art/v5/manga/parody_N.png, 말풍선은 비어 있다).
  * 숫자는 엔진 값: 코인 빚 30만(LITE.start), 첫 대출과 그 이자(오소리 사무소), 시작 잔액(첫 대출), 빚 전부.
  */
 export function prologuePages(): Panel[] {
@@ -114,7 +114,7 @@ export function prologuePages(): Panel[] {
   const lost = -Math.round(d.left * 0.9727 / 100) * 100; // 빌린 30만이 거의 다 녹은 평가손익
   return [
     {
-      id: 'p6', src: pg6, ar: 1046 / 1503, alt: '컬러 세 칸. 초록빛 모니터에 파란 봉이 떨어진다. 어두운 파란 방, 모니터 앞에 웅크린 칩멍크의 뒷모습. 분홍빛으로 번쩍이는 칸.',
+      id: 'p6', src: pg6, ar: 1046 / 1503, alt: '컬러 세 칸. 초록빛 모니터에 파란 봉이 떨어진다. 어두운 파란 방, 모니터 앞에 웅크린 다로미의 뒷모습. 분홍빛으로 번쩍이는 칸.',
       balloons: [],
       words: [
         { x: 30, y: 1.2, w: 40, h: 2.6, t: 'FRX Fighter CHIPMUNK', k: 'white', fs: 2, d: 0 },
@@ -140,7 +140,7 @@ export function prologuePages(): Panel[] {
       ],
     },
     {
-      id: 'p1', src: pg1, ar: 1239 / 1269, alt: '왼쪽은 하얗게 질린 칩멍크의 얼굴과 땀방울. 오른쪽은 마지막 검은 봉이 눈금을 뚫고 길게 내리꽂히는 봉 차트.',
+      id: 'p1', src: pg1, ar: 1239 / 1269, alt: '왼쪽은 하얗게 질린 다로미의 얼굴과 땀방울. 오른쪽은 마지막 검은 봉이 눈금을 뚫고 길게 내리꽂히는 봉 차트.',
       balloons: [],
       words: [
         { x: 89.4, y: 13, w: 8.4, h: 4, t: '100.3', k: 'box', fs: 2.2, d: 0 },
@@ -154,7 +154,7 @@ export function prologuePages(): Panel[] {
       ],
     },
     {
-      id: 'p2', src: pg2, ar: 1289 / 1221, alt: '칩멍크가 눈물을 줄줄 흘리며 도토리 지폐 몇 장을 쥐고 떤다. 왼쪽 칸에는 가라앉는 봉 차트와 집중선.',
+      id: 'p2', src: pg2, ar: 1289 / 1221, alt: '다로미가 눈물을 줄줄 흘리며 도토리 지폐 몇 장을 쥐고 떤다. 왼쪽 칸에는 가라앉는 봉 차트와 집중선.',
       balloons: [],
       words: [
         { x: 1, y: 2, w: 13, h: 12, t: `${won(d.left)}이나\n있으면…`, k: 'say', fs: 2.4, d: 0 },
@@ -173,7 +173,7 @@ export function prologuePages(): Panel[] {
     },
     despairPanel({ sub: '제1화 기도', fresh: true }),
     {
-      id: 'p5', src: pg5, ar: 1034 / 1497, alt: '오소리 대부가 빨대 컵을 들고 바짝 다가와 달콤하게 웃는다. 아래 두 칸: 웃는 대부, 곁눈질하며 땀 흘리는 칩멍크.',
+      id: 'p5', src: pg5, ar: 1034 / 1497, alt: '오소리 대부가 빨대 컵을 들고 바짝 다가와 달콤하게 웃는다. 아래 두 칸: 웃는 대부, 곁눈질하며 땀 흘리는 다로미.',
       balloons: [],
       words: [
         { x: 1, y: 1, w: 21, h: 17, t: 'ㅅ', k: 'sfx', fs: 22, rot: -8, d: 0.2 },
@@ -193,7 +193,7 @@ export function prologuePages(): Panel[] {
       ],
     },
     {
-      id: 'p4', src: pg4, ar: 1005 / 1341, alt: '줄 공책의 손그림: 1배는 크게 올라야, 200배는 조금만 올라도 같은 이익. 진지한 칩멍크. 숲 마을 풍경, 도토리 버거 쟁반과 도토리 간판.',
+      id: 'p4', src: pg4, ar: 1005 / 1341, alt: '줄 공책의 손그림: 1배는 크게 올라야, 200배는 조금만 올라도 같은 이익. 진지한 다로미. 숲 마을 풍경, 도토리 버거 쟁반과 도토리 간판.',
       balloons: [],
       words: [
         { x: 16, y: 4.6, w: 15, h: 4.6, t: '1배로 산다', k: 'hand', fs: 3.4, d: 0.2 },
@@ -209,12 +209,12 @@ export function prologuePages(): Panel[] {
         { x: 46, y: 30.2, w: 11, h: 3, t: '100.05', k: 'hand', fs: 3.0, d: 1.85 },
         { x: 46.5, y: 40.2, w: 10, h: 4, t: '+10', k: 'hand', fs: 3.2, d: 1.95 },
         { x: 46.5, y: 46.4, w: 8, h: 3, t: '100', k: 'hand', fs: 3.2, d: 2 },
-        { x: 25.5, y: 76, w: 14, h: 10, t: '맞다 칩멍크,\n200배까지\n되는 데\n찾았어', k: 'say', fs: 2, d: 2.5 },
+        { x: 25.5, y: 76, w: 14, h: 10, t: '맞다 다로미,\n200배까지\n되는 데\n찾았어', k: 'say', fs: 2, d: 2.5 },
         { x: 2.5, y: 87.5, w: 10, h: 8, t: '에!\n정말~?', k: 'say', fs: 2.3, d: 3 },
       ],
     },
     {
-      id: 'p3', src: pg3, ar: 1031 / 1526, alt: '위 칸: 활활 타오르는 불길. 아래 칸: 위에서 내려다본 책상 앞, 칩멍크가 눈에 불을 켜고 이를 악문 채 주먹을 치켜든다.',
+      id: 'p3', src: pg3, ar: 1031 / 1526, alt: '위 칸: 활활 타오르는 불길. 아래 칸: 위에서 내려다본 책상 앞, 다로미가 눈에 불을 켜고 이를 악문 채 주먹을 치켜든다.',
       balloons: [],
       words: [
         { x: 2, y: 0.5, w: 44, h: 10, t: '화르륵', k: 'hollow', fs: 13, rot: -6, d: 0 },
@@ -231,7 +231,7 @@ export function prologuePages(): Panel[] {
         { x: 76, y: 50, w: 22, h: 6.5, t: '반드시', k: 'out', fs: 6.6, d: 2.9 },
         { x: 61, y: 79.4, w: 14, h: 4, t: '목표!', k: 'sfx', fs: 4.4, rot: -4, cls: 'ink', d: 3.2 },
         { x: 61, y: 84.5, w: 25, h: 7, t: `날다람쥐코인 200배\n빚 ${n(d.left + f.unit)} 다 갚기`, k: 'box', fs: 2.6, d: 3.3 },
-        { x: 22.5, y: 89.5, w: 35, h: 9.5, t: `칩멍크\nFRX 잔액\n${n(f.unit)} 도토리`, k: 'box', fs: 3.2, d: 3.6 },
+        { x: 22.5, y: 89.5, w: 35, h: 9.5, t: `다로미\nFRX 잔액\n${n(f.unit)} 도토리`, k: 'box', fs: 3.2, d: 3.6 },
         { x: 8, y: 92, w: 12, h: 6, t: '꽉!', k: 'sfx', fs: 5, rot: -12, d: 3.9 },
       ],
     },
@@ -260,7 +260,7 @@ export interface Tempt { lender: 'shark1' | 'capital' | 'shark2'; /** 장부에 
 export function temptPanels(t: Tempt): Panel[] {
   if (t.lender === 'shark1') return temptBoss(t.unit, t.perSettle);
   if (t.lender === 'capital') return [{
-    id: 't_cap', src: tRaccoon, alt: '숲속 캐피탈 창구 너구리가 턱을 괴고 빨대를 문 채 웃는다. 칩멍크는 이미 돈뭉치로 손을 뻗었다.',
+    id: 't_cap', src: tRaccoon, alt: '숲속 캐피탈 창구 너구리가 턱을 괴고 빨대를 문 채 웃는다. 다로미는 이미 돈뭉치로 손을 뻗었다.',
     balloons: [
       { x: 5, y: 7, w: 17, h: 20, text: `${won(t.unit)}, 바로 됩니다아~`, kind: 'say', fs: 2.3 },
       { x: 27, y: 7, w: 15, h: 20, text: `정산마다 ${n(t.perSettle)}씩이에요 ♥`, kind: 'say', fs: 2 },
@@ -268,7 +268,7 @@ export function temptPanels(t: Tempt): Panel[] {
     ],
   }];
   return [{
-    id: 't_vip', src: tViper, alt: '뒷골목 독사가 문간에 몸을 감고 빨대를 문 채 혀를 날름거린다. 칩멍크는 이미 돈다발을 껴안았다.',
+    id: 't_vip', src: tViper, alt: '뒷골목 독사가 문간에 몸을 감고 빨대를 문 채 혀를 날름거린다. 다로미는 이미 돈다발을 껴안았다.',
     balloons: [
       { x: 5, y: 6, w: 17, h: 21, text: `${won(t.unit)}. 손에는 ${won(t.got)}.`, kind: 'say', fs: 2.2 },
       { x: 31, y: 5, w: 17, h: 18, text: `이자는 ${t.ratePct}%. 싫으면 말고.`, kind: 'say', fs: 2 },

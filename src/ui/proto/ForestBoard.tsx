@@ -87,7 +87,7 @@ export function ForestBoard() {
                       <div key={r.id} className={'fb-row' + (r.me ? ' me' : '')} role="row" data-fbr={r.id}>
                         <i className="no">{i + 1}</i>
                         {d ? <Face who={d.who} size={28} /> : <span className="fb-face me" style={{ width: 28, height: 28 }}><img src={sprite('heroHappy')!.src} alt="" /></span>}
-                        <span className="nm">{r.name}<small>{d && o ? (p ? `${mName(p.market)} ${p.dir === 1 ? '롱' : '숏'} ${p.lev}배 ${px ? (roeOf(p, px) >= 0 ? '+' : '−') + Math.abs(roeOf(p, px)).toFixed(0) + '%' : ''}` : `쉬는 중${o.busts ? `, 파산 ${o.busts}번` : ''}`) : '칩멍크'}</small></span>
+                        <span className="nm">{r.name}<small>{d && o ? (p ? `${mName(p.market)} ${p.dir === 1 ? '롱' : '숏'} ${p.lev}배 ${px ? (roeOf(p, px) >= 0 ? '+' : '−') + Math.abs(roeOf(p, px)).toFixed(0) + '%' : ''}` : `쉬는 중${o.busts ? `, 파산 ${o.busts}번` : ''}`) : '다로미'}</small></span>
                         <b className={r.pnl >= 0 ? 'up' : 'down'}>{sgn(r.pnl)}</b>
                       </div>
                     ); })}

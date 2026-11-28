@@ -118,7 +118,7 @@ describe('D. 업그레이드', () => {
     expect(g.run.coinWheels.MDT).toBeUndefined();
   });
 
-  it('AC-v2-55 알바 칩멍크가 0대가 되면 그 단계 업그레이드가 0', () => {
+  it('AC-v2-55 알바 다로미가 0대가 되면 그 단계 업그레이드가 0', () => {
     const g = bare();
     giveWheel(g, 'DTC');
     const u = giveEquip(g, 'helper', 'DTC', 60000);

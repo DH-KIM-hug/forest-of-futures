@@ -1,5 +1,5 @@
 // 세상이 내가 한 일에 반응한다(U-38): 끝난 거래 하나, 정산 한 번을 보고 누가 무슨 말을 할지 고른다.
-// 순수 함수다(엔진, 저장소를 부르지 않는다). 숫자는 전부 부르는 쪽이 엔진 값으로 채운다. 말투(개정 대본): 추심원은 금액을 정확히, 오소리 대부는 반쯤만 답하는 존댓말, 칩멍크는 혼잣말 한마디.
+// 순수 함수다(엔진, 저장소를 부르지 않는다). 숫자는 전부 부르는 쪽이 엔진 값으로 채운다. 말투(개정 대본): 추심원은 금액을 정확히, 오소리 대부는 반쯤만 답하는 존댓말, 다로미는 혼잣말 한마디.
 import type { Who } from './protoStore';
 import { josa } from '../../engine/util';
 
@@ -50,7 +50,7 @@ export function tradeReaction(t: TradeEnd, c: TradeCtx): Reaction | null {
   }
   if (t.pnl >= claim * 3) { const r = R('bigWin', 'boss', ['많이 버셨네요. 그중에 얼마쯤 장부에서 지워 드릴까요?'], true); if (r) return r; }
   if (t.pnl >= claim) {
-    // 한 판에 이자와 생활비 한 번 치: 이번 생 처음은 장면(추심원, 칩멍크), 그 뒤로는 번갈아 한 줄
+    // 한 판에 이자와 생활비 한 번 치: 이번 생 처음은 장면(추심원, 다로미), 그 뒤로는 번갈아 한 줄
     const first = R('winClaim1', 'collector', [`${josa(n(claim), '은', '는')} 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.`], true);
     if (first) return first;
     const k = c.claimWins ?? 2;

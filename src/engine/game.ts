@@ -33,7 +33,7 @@ export function newFamily(): FamilyState {
 }
 
 export function defaultSettings(): Settings {
-  return { name: '칩멍크', priceColors: balance.ui.priceColors === 'kr' ? 'kr' : 'intl', prologueSeen: false, guides: {} };
+  return { name: '다로미', priceColors: balance.ui.priceColors === 'kr' ? 'kr' : 'intl', prologueSeen: false, guides: {} };
 }
 
 export function newRun(seed: number, prices?: Record<string, number>): RunState {

@@ -166,7 +166,7 @@ describe('AC-v2-127·130·131 기록관', () => {
   it('같은 엔딩을 다른 세대가 다시 얻으면 두 세대가 모두 적힌다', () => {
     const g = bare();
     const id = endings[10].id;
-    g.family.ledger[id] = { count: 2, holders: [{ gen: 2, name: '칩멍크' }, { gen: 3, name: '칩멍크' }], firstAt: 2, scenes: [] };
+    g.family.ledger[id] = { count: 2, holders: [{ gen: 2, name: '다로미' }, { gen: 3, name: '다로미' }], firstAt: 2, scenes: [] };
     const e = albumModel(g).entries.find((x) => x.id === id)!;
     expect(e.holders.map((h) => h.gen)).toEqual([2, 3]);
     expect(e.title).not.toBe('???');
