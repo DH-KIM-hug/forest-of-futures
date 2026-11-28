@@ -25,8 +25,8 @@
 .le-book .le-bh b { font-family: var(--dsp); font-weight: 400; font-size: 20px; }
 .le-book .le-bh span { font-family: var(--dsp); color: #FFD84A; }
 .le-book .le-bh button { margin-left: auto; min-width: 64px; min-height: 40px; border-radius: 20px; border: 2px solid #F3E7C6; background: transparent; color: #F3E7C6; font-family: var(--dsp); font-size: 15px; cursor: pointer; }
-.le-book .le-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-content: start; }
-.le-book .le-tile { height: auto; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 0; border: 2px solid #4a4239; border-radius: 4px; background: #2a2622; color: #8c8174; overflow: hidden; cursor: default; font: inherit; }
+.le-book .le-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: max-content; gap: 8px; align-content: start; }
+.le-book .le-tile { height: auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 0; border: 2px solid #4a4239; border-radius: 4px; background: #2a2622; color: #8c8174; overflow: hidden; cursor: default; font: inherit; }
 .le-book .le-tile.got { border-color: #F3E7C6; color: #F3E7C6; cursor: pointer; }
 .le-book .le-tile.hi { border-color: #FFD84A; box-shadow: 0 0 0 2px #FFD84A; }
 .le-book .le-tile img, .le-book .le-tile i { flex: none; height: auto; display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; font-style: normal; font-family: var(--dsp); font-size: 18px; }

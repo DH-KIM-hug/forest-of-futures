@@ -156,7 +156,7 @@ export function LiteCuts() {
         {cut.kind === 'sign' && <>
           <Fx t="덜덜덜" x={4} y={4} fs={7} rot={-6} cls="shake" />
           <Fx t="슥…" x={70} y={66} fs={5} rot={8} cls="pop late" />
-          <div className="mc-think lc-say" style={{ left: '52%', top: '4%', width: '44%', height: '22%' }}><span>…한 번만 더.</span></div>
+          <div className="mc-think lc-say" style={{ left: '31%', top: '3%', width: '34%', height: '20%' }}><span>…한 번만 더.</span></div>
         </>}
         {cut.kind === 'streak' && <>
           <Fx t="후훗…" x={66} y={8} fs={7} rot={6} cls="pop" />
