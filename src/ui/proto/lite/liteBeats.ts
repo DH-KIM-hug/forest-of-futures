@@ -30,7 +30,7 @@ export function useLiteBankrupt(): void {
   useEffect(() => {
     if (!run.over || !run.bankruptcy || g.pendingEnding?.cause === RETIRE_CAUSE || shown.has(g.family.generation)) return;
     shown.add(g.family.generation);
-    // 장면 D: 컷 1의 절망 표지를 진짜 숫자와 함께. 해설 상자 = 빌린 돈(지금 빚 전부) / 남은 돈(손의 돈)
+    // 장면 D: 프롤로그 7쪽(절망의 표제지)을 진짜 숫자와 함께. 숫자 상자 = 빌린 돈(지금 빚 전부) / 남은 돈(손의 돈)
     // 판을 쥔 채 이자를 못 내 파산했으면 그 돈도 적는다(걸어 둔 증거금은 압류되지도, 이자로 나가지도 않는다)
     const onTable = Object.values(run.positions).reduce((a, p) => a + p.margin, 0);
     const nar: [string, string] = [`빌린 돈 ${comma(Math.round(totalDebt(run)))}`, `남은 돈 ${comma(Math.max(0, Math.floor(run.cash)))}${onTable >= 1000 ? `, 판에 걸려 있던 돈 ${comma(Math.round(onTable))}` : ''}`];
@@ -38,8 +38,8 @@ export function useLiteBankrupt(): void {
   });
 }
 
-/** 장면 E: 새 생이 열리면 「다시, 사흘 전」 */
+/** 장면 E: 새 생이 열리면 「다시, 어느 날」 */
 export function rebirthSeq(): void {
-  pushSeq({ id: 'reborn', label: '다시, 사흘 전', panels: rebirthPanels() });
+  pushSeq({ id: 'reborn', label: '다시, 어느 날', panels: rebirthPanels() });
   useUI.getState().setTrade({ market: 'FLY' }); // 새 생도 날다람쥐코인부터
 }

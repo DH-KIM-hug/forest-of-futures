@@ -102,7 +102,7 @@ export function rebirthOverride(): void {
   applyBirth(g); // 스킬트리: 지난 생까지 산 노드가 이번 생에 켜진다
   if (isLite) liteAfterLoan(g); // 라이트: 첫 대출을 받은 자리(빚 40만, 손에 10만, FRX 열림)
   else applyPostTutorial(g);
-  if (isLite) window.setTimeout(rebirthSeq, 300); // 장면 E: 다시, 사흘 전 // U-46: 새 생은 첫 생의 튜토리얼이 끝난 자리에서(손에 10만 · 빚 50만 · 쳇바퀴 둘 · 알바 둘 · 폰)
+  if (isLite) window.setTimeout(rebirthSeq, 300); // 장면 E: 다시, 어느 날 // U-46: 새 생은 첫 생의 튜토리얼이 끝난 자리에서(손에 10만 · 빚 50만 · 쳇바퀴 둘 · 알바 둘 · 폰)
   run.peakNetWorth = netWorth(run);
   st.setGame(g);
 }

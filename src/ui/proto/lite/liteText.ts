@@ -81,7 +81,7 @@ export const LITE_STORY: Partial<typeof STORY> = {
   savings: (k) => k === 0 ? [L('hero', '빚 없는 10만. 이건 아무도 안 걷어 간다.')]
     : k === 1 ? [L('hero', '30만. 처음에 코인 산 돈만큼 모았다.')]
     : [L('collector', '오늘은 걷으러 온 거 아니에요. 지나가다 들렀어요.', 'smile'), L('hero', '차 한 잔 하고 가요.')],
-  /** 새 생은 만화(다시, 사흘 전)가 연다(lite/liteBeats.ts rebirthSeq) */
+  /** 새 생은 만화(다시, 어느 날)가 연다(lite/liteBeats.ts rebirthSeq) */
   reborn: () => [],
   capitalSms: (o) => [L('sms', `[숲속 캐피탈] 선물 하시는 분께. ${man(o.unit)} 빌리면 정산마다 이자 ${n(o.perUnit)}. 조합 옆문에서 담보 없이 상담해요.`)],
   capitalIntro: (o) => [

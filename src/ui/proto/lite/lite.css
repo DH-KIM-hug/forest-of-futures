@@ -114,7 +114,7 @@
 .ln-paper .ln-face { position: absolute; right: 1.5%; top: 18%; width: 19%; height: auto; border: 3px solid #1d1b19; border-radius: 4px; transform: rotate(3deg); box-shadow: 2px 3px 0 #1d1b19; }
 .ln-paper .ln-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-/* ── 장면 넘김 칸(사흘 전) ── */
+/* ── 장면 넘김 칸(다시, 어느 날) ── */
 .lite-manga .lm-card { display: flex; align-items: center; justify-content: center; background: #fff; }
 .lite-manga .lm-card span { font-family: var(--dsp); font-size: 9cqw; color: #1d1b19; letter-spacing: .25em; transform: rotate(-3deg); animation: lm-pop .4s .2s both; }
 /* 화면이 그리는 작은 흰 상자(장부 아래 글씨, 빌린 돈 등) */
@@ -153,3 +153,40 @@
 .manga-cut .mc-liqstamp { position: absolute; right: 4%; bottom: 6%; display: flex; flex-direction: column; align-items: center; gap: 2px; transform: rotate(-10deg); animation: mc-sfx .3s .5s cubic-bezier(.2, 1.7, .4, 1) both; }
 .manga-cut .mc-liqstamp b { padding: 0 4%; border: 4px solid #E23B3B; border-radius: 8px; font-family: var(--dsp); font-weight: 400; font-size: 9cqw; line-height: 1.05; color: #E23B3B; background: rgba(255, 255, 255, .85); }
 .manga-cut .mc-liqstamp span { padding: 1px 6px; border-radius: 6px; background: #1d1b19; color: #fff; font-size: 3cqw; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ── 프롤로그 쪽(패러디 일곱 쪽): 한 쪽씩 화면에 맞춰 띄운다. 넓은 펼침면(7쪽)은 세로 화면에서 높이를 채우고 왼쪽에서 오른쪽으로 천천히 훑는다 ── */
+.lite-manga.pages { gap: 0; }
+.lite-manga .lp-stage { flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.lite-manga .lp-sheet { position: relative; flex: 0 0 auto; width: min(100%, calc((100dvh - 120px) * var(--ar))); aspect-ratio: var(--ar); container-type: inline-size; overflow: hidden; background: #fff; box-shadow: 0 12px 40px rgba(0, 0, 0, .55); animation: lm-slam .42s cubic-bezier(.2, 1.4, .4, 1) both; }
+.lite-manga .lp-sheet > img { display: block; width: 100%; height: 100%; object-fit: fill; }
+@media (max-aspect-ratio: 1 / 1) {
+  .lite-manga .lp-stage.wide { justify-content: flex-start; }
+  .lite-manga .lp-sheet.wide { width: calc(min(62dvh, 100dvh - 150px) * var(--ar)); animation: lm-fade .3s both, lp-pan 7s ease-in-out .6s both; }
+  .lite-manga.calm .lp-sheet.wide { width: 100%; animation: lm-fade .2s both; }
+  .lite-manga.calm .lp-stage.wide { justify-content: center; }
+}
+@keyframes lp-pan { from { translate: 0 0; } to { translate: calc(-100% + 100vw - 24px) 0; } }
+/* 글: 그림 % 자리. say = 빈 풍선 안 대사, out = 흰 테 두른 검은 큰 글(세로면 v), white = 검은 테 흰 글(컬러 쪽), sfx = 굵은 효과음, hand = 공책 손글씨, box = 그림의 빈 상자 안 글 */
+.lite-manga .lp-w { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; font-family: var(--dsp); font-weight: 400; font-size: var(--fs); line-height: 1.18; color: #1d1b19; word-break: keep-all; white-space: pre-line; pointer-events: none; transform: rotate(var(--rot, 0deg)); animation: lm-pop .3s cubic-bezier(.2, 1.6, .4, 1) both; }
+.lite-manga .lp-w.v { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: -.1em; line-height: 1.05; }
+.lite-manga .lp-w.out { text-shadow: .09em 0 0 #fff, -.09em 0 0 #fff, 0 .09em 0 #fff, 0 -.09em 0 #fff, .07em .07em 0 #fff, -.07em .07em 0 #fff, .07em -.07em 0 #fff, -.07em -.07em 0 #fff; animation: lm-sfx .4s cubic-bezier(.2, 1.7, .4, 1) both; }
+.lite-manga .lp-w.white { color: #fff; text-shadow: .06em 0 0 #1d1b35, -.06em 0 0 #1d1b35, 0 .06em 0 #1d1b35, 0 -.06em 0 #1d1b35, .05em .05em 0 #1d1b35, -.05em .05em 0 #1d1b35, .05em -.05em 0 #1d1b35, -.05em -.05em 0 #1d1b35; animation: lm-sfx .5s both; }
+.lite-manga .lp-w.sfx { color: var(--c, #1d1b19); white-space: nowrap; text-shadow: .1em 0 0 #fff, -.1em 0 0 #fff, 0 .1em 0 #fff, 0 -.1em 0 #fff, .08em .08em 0 #fff, -.08em .08em 0 #fff, .08em -.08em 0 #fff, -.08em -.08em 0 #fff, 0 .18em 0 rgba(0, 0, 0, .25); animation: lm-sfx .36s cubic-bezier(.2, 1.7, .4, 1) both; }
+.lite-manga .lp-w.sfx.ink { color: #fff; text-shadow: .08em 0 0 #1d1b19, -.08em 0 0 #1d1b19, 0 .08em 0 #1d1b19, 0 -.08em 0 #1d1b19, .06em .06em 0 #1d1b19, -.06em .06em 0 #1d1b19, .06em -.06em 0 #1d1b19, -.06em -.06em 0 #1d1b19; }
+.lite-manga .lp-w.say.red { color: #D0302A; }
+.lite-manga .lp-w.hand { color: #23234d; font-family: 'Nanum Pen Script', var(--dsp); }
+.lite-manga .lp-w.box { font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lite-manga .lp-w.drip { animation: lm-sfx .4s both, mc-drip 1.4s ease-in .5s infinite; }
+.lite-manga .lp-w.beat { animation: lm-sfx .36s both, mc-beat .8s ease-in-out .4s infinite; }
+.lite-manga .lp-logo { position: absolute; display: flex; flex-direction: column; align-items: flex-end; pointer-events: none; transform: rotate(-3deg); animation: lm-sfx .45s cubic-bezier(.2, 1.7, .4, 1) both; }
+.lite-manga .lp-logo i { font-style: normal; font-family: var(--dsp); font-size: 2.6cqw; color: #FFE27A; letter-spacing: .04em; text-shadow: 2px 2px 0 #1d1b35; }
+.lite-manga .lp-logo b { font-family: var(--dsp); font-weight: 400; font-size: var(--fs, 9cqw); line-height: 1; color: #F47C8C; white-space: nowrap; text-shadow: .05em .05em 0 #fff, -.03em -.03em 0 #fff, .03em -.03em 0 #fff, -.03em .03em 0 #fff, .09em .09em 0 #B8432C; }
+.lite-manga .lp-logo svg { width: 100%; height: auto; }
+.lite-manga .lp-logo small { font-family: var(--dsp); font-size: 2.2cqw; color: #F3E7C6; letter-spacing: .1em; }
+.lite-manga .lp-w.box { color: #1d1b19; line-height: 1.3; }
+.lite-manga .lp-w.tag { background: #fff; border: 2px solid #1d1b19; border-radius: 3px; box-shadow: 2px 2px 0 #1d1b19; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.lite-manga .lp-w.hollow { color: #fff; white-space: nowrap; justify-content: flex-start; -webkit-text-stroke: .035em #1d1b19; letter-spacing: .02em; animation: lm-fade .5s both; }
+.lite-manga .lp-w.ghost { color: rgba(236, 226, 255, .22); white-space: nowrap; animation: lm-fade 1s both; }
+.lite-manga .lp-w.sfx.pink { color: #FFF4F6; text-shadow: .06em .06em 0 #E2557A, -.04em -.04em 0 #E2557A, .04em -.04em 0 #E2557A, -.04em .04em 0 #E2557A, .1em .12em 0 #1d1b35; }
+.lite-manga .lp-wave { position: absolute; overflow: visible; pointer-events: none; animation: mc-slide .9s cubic-bezier(.3, 0, .5, 1) both; }
+.lite-manga.calm .lp-sheet, .lite-manga.calm .lp-w, .lite-manga.calm .lp-logo, .lite-manga.calm .lp-wave { animation: lm-fade .2s ease-out both; }
