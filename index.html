@@ -12,6 +12,23 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- &new=1: 저장과 본 기록(프롤로그, 튜토리얼, 만화, 도감)을 지우고 완전히 처음부터. 랭킹 기기와 이름은 남긴다.
+         지운 뒤 주소에서 new 를 빼서, 새로 고침해도 또 지우지 않는다 -->
+    <script>
+      (function () {
+        try {
+          var u = new URL(location.href);
+          if (u.searchParams.get('new') !== '1') return;
+          var keep = { 'fof.rank.device': 1, 'fof.rank.name': 1 };
+          for (var i = localStorage.length - 1; i >= 0; i--) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('fof.') === 0 && !keep[k]) localStorage.removeItem(k);
+          }
+          u.searchParams.delete('new');
+          history.replaceState(null, '', u.toString());
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
