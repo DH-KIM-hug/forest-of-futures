@@ -111,21 +111,28 @@ export function LiteManga({ onDone, canSkip }: { onDone: () => void; canSkip: bo
   const [pages] = useState(prologuePages);
   const [i, setI] = useState(0);
   const [tw, setTw] = useState(false);
+  // 사용자 결정: 대사가 다 나오기 전에 누르면 그 쪽의 대사를 한꺼번에 다 띄우고, 다음 누름에 넘긴다
+  const [full, setFull] = useState(false);
   const at = useRef(performance.now());
   const p = pages[i];
   const last = i === pages.length - 1;
-  useEffect(() => { at.current = performance.now(); play(pages[i]?.id === 'x' ? 'liq_gavel' : 'ui_tap'); }, [i, pages]);
+  useEffect(() => { at.current = performance.now(); setFull(false); play(pages[i]?.id === 'x' ? 'liq_gavel' : 'ui_tap'); }, [i, pages]);
   // 반전 카드: 도장이 찍히는 때에 발도장 소리
   useEffect(() => {
     if (!tw) return;
     at.current = performance.now();
+    setFull(false);
     const t = window.setTimeout(() => play('paw_stamp'), reduced() ? 0 : 560);
     return () => window.clearTimeout(t);
   }, [tw]);
   // 다음 쪽 그림을 미리 받아 둔다
   useEffect(() => { const n = pages[i + 1]; if (n?.src) { const im = new Image(); im.src = n.src; } }, [i, pages]);
   const next = () => {
-    if (performance.now() - at.current < 380) return; // 연타가 쪽을 건너뛰지 않게
+    const el = performance.now() - at.current;
+    if (el < 380) return; // 연타가 쪽을 건너뛰지 않게
+    // 아직 대사가 다 안 나왔으면 이번 누름은 남은 대사를 한꺼번에 띄우기만
+    const lastAt = tw ? 1.4 : Math.max(0, ...(p?.words ?? []).map((w) => w.d ?? 0)) + 0.5 + (last ? 1 : 0);
+    if (!full && !reduced() && el < lastAt * 1000) { setFull(true); at.current = performance.now(); return; }
     if (p?.twist && !tw) { setTw(true); return; } // 넘기기 전에 반전 카드부터
     setTw(false);
     if (last) { onDone(); return; }
@@ -141,14 +148,14 @@ export function LiteManga({ onDone, canSkip }: { onDone: () => void; canSkip: bo
         {canSkip && <button className="lm-skip" data-manga-skip onClick={(e) => { e.stopPropagation(); onDone(); }}>건너뛰기</button>}
       </div>
       <div className={'lp-stage' + (wide ? ' wide' : '')}>
-        <div key={p.id} className={'lp-sheet' + (wide ? ' wide' : '')} style={{ ['--ar' as string]: String(ar) }} data-panel={p.id}>
+        <div key={p.id} className={'lp-sheet' + (wide ? ' wide' : '') + (full && !tw ? ' full' : '')} style={{ ['--ar' as string]: String(ar) }} data-panel={p.id}>
           <img src={p.src} alt={p.alt} draggable={false} />
           {p.words?.map((w, wi) => <WordView key={wi} w={w} />)}
           <i className="lm-flash" aria-hidden="true" />
           {last && <b className="lp-start" data-game-start aria-hidden="true"><span>GAME</span><span>START!</span></b>}
         </div>
       </div>
-      {tw && p.twist && <TwistCard t={p.twist} />}
+      {tw && p.twist && <div className={full ? 'lp-twist-wrap full' : 'lp-twist-wrap'}><TwistCard t={p.twist} /></div>}
       <p className="lm-hint" aria-hidden="true">{last ? '눌러서 첫 거래' : '눌러서 넘기기'}</p>
     </div>
   );

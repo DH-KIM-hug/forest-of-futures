@@ -214,3 +214,7 @@
 @keyframes lt-stamp { 0% { opacity: 0; scale: 2.6; } 70% { opacity: 1; scale: .94; } 100% { opacity: 1; scale: 1; } }
 .lite-manga.calm .lp-twist, .lite-manga.calm .lt-card, .lite-manga.calm .lt-beat, .lite-manga.calm .lt-stamp, .lite-manga.calm .lt-paw, .lite-manga.calm .lt-lines { animation: lm-fade .15s both; }
 .lite-manga .lp-twist ~ .lm-hint { z-index: 6; }
+
+/* 대사가 다 나오기 전에 누르면(사용자 결정) 남은 글과 도장을 기다림 없이 바로 띄운다 */
+.lite-manga .lp-sheet.full *, .lite-manga .lp-twist-wrap.full * { animation-delay: 0s !important; }
+.lite-manga .lp-twist-wrap { display: contents; }
