@@ -13,6 +13,8 @@ import { comma } from '../../engine/util';
 import { sprite, type SpriteId } from './sprites';
 import { play } from './audio';
 import { useUI } from '../uiStore';
+import { bustHeadline, refreshBusts, useBust } from './bustNews';
+import { openBoard } from './ranking';
 
 const FACE: Partial<Record<Who, SpriteId>> = { raccoon: 'cRaccoon', weasel: 'cWeasel', owl: 'cOwl', viper: 'cViper', boss: 'cBoss', collector: 'cCollector' };
 export function Face({ who, off = false, size = 34 }: { who: Who; off?: boolean; size?: number }) {
@@ -132,7 +134,11 @@ export function ForestLine() {
   const prices = useGame((s) => s.g.run.prices);
   const tick = useGame((s) => s.g.run.tick);
   const ui = useUI((s) => s.trade.market);
+  const busts = useBust((st) => st.rows);
+  // U-59 「오늘 망한 자들」: 2분에 한 번 받아 두고, 1분에 9초쯤 진짜 사람의 파산 소식을 띄운다
+  useEffect(() => { void refreshBusts(); }, [Math.floor(tick / 120)]);
   if (!quests) return null;
+  const bustNow = busts.length && tick % 60 < 9 ? busts[Math.floor(tick / 60) % busts.length] : null;
   const fresh = log.find((e) => tick - e.at <= 8 && e.kind !== 'open' && (e.market === ui || e.kind === 'bust'));
   const gust = quests.gust && !quests.gust.done;
   const s0 = quests.slots[0];
@@ -141,7 +147,11 @@ export function ForestLine() {
   const myRank = rows.findIndex((r) => r.me) + 1;
   return (
     <div className="pt-forest" data-forestline>
-      {fresh ? (
+      {bustNow && !log.find((e) => tick - e.at <= 8 && e.kind !== 'open') ? (
+        <button className="fq ev bust" data-fl-bust onClick={() => { play('ui_tap'); openBoard(); }}>
+          <Face who="news" size={20} /><span><em>오늘 망한 자들</em>{bustHeadline(bustNow)}</span>
+        </button>
+      ) : fresh ? (
         <button className={'fq ev ' + fresh.kind} data-fl-ev={fresh.kind} onClick={() => forestOpen('rival')}>
           <Face who={rivalById[fresh.id].who} size={20} /><span><b>{rivalById[fresh.id].name}</b> {fresh.kind === 'liq' ? `${fresh.lev}배 청산` : fresh.kind === 'bust' ? '파산' : fresh.pnl >= 0 ? `${fresh.lev}배 익절` : `${fresh.lev}배 손절`} 「{fresh.line}」</span>
         </button>

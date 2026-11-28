@@ -2,7 +2,10 @@
 // GET  /top?board=networth|roe|pnl&limit=50  → [{rank,name,value,detail,at}]
 // GET  /me?board=…&deviceId=…                 → 내 기록과 순위
 // POST /submit {deviceId,name,board,value,detail} → 검사 뒤 기기당 최고 기록만 남긴다
+// POST /event  {deviceId,name,cause,coin,dir,lev,loss,peak,ending,lite} → 파산 소식(U-59, 모양만 본다, 기기당 1분에 하나)
+// GET  /recent?limit=20                       → 최근 파산 소식(사흘 안, 새것부터)
 import { flyCandlesVerified } from './flyVersions';
+import { EVENT_LIMITS, eventTooSoon, parseEvent } from './events';
 import { BOARDS, LIMITS, REAL, SYNTH, checkLifeAgainstCandles, checkLifeShape, checkTradeAgainstCandles, checkTradeShape, parseSubmit, type Board, type Candle, type LifeDetail, type TradeDetail } from './verify';
 
 export interface Env {
@@ -66,6 +69,30 @@ export default {
       if (!mine) return json({ board, me: null }, 200, h);
       const above = await env.DB.prepare('SELECT COUNT(*) AS n FROM scores WHERE board = ? AND value > ?').bind(board, mine.value).first<{ n: number }>();
       return json({ board, me: { rank: (above?.n ?? 0) + 1, name: mine.name, value: mine.value, detail: JSON.parse(mine.detail) } }, 200, h);
+    }
+
+    if (req.method === 'GET' && url.pathname === '/recent') {
+      const limit = Math.min(EVENT_LIMITS.recentMax, Math.max(1, Number(url.searchParams.get('limit') ?? 20) || 20));
+      const rs = await env.DB.prepare('SELECT name, cause, coin, dir, lev, loss, peak, ending, lite, created_at FROM events WHERE created_at > ? ORDER BY created_at DESC LIMIT ?').bind(Date.now() - EVENT_LIMITS.keepMs, limit).all();
+      const rows = (rs.results ?? []).map((r: any) => ({ name: r.name, cause: r.cause, coin: r.coin, dir: r.dir, lev: r.lev, loss: r.loss, peak: r.peak, ending: r.ending, lite: !!r.lite, at: r.created_at }));
+      return json({ rows }, 200, { ...h, 'cache-control': 'public, max-age=30' });
+    }
+
+    if (req.method === 'POST' && url.pathname === '/event') {
+      let body: unknown;
+      try { body = await req.json(); } catch { return json({ ok: false, why: 'json' }, 400, h); }
+      const p = parseEvent(body);
+      if (!p.ok) return json({ ok: false, why: p.why }, 400, h);
+      const e = p.e;
+      const now = Date.now();
+      const last = await env.DB.prepare('SELECT last_at FROM event_submits WHERE device = ?').bind(e.deviceId).first<{ last_at: number }>();
+      if (eventTooSoon(last?.last_at ?? null, now)) return json({ ok: false, why: 'tooSoon' }, 429, h);
+      await env.DB.prepare('INSERT INTO event_submits (device, last_at) VALUES (?, ?) ON CONFLICT(device) DO UPDATE SET last_at = excluded.last_at').bind(e.deviceId, now).run();
+      await env.DB.prepare('INSERT INTO events (device, name, cause, coin, dir, lev, loss, peak, ending, lite, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .bind(e.deviceId, e.name, e.cause, e.coin, e.dir, e.lev, e.loss, e.peak, e.ending, e.lite ? 1 : 0, now).run();
+      // 오래된 소식은 가끔 지운다
+      if (Math.random() < 0.05) await env.DB.prepare('DELETE FROM events WHERE created_at < ?').bind(now - EVENT_LIMITS.keepMs * 3).run();
+      return json({ ok: true }, 200, h);
     }
 
     if (req.method === 'POST' && url.pathname === '/submit') {

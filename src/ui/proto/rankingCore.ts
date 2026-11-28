@@ -2,7 +2,8 @@
 // 서버(ranking/src/verify.ts)가 검사하는 모양을 그대로 따른다. 화면 · 게임 상태는 모른다(ranking.ts 가 잇는다).
 
 export type Board = 'networth' | 'roe' | 'pnl';
-export const BOARDS: Board[] = ['networth', 'roe', 'pnl'];
+/** 판 순서(U-59 사용자: "최고 수익률, 최고 수익금, 최고 자산") */
+export const BOARDS: Board[] = ['roe', 'pnl', 'networth'];
 export const RANK_MARKETS = ['DTC', 'BTH', 'SMS', 'MDT', 'JQQ', 'FLY'] as const;
 
 export interface TradeDetail {
@@ -16,7 +17,7 @@ export interface TradeDetail {
   roe: number;
   pnl: number;
 }
-export interface LifeDetail { lifeNo: number; settles: number; peak: number; trades: TradeDetail[] }
+export interface LifeDetail { lifeNo: number; settles: number; peak: number; trades: TradeDetail[]; /** 라이트 생(U-59): 서버가 시작 재산을 라이트 것(-30만)으로 잰다 */ lite?: true }
 
 /** 포지션이 열릴 때 적어 두는 것(엔진 틱은 벽시계가 아니라서, 진입 시각은 화면 쪽이 적는다) */
 export interface OpenMeta {
@@ -66,8 +67,10 @@ export function lifeTrades(all: TradeDetail[]): TradeDetail[] {
   const losses = all.filter((t) => t.pnl <= 0);
   return [...wins, ...losses].slice(0, LIFE_MAX_TRADES);
 }
-export function lifeDetail(lifeNo: number, settles: number, peak: number, trades: TradeDetail[]): LifeDetail {
-  return { lifeNo, settles, peak: Math.floor(peak), trades: lifeTrades(trades) };
+export function lifeDetail(lifeNo: number, settles: number, peak: number, trades: TradeDetail[], lite = false): LifeDetail {
+  const d: LifeDetail = { lifeNo, settles, peak: Math.floor(peak), trades: lifeTrades(trades) };
+  if (lite) d.lite = true;
+  return d;
 }
 
 // ── 보내기 줄 ──────────────────────────────────────────────────────────
@@ -175,9 +178,9 @@ export function valueText(board: Board, v: number): string {
   return commaN(v);
 }
 export const BOARD_LABEL: Record<Board, { tab: string; title: string; toast: string }> = {
-  networth: { tab: '한 생 최고 재산', title: '한 생에 가장 많이 모은 재산', toast: '재산' },
-  roe: { tab: '한 번에 최고 수익률', title: '한 번의 거래로 가장 크게 불린 비율', toast: '수익률' },
-  pnl: { tab: '한 번에 최고 수익금', title: '한 번의 거래로 가장 많이 번 도토리', toast: '수익금' },
+  roe: { tab: '최고 수익률', title: '한 번의 거래로 가장 크게 불린 비율', toast: '수익률' },
+  pnl: { tab: '최고 수익금', title: '한 번의 거래로 가장 많이 번 도토리', toast: '수익금' },
+  networth: { tab: '최고 자산', title: '한 생에 가장 많이 모은 자산(빚을 뺀 것)', toast: '자산' },
 };
 
 /** 이름: 1~12글자, 꺾쇠 · 제어 문자는 뺀다(서버 cleanName 과 같다) */

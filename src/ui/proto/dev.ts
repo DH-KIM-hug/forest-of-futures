@@ -65,7 +65,9 @@ export function bootProto(): void {
   }
   let g = freshGame();
   if (isLite) liteBoot();
-  if (pdev) g = isLite ? liteScene(pdev, g) : scene(pdev, g);
+  // U-59 &pdev=rank_clear: 빚이 1만 남은 판(본편은 clear, 라이트는 lite_clear 와 같다). 장면 건너뛰기는 전광판이 잠긴 채로 열려, 지도에서 [전부 갚기]를 누르면 첫 완납 축하가 뜬다
+  const pd = pdev === 'rank_clear' || pdev === 'lite_rank_clear' ? (isLite ? 'lite_clear' : 'clear') : pdev;
+  if (pd) g = isLite ? liteScene(pd, g) : scene(pd, g);
   if (wantPrologue()) { useProto.getState().patch({ prologue: true }); st.setSpeed(0); }
   st.setGame(g);
   // 화면 확인용: &pguide=<때> 는 그 때의 설명 장면을 바로 띄운다(예: pdev=cabin0&guide=1&pguide=hamster)

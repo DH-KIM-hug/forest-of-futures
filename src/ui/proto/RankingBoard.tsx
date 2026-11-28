@@ -1,11 +1,17 @@
 // 마을 전광판(랭킹, U-45): 지도 한쪽의 나무 게시판 · 환생 화면에서 연다. 판 셋, 위 50, 내 자리는 밝힌다.
-import { useEffect, useRef, useState } from 'react';
+// U-59: 빚을 한 번 다 갚기 전에는 자물쇠 판(RankLocked). 처음 다 갚으면 완납 장면의 고르는 줄 위로 큰 축하(RankUnlockCheer)
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../../store/gameStore';
 import { marketById } from '../../engine/data';
 import { pdev } from './config';
 import { play } from './audio';
 import { closeBoard, fetchMe, fetchTop, openBoard, rankOffReason, setRankName, useRank, type MeRow, type TopRow } from './ranking';
 import { BOARDS, BOARD_LABEL, cleanName, detailText, valueText, type Board } from './rankingCore';
+import { endCheer, useUnlock } from './rankUnlock';
+import { acornSvg } from './art';
+import { sprite, BUST_OF } from './sprites';
+import { reduced } from './fx';
+import { later } from './audio';
 import './ranking.css';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -54,16 +60,86 @@ export function RankNameAsk({ compact }: { compact?: boolean }) {
 
 /** 지도 위 나무 게시판(전광판을 여는 곳): 마을 빈터 한쪽에 박아 둔 널빤지 */
 export function RankSign() {
+  const locked = useUnlock((s) => !s.rec);
   return (
-    <button className="rk-sign" data-rank-sign onClick={(e) => { e.stopPropagation(); play('ui_tap'); openBoard(); }} aria-label="마을 전광판 보기">
-      <span className="plank"><b>전광판</b><small>숲의 기록</small></span>
+    <button className={'rk-sign' + (locked ? ' locked' : '')} data-rank-sign={locked ? 'locked' : 'open'} onClick={(e) => { e.stopPropagation(); play('ui_tap'); openBoard(); }} aria-label={locked ? '마을 전광판, 잠김' : '마을 전광판 보기'}>
+      <span className="plank"><b>전광판</b><small>{locked ? '빚 다 갚으면' : '숲의 기록'}</small>{locked && <i className="lock" aria-hidden="true" />}</span>
       <span className="posts" aria-hidden="true"><i /><i /></span>
     </button>
   );
 }
 /** 환생 화면의 작은 단추 */
 export function RankButton() {
-  return <button className="rk-open" data-rank-open onClick={() => { play('ui_tap'); openBoard(); }}>마을 전광판 보기</button>;
+  const locked = useUnlock((s) => !s.rec);
+  return <button className={'rk-open' + (locked ? ' locked' : '')} data-rank-open={locked ? 'locked' : 'open'} onClick={() => { play('ui_tap'); openBoard(); }}>{locked ? '마을 전광판 (잠김)' : '마을 전광판 보기'}</button>;
+}
+
+export const LOCK_TEASER = '빚을 한 번 다 갚은 자만 전광판에 이름을 올린다';
+/** 잠긴 전광판: 자물쇠 판 하나 */
+function RankLocked() {
+  return (
+    <div className="pr-notice pr-rank" role="dialog" aria-label="마을 전광판, 잠김" data-rank-board="locked" onClick={closeBoard}>
+      <div className="box rk-lockbox" onClick={(e) => e.stopPropagation()}>
+        <div className="rk-mast"><b>마을 전광판</b><span>잠김</span></div>
+        <div className="rk-plaque" data-rank-locked>
+          <i className="lock big" aria-hidden="true" />
+          <b>{LOCK_TEASER}</b>
+          <small>어느 생이든 장부의 빚을 0 으로 만드는 날 자물쇠가 풀린다. 한 번 풀리면 다음 생에도 열려 있다.</small>
+          <small>그 전에 낸 기록은 올라가지 않는다.</small>
+        </div>
+        <ul className="rk-tease" aria-label="열리면 붙는 판">
+          {BOARDS.map((b) => <li key={b}>{BOARD_LABEL[b].tab}</li>)}
+        </ul>
+        <button className="buy on wide" data-rank-close onClick={closeBoard}><span>접는다</span></button>
+      </div>
+    </div>
+  );
+}
+
+/** 처음 다 갚은 순간(U-59): 축하합니다! 도토리 비, 팡파르, 추심원이 장부를 덮는 한마디, 그리고 전광판이 열렸다 */
+export const CHEER_LINES = {
+  title: '축하합니다!',
+  collector: '장부를 덮겠습니다. 덮을 일이 없을 줄 알고 풀칠해 뒀는데, 뜯느라 혼났어요.',
+  collector2: '이제 이름 석 자는 장부 말고 전광판에 적으세요.',
+  open: '숲 전광판이 열렸다',
+  sub: '빚을 다 갚은 자만 이름을 올리는 판. 지금부터 낸 기록이 붙는다.',
+};
+export function RankUnlockCheer() {
+  const on = useUnlock((s) => s.cheer);
+  const named = useRank((s) => !!s.name);
+  const calm = reduced();
+  const rain = useMemo(() => Array.from({ length: calm ? 0 : 40 }, (_, i) => ({
+    x: 3 + ((i * 41) % 94), d: (i % 10) * 0.16 + (i > 20 ? 1.4 : 0), s: 16 + ((i * 7) % 16), r: (i % 2 ? -1 : 1) * (200 + ((i * 53) % 300)), t: 1.6 + ((i * 13) % 9) / 10,
+  })), [on]);
+  useEffect(() => {
+    if (!on) return;
+    play('win_jackpot');
+    later(450, () => play('win_coins'));
+    later(1700, () => play('win_fanfare'));
+  }, [on]);
+  if (!on) return null;
+  const col = sprite(BUST_OF.collector ?? 'collector');
+  const go = () => { play('ui_tap'); endCheer(); openBoard('roe'); };
+  const close = () => { play('ui_tap'); endCheer(); };
+  return (
+    <div className={'rk-cheer' + (calm ? ' calm' : '')} role="dialog" aria-label="축하합니다, 숲 전광판이 열렸다" data-rank-cheer>
+      <div className="rain" aria-hidden="true">
+        {rain.map((a, i) => <span key={i} style={{ left: `${a.x}%`, width: a.s, height: a.s, animationDelay: `${a.d}s`, animationDuration: `${a.t}s`, ['--rot' as string]: `${a.r}deg` }} dangerouslySetInnerHTML={{ __html: acornSvg(a.s) }} />)}
+      </div>
+      <h2 className="rk-cheer-t" data-cheer-title>{CHEER_LINES.title}</h2>
+      <div className="rk-cheer-col">
+        {col && <img src={col.src} alt="" draggable={false} />}
+        <p className="say"><b>추심원</b>「{CHEER_LINES.collector}」<br />「{CHEER_LINES.collector2}」</p>
+      </div>
+      <div className="rk-cheer-open" data-cheer-open>
+        <i className="lock open" aria-hidden="true" />
+        <b>{CHEER_LINES.open}</b>
+        <small>{CHEER_LINES.sub}</small>
+        <button className="buy on wide" data-cheer-board onClick={go}><span>전광판 보기</span>{!named && <small>이름부터 적는다</small>}</button>
+        <button className="rk-link" data-cheer-close onClick={close}>나중에 본다</button>
+      </div>
+    </div>
+  );
 }
 
 export function RankBoard() {
@@ -73,12 +149,13 @@ export function RankBoard() {
   const named = useRank((s) => !!s.name);
   const net = useGame((s) => s.net);
   const fake = pdev === 'rank';
+  const locked = useUnlock((s) => !s.rec);
   const [rows, setRows] = useState<TopRow[] | null>(null);
   const [me, setMe] = useState<MeRow | null>(null);
   const [err, setErr] = useState(false);
   useEffect(() => { if (!fake) return; if (q.get('pname')) useRank.setState({ name: q.get('pname') }); openBoard((q.get('prank') as Board) || undefined); }, []);
   useEffect(() => {
-    if (!open) return;
+    if (!open || (locked && !fake)) return;
     let live = true;
     setRows(null); setErr(false);
     if (fake) { const r = fakeRows(tab); setRows(r); setMe(fakeMe(r)); return; }
@@ -86,7 +163,7 @@ export function RankBoard() {
       .then(([r, m]) => { if (live) { setRows(r); setMe(m); } })
       .catch(() => { if (live) setErr(true); });
     return () => { live = false; };
-  }, [open, tab]);
+  }, [open, tab, locked]);
   // 내 줄이 있으면 목록 가운데로 굴려 둔다
   const list = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -94,6 +171,7 @@ export function RankBoard() {
     if (el && row) el.scrollTop = Math.max(0, row.offsetTop - el.offsetTop - el.clientHeight / 2 + row.clientHeight / 2);
   }, [rows, me]);
   if (!open) return null;
+  if (locked && !fake) return <RankLocked />;
   const off = fake ? null : rankOffReason(net);
   const meIn = me && me.rank <= (rows?.length ?? 0);
   return (
@@ -141,7 +219,8 @@ export function RankBoard() {
 export function RankRebirth() {
   const named = useRank((s) => !!s.name);
   const net = useGame((s) => s.net);
-  const ask = !named && (rankOffReason(net) === null || pdev === 'rebirth' || pdev === 'tree');
+  const locked = useUnlock((s) => !s.rec);
+  const ask = !named && !locked && (rankOffReason(net) === null || pdev === 'rebirth' || pdev === 'tree');
   return (
     <div className="rk-rebirth" data-rank-rebirth>
       {ask && <RankNameAsk compact />}

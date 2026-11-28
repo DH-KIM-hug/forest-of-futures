@@ -13,7 +13,14 @@ export async function postRank(body: unknown, base = RANK_API): Promise<RankRepl
   try { j = await r.json(); } catch { /* 빈 몸 */ }
   return { status: r.status, body: j };
 }
-/** GET /top · /me */
+/** POST /event: 파산 소식 한 건(U-59). 그물이 끊기면 던진다 */
+export async function postEvent(body: unknown, base = RANK_API): Promise<RankReply> {
+  const r = await fetch(`${base}/event`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  let j: unknown = null;
+  try { j = await r.json(); } catch { /* 빈 몸 */ }
+  return { status: r.status, body: j };
+}
+/** GET /top · /me · /recent */
 export async function getRank(path: string, base = RANK_API): Promise<any> {
   const r = await fetch(`${base}${path}`);
   if (!r.ok) throw new Error(`rank ${r.status}`);

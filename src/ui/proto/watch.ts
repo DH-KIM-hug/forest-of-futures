@@ -1,4 +1,5 @@
 // 게임 상태 변화를 보고 시제품 화면 사건(추심원·정산 컷인·탭 해금·목표)을 만든다. 규칙은 엔진의 것만 쓴다.
+import { rankCleared } from './rankUnlock';
 import { resumeHint, useGame } from '../../store/gameStore';
 import { settleSec } from '../../engine/pace';
 import { useProto, type Scene } from './protoStore';
@@ -840,6 +841,8 @@ export function startWatch(): void {
           if (k) { P1.patch({ clueAt: run.settleNo }); scene({ id: 'momClue_' + k, lines: STORY.momClue(k) }); }
         }
       }
+      // U-59: 처음 다 갚았으면 전광판이 풀린다(축하는 이 장면의 고르는 줄에서 뜬다, RankUnlockCheer)
+      if (lenderDebtTotal(run) === 0 && lenderDebtTotal(prev.run) > 0) rankCleared();
       if (lenderDebtTotal(run) === 0 && lenderDebtTotal(prev.run) > 0) scene({ id: 'clear', lines: STORY.clear(), hold: true, choices: [
         { id: 'retire', label: '은퇴한다', sub: `이번 생 마치기, 황금 도토코인 +${treeAward(run)}`, run: retireNow },
         { id: 'continue', label: isLite ? '한 판 더 산다' : '계속 산다', sub: '빚 없이 이어 하기', primary: true, run: () => { useProto.getState().patch({ seen: { ...useProto.getState().seen, continued: true } }); scene({ id: 'act2Hook', lines: STORY.act2Hook() }); } },

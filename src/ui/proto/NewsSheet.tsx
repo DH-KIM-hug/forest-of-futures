@@ -8,6 +8,30 @@ import { sessionOf, SESSIONS, opensInText } from './market';
 import { recentRange } from './tension';
 import { liveHistoryOf } from '../priceHistory';
 import { Coin } from './Trade';
+import { useEffect } from 'react';
+import { bustNewsItems, refreshBusts, useBust } from './bustNews';
+import { openBoard } from './ranking';
+import { Face } from './ForestBoard';
+import { play } from './audio';
+
+/** 「오늘 망한 자들」(U-59): 전광판에 이름을 올린 이들의 파산 소식. 모자라면 숲 단타방 마을 사람들 이야기로 채운다. 누르면 전광판 */
+export function BustNews({ max = 5 }: { max?: number }) {
+  const rows = useBust((s) => s.rows);
+  const log = useProto((s) => s.rivalLog);
+  useEffect(() => { void refreshBusts(); }, []);
+  const items = bustNewsItems(rows, log, Math.floor(Date.now() / 86_400_000), max);
+  return (
+    <div className="dn-bust" data-bust-news={items.filter((x) => x.real).length}>
+      <h4>오늘 망한 자들</h4>
+      {items.map((x) => (
+        <button key={x.key} className={'bn' + (x.real ? ' real' : ' npc')} data-bust-item={x.real ? 'real' : 'npc'} onClick={() => { play('ui_tap'); if (x.real) { dayNoteOpen(false); openBoard(); } }}>
+          {x.who ? <Face who={x.who} size={22} /> : <i className="bn-mark" aria-hidden="true">속보</i>}
+          <span>{x.text}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const span = (min: number) => (min >= 90 ? `${Math.round(min / 60)}시간` : `${Math.max(1, Math.round(min))}분`);
 
@@ -41,6 +65,7 @@ export function DayNoteSheet() {
             );
           })}
         </div>
+        <BustNews />
         <p className="boss" data-note-boss><b>오소리 대부</b>「{note.boss}」</p>
         <button className="buy on wide" data-daynote-ok onClick={() => dayNoteOpen(false)}><span>접는다</span></button>
       </div>

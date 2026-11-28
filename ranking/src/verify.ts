@@ -28,6 +28,8 @@ export interface LifeDetail {
   peak: number;
   /** 그 생의 끝난 거래 전부(이긴 것만 상한에 들어간다. 빠뜨려도 상한이 커지지 않는다). */
   trades: TradeDetail[];
+  /** 라이트 생(U-59): 빚 40만, 손에 10만에서 연다. 생마다 같다 */
+  lite?: boolean;
 }
 export interface Submit {
   deviceId: string;
@@ -116,6 +118,8 @@ export const LIFE = {
   start: -300_000, // 첫 생: 엄마 빚 30만, 현금 0
   /** 둘째 생부터(U-46): 첫 생의 튜토리얼이 끝난 자리에서 시작한다 — 손에 10만, 빚 50만 */
   rebornStart: -400_000,
+  /** 라이트(U-59, data/lite.json): 첫 생도 다음 생도 첫 대출을 받은 자리(빚 40만, 손에 10만)에서 연다. 쳇바퀴 · 알바가 없어 정산당 몫은 남는다 */
+  liteStart: -300_000,
   // U-47: 정산이 60초(튜토리얼 20초)가 되어 정산당 상한도 1/3
   mineMaxPerSettle: 17_000, // 쳇바퀴 6대 × 2,170 + 최대 탭(12회/초 × 60초 × 2) + 여유
   eventMaxPerSettle: 1_000, // 마을 사건(지원금 등) 평균 상한
@@ -161,7 +165,7 @@ export function checkLifeAgainstCandles(d: LifeDetail, value: number, candlesOf:
     if (why) return `trade:${why}`;
     wins += t.pnl;
   }
-  const start = d.lifeNo >= 2 ? LIFE.rebornStart : LIFE.start;
+  const start = d.lite === true ? LIFE.liteStart : d.lifeNo >= 2 ? LIFE.rebornStart : LIFE.start;
   const bound = start + wins * (1 + LIFE.winBonusMax) + pops + d.settles * (LIFE.mineMaxPerSettle + LIFE.eventMaxPerSettle);
   if (value > bound) return `tooHigh(${Math.round(value)} > ${Math.round(bound)})`;
   return null;

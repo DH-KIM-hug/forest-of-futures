@@ -10,6 +10,7 @@ import { play } from './audio';
 import { Typed, useSpeech } from './speech';
 import { say } from './watch';
 import { hlPanel, hlSel, hlTab, markTip } from './guide';
+import { choicesShown } from './rankUnlock';
 
 const TAB_LABEL: Record<string, string> = { map: '지도', phone: '거래소', lot: '집' };
 import heroFront from './img/hero_front.png';
@@ -151,6 +152,8 @@ function CutInScene({ sc }: { sc: Scene }) {
 
   const smile = line.mood ? line.mood === 'smile' : sc.settle ? sc.settle.win : true;
   const pick = last ? sc.choices : undefined;
+  // U-59: 고르는 줄이 떴다(첫 완납이면 그 위로 전광판 축하가 뜬다)
+  useEffect(() => { if (pick && !sp.typing) choicesShown(sc.id); }, [!!pick, sp.typing]);
   const guarded = () => performance.now() - shownAt.current < 600;
   // 글자가 나오는 중에 누르면 그 줄이 바로 다 보이고 소리가 멎는다. 한 번 더 누르면 전처럼 넘어간다.
   const next = () => { if (guarded()) return; if (sp.typing) { sp.finish(); return; } if (last && pick) return; shownAt.current = performance.now(); if (last) end(); else { play('ui_tap'); setI(i + 1); } };

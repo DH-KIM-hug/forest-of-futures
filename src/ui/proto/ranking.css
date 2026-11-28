@@ -62,3 +62,55 @@
 .pr .rk-link { box-shadow: none; }
 .pr .rk-link:active, .pr .rk-tabs button:active { transform: scale(.95); }
 .pr .rk-tabs button:not(.on) { box-shadow: none; }
+
+/* U-59 잠긴 전광판: 쇠 자물쇠를 건 나무 판 */
+.rk-sign .lock, .rk-plaque .lock, .rk-cheer .lock { position: relative; display: inline-block; width: 16px; height: 13px; border-radius: 3px; background: #8E8A80; border: 2px solid var(--o); }
+.rk-sign .lock::before, .rk-plaque .lock::before, .rk-cheer .lock::before { content: ''; position: absolute; left: 50%; bottom: 100%; width: 10px; height: 9px; margin-left: -7px; border: 2.5px solid var(--o); border-bottom: 0; border-radius: 7px 7px 0 0; }
+.rk-cheer .lock.open::before { transform: translate(5px, -3px) rotate(18deg); transform-origin: left bottom; }
+.pr .rk-sign .lock { position: absolute; right: -8px; top: -9px; transform: rotate(12deg); }
+.pr .rk-sign.locked .plank { background-color: #A8865F; filter: saturate(.7); }
+.pr .rk-sign.locked .plank b { opacity: .85; }
+.pr .rk-sign .plank { position: relative; }
+.pr .rk-open.locked { background: #A8865F; color: #F2E6CC; }
+.pr-rank .rk-lockbox { gap: 12px; }
+.rk-plaque { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 16px 18px; border-radius: 14px; background: #C99B6A; border: 3px solid var(--o); box-shadow: inset 0 -4px 0 #A97C4E; text-align: center;
+  background-image: repeating-linear-gradient(180deg, transparent 0 13px, rgba(74, 70, 64, .14) 13px 15px); }
+.rk-plaque .lock.big { width: 34px; height: 27px; margin-top: 14px; border-width: 3px; border-radius: 6px; }
+.rk-plaque .lock.big::before { width: 20px; height: 18px; margin-left: -13px; border-width: 4px; border-radius: 12px 12px 0 0; }
+.rk-plaque b { font-family: var(--dsp); font-weight: 400; font-size: 20px; line-height: 1.3; color: #FFF8E4; text-shadow: 0 2px 0 var(--o); word-break: keep-all; }
+.rk-plaque small { font-size: 12.5px; font-weight: 700; color: #3E2C1E; line-height: 1.4; word-break: keep-all; }
+.rk-tease { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.rk-tease li { flex: 1 1 0; padding: 8px 4px; border-radius: 10px; border: 2px dashed rgba(74, 70, 64, .45); text-align: center; font-size: 12px; font-weight: 800; color: rgba(74, 70, 64, .6); }
+
+/* U-59 첫 완납 축하: 완납 장면(고르는 줄) 위에 뜬다 */
+.rk-cheer { position: absolute; inset: 0; z-index: 55; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px 16px calc(env(safe-area-inset-bottom) + 24px); overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255, 214, 120, .55), rgba(29, 27, 25, .82) 70%); animation: fadeIn .25s ease-out; }
+.rk-cheer .rain { position: absolute; inset: 0; pointer-events: none; }
+.rk-cheer .rain span { position: absolute; top: -40px; display: block; animation: rkAcorn 2s cubic-bezier(.45, .05, .7, .6) both; }
+.rk-cheer .rain span svg { width: 100%; height: 100%; display: block; }
+@keyframes rkAcorn { 0% { transform: translateY(0) rotate(0); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(110vh) rotate(var(--rot)); opacity: 0; } }
+.rk-cheer-t { position: relative; margin: 0; font-family: var(--dsp); font-weight: 400; font-size: 46px; line-height: 1.1; color: #FFE27A; letter-spacing: 1px; text-shadow: 0 3px 0 var(--o), 0 0 0 var(--o), 3px 0 0 var(--o), -3px 0 0 var(--o), 0 -3px 0 var(--o), 0 8px 18px rgba(0, 0, 0, .45);
+  animation: rkPop .55s .1s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes rkPop { 0% { transform: scale(.2) rotate(-8deg); opacity: 0; } 100% { transform: scale(1) rotate(-3deg); opacity: 1; } }
+.rk-cheer-col { position: relative; display: flex; align-items: flex-end; gap: 6px; width: min(360px, 100%); animation: slideUp .4s .5s cubic-bezier(.22, 1, .36, 1) both; }
+.rk-cheer-col img { flex: 0 0 auto; width: 92px; height: auto; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .25)); }
+.rk-cheer-col .say { flex: 1 1 auto; margin: 0 0 8px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 3px solid var(--o); font-size: 13.5px; font-weight: 700; line-height: 1.45; color: var(--o); word-break: keep-all; }
+.rk-cheer-col .say b { display: block; font-size: 11.5px; color: var(--sub); }
+.rk-cheer-open { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(360px, 100%); padding: 18px 14px 12px; border-radius: 16px; background: #F6E9C8; border: 3px solid #6B4A35; box-shadow: 0 0 0 4px #fff, 0 10px 20px rgba(0, 0, 0, .35); text-align: center;
+  animation: slideUp .4s 1.4s cubic-bezier(.22, 1, .36, 1) both; }
+.rk-cheer-open > b { font-family: var(--dsp); font-weight: 400; font-size: 24px; color: var(--o); }
+.rk-cheer-open > small { font-size: 12.5px; font-weight: 700; color: var(--sub); word-break: keep-all; }
+.rk-cheer-open .lock { margin-top: 6px; }
+.rk-cheer-open .buy.wide { width: 100%; min-height: 52px; margin-top: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.rk-cheer-open .buy.wide small { font-size: 11px; font-weight: 700; opacity: .8; }
+.rk-cheer-open .rk-link { margin-top: 2px; border-color: transparent; background: transparent; color: var(--sub); }
+.rk-cheer.calm .rk-cheer-t, .rk-cheer.calm .rk-cheer-col, .rk-cheer.calm .rk-cheer-open { animation: none; }
+
+/* U-59 도토리일보 「오늘 망한 자들」 */
+.dn-bust { display: flex; flex-direction: column; gap: 5px; margin: 10px 0 6px; padding-top: 8px; border-top: 3px double var(--o); }
+.dn-bust h4 { margin: 0; font-family: var(--dsp); font-weight: 400; font-size: 17px; text-align: left; }
+.pr .dn-bust .bn { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; margin: 0; padding: 5px 8px; border-radius: 9px; border: 2px solid rgba(74, 70, 64, .3); background: #FFFBEE; box-shadow: none; font: inherit; font-size: 12.5px; font-weight: 700; line-height: 1.35; color: var(--o); text-align: left; cursor: pointer; transform: none; filter: none; min-width: 0; }
+.pr .dn-bust .bn.real { border-color: var(--red); background: #FFF0E8; }
+.pr .dn-bust .bn span { flex: 1 1 auto; min-width: 0; word-break: keep-all; }
+.dn-bust .bn-mark { flex: 0 0 auto; padding: 1px 5px; border-radius: 5px; background: var(--red); color: #fff; font-style: normal; font-size: 10.5px; font-weight: 800; }
+.pr .pt-forest .fq.bust em { margin-right: 6px; color: var(--red); font-style: normal; font-weight: 800; }

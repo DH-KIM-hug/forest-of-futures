@@ -3,13 +3,16 @@
 //   - 생이 끝날 때(파산 · 은퇴), 그리고 정산 때 이번 생 최고 재산이 새로 나오면(정산 5번에 한 번까지) → 한 생 최고 재산(networth) 판
 //   - 연습 시세(&feed=sim, 실시간을 못 받아 내려간 판) · 튜토리얼 거래 · 개발 판(&pdev 장면 건너뛰기 · &cheat 치트)은 올리지 않는다
 //   - 서버와 말하는 곳은 src/net/rankingIo.ts 하나(&rankapi=<주소> 로 바꾼다, 기본 = 운영 Worker)
+//   - U-59: 빚을 한 번 다 갚기 전에는 잠겨 있다(rankUnlock.ts). 잠긴 동안은 줄에 넣지도 보내지도 않는다. 풀린 뒤 이번 생 최고 자산은 그 순간부터 잰다
+//     (거래 목록은 잠긴 동안에도 모은다: 서버가 자산 상한을 그 생의 이긴 거래 전부로 잰다)
+//   - U-59: 파산하면 이름을 적은(전광판이 풀린) 기기만 「오늘 망한 자들」 소식을 올린다(bustNews.ts)
 import { create } from 'zustand';
 import { useGame } from '../../store/gameStore';
 import { useProto } from './protoStore';
 import { closedMath, say } from './watch';
 import { lifeNo } from './model';
 import { isCheat, pdev } from './config';
-import { totalDebt, walletValue } from '../../engine/selectors';
+import { lenderDebtTotal, totalDebt, walletValue } from '../../engine/selectors';
 import type { GameState } from '../../engine/types';
 import type { NetInfo } from '../../store/gameStore';
 import {
@@ -17,10 +20,15 @@ import {
   type Board, type ClosedTrade, type OpenMeta, type QueueState, type Sender, type TradeDetail,
 } from './rankingCore';
 
-import { RANK_API, getRank, postRank } from '../../net/rankingIo';
+import { RANK_API, getRank, postEvent, postRank } from '../../net/rankingIo';
+import { __setUnlockForTest, isRankUnlocked, onRankUnlock, rankGrandfather } from './rankUnlock';
+import { bustFromGame, postBust, type BustEvent, type LastTrade } from './bustNews';
 export { RANK_API };
 /** 개발 판(장면 건너뛰기 · 치트)은 전광판에 올리지 않는다. 빠른 정산(&fast)은 시세가 진짜라 막지 않는다(재산 상한은 정산 수로 잰다) */
 export const rankDevOff = !!pdev || isCheat;
+/** 파산 소식(U-59)은 자동 시험(&e2e)에서도 올리지 않는다 */
+const noEvents = typeof window !== 'undefined' && /[?&]e2e=1/.test(window.location.search);
+let eventSender: (b: BustEvent) => Promise<{ status: number }> = postEvent;
 
 // ── 저장(이 기기의 브라우저에만) ─────────────────────────────────────────
 const K = { device: 'fof.rank.device', name: 'fof.rank.name', queue: 'fof.rank.queue', life: 'fof.rank.life' };
@@ -42,7 +50,7 @@ export const fallbackName = (): string => `다람쥐 ${deviceId().slice(-4).toUp
 
 // ── 전광판 화면 상태 ─────────────────────────────────────────────────────
 interface RankUi { open: boolean; tab: Board; name: string | null; rejected: number; posts: number; queued: number }
-export const useRank = create<RankUi>(() => ({ open: false, tab: 'networth', name: typeof window !== 'undefined' ? savedName() : null, rejected: 0, posts: 0, queued: 0 }));
+export const useRank = create<RankUi>(() => ({ open: false, tab: 'roe', name: typeof window !== 'undefined' ? savedName() : null, rejected: 0, posts: 0, queued: 0 }));
 export const openBoard = (tab?: Board): void => useRank.setState((s) => ({ open: true, tab: tab ?? s.tab }));
 export const closeBoard = (): void => useRank.setState({ open: false });
 
@@ -53,7 +61,7 @@ export function setRankName(raw: string): boolean {
   const was = savedName();
   ls.set(K.name, n);
   useRank.setState({ name: n });
-  if (was !== n && !rankDevOff) {
+  if (was !== n && !rankDevOff && isRankUnlocked()) {
     for (const b of Object.keys(sent) as Board[]) {
       const x = sent[b]!;
       if (!queue.items.some((i) => i.board === b)) queue.items.push({ board: b, value: x.value, detail: x.detail as any, tries: 0, nextAt: Date.now(), at: Date.now(), rename: true });
@@ -86,7 +94,7 @@ let sender: Sender = defaultSender();
 let timer: number | undefined;
 let pumping = false;
 function kick(ms = 0): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !isRankUnlocked()) return;
   window.clearTimeout(timer);
   timer = window.setTimeout(() => { void pump(); }, Math.max(0, ms));
 }
@@ -110,7 +118,7 @@ async function pump(): Promise<void> {
   } finally { pumping = false; }
 }
 function submit(board: Board, value: number, detail: unknown): void {
-  if (rankDevOff) return;
+  if (rankDevOff || !isRankUnlocked()) return;
   if (enqueue(queue, board, value, detail as any, Date.now())) { saveQueue(); kick(); }
 }
 
@@ -125,6 +133,8 @@ interface Life {
   /** 열린 포지션마다(종목:열린 틱) 진입 때 적은 것 */ open: Record<string, OpenMeta>;
   done: boolean;
   /** 이미 넣은 닫힌 거래(종목:열린 틱, 반 익절은 :h 번호). 저장에서 이어 간 뒤 같은 판이 다시 닫혀도 두 번 넣지 않는다(U-55) */ closed?: string[];
+  /** 라이트 생(서버가 시작 자산을 라이트 것으로 잰다) */ lite?: boolean;
+  /** 마지막으로 닫힌 판(실제 시세가 아니어도). 파산 소식에 쓴다 */ last?: LastTrade;
 }
 const CLOSED_KEEP = 60;
 /** 처음 보는 닫힌 거래면 적고 true */
@@ -136,7 +146,7 @@ function firstClose(L: Life, k: string): boolean {
   return true;
 }
 const lifeId = (g: GameState): string => `${g.run.seed}:${g.family.generation}`;
-const newLife = (g: GameState): Life => ({ id: lifeId(g), lifeNo: lifeNo(g), settles: g.run.settleNo, trades: [], peak: -Infinity, tainted: false, subSettle: -99, subPeak: -Infinity, open: {}, done: false });
+const newLife = (g: GameState): Life => ({ id: lifeId(g), lifeNo: lifeNo(g), settles: g.run.settleNo, trades: [], peak: -Infinity, tainted: false, subSettle: -99, subPeak: -Infinity, open: {}, done: false, lite: !!g.run.lite });
 let life: Life | null = null;
 const saveLife = () => { if (life) ls.set(K.life, JSON.stringify(life)); };
 const posKey = (m: string, openTick: number) => `${m}:${openTick}`;
@@ -149,7 +159,7 @@ export const rankNetWorth = (g: GameState): number => lifeNetWorth({
 function submitLife(L: Life): void {
   if (L.tainted || !(L.peak > 0) || L.settles < 1 || L.peak <= L.subPeak) return;
   L.subPeak = L.peak; L.subSettle = L.settles;
-  submit('networth', Math.floor(L.peak), lifeDetail(L.lifeNo, L.settles, L.peak, L.trades));
+  submit('networth', Math.floor(L.peak), lifeDetail(L.lifeNo, L.settles, L.peak, L.trades, !!L.lite));
 }
 /** 정산 몇 번에 한 번까지 생 중간 기록을 넣는가 */
 export const LIFE_SUBMIT_EVERY = 15; // U-47: 정산이 60초 — 15분에 한 번
@@ -165,6 +175,7 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     if (lifeId(prev) !== life.id) prev = g;
   }
   const L = life;
+  L.lite = !!g.run.lite;
   const tutNow = useProto.getState().tutorial;
   const run = g.run;
   // 새로 열린 포지션: 진입 시각과 그때의 시세 출처를 적는다
@@ -199,6 +210,7 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     delete L.open[k];
     if (!firstClose(L, k)) continue;
     const { pnl } = closedMath(run, p);
+    L.last = { market: p.market, dir: p.dir, lev: p.lev, pnl: Math.round(pnl), liq: !!run.lastClose?.liq && run.lastClose.market === p.market };
     const c: ClosedTrade = { market: p.market, dir: p.dir, lev: p.lev, margin0: p.margin0, pnl, open: meta, exitTs: now, realAtExit: live, tutorialAtExit: tutNow === 'run' };
     const tut = meta?.tutorial || tutNow === 'run';
     if (tut) continue; // 튜토리얼 거래는 어디에도 넣지 않는다
@@ -221,9 +233,17 @@ export function observe(prev: GameState, g: GameState, net: NetInfo, now = Date.
     if (nw > L.peak) L.peak = nw;
     L.done = true;
     submitLife(L);
+    // 파산(은퇴가 아니다): 이름을 적은 기기만 소식을 올린다
+    if (g.run.bankruptcy && g.pendingEnding?.cause !== 'RETIRE' && isRankUnlocked() && !noEvents) { const ev = bustFromGame(g, L.last ?? null, savedName(), deviceId()); if (ev) postBust(ev, eventSender); }
   }
   saveLife();
 }
+
+// 풀린 순간: 이번 생 최고 자산은 지금부터 다시 잰다(풀리기 전의 기록은 거슬러 올리지 않는다). 기다리던 줄이 있으면 보낸다
+onRankUnlock(() => {
+  if (life && !life.done) { life.peak = -Infinity; life.subPeak = -Infinity; life.subSettle = -99; saveLife(); }
+  kick(500);
+});
 
 let started = false;
 /** 시제품이 켜질 때 한 번 */
@@ -236,6 +256,9 @@ export function startRanking(opts: { sender?: Sender } = {}): void {
   queue = { items: saved.items ?? [], lastSentAt: saved.lastSentAt ?? 0, best: saved.best ?? {}, rank: saved.rank ?? {}, rejected: saved.rejected ?? [], posts: saved.posts ?? 0 };
   try { const s = ls.get(K.life); life = s ? (JSON.parse(s) as Life) : null; } catch { life = null; }
   useRank.setState((s) => ({ name: savedName() ?? s.name, rejected: queue.rejected.length, posts: queue.posts, queued: queue.items.length }));
+  // U-59: 이 기능 전의 저장에 이미 다 갚은 생이 있으면(은퇴한 적이 있다, 빚 없이 이어 가는 생) 축하 없이 풀어 둔다
+  const g0 = useGame.getState().g;
+  rankGrandfather((g0.family.stats.retires ?? 0) > 0 || (lenderDebtTotal(g0.run) === 0 && ((g0.run.stats['repaid.shark1'] as number | undefined) ?? 0) > 0));
   if (/[?&]e2e=1/.test(window.location.search)) {
     (window as unknown as { __fofRank?: () => unknown }).__fofRank = () => ({ off: rankOffReason(), posts: queue.posts, queued: queue.items.length, rejected: queue.rejected.length, lifeTrades: life?.trades.length ?? 0, tainted: life?.tainted ?? null, api: RANK_API });
   }
@@ -257,6 +280,7 @@ export async function fetchMe(board: Board): Promise<MeRow | null> {
 }
 
 /** 시험용: 상태를 비운다 */
-export function __resetRankingForTest(s: Sender): void { queue = emptyQueue(); sent = {}; life = null; sender = s; }
+export function __resetRankingForTest(s: Sender, unlocked = true): void { queue = emptyQueue(); sent = {}; life = null; sender = s; __setUnlockForTest(unlocked ? { at: 1, cheered: true, why: 'past' } : null); }
+export const __setEventSenderForTest = (f: (b: BustEvent) => Promise<{ status: number }>): void => { eventSender = f; };
 export const __rankState = () => ({ queue, life, sent });
 export const __pump = pump;
