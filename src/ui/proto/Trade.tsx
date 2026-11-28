@@ -835,14 +835,13 @@ export function ProtoTrade() {
   // 바람 줄(U-52, U-57): 날다람쥐코인을 볼 때만. 지금 10분의 바람 세기, 방금 끝난 차트 모양(끝난 뒤에만), 지난 하루 모양 성적
   const windLine = wind && marketById[market].synthetic ? (() => {
     const d = wind.done, gw = wind.gust;
-    const rec = wind.rec.n ? `지난 하루 끝난 모양 ${wind.rec.n}개 중 ${wind.rec.ok}개가 교과서대로` : '';
     const cls = 'pt-wind' + (d ? ' came' + (d.e.ok ? '' : ' fake') : '') + (gw.mul >= 1.35 ? ' gusty' : gw.mul < 0.75 ? ' calm' : '');
     return (
-      <button className={cls} data-wind={d ? (d.e.ok ? 'ok' : 'fake') : 'none'} data-gust={gw.word} onClick={() => { play('ui_tap'); toast(`${PATTERN_ODDS_TEXT}. ${rec ? rec + '. ' : ''}모양 이름은 끝난 뒤에만 붙는다. 바람 세기는 지금 10분 동안의 흔들림(평소의 ${gw.mul.toFixed(1)}배).`, 8000); }}
+      <button className={cls} data-wind={d ? (d.e.ok ? 'ok' : 'fake') : 'none'} data-gust={gw.word} onClick={() => { play('ui_tap'); toast('바람이 셀수록 크게 오르내린다.', 4000); }}
         aria-label={`바람 ${gw.word}${d ? ', 방금 ' + d.e.label : ''}`}>
         <span className={'gw g' + Math.min(3, Math.floor(gw.mul / 0.65))}><i className="bars" aria-hidden="true"><u /><u /><u /></i>{gw.word}<small>{Math.ceil(gw.leftSec / 60)}분</small></span>
         {d ? <span className="tl" data-pat-done={d.e.label}><b>방금</b> {d.e.label}<em className={d.e.ok ? (d.e.dir === 1 ? 'up' : 'down') : (d.e.dir === 1 ? 'down' : 'up')}>{(d.e.ok ? d.e.dir : -d.e.dir) === 1 ? '▲' : '▼'}</em></span>
-          : <span className="tl dim">{wind.rec.n ? `지난 하루 끝난 모양 ${wind.rec.n}개, 교과서대로 ${wind.rec.ok}개` : '끝난 모양 없음'}</span>}
+          : <span className="tl dim">{gw.mul >= 1.35 ? '다들 몰려드는 중!' : gw.mul < 0.75 ? '오늘은 조용하네요' : '숲이 수군거려요'}</span>}
       </button>
     );
   })() : null;

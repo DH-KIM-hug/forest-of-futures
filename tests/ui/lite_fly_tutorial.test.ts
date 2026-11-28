@@ -71,12 +71,9 @@ describe('날다람쥐 길잡이 대사', () => {
       expect(t, t).not.toMatch(/undefined|NaN|null/);
     }
   });
-  it('숫자는 받은 값: 배율, 청산 거리, 익절 손절 폭, 이자와 생활비', () => {
+  it('숫자는 받은 값: 배율, 이자와 생활비(쉬운 말로 줄여 청산 거리와 익절 폭 숫자는 뺐다)', () => {
     const t = allLines(base).join('\n');
     expect(t).toContain(`${FT_LEV}배`);
-    expect(t).toContain('1.9%');
-    expect(t).toContain('+5,300');
-    expect(t).toContain('−5,300');
     expect(t).toContain('이자 4,300');
     expect(t).toContain('생활비 1,000');
     expect(t).toContain(`${FT_PCT}%`);

@@ -54,7 +54,7 @@ export const FT_STEPS: FtStep[] = [
   { id: 'hi', kind: 'text', phase: 'pre', who: 'boss', line: () => '어서 와요, 다로미 씨. 제 거래소 구경 좀 하죠.' },
   { id: 'fly', kind: 'text', phase: 'pre', who: 'boss', target: 'flyTab', line: () => '이게 날다람쥐코인이에요.' },
   { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '요즘 숲에서 제일 핫한 코인이에요. 누구나 벌 수 있어요.' },
-  { id: 'shape', kind: 'text', phase: 'pre', who: 'boss', target: 'wind', line: () => `빠르고, 교과서 모양을 그려요. 열에 ${tenth}은 속임수지만.` },
+  { id: 'shape', kind: 'text', phase: 'pre', who: 'boss', target: 'wind', line: () => '가끔 쭉 오르고 쭉 빠져요. 그때 잡으면 대박이죠.' },
   // ── 2. 차트 읽기 ──
   { id: 'chart', kind: 'text', phase: 'pre', who: 'boss', target: 'chart', line: (c) => (c.candles ? '봉 하나가 잠깐 동안의 값. 오른쪽 끝이 지금 값이에요.' : '이 선이 값이에요. 오른쪽 끝 점이 지금 값.') },
   { id: 'color', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: (c) => `오르면 ${upWord(c)} ▲, 내리면 ${downWord(c)} ▼.${c.up === null ? '' : c.up ? ` 지금은 ${upWord(c)}이네요.` : ` 지금은 ${downWord(c)}이네요.`}` },
@@ -64,18 +64,18 @@ export const FT_STEPS: FtStep[] = [
   { id: 'dirA', kind: 'text', phase: 'pre', who: 'boss', target: 'orders', sfx: '쪼옥', line: () => '맞히기만 하면요.' },
   // ── 4. 배율과 청산선 ──
   { id: 'lev', kind: 'act', phase: 'pre', who: 'boss', target: 'lev50', line: (c) => `배율은 ${c.lev}배로 하죠. 눌러 봐요.` },
-  { id: 'lev200', kind: 'text', phase: 'pre', who: 'boss', target: 'lev200', line: () => `${FT_SHOW_LEV}배도 있어요. 발도장 하나면 열려요. 그건 나중에.` },
-  { id: 'liq', kind: 'text', phase: 'pre', who: 'boss', target: 'chart', ghostLiq: true, line: (c) => `빨간 줄이 청산선. ${c.lev}배면 반대로 ${pctTxt(c.liqPct)}%만 가도 건 돈이 다 사라져요.` },
+  { id: 'lev200', kind: 'text', phase: 'pre', who: 'boss', target: 'lev200', line: () => `${FT_SHOW_LEV}배도 있어요. 그건 나중에.` },
+  { id: 'liq', kind: 'text', phase: 'pre', who: 'boss', target: 'chart', ghostLiq: true, line: () => '빨간 줄은 청산선. 저기 닿으면 건 돈이 다 사라져요.' },
   { id: 'liqQ', kind: 'text', phase: 'pre', who: 'hero', target: 'chart', ghostLiq: true, line: () => '사라진 돈은 어디로 가요?' },
   { id: 'liqA', kind: 'text', phase: 'pre', who: 'boss', target: 'chart', ghostLiq: true, sfx: '쪼옥', line: () => '…….' },
   // ── 5. 증거금 ──
   { id: 'mg', kind: 'act', phase: 'pre', who: 'boss', target: 'mg25', line: () => `넣을 돈은 ${FT_PCT}%만. 전부 거는 손님은 제가 제일 좋아하고요.` },
   // ── 6. 익절과 손절 ──
-  { id: 'stops', kind: 'act', phase: 'pre', who: 'boss', target: 'firstGo', line: (c) => `익절 손절은 한 번에. +${n(c.claim)}에 나오고, −${n(c.claim)}에 나와요.` },
+  { id: 'stops', kind: 'act', phase: 'pre', who: 'boss', target: 'firstGo', line: () => '익절 손절은 제가 맞춰 드릴게요. 눌러요.' },
   // ── 7. 주문하고 지켜보기 ──
   { id: 'order', kind: 'act', phase: 'pre', who: 'boss', target: 'orderBtns', line: () => '이제 롱이나 숏. 감 가는 쪽으로.' },
   { id: 'pnl', kind: 'text', phase: 'hold', who: 'boss', target: 'posNet', line: (c) => (c.net === null ? '이 숫자가 지금 손익이에요.' : c.net >= 0 ? `이 숫자가 지금 손익. 벌써 +${n(c.net)}이네요.` : `이 숫자가 지금 손익. −${n(c.net)}. 그런 날도 있죠.`) },
-  { id: 'posLiq', kind: 'text', phase: 'hold', who: 'boss', target: 'posLiq', line: () => '청산까지 남은 거리. 이게 0이 되면 끝이에요.' },
+  { id: 'posLiq', kind: 'text', phase: 'hold', who: 'boss', target: 'posLiq', line: () => '이게 0이 되면 끝이에요.' },
   // ── 8. 닫기(한 번 누르기, 아니면 익절 손절이 알아서) ──
   { id: 'wait', kind: 'wait', phase: 'hold', who: 'boss', target: 'close', line: (c) => `익절이나 손절에 닿으면 알아서 닫혀요. 급하면 정리하기 한 번.${c.net === null ? '' : c.net >= 0 ? ` 지금 +${n(c.net)}.` : ` 지금 −${n(c.net)}. 그런 날도 있죠.`}` },
   { id: 'result', kind: 'text', phase: 'post', who: 'boss', line: resultLine },
