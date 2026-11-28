@@ -37,26 +37,28 @@ const won = (x: number): string => (x >= 10000 && x % 10000 === 0 ? `${x / 10000
 const n = (x: number): string => Math.round(x).toLocaleString('ko-KR');
 
 // ── 절망의 표제지(프롤로그 7쪽, 장면 D 파산): 세로 기도 글, 해설 두 칸, 하아 넷, 표제 로고 ──
-export const PAGE7_AR = 1480 / 1063;
+export const PAGE7_AR = 1024 / 1536;
 export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: boolean }): Panel {
-  const nar = ['어째서\n사람은\n그 순간이\n올 때까지', '절망의 때에\n서 있다는 걸\n눈치채지\n못하는 걸까'];
-  // 파산이면 진짜 숫자 두 줄을 읽히는 크기의 상자로(해설 칸은 그대로 둔다)
-  const facts: Word[] = (o.nar ?? []).map((t, i) => ({ x: 22, y: 80 + i * 8.5, w: 42, h: 7.5, t, k: 'tag', fs: t.length > 22 ? 1.9 : 2.4, d: 2.6 + i * 0.3 }));
+  // 세로 한 쪽(2:3). 폰에서 자르지도 훑지도 않고 한 화면에 다 보인다
+  const nar = ['어째서 사람은\n그 순간이\n올 때까지', '절망의 때에\n서 있다는 걸\n눈치채지\n못하는 걸까'];
+  const broke = !!o.nar;
+  // 파산이면 진짜 숫자 두 줄을 읽히는 크기의 상자로(해설 칸은 그대로 두고, 폰 불빛 아래 책상 위에)
+  const facts: Word[] = (o.nar ?? []).map((t, i) => ({ x: 40, y: 75.6 + i * 5.8, w: 58, h: 5.3, t, k: 'tag', fs: t.length > 22 ? 2.7 : 3.4, d: 2.6 + i * 0.3 }));
   return {
-    id: 'x', src: pg7, ar: PAGE7_AR, alt: '푸른 보랏빛 어두운 방, 책상의 모니터 불빛 위로 칩멍크가 두 손으로 머리를 감싸 쥐고 눈물을 줄줄 흘리며 이를 악문다.',
+    id: 'x', src: pg7, ar: PAGE7_AR, alt: '밤의 나무 밑동 집, 어두운 나무 벽. 책상 위 폰 불빛 하나가 아래에서 비추고, 칩멍크가 두 손으로 머리를 감싸 쥐고 눈물을 줄줄 흘리며 이를 악문다.',
     balloons: [],
     words: [
-      { x: 2, y: 3, w: 19, h: 33, t: '시간을\n되돌려\n주세요', k: 'white', fs: 5, d: 0.2 },
-      { x: 24.5, y: 8.5, w: 9, h: 17, t: '하아', k: 'say', cls: 'red', fs: 2.4, d: 0.5 },
-      { x: 15, y: 40, w: 8, h: 14, t: '하아', k: 'say', cls: 'red', fs: 2.4, d: 0.7 },
-      { x: 80.5, y: 3, w: 5, h: 42, t: '이루어진다면', k: 'white', v: true, fs: 3.4, d: 0.9 },
-      { x: 70.5, y: 16.5, w: 9, h: 20, t: '하아', k: 'say', cls: 'red', fs: 2.4, d: 1.1 },
-      { x: 77, y: 51, w: 8, h: 18, t: '하아', k: 'say', cls: 'red', fs: 2.4, d: 1.3 },
-      { x: 10.4, y: 57.8, w: 9, h: 11.6, t: nar[0], k: 'box', fs: 1.3, d: 1.6 },
-      { x: 3, y: 76.6, w: 10.8, h: 17.6, t: nar[1], k: 'box', fs: 1.3, d: 2 },
-      { x: 88, y: 2, w: 11, h: 60, t: '빌어라。', k: 'ghost', v: true, fs: 9, d: 0 },
-      ...(o.fresh ? [{ x: 31, y: 86, w: 30, h: 12, t: '신연재!!!', k: 'sfx' as const, cls: 'pink', fs: 6, rot: -3, d: 2.6 }] : []),
-      { x: 66, y: 73, w: 33, h: 25, t: o.sub, k: 'logo', fs: 8.4, d: 2.3 },
+      { x: 2, y: 2, w: 33, h: 16, t: '시간을\n되돌려\n주세요', k: 'white', fs: 7, d: 0.2 },
+      { x: 14.5, y: 20.5, w: 13, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 0.5 },
+      { x: 5.5, y: 41, w: 10.5, h: 9.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 0.7 },
+      { x: 86, y: 2, w: 12, h: 22, t: '이루어진다면', k: 'white', v: true, fs: 5, d: 0.9 },
+      { x: 79.5, y: 27, w: 12, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 1.1 },
+      { x: 86, y: 48, w: 9.5, h: 10.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 1.3 },
+      { x: 13, y: 73.6, w: 25, h: 9.6, t: nar[0], k: 'tag', fs: 3.2, d: 1.6 },
+      { x: 3, y: 83, w: 25, h: 15.5, t: nar[1], k: 'tag', fs: 3.2, d: 2 },
+      { x: 0, y: 52, w: 12, h: 22, t: '빌어라。', k: 'ghost', v: true, fs: 8, d: 0 },
+      ...(o.fresh ? [{ x: 42, y: 74.5, w: 56, h: 7, t: '신연재!!!', k: 'sfx' as const, cls: 'pink', fs: 9, rot: -3, d: 2.6 }] : []),
+      broke ? { x: 40, y: 89, w: 58, h: 10.5, t: o.sub, k: 'logo', fs: 7, d: 2.3 } : { x: 38, y: 80.5, w: 60, h: 18, t: o.sub, k: 'logo', fs: 11, d: 2.3 },
       ...facts,
     ],
   };
@@ -139,7 +141,7 @@ export function prologuePages(): Panel[] {
       ],
     },
     {
-      id: 'p1', src: pg1, ar: 1239 / 1270, alt: '왼쪽은 하얗게 질린 칩멍크의 얼굴과 땀방울. 오른쪽은 마지막 검은 봉이 눈금을 뚫고 길게 내리꽂히는 봉 차트.',
+      id: 'p1', src: pg1, ar: 1239 / 1269, alt: '왼쪽은 하얗게 질린 칩멍크의 얼굴과 땀방울. 오른쪽은 마지막 검은 봉이 눈금을 뚫고 길게 내리꽂히는 봉 차트.',
       balloons: [],
       words: [
         { x: 89.4, y: 13, w: 8.4, h: 4, t: '100.3', k: 'box', fs: 2.2, d: 0 },
@@ -172,7 +174,7 @@ export function prologuePages(): Panel[] {
     },
     despairPanel({ sub: '제1화 기도', fresh: true }),
     {
-      id: 'p5', src: pg5, ar: 950 / 1375, alt: '오소리 대부가 빨대 컵을 들고 바짝 다가와 달콤하게 웃는다. 아래 두 칸: 웃는 대부, 곁눈질하며 땀 흘리는 칩멍크.',
+      id: 'p5', src: pg5, ar: 1034 / 1497, alt: '오소리 대부가 빨대 컵을 들고 바짝 다가와 달콤하게 웃는다. 아래 두 칸: 웃는 대부, 곁눈질하며 땀 흘리는 칩멍크.',
       balloons: [],
       words: [
         { x: 1, y: 1, w: 21, h: 17, t: 'ㅅ', k: 'sfx', fs: 22, rot: -8, d: 0.2 },
