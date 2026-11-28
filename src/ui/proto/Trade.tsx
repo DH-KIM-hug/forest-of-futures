@@ -41,7 +41,7 @@ import { rollWheel, rolledFor } from './roll';
 import { dayNoteOpen } from './daynote';
 import { ctxOfPosition, plans, reapplyPlan } from './exitPlan';
 import { STORY } from './text';
-import { swingOf, swingText, sessionOf, liveliest, allQuiet, feeEventChip, SESSIONS, opensInText, swingRank } from './market';
+import { swingOf, swingText, sessionOf, liveliest, allQuiet, feeEventChip, SESSIONS, opensInText, swingRank, sessionHoursKst } from './market';
 import { feeEventLeft, openingEvent } from '../../engine/skilltree';
 import {
   chartModel, fmtPrice, levRuler, marketMood, marketTabs, MARGIN_PCTS, orderPreview, positionView, SL_OPTIONS, TP_OPTIONS, tradeMode,
@@ -58,6 +58,8 @@ import { rankOf, lookOf, rankName, stampsFor, CASE_COL } from './frxRank';
 import { sprite } from './sprites';
 const heroFront = sprite('hero')!.src; // 포지션 카드의 주인공: 폰을 보는 새 그림(U-33)
 import './trade.css';
+import './tradeArt.css';
+import coinInfoJson from '../../../data/coin_info.json';
 
 export const EXCHANGE_NAME = 'FRX 숲거래소';
 
@@ -309,6 +311,15 @@ export function ProtoTrade() {
   /** 차트에 보이는 시간(초): 2분 · 5분 · 10분. 기록은 초마다 한 값, 600개까지 */
   const [span, setSpan] = useState(120);
   const [bigChart, setBigChart] = useState(false);
+  /** 종목 소개 카드(보기만 한다): 시세 줄의 종목 이름, 또는 이미 고른 종목 꼬리표를 한 번 더 누르면 */
+  const [info, setInfo] = useState<string | null>(null);
+  useEffect(() => {
+    if (!info) return;
+    // 카드 밖을 누르면 닫히고, 그 누름은 그대로 아래 단추에 간다(거래를 막지 않는다)
+    const f = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.('.pt-coininfo')) setInfo(null); };
+    const t = window.setTimeout(() => document.addEventListener('pointerdown', f, true), 0);
+    return () => { window.clearTimeout(t); document.removeEventListener('pointerdown', f, true); };
+  }, [info]);
   /** 포지션 카드의 둘째 줄(시세 · 수수료로 나눈 손익)은 카드를 누르면 펼친다(U-43: 차트에 자리를 준다) */
   const [whyOpen, setWhyOpen] = useState(false);
   /** 들고 있는 동안 증거금 칩은 접어 둔다: [추가 진입]을 한 번 누르면 펴지고, 한 번 더 누르면 들어간다(U-43: 차트에 자리를 준다) */
@@ -778,11 +789,13 @@ export function ProtoTrade() {
         const ss = SESSIONS[t.id] ? sessionOf(t.id, now, r) : null;
         return (
         <button key={t.id} role="tab" aria-selected={t.id === market} className={'pt-ct sw-' + sw + (t.id === market ? ' on' : '') + (ss?.badge ? ' shut' : '')} data-swing={sw} data-session={ss?.state} onClick={() => {
+          if (t.id === market && tutSt === 'done') { play('ui_tap'); setInfo((v) => (v ? null : t.id)); return; }
           setTrade({ market: t.id });
           // 날다람쥐코인(FLY)을 처음 열었다: 숲 신문 한 줄(생마다 한 번)
           if (marketById[t.id].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[t.id].name} 상장. 실체 없는 숲 밈코인, 값은 바람이 정한다.`, 6000); }
         }}>
           <Coin id={t.id} size={22} />
+          {t.id === market && tutSt === 'done' && <i className="inf" aria-hidden="true">i</i>}
           <span className="nm">{marketById[t.id].short ?? marketById[t.id].name}</span>
           {/* 종목마다 지난 1분의 출렁임(실시간 값). 주식을 따라가는 종목이 본장 밖에서 자고 있으면 "장 마감" */}
           <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '재는 중' : r.toFixed(3) + '%'}`}>
@@ -802,7 +815,7 @@ export function ProtoTrade() {
   const moodQ: string = m.synthetic && wind ? wind.gust.word : mood;
   const quote = (
     <div className="pt-quote">
-      <div className="px"><i className="qn">{marketById[market].name}</i><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
+      <div className="px"><i className="qn" role="button" tabIndex={0} data-coininfo-open aria-label={`${marketById[market].name} 소개 보기`} onClick={() => { if (tutSt !== 'done') return; play('ui_tap'); setInfo((v) => (v ? null : market)); }}>{marketById[market].name}{tutSt === 'done' && <u className="inf" aria-hidden="true">i</u>}</i><b>{fmtPrice(market, px)}</b><span className={tab.pct >= 0 ? 'up' : 'down'}><Tri up={tab.pct >= 0} size={10} />{pctTxt(tab.pct).slice(1)}</span></div>
       {status ? <div className="st-bad" role="status">{status}</div>
         : sess && sess.state !== 'open' ? <div className={'mood m-sess s-' + sess.state} data-sess={sess.state} role="status" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><b>{sess.state === 'closed' ? '본장 마감' : sess.state === 'after' ? '본장 마감, 그래도 움직인다' : '장중인데 조용함, 휴장인 듯'}</b><small data-opens-in>{opensInText(market, now) ? `개장 ${sess.hours.split('~')[0]}, ${opensInText(market, now)!.replace(/^본장까지 /, '')} 뒤` : `본장 ${sess.hours}`}</small></div>
         : <div className={'mood m-' + (moodQ === '잔잔함' || moodQ === '잔바람' ? 'calm' : moodQ === '격동' || moodQ === '돌풍' || moodQ === '센바람' ? 'wild' : 'mid')} data-sess={sess ? 'open' : undefined} data-daynote-mood role="button" tabIndex={0} aria-label="도토리일보 시세면 열기" onClick={() => { if (tutSt === 'done') dayNoteOpen(true); }}><span data-feed={feedTag ? tutSt : undefined}>{feedTag ?? (sess ? `본장 ${sess.hours}` : m.synthetic ? '밈코인' : '24시간')}</span>{moodQ}{tutSt === 'done' && <i className="nw" aria-hidden="true">›</i>}</div>}
@@ -1206,7 +1219,7 @@ export function ProtoTrade() {
       </div>
     );
   })() : null;
-  return frame(<>{coins}{quote}{windLine}{tutSt === 'done' && !bigOn && <ForestLine />}{rankRow}{chart}{unbig}{lower}{rankCardEl}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : ''));
+  return frame(<>{coins}{quote}{windLine}{tutSt === 'done' && !bigOn && <ForestLine />}{rankRow}{chart}{unbig}{lower}{rankCardEl}{info && <CoinInfoCard id={info} now={now} r1={info === market && flyChart ? recentRange(chartHist) : rangeOf(info)} typ={typicalRange(info === market && flyChart ? chartHist : liveHistoryOf(info))} onClose={() => setInfo(null)} />}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : ''));
 }
 
 /** 거래 화면이 잠겼는데 열린 판(회차 14): 종목, 손익, [정리] — 정리는 한곳 정리 판과 같은 행동(close) */
@@ -1221,6 +1234,31 @@ function LockedPositions({ ps }: { ps: { market: string; dir: 1 | -1; lev: numbe
           <span>{marketById[p.market]?.name ?? p.market} {p.dir === 1 ? '롱' : '숏'} {p.lev}배</span><b>{net >= 0 ? '+' : '−'}{comma(Math.abs(net))}</b><em>정리</em>
         </button>
       ); })}
+    </div>
+  );
+}
+
+const COIN_INFO = (coinInfoJson as { coins: Record<string, { lore: string; rumor: string }> }).coins;
+const COIN_KIND: Record<string, string> = { DTC: '코인', BTH: '코인', MDT: '밈코인', SMS: '주식', JQQ: '지수', FLY: '숲 밈코인' };
+const pctFmt = (r: number) => (r < 0.1 ? r.toFixed(3) : r.toFixed(2)) + '%';
+/** 종목 소개 카드: 로고, 이름, 설명, 숲의 소문, 거래 시간과 평소 1분 폭(실시간). 보기만 하고, 아무 데나 누르면 닫힌다 */
+function CoinInfoCard({ id, now, r1, typ, onClose }: { id: string; now: Date; r1: number | null; typ: number | null; onClose: () => void }) {
+  const m = marketById[id];
+  const t = COIN_INFO[id];
+  if (!m || !t) return null;
+  const ses = SESSIONS[id] ? sessionOf(id, now, r1) : null;
+  const hours = SESSIONS[id] ? `평일 본장 ${sessionHoursKst(id, now)} (한국 시간)` : m.synthetic ? '24시간, 바람은 쉬지 않는다' : '24시간, 주말에도 쉬지 않는다';
+  const nowTxt = ses ? (ses.state === 'open' ? '지금 장중' : ses.state === 'after' ? '지금 본장 마감, 그래도 조금 움직인다' : ses.state === 'holiday' ? '장중인데 조용함, 휴장인 듯' : '지금 본장 마감') : '지금 열려 있음';
+  return (
+    <div className="pt-coininfo" data-coininfo={id} role="dialog" aria-label={`${m.name} 소개`} onClick={onClose}>
+      <div className="ci-top"><Coin id={id} size={40} /><div className="ci-nm"><b>{m.name}</b><small>{COIN_KIND[id] ?? '종목'}</small></div></div>
+      <p className="ci-lore">{t.lore}</p>
+      <p className="ci-rumor"><b>숲의 소문</b>{t.rumor}</p>
+      <dl className="ci-facts">
+        <div><dt>거래 시간</dt><dd>{hours}<small>{nowTxt}</small></dd></div>
+        <div><dt>평소 1분 폭</dt><dd data-ci-typ>{typ === null ? '재는 중' : pctFmt(typ)}<small>{r1 === null ? '지난 1분 재는 중' : `지난 1분 ${pctFmt(r1)}`}</small></dd></div>
+      </dl>
+      <span className="ci-x">누르면 닫힘</span>
     </div>
   );
 }
