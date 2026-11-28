@@ -816,7 +816,7 @@ export function ProtoTrade() {
           {t.id === market && tutSt === 'done' && <i className="inf" aria-hidden="true">i</i>}
           <span className="nm">{marketById[t.id].short ?? marketById[t.id].name}</span>
           {/* 종목마다 지난 1분의 출렁임(실시간 값). 주식을 따라가는 종목이 본장 밖에서 자고 있으면 "장 마감" */}
-          <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '재는 중' : r.toFixed(3) + '%'}`}>
+          <small className={'swg ' + sw} title={ss ? ss.text : `지난 1분 폭 ${r === null ? '계산 중' : r.toFixed(3) + '%'}`}>
             <i className="bars" aria-hidden="true"><u /><u /><u /></i>{ss?.badge ?? swingText(r).replace(/^1분 /, '')}
           </small>
           {wild && wild.id === t.id && <i className="wild" data-wild title={`지난 1분 폭 ${wild.r.toFixed(2)}%`}>출렁</i>}
@@ -1297,7 +1297,7 @@ function CoinInfoCard({ id, now, r1, typ, onClose }: { id: string; now: Date; r1
       <p className="ci-rumor"><b>숲의 소문</b>{t.rumor}</p>
       <dl className="ci-facts">
         <div><dt>거래 시간</dt><dd>{hours}<small>{nowTxt}</small></dd></div>
-        {!isLite && <div><dt>평소 1분 폭</dt><dd data-ci-typ>{typ === null ? '재는 중' : pctFmt(typ)}<small>{r1 === null ? '지난 1분 재는 중' : `지난 1분 ${pctFmt(r1)}`}</small></dd></div>}
+        {!isLite && <div><dt>평소 1분 폭</dt><dd data-ci-typ>{typ === null ? '계산 중' : pctFmt(typ)}<small>{r1 === null ? '지난 1분 계산 중' : `지난 1분 ${pctFmt(r1)}`}</small></dd></div>}
       </dl>
       <span className="ci-x">누르면 닫힘</span>
     </div>

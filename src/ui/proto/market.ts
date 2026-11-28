@@ -16,7 +16,7 @@ export type Swing = 'wait' | 'still' | 'calm' | 'lively';
 /** 지난 1분 폭 → 네 단계. wait = 아직 재는 중 */
 export const swingOf = (rangePct: number | null): Swing => (rangePct === null ? 'wait' : rangePct < QUIET_PCT ? 'still' : rangePct < LIVELY_PCT ? 'calm' : 'lively');
 /** 종목 꼬리표에 넣는 짧은 글: "1분 0.08%" */
-export const swingText = (rangePct: number | null): string => (rangePct === null ? '재는 중' : `1분 ${rangePct < 0.095 ? rangePct.toFixed(2) : rangePct.toFixed(1)}%`);
+export const swingText = (rangePct: number | null): string => (rangePct === null ? '계산 중' : `1분 ${rangePct < 0.095 ? rangePct.toFixed(2) : rangePct.toFixed(1)}%`);
 
 // ── 본장 시간(주식을 따라가는 종목) ─────────────────────────────────────
 interface SessionDef { tz: string; open: [number, number]; close: [number, number]; home: string }

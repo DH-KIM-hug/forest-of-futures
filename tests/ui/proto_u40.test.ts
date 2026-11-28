@@ -55,12 +55,12 @@ describe('본장 시간 (삼솔전자 = 서울, 잣스닥 = 뉴욕)', () => {
 });
 
 describe('종목마다 출렁임', () => {
-  it('지난 1분 폭 → 재는 중 · 조용 · 잔잔 · 출렁', () => {
+  it('지난 1분 폭 → 계산 중 · 조용 · 잔잔 · 출렁', () => {
     expect(swingOf(null)).toBe('wait');
     expect(swingOf(0)).toBe('still');
     expect(swingOf(QUIET_PCT)).toBe('calm');
     expect(swingOf(LIVELY_PCT)).toBe('lively');
-    expect(swingText(null)).toBe('재는 중');
+    expect(swingText(null)).toBe('계산 중');
     expect(swingText(0.0312)).toBe('1분 0.03%');
     expect(swingText(0.31)).toBe('1분 0.3%');
   });
