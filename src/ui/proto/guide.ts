@@ -3,6 +3,7 @@
 // 한 줄(tip)은 평생 한 번만 나온다: 본 줄은 localStorage 에 적어 두고, &prologue=1 이나 &guide=1 로 지운다. &guide=0 은 전부 끈다.
 // 숫자는 엔진 값을 받아 끼운다(TipArgs = model.ts tipArgs). 이 파일은 엔진·저장소를 부르지 않는다(시험이 그대로 읽는다).
 import type { Line, Tab, Who } from './protoStore';
+import { isLite } from './config';
 
 /** 비출 수 있는 화면 조각: 화면 쪽에 data-hl="<이름>" 이 붙어 있다. tab 이 있으면 그 탭에서만 보인다(다른 탭이면 그 탭으로 넘긴다).
  *  panel 이 있으면 집 아래 판을 그 상태로 맞춘다(U-34: closed = 접힌 채 세상이 크게, open = 쳇바퀴 자리 칸이 펴진 채). */
@@ -105,7 +106,9 @@ export function T(id: TipId, o: TipArgs): Line {
   return { who: d.who, text: d.text(o), mood: d.mood, tip: id, hl: d.hl };
 }
 /** 한 때(moment)의 설명 전부 */
-export const tipsOf = (m: Moment): TipId[] => TIP_IDS.filter((id) => (TIPS[id] as TipDef).moment === m);
+/** 라이트(쳇바퀴, 집, 지도, 엄마 이야기가 없다)에서는 포지션 설명만 남긴다. 집과 쳇바퀴 설명이 환생 뒤에 새어 나오던 것(사용자 보고) */
+const LITE_MOMENTS: Moment[] = ['position'];
+export const tipsOf = (m: Moment): TipId[] => (isLite && !LITE_MOMENTS.includes(m) ? [] : TIP_IDS.filter((id) => (TIPS[id] as TipDef).moment === m));
 export const tips = (m: Moment, o: TipArgs): Line[] => tipsOf(m).map((id) => T(id, o));
 
 // ── 본 줄 기록(평생 한 번) ──────────────────────────────────────────────────
