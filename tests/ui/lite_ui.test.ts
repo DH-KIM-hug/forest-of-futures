@@ -21,7 +21,7 @@ describe('라이트 도입 만화(패러디 일곱 쪽)', () => {
   it('숫자는 엔진 값: 코인 빚 30만, 첫 대출과 그 이자, 시작 잔액, 빚 전부', () => {
     const all = textsOf(ps).join('\n');
     const coin = LITE.start.debts.shark1, unit = lenderById.shark1.borrowUnit!;
-    expect(all).toContain(`${coin / 10000}만———`);
+    expect(all).toContain(`${coin / 10000}만쯤이야!!`);
     expect(all).toContain(`빌린 돈 +${unit.toLocaleString('ko-KR')}`);
     expect(all).toContain(`이자 +${Math.ceil(unit * lenderById.shark1.rate).toLocaleString('ko-KR')}`);
     expect(all).toContain(`${unit.toLocaleString('ko-KR')} 도토리`);
