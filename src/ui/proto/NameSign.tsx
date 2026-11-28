@@ -109,7 +109,6 @@ function SignPaper({ lite }: { lite: boolean }) {
               <button type="button" className="sg-chip more" data-sign-more onClick={() => { play('ui_tap'); setChips((x) => pickSuggest(CHIP_COUNT, Math.random, x)); }} aria-label="다른 별명 섞기"><span aria-hidden="true">🎲</span> 섞기</button>
             </div>
           )}
-          <p className="sg-fine">{SIGN_LINES.fine}<br />{SIGN_LINES.fine2}</p>
           <button type="submit" className={'buy wide' + (stamped ? '' : ' on')} data-sign-stamp disabled={!!stamped}><span>{stamped ? '찍었다' : '발도장 찍기'}</span></button>
         </form>
       </div>
