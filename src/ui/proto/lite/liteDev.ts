@@ -5,6 +5,7 @@ import { clone, stepMut } from '../../../engine/game';
 import { balance } from '../../../engine/data';
 import { useUI } from '../../uiStore';
 import { pdev } from '../config';
+import { liteEndingById, liteEndings } from '../../../engine/liteEndings';
 import type { GameState } from '../../../engine/types';
 import type { Action } from '../../../engine/actions';
 
@@ -126,6 +127,26 @@ export function liteScene(name: string, base: GameState): GameState {
       stepMut(g, { type: 'tick', tick: { n: g.run.tick + 1, st: 'open', p: Object.fromEntries(Object.entries(g.run.prices).map(([k, v]) => [k, [v, 1, 0.5] as [number, number, number]])) } });
       if (g.run.over) { A(g, { type: 'estateNext' }); A(g, { type: 'inherit', branch: 'renounce' }); }
       g.family.gold = 4;
+      return g;
+    }
+    case 'lite_end': case 'lite_book': {
+      // 라이트 엔딩 카드(LiteEnding.tsx): 연체 파산을 엔진으로 일으키고, &pend=LE04 면 그 엔딩으로 바꿔 보인다. lite_book = 도감에 14개를 채운 채
+      const g = ready(base);
+      g.run.cash = 0; g.run.debts.shark1.overdue = 1; g.run.settleIn = 1;
+      stepMut(g, { type: 'tick', tick: { n: g.run.tick + 1, st: 'open', p: Object.fromEntries(Object.entries(g.run.prices).map(([k, v]) => [k, [v, 1, 0.5] as [number, number, number]])) } });
+      const want = new URLSearchParams(window.location.search).get('pend');
+      const p = g.pendingEnding;
+      if (p?.lite && want && liteEndingById[want]) {
+        const e = liteEndingById[want];
+        delete g.family.liteBook![p.id];
+        g.family.liteBook![want] = { count: 1, firstAt: g.family.generation };
+        Object.assign(p, { id: want, title: e.title, line: e.lines.join(' '), isNew: true, nth: 1 });
+        p.lite.lines = e.lines;
+      }
+      if (name === 'lite_book' && p?.lite) {
+        for (const e of liteEndings.slice(0, 28).filter((_, i) => i % 2 === 0)) g.family.liteBook![e.id] ??= { count: 1, firstAt: 1 };
+        p.collected = Object.keys(g.family.liteBook!).length;
+      }
       return g;
     }
     default: return base;

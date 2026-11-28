@@ -41,6 +41,7 @@ import { pdev, isLite } from './config';
 import { LiteHud } from './lite/LiteHud';
 import { LiteManga } from './lite/LiteManga';
 import { MangaCut } from './lite/MangaCut';
+import { LiteCuts } from './lite/LiteCuts';
 import { LiteSeqHost } from './lite/LiteManga';
 import { useLiteBankrupt } from './lite/liteBeats';
 import { mangaSeen } from './lite/liteDev';
@@ -391,6 +392,7 @@ export function ProtoApp() {
       <CutIn />
       <LiqStamp onShake={shake} />
       {isLite && <MangaCut />}
+      {isLite && <LiteCuts />}
       {isLite && <LiteSeqHost />}
       {isLite && <LiteBroke />}
       <SecondWind />

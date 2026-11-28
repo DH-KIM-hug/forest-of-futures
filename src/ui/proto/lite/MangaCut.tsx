@@ -26,6 +26,7 @@ import cutLev from '../img/manga/cut_lev.webp';
 import cutFirst from '../img/manga/cut_first.webp';
 import dChart from '../img/manga/d_chart.webp';
 import dBack from '../img/manga/d_back.webp';
+import { lev100Due } from './LiteCuts';
 import './lite.css';
 
 type Kind = 'pray' | 'near' | 'liq' | 'win' | 'lev' | 'first';
@@ -148,7 +149,7 @@ export function MangaCut() {
       // 장면 B: 50배 넘게 건다(생마다 처음 한 번)
       for (const p of Object.values(run.positions)) {
         const was = prev.run.positions[p.market];
-        if ((!was || was.openTick !== p.openTick) && p.lev > LEV_CUT_OVER && levLife.current !== g1.family.generation && P.scenes.length === 0) {
+        if ((!was || was.openTick !== p.openTick) && p.lev > LEV_CUT_OVER && levLife.current !== g1.family.generation && P.scenes.length === 0 && !lev100Due(p.lev)) {
           levLife.current = g1.family.generation;
           show({ kind: 'lev', market: p.market });
         }
