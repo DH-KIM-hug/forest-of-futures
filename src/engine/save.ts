@@ -1,5 +1,6 @@
 // 저장 v2(GDD_v2 5.1): `fof.save.v2` 한 키. 어댑터로 감싸 localStorage -> Capacitor Preferences 로 바꿀 수 있다(둘 다 비동기 모양).
 // 버전 사슬: 없음(0) -> 2. 깨진 저장은 `fof.save.broken`으로 옮기고 새로 시작, v1 저장은 도감 수집분만 가문 장부로 옮긴다.
+import { migrateLiteFruit } from './liteFruit';
 import { createGame, SAVE_VERSION } from './game';
 import { endingById } from './data';
 import type { GameState } from './types';
@@ -89,6 +90,7 @@ export function migrate(raw: unknown): GameState | null {
   g.estate = x.estate ?? null;
   g.pendingEnding = x.pendingEnding ?? null;
   g.version = 2;
+  migrateLiteFruit(g, x.family?.fruit); // 옛 라이트 저장: 황금 → 열매, 본 엔딩의 열매 소급(U-62)
   return g;
 }
 

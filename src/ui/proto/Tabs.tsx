@@ -24,6 +24,7 @@ import { journeyOf } from './stops';
 import { claim } from './model';
 import { RankSign } from './RankingBoard';
 import { isLite } from './config';
+import { retireSubLite } from './lite/fruitText';
 import { borrowAt, payAt, payAllWarn } from './loanActs';
 
 /** 가게 안 그림 한 띠(U-40): 그 가게의 방과 거기 서 있는 사람. 지도 카드 맨 위에 붙는다. */
@@ -117,11 +118,11 @@ export function MapTab() {
             })()}
             {/* 정산 빼고 갚기(U-42): 다음 정산에 낼 돈은 손에 남기고 갚는다. [전부]는 그 돈까지 갚아 버린다 — 둘의 차이가 단추에 보인다 */}
             {id === 'shark1' && loanTaken && keepPay && keepPay.amount > payAmt && keepPay.amount < Math.min(d.principal, Math.floor(run.cash)) && (
-              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>남길 돈 {comma(Math.round(dueNext))}, 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 ? `, 황금 도토코인 +${keepPay.stamps}` : ''}</small></button>
+              <button className="buy pay keeppay" data-paykeep={keepPay.amount} onClick={() => doPay(id, keepPay.amount >= d.principal ? 'all' : keepPay.mult)}><span>정산 빼고 갚기 −{comma(keepPay.amount)}</span><small>남길 돈 {comma(Math.round(dueNext))}, 이자 −{comma(keepPay.cut)}{keepPay.stamps > 0 && !isLite ? `, 황금 도토코인 +${keepPay.stamps}` : ''}</small></button>
             )}
             {/* 빚을 다 갚은 생은 여기서 닫을 수 있다(U-39 ⑧): 은퇴 = 엔딩 카드 → 환생 */}
             {id === 'shark1' && canRetireAct1(g) && (
-              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>이번 생 마치기, 황금 도토코인 +{treeAward(run)}</small></button>
+              <button className="buy on retire" data-retire onClick={retireNow}><span>은퇴한다</span><small>{isLite ? retireSubLite(g) : `이번 생 마치기, 황금 도토코인 +${treeAward(run)}`}</small></button>
             )}
           </div>
         );
@@ -188,7 +189,7 @@ function Ledger() {
       {closes > 0 && <div className="lg-jr" data-journey="ledger">{jr.text}</div>}
       <div className="lg-st" data-stamps={stamps}>
         <span className="dots">{Array.from({ length: Math.min(10, stamps + 1) }, (_, i) => <i key={i} className={i < stamps ? 'on' : ''} />)}{stamps > 9 && <em>×{stamps}</em>}</span>
-        <small>황금 도토코인 {stamps}개{g.run.debts.shark1.principal > 0 ? `, 다음 하나까지 ${comma(Math.min(toNext, g.run.debts.shark1.principal))} (5만마다 한 개)` : ', 장부가 깨끗하다'}</small>
+        <small>{isLite ? `갚은 원금 ${comma(repaidOffice(g))}` : `황금 도토코인 ${stamps}개`}{isLite ? '' : g.run.debts.shark1.principal > 0 ? `, 다음 하나까지 ${comma(Math.min(toNext, g.run.debts.shark1.principal))} (5만마다 한 개)` : ', 장부가 깨끗하다'}</small>
       </div>
     </div>
   );

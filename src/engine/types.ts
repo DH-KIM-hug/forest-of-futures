@@ -270,6 +270,10 @@ export interface FamilyState {
   skillPick: Partial<Record<'A' | 'B' | 'C', string>>;
   /** 라이트 엔딩 도감(engine/liteEndings.ts): 엔딩 id → 본 횟수, 처음 본 세대. 생과 저장을 넘어 남는다 */
   liteBook?: Record<string, { count: number; firstAt: number }>;
+  /** 라이트 나무의 재화 열매(U-62, engine/liteFruit.ts): 처음 보는 엔딩마다 1개. 황금 도토코인 대신 */
+  fruit?: number;
+  /** 지금까지 받은 열매 합 */
+  fruitEarned?: number;
 }
 
 export interface FuturesState {
@@ -376,6 +380,19 @@ export interface RunState {
   lite?: boolean;
 }
 
+/** 라이트 엔딩 하나가 준 것(engine/liteFruit.ts) */
+export interface LiteReward {
+  /** 받은 열매 합(새 엔딩 + 도감 보상, 공짜 가지가 다 자란 노드면 그 몫) */
+  fruit: number;
+  /** 새로 도감에 적힌 엔딩 수(이번 카드, 도감 완성 포함) */
+  newCount: number;
+  gift: { node: string; name: string; kind: 'open' | 'level' | 'fruit'; level: number; line: string } | null;
+  milestone: { at: number; fruit: number; name: string; text: string } | null;
+  /** 배드 엔딩 본 수(이번 포함), 다음 보상(없으면 null) */
+  seen: number;
+  next: { at: number; left: number; text: string } | null;
+}
+
 export interface PendingEnding {
   id: string; // END-xxx
   cause: string;
@@ -394,7 +411,12 @@ export interface PendingEnding {
   awayHours: number | null;
   snapshot: Record<string, any>;
   /** 라이트 엔딩(engine/liteEndings.ts): 글 줄, 모은 수와 전체, 고를 때 본 꼬리표 */
-  lite?: { lines: string[]; total: number; tags: string[]; death: boolean };
+  lite?: { lines: string[]; total: number; tags: string[]; death: boolean;
+    /** 이 엔딩이 준 것(U-62): 열매, 공짜 가지, 도감 보상. 다시 본 엔딩은 열매 0 */
+    reward?: LiteReward;
+    /** 특별한 결말(완납 영수증 LX01, 도감 완성 LX02)이면 도장 글 */
+    stamp?: string;
+  };
 }
 
 export interface Settings {

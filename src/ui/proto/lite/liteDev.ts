@@ -6,7 +6,7 @@ import { balance } from '../../../engine/data';
 import { useUI } from '../../uiStore';
 import { pdev } from '../config';
 import { openLoan } from './LiteLoan';
-import { liteEndingById, liteEndings } from '../../../engine/liteEndings';
+import { liteDevPick, liteEndingById, liteEndings } from '../../../engine/liteEndings';
 import type { GameState } from '../../../engine/types';
 import type { Action } from '../../../engine/actions';
 
@@ -53,6 +53,8 @@ export function liteScene(name: string, base: GameState): GameState {
     case 'lite_trade': { const g = ready(base); useUI.getState().setTrade({ market: 'FLY' }); return g; }
     // U-61 대출: lite_loan = 거래소 안의 「대출」을 연 자리(캐피탈 문자도 받았다). lite_quick = 손의 돈이 적어 증거금이 모자라다(빌리기 말풍선), lite_quick_settle = 정산 8초 전인데 모자라다
     case 'lite_loan': { const g = ready(base); P.patch({ seen: { ...useProto.getState().seen, capitalSms: true } }); window.setTimeout(() => openLoan(), 600); return g; }
+    // U-63 대출 탭: lite_loan_od = 오소리 사무소에 연체 1회, 대출 탭을 보는 자리
+    case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
     case 'lite_quick': { const g = ready(base); g.run.cash = 2400; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_quick_settle': { const g = ready(base); g.run.cash = 2400; g.run.settleIn = 9; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }
     case 'lite_tut': case 'lite_sign': {
@@ -146,27 +148,29 @@ export function liteScene(name: string, base: GameState): GameState {
       g.run.cash = 0; g.run.debts.shark1.overdue = 1; g.run.settleIn = 1;
       stepMut(g, { type: 'tick', tick: { n: g.run.tick + 1, st: 'open', p: Object.fromEntries(Object.entries(g.run.prices).map(([k, v]) => [k, [v, 1, 0.5] as [number, number, number]])) } });
       if (g.run.over) { A(g, { type: 'estateNext' }); A(g, { type: 'inherit', branch: 'renounce' }); }
-      g.family.gold = 4;
+      g.family.fruit = new URLSearchParams(window.location.search).get('pfruit') ? +new URLSearchParams(window.location.search).get('pfruit')! : 4; // 라이트 나무의 열매(U-62)
+      return g;
+    }
+    case 'lite_retire': {
+      // 완납(U-62): 빚을 다 갚고 은퇴 → 특별한 결말 「완납 영수증」 카드
+      const g = ready(base);
+      g.run.cash += 1_000_000;
+      for (let k = 0; k < 5; k++) for (const id of ['shark1', 'shark2', 'capital', 'bank'] as const) if (g.run.debts[id].principal > 0) A(g, { type: 'stamp', lender: id, mult: 'all' });
+      A(g, { type: 'retireAct1' });
       return g;
     }
     case 'lite_end': case 'lite_book': {
       // 라이트 엔딩 카드(LiteEnding.tsx): 연체 파산을 엔진으로 일으키고, &pend=LE04 면 그 엔딩으로 바꿔 보인다. lite_book = 도감에 14개를 채운 채
       const g = ready(base);
+      const q = new URLSearchParams(window.location.search);
+      // &pseen=9 = 도감에 미리 9개(LE40 부터 거꾸로, 고른 엔딩은 빼고). 다음 엔딩이 10개째 보상을 받는 자리
+      const want = q.get('pend');
+      const pre = name === 'lite_book' ? 14 : +(q.get('pseen') ?? 0);
+      if (pre > 0) { g.family.liteBook ??= {}; for (const e of [...liteEndings].reverse().filter((x) => x.id !== want).slice(0, pre)) g.family.liteBook[e.id] = { count: 1, firstAt: 1 }; }
+      if (want && liteEndingById[want]) liteDevPick.id = want;
+      if (want && liteEndingById[want] && q.get('prepeat') === '1') (g.family.liteBook ??= {})[want] = { count: 1, firstAt: 1 }; // 다시 본 엔딩(열매 0)
       g.run.cash = 0; g.run.debts.shark1.overdue = 1; g.run.settleIn = 1;
       stepMut(g, { type: 'tick', tick: { n: g.run.tick + 1, st: 'open', p: Object.fromEntries(Object.entries(g.run.prices).map(([k, v]) => [k, [v, 1, 0.5] as [number, number, number]])) } });
-      const want = new URLSearchParams(window.location.search).get('pend');
-      const p = g.pendingEnding;
-      if (p?.lite && want && liteEndingById[want]) {
-        const e = liteEndingById[want];
-        delete g.family.liteBook![p.id];
-        g.family.liteBook![want] = { count: 1, firstAt: g.family.generation };
-        Object.assign(p, { id: want, title: e.title, line: e.lines.join(' '), isNew: true, nth: 1 });
-        p.lite.lines = e.lines;
-      }
-      if (name === 'lite_book' && p?.lite) {
-        for (const e of liteEndings.slice(0, 28).filter((_, i) => i % 2 === 0)) g.family.liteBook![e.id] ??= { count: 1, firstAt: 1 };
-        p.collected = Object.keys(g.family.liteBook!).length;
-      }
       return g;
     }
     default: return base;

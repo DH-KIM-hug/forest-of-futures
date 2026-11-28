@@ -31,7 +31,7 @@ export function lookOf(r: number): RankLook {
   return { ...RANK_LOOKS[RANK_LOOKS.length - 1], bow: odd ? '#E8B93A' : '#C2413B', bowName: odd ? '금빛 리본' : '붉은 리본', gift: odd ? '금빛 리본 고리' : '붉은 리본 고리' };
 }
 /** 케이스 색(폰 테두리). teal 은 원래 색(var(--teal)) */
-export const CASE_COL: Record<string, string> = { teal: '#3E9A9C', leaf: '#5C9A5A', night: '#3E5C8A', plum: '#7A5AA8', gold: '#C9962E' };
+export const CASE_COL: Record<string, string> = { teal: '#3E9A9C', leaf: '#5C9A5A', night: '#3E5C8A', plum: '#7A5AA8', gold: '#C9962E', ink: '#2B2622' };
 
 /** 등급의 수수료(U-56 ③, 사용자 결정): 오픈 기념이 끝난 뒤의 수수료율에서 한 등급마다 0.001%p, 절반까지. "0.009%" */
 import { tierFee, openingEvent } from '../../engine/skilltree';

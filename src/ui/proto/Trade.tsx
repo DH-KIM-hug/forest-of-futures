@@ -68,6 +68,7 @@ import './tradeManga.css';
 import mgaNear from './img/manga/cut_near.webp';
 import mgaWin from './img/manga/cut_win.webp';
 import { isLite } from './config';
+import { litePerks } from '../../engine/liteFruit';
 import { quickBorrowWhy } from './loanActs';
 import { QuickBorrow } from './lite/LiteLoan';
 import coinInfoJson from '../../../data/coin_info.json';
@@ -362,7 +363,10 @@ export function ProtoTrade() {
   const rankUp = useProto((s0) => s0.rankUp);
   const rk = rankOf(frxStamps);
   /** 등급의 폰(U-53): 케이스 색과 고리 색. 꾸밈뿐 */
-  const look = lookOf(rk.r), nextLook = lookOf(rk.r + 1);
+  // 라이트 도감 20개의 덤(U-62): 새싹 등급의 청록 케이스 대신 만화 먹선 케이스
+  const inkCase = useGame((s0) => isLite && litePerks(s0.g.family.liteBook).inkCase);
+  const look0 = lookOf(rk.r), nextLook = lookOf(rk.r + 1);
+  const look = inkCase && look0.case === 'teal' ? { ...look0, case: 'ink', caseName: '먹선 만화' } : look0;
   const rankSeen = useProto((s0) => s0.rankSeen);
   /** 승급 축하(U-53): 폰을 보고 있을 때(이긴 판의 상자, 장면이 지나간 뒤), 아니면 다음에 폰을 열 때 한 번 */
   const [rankCard, setRankCard] = useState<{ k: number; r: number } | null>(null);

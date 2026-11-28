@@ -48,3 +48,44 @@
 .manga-cut.lite-cut .lc-say span { font-size: 4.4cqw; }
 .manga-cut.lite-cut.calm .lc-big { animation: none; }
 .manga-cut.lite-cut .lc-say { background: #fff; border: .6cqw solid #1d1b19; border-radius: 50%; }
+
+/* U-62 열매: 새 엔딩이 주는 것, 도감 보상, 특별한 결말 */
+.le-end .le-stamp.gold { color: #C9962E; border-color: #C9962E; }
+.le-end .le-eptitle { font-style: normal; color: #FFD84A; }
+.le-end .le-reward { width: min(360px, 100%); display: flex; flex-direction: column; gap: 6px; animation: le-up .45s 1.6s both; }
+.le-end .le-reward > span { display: flex; flex-direction: column; gap: 1px; padding: 8px 12px; border: 2px solid #F3E7C6; border-radius: 6px; background: rgba(255, 253, 248, .06); }
+.le-end .le-reward b { font-family: var(--dsp); font-weight: 400; font-size: 17px; color: #fff; word-break: keep-all; }
+.le-end .le-reward small { font-size: 13px; line-height: 1.4; opacity: .82; word-break: keep-all; }
+.le-end .le-fruit { flex-direction: row !important; align-items: center; gap: 8px !important; border-color: #E2553B !important; }
+.le-end .le-fruit b { font-size: 20px; color: #FFD84A; }
+.le-end .le-fruit small { margin-left: auto; }
+.le-end .le-gift { border-color: #5C9A5A !important; background: rgba(92, 154, 90, .14) !important; }
+.le-end .le-gift b { color: #B9E2A6; }
+.le-end .le-mile { border-color: #FFD84A !important; background: rgba(255, 216, 74, .12) !important; }
+.le-end .le-mile b { color: #FFD84A; }
+.le-end .le-next { font-family: var(--dsp); font-size: 14px; color: #FFD84A; }
+.le-book .le-bfruit { display: inline-flex; align-items: center; gap: 4px; color: #F3E7C6 !important; }
+.le-book .le-title-badge { align-self: flex-start; margin: 0 2px 8px; padding: 2px 10px; font-family: var(--dsp); font-size: 14px; color: #1d1b19; background: #FFD84A; border: 2px solid #1d1b19; border-radius: 4px; transform: rotate(-2deg); }
+.le-book .le-miles { padding: 0 4px 10px; }
+.le-book .le-mtrack { position: relative; height: 8px; margin: 10px 10px 6px; border-radius: 4px; background: #3a332b; }
+.le-book .le-mtrack u { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: #E2553B; }
+.le-book .le-mtrack i { position: absolute; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; display: flex; align-items: center; justify-content: center; font-style: normal; font-family: var(--dsp); font-size: 11px; color: #8c8174; background: #1D1B19; border: 2px solid #4a4239; border-radius: 50%; }
+.le-book .le-mtrack i.on { color: #1d1b19; background: #FFD84A; border-color: #FFD84A; }
+.le-book .le-mnames { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-top: 8px; }
+.le-book .le-mnames span { font-size: 10.5px; line-height: 1.25; text-align: center; color: #8c8174; word-break: keep-all; }
+.le-book .le-mnames span b { display: block; font-family: var(--dsp); font-weight: 400; font-size: 12px; }
+.le-book .le-mnames span.on { color: #FFD84A; }
+.le-book .le-mnext { display: block; margin-top: 6px; font-size: 13px; color: #F3E7C6; text-align: center; word-break: keep-all; }
+.le-book .le-tile { position: relative; }
+.le-book .le-gtag { position: absolute; right: 3px; top: 3px; padding: 0 4px; font-style: normal; font-size: 9.5px; line-height: 1.5; color: #B9E2A6; background: rgba(29, 27, 25, .85); border: 1px solid #5C9A5A; border-radius: 3px; }
+.le-book .le-gtag.on { color: #1d1b19; background: #B9E2A6; }
+.le-book .le-sph { grid-column: 1 / -1; margin-top: 6px; font-family: var(--dsp); font-size: 14px; color: #FFD84A; }
+.le-book .le-bgift { color: #B9E2A6; font-size: 14px; }
+
+/* 환생 화면의 열매 줄과 나무 머리(Ending.tsx, 라이트만) */
+.pr-end .award.fruit .coin { flex: none; }
+.pr-end .award.fruit small.nx { color: #8a5a18; }
+.pr-end .award.fruit.none b { opacity: .45; }
+.pr-tree .tr-h .gold.fruit { display: inline-flex; align-items: center; gap: 4px; }
+.pr-tree .tr-fruit { margin: 2px 0 6px; font-size: 12.5px; line-height: 1.4; word-break: keep-all; opacity: .85; }
+.pr-end i.fruit-ic.coin, .pr-tree i.fruit-ic.coin { background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important; animation: none; }

@@ -114,11 +114,16 @@ export function recordLite(book: Record<string, LiteBookEntry>, id: string, gen:
   return true;
 }
 
+/** 화면 확인용(&pend=LE04): 다음 라이트 파산의 엔딩을 이것으로. 한 번 쓰면 비운다 */
+export const liteDevPick: { id: string | null } = { id: null };
+
 /** 라이트 파산의 엔딩을 고른다(사실, 꼬리표, 엔딩). totalDebt 는 카드의 숫자용 */
 export function chooseLiteEnding(g: GameState, now: Date = new Date()): { ending: LiteEndingDef; facts: LiteFacts; tags: string[]; debt: number } {
   const facts = liteFacts(g, now);
   const tags = factTags(facts);
   const book = g.family.liteBook ?? {};
-  const ending = pickLite(tags, book, liteRoll(g.run.seed, g.family.generation, g.run.tick, now.getMinutes()));
+  const forced = liteDevPick.id && liteEndingById[liteDevPick.id];
+  liteDevPick.id = null;
+  const ending = forced || pickLite(tags, book, liteRoll(g.run.seed, g.family.generation, g.run.tick, now.getMinutes()));
   return { ending, facts, tags, debt: totalDebt(g.run) };
 }

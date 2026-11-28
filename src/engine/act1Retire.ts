@@ -8,11 +8,37 @@ import { grantAward } from './skilltree';
 import { lenderDebtTotal, netWorth } from './selectors';
 import { logEvent } from './util';
 import type { GameState, PendingEnding, Res } from './types';
+import { CLEAR_ID, liteSeenCount, liteSpecialById, recordLiteReward } from './liteFruit';
+import { LITE_ENDING_TOTAL } from './liteEndings';
+
+/** 라이트의 완납(U-62): 황금 대신 특별한 결말 「완납 영수증」이 도감에 적힌다(처음이면 열매 1개). 카드는 라이트 엔딩 카드 */
+function retireLite(g: GameState): Res {
+  const run = g.run;
+  const f = g.family;
+  logEvent(run, 'retire', '빚을 다 갚고 그 생을 닫았다');
+  const sp = liteSpecialById[CLEAR_ID];
+  const { isNew, reward } = recordLiteReward(g, CLEAR_ID);
+  const nw = Math.max(run.peakNetWorth, netWorth(run));
+  f.peakNetWorth = Math.max(f.peakNetWorth, nw);
+  f.lineage.push({ gen: f.generation, name: g.settings.name, endedBy: CLEAR_ID, branch: run.branch, peak: nw });
+  f.stats.retires = (f.stats.retires ?? 0) + 1;
+  g.pendingEnding = {
+    id: CLEAR_ID, cause: RETIRE_CAUSE, isNew, via: isNew ? 'normal' : 'repeat', nth: f.liteBook![CLEAR_ID].count, title: sp.title, line: sp.lines.join(' '),
+    lastThree: run.eventLog.slice(-3), nearMisses: [], nextGen: { trait: null, trace: '', heirloom: null }, collected: liteSeenCount(f.liteBook), peakNetWorth: nw,
+    settleNo: run.settleNo, offline: false, awayHours: null, snapshot: {},
+    lite: { lines: sp.lines, total: LITE_ENDING_TOTAL, tags: [], death: false, reward, stamp: sp.stamp },
+  };
+  run.over = true;
+  g.estate = openEstate('bankrupt', RETIRE_CAUSE);
+  grantAward(g); // 라이트는 0(treeAward)
+  return { ok: true };
+}
 
 export const canRetireAct1 = (g: GameState): boolean => act1On() && !g.run.over && lenderDebtTotal(g.run) === 0 && ((g.run.stats['repaid.shark1'] as number | undefined) ?? 0) > 0;
 
 export function retireAct1(g: GameState): Res {
   if (!canRetireAct1(g)) return { ok: false, code: 'retire', msg: '빚이 남아 있으면 은퇴할 수 없습니다.' };
+  if (g.run.lite) return retireLite(g);
   const run = g.run;
   const f = g.family;
   // 열린 포지션은 그대로 둔 채 떠난다(환생하면 사라진다). 장부에는 은퇴로 적는다.

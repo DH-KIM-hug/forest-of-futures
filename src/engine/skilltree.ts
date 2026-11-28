@@ -10,9 +10,16 @@ const no = (code: string, msg: string): Res => ({ ok: false, code, msg });
 
 // ── 값과 효과(순수) ─────────────────────────────────────────────────────
 /** 레벨 level → level+1 의 값. 열기(0→1) = openCost, 그 뒤 = ceil(openCost × levelMul^level). */
-export function costAt(def: SkillNodeDef, level: number): number {
-  return level <= 0 ? def.openCost : Math.ceil(def.openCost * Math.pow(skillMeta.levelMul, level) - 1e-9);
+export function costAt(def: SkillNodeDef, level: number, lite = false): number {
+  // 라이트(U-62): 재화가 열매라 값이 따로 있다(data/skilltree.json lite)
+  const L = lite ? (skillMeta.lite as { openCost: number[]; levelMul: number } | undefined) : undefined;
+  const open = L ? L.openCost[def.tier] ?? def.openCost : def.openCost;
+  const mul = L ? L.levelMul : skillMeta.levelMul;
+  return level <= 0 ? open : Math.ceil(open * Math.pow(mul, level) - 1e-9);
 }
+/** 이 가문의 나무 재화: 라이트 = 열매(U-62, 새 엔딩마다), 그 밖 = 황금 실물 도토코인 */
+export const treeLite = (g: GameState): boolean => !!g.run.lite;
+export const treeWallet = (g: GameState): number => (treeLite(g) ? g.family.fruit ?? 0 : g.family.gold ?? 0);
 /** scaled 노드의 효과 = cap × (1 − decay^레벨). 상한에 다가갈 뿐 닿지 않는다. binary 는 0/1. */
 export function effectAt(def: SkillNodeDef, level: number): number {
   if (level <= 0) return 0;
@@ -33,7 +40,7 @@ export function nextCost(g: GameState, id: string): number | null {
   const def = skillById[id];
   if (!def) return null;
   const lv = nodeLevel(g, id);
-  return lv >= maxLevelOf(def) ? null : costAt(def, lv);
+  return lv >= maxLevelOf(def) ? null : costAt(def, lv, treeLite(g));
 }
 export function canBuy(g: GameState, id: string): { ok: boolean; reason?: string } {
   const def = skillById[id];
@@ -41,16 +48,17 @@ export function canBuy(g: GameState, id: string): { ok: boolean; reason?: string
   const cost = nextCost(g, id);
   if (cost === null) return { ok: false, reason: '더 올릴 수 없습니다.' };
   if (def.requires.length && !def.requires.some((r) => nodeLevel(g, r) > 0)) return { ok: false, reason: '앞 노드를 먼저 열어야 합니다.' };
-  if ((g.family.gold ?? 0) < cost) return { ok: false, reason: '황금 도토코인이 모자랍니다.' };
+  if (treeWallet(g) < cost) return { ok: false, reason: treeLite(g) ? '열매가 모자랍니다.' : '황금 도토코인이 모자랍니다.' };
   return { ok: true };
 }
-/** 황금 도토코인을 내고 레벨 +1. 3단계 노드는 사면 그 길의 고른 것이 된다. */
+/** 황금 도토코인(라이트는 열매)을 내고 레벨 +1. 3단계 노드는 사면 그 길의 고른 것이 된다. */
 export function buyNode(g: GameState, id: string): Res {
   const c = canBuy(g, id);
   if (!c.ok) return no('tree', c.reason!);
   const def = skillById[id];
   const cost = nextCost(g, id)!;
-  g.family.gold -= cost;
+  if (treeLite(g)) g.family.fruit = (g.family.fruit ?? 0) - cost;
+  else g.family.gold -= cost;
   g.family.skill[id] = nodeLevel(g, id) + 1;
   if (def.pair) g.family.skillPick[def.path as PathId] = id;
   return { ok: true, amount: cost };
@@ -231,6 +239,7 @@ export function setDayLimit(g: GameState, value: number | null): Res {
 // ── 재화 ────────────────────────────────────────────────────────────────
 /** 이 생이 받을 황금 실물 도토코인: 오소리에게 갚은 원금 per 마다 1개, 오소리 빚을 다 갚았으면 + clearBonus. 거래 수익은 세지 않는다. */
 export function treeAward(run: RunState): number {
+  if (run.lite) return 0; // 라이트(U-62): 황금이 없다. 나무는 엔딩 도감의 열매로 자란다(liteFruit.ts)
   const repaid = (run.stats['repaid.shark1'] as number | undefined) ?? 0;
   const a = skillMeta.award as { per: number; clearBonus: number };
   return Math.floor(repaid / a.per) + (repaid > 0 && run.debts.shark1.principal === 0 ? a.clearBonus : 0);

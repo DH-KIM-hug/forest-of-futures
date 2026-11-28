@@ -7,6 +7,11 @@
     "per": 50000,
     "clearBonus": 2
   },
+  "lite": {
+    "_doc": "U-62 라이트(?lite=1)의 값: 재화가 열매(새 엔딩마다 1개, data/endings_lite.json fruit)라 황금보다 드물다. 열기(Lv0→1) = openCost[단계], Lv n→n+1 = ceil(열기 × levelMul^n). 첫 엔딩 둘이면 뿌리와 첫 가지 하나, 넷이면 첫 가지 셋. 4단계는 5개. 레벨은 끝이 없다(나무는 다 차면 안 돼).",
+    "openCost": [1, 1, 2, 3, 5],
+    "levelMul": 1.6
+  },
   "premium": {
     "C2": 0.0001
   },

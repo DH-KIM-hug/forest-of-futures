@@ -18,6 +18,11 @@ import { marketById } from '../../engine/data';
 import { isLite } from './config';
 import { LiteEndingCard } from './lite/LiteEnding';
 import { despairThenRebirth } from './lite/liteBeats';
+import { FruitIcon, FRUIT_SVG } from './lite/Fruit';
+import { liteClue, nextDetail, nextText, rebirthFruit, seenOf } from './lite/fruitText';
+import { treeWallet } from '../../engine/skilltree';
+import { GIFT_PAIRS } from '../../engine/liteFruit';
+import { liteEndingById } from '../../engine/liteEndings';
 
 /** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
@@ -86,11 +91,22 @@ export function EndingFlow() {
           <p>{isLite ? (retired ? '완납 영수증을 액자에 넣었는데, 눈을 뜨니 손에 오소리의 봉투가 있다. 폰에는 FRX. 장부에 다시 40만.' : '폰 화면이 꺼졌다가 켜진다. 손에 오소리의 봉투, 장부에 40만. 또 그 아침이다.') : retired ? '완납 영수증을 넣어 둔 주머니에서 엄마 집 열쇠가 나온다. 해가 지고 있다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 다시 50만.' : '문턱에 짐차 바퀴 자국이 아직 젖어 있다. 손끝에 진흙이 묻는다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 50만.'}</p>
         </div>
       </div>
+      {isLite ? (() => {
+        // 라이트(U-62): 나무는 엔딩 도감으로 자란다. 새 엔딩마다 열매 하나
+        const fr = rebirthFruit(g.pendingEnding);
+        return (
+          <div className={'award fruit' + (fr.fruit > 0 ? '' : ' none')} data-award={fr.fruit} data-fruit-award={fr.fruit}>
+            <FruitIcon size={34} className="coin" />
+            <span>{fr.main}{fr.sub.map((t, i) => <small key={i}><br />{t}</small>)}<small className="nx"><br />도감 {seenOf(g)} / 40, {nextText(seenOf(g))}</small></span>
+            <b>+{fr.fruit}</b>
+          </div>
+        );
+      })() : (
       <div className="award" data-award={e.gold ?? 0}>
         <img className="coin art" data-art="goldcoin" src={sprite('goldcoin')!.src} alt="" />
         <span>지난 생에 갚은 원금 <b className="sm">{comma(repaid)}</b><br /><small>5만마다 황금 도토코인 하나{run.debts.shark1.principal <= 0 && repaid > 0 ? ', 완납 +2' : ''}</small></span>
         <b>+{comma(e.gold ?? 0)}</b>
-      </div>
+      </div>)}
       <SkillTree />
       <p className="re-stat">지난 생: 정산 {run.settleNo}번, 거래 {run.futures.closedTrades}건, 청산 {(run.stats.liqCount as number | undefined) ?? 0}번</p>
       <RankRebirth />
@@ -137,11 +153,11 @@ function SkillTree() {
   const nodes = treeView(g);
   const byId = Object.fromEntries(nodes.map((v) => [v.id, v]));
   const cur = byId[sel] ?? nodes[0];
-  const gold = g.family.gold ?? 0;
+  const gold = treeWallet(g); // 라이트는 열매(U-62), 본편은 황금 도토코인
   const edges: [string, string][] = [];
   for (const v of nodes) for (const r of skillById[v.id].requires) edges.push([r, v.id]);
   // 이 길의 엔딩(U-39 ⑪): 봤으면 이름, 못 봤으면 ???? — 누르면 단서(본 것은 글)
-  const pathEnds = cur.path === 'R' ? [] : ((skillPathEndings[cur.path] as string[] | undefined) ?? []).filter((id) => endingById[id]);
+  const pathEnds = isLite || cur.path === 'R' ? [] : ((skillPathEndings[cur.path] as string[] | undefined) ?? []).filter((id) => endingById[id]);
   const seenEnd = (id: string) => !!g.family.ledger[id];
   const active = activeLevels(g);
   const od = nodeOdds(active, cur.id, cur.level);
@@ -156,7 +172,7 @@ function SkillTree() {
     setMsg(null);
     const id = cur.id;
     const toEl = document.querySelector(`[data-node="${id}"] i`);
-    flyIcons(`<img src="${sprite('goldcoin')!.src}" width="20" height="20" alt="" style="border-radius:50%">`, fromRect, toEl?.getBoundingClientRect() ?? null, Math.min(6, 2 + from), { size: 20 });
+    flyIcons(isLite ? `<span style="display:block;width:20px;height:20px">${FRUIT_SVG}</span>` : `<img src="${sprite('goldcoin')!.src}" width="20" height="20" alt="" style="border-radius:50%">`, fromRect, toEl?.getBoundingClientRect() ?? null, Math.min(6, 2 + from), { size: 20 });
     play('new_equipment');
     later(reduced() ? 0 : 520, () => { setUp((u) => ({ k: (u?.k ?? 0) + 1, id, from, to: from + 1, was })); play(from === 0 ? 'win_fanfare' : 'milestone_up'); if (from > 0) later(160, () => play('goal_complete')); });
   };
@@ -164,8 +180,9 @@ function SkillTree() {
   const pick = () => { const r = act({ type: 'treePick', id: cur.id }); if (r.ok) play('ui_tap'); };
   return (
     <section className="pr-tree" data-tree aria-label="스킬트리">
-      <div className="tr-h"><b>거래의 나무</b><span className="gold" data-gold={gold} ref={goldRef}><img className="coin art" src={sprite('goldcoin')!.src} alt="" />{comma(gold)}개</span></div>
+      <div className="tr-h"><b>거래의 나무</b><span className={'gold' + (isLite ? ' fruit' : '')} data-gold={gold} data-fruit={isLite ? gold : undefined} ref={goldRef}>{isLite ? <FruitIcon size={18} className="coin" /> : <img className="coin art" src={sprite('goldcoin')!.src} alt="" />}{isLite ? `열매 ${comma(gold)}개` : `${comma(gold)}개`}</span></div>
       <p className="tr-odds" data-tree-odds>{treeOddsLine(active)}</p>
+      {isLite && <p className="tr-fruit" data-tree-fruit>새 엔딩을 볼 때마다 열매가 하나 열린다. {nextDetail(seenOf(g))}</p>}
       <div className="tr-paths">{PATHS.map((p) => <span key={p.id} className={'p-' + p.id}><b>{p.name}</b><small>{p.sub}</small></span>)}</div>
       <div className="tr-box">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -199,9 +216,22 @@ function SkillTree() {
         {cur.level > 0 && cur.pair && !cur.picked
           ? <button className="buy on" data-pick onClick={pick}><span>이번 생에 켠다</span></button>
           : cur.cost !== null
-            ? <button className={'buy' + (cur.canBuy ? ' on' : '')} data-buy disabled={!cur.canBuy} onClick={buy}><span>{cur.level > 0 ? '키운다' : '연다'}</span><small>{cur.canBuy ? `황금 도토코인 ${cur.cost}개` : cur.reason ?? ''}</small></button>
+            ? <button className={'buy' + (cur.canBuy ? ' on' : '')} data-buy disabled={!cur.canBuy} onClick={buy}><span>{cur.level > 0 ? '키운다' : '연다'}</span><small>{cur.canBuy ? `${isLite ? '열매' : '황금 도토코인'} ${cur.cost}개` : cur.reason ?? ''}</small></button>
             : <span className="have">열림</span>}
       </div>
+      {isLite && (() => {
+        // 라이트(U-62): 이 가지를 공짜로 여는 엔딩. 봤으면 제목, 못 봤으면 ????
+        const ends = GIFT_PAIRS.filter((x) => x.node === cur.id);
+        if (!ends.length) return null;
+        const book = g.family.liteBook ?? {};
+        return (
+          <div className={'tr-ends p-' + cur.path} data-gift-ends={cur.id}>
+            <b>이 가지를 여는 엔딩</b>
+            <span>{ends.map((x) => <button key={x.ending} className={book[x.ending] ? 'got' : ''} data-end={x.ending} data-got={book[x.ending] ? '1' : '0'} onClick={() => { play('ui_tap'); setHint(book[x.ending] ? `「${liteEndingById[x.ending].title}」 ${liteEndingById[x.ending].lines.join(' ')}` : `???? ${liteClue(liteEndingById[x.ending].w, (c) => marketById[c]?.name ?? c)} 망하면 이 가지가 공짜로 열린다.`); }}>{book[x.ending] ? liteEndingById[x.ending].title : '????'}</button>)}</span>
+            {hint && <small data-end-hint>{hint}</small>}
+          </div>
+        );
+      })()}
       {pathEnds.length > 0 && (
         <div className={'tr-ends p-' + cur.path} data-path-ends={cur.path}>
           <b>{PATHS.find((p) => p.id === cur.path)?.name}의 엔딩 {pathEnds.filter(seenEnd).length}/{pathEnds.length}</b>

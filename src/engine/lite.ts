@@ -6,6 +6,7 @@ import { act } from './actions';
 import { createGame, type NewGameOpts } from './game';
 import { settleSec } from './pace';
 import { netWorth } from './selectors';
+import { applyLitePerks } from './liteFruit';
 import type { GameState, RunState } from './types';
 
 export interface LiteData {
@@ -48,5 +49,6 @@ export function liteAfterLoan(g: GameState): void {
   const must = (r: { ok: boolean; msg?: string }, what: string) => { if (!r.ok) throw new Error(`liteAfterLoan: ${what}: ${r.msg ?? ''}`); };
   for (let i = 0; i < LITE.rebirthLoans; i++) must(act(g, { type: 'borrow', lender: 'shark1' }), '대출');
   if (!run.futures.open) must(act(g, { type: 'openAccount', sponsor: true }), 'FRX 계좌');
+  applyLitePerks(g); // 도감 덤(U-62): 5개 = 손에 +1만, 10개 = 코인 빚 이자 −10%
   run.settleIn = settleSec(run);
 }

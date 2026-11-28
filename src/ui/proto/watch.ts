@@ -35,6 +35,7 @@ import { settle } from '../../engine/settlement';
 import { clone } from '../../engine/game';
 import { fx } from './fx';
 import { isLite } from './config';
+import { retireSubLite } from './lite/fruitText';
 import { pushPop, treePing } from './popBus';
 import { rankOf, stampsOf, rankFeeText } from './frxRank';
 import { forestClose, forestTick, forestNewLife } from './forestWatch';
@@ -827,7 +828,7 @@ export function startWatch(): void {
         if (beat === 'firstCleared') useProto.getState().patch({ clueAt: run.settleNo });
         // 5만을 갚을 때마다 장부에 금박 도장이 하나 찍힌다(환생 때 황금 실물 도토코인이 된다 — 그 생에 갚은 만큼은 남는다)
         const gs = goldStamps(g);
-        if (gs > goldStamps(prev)) { play('goal_complete'); later(400, () => say(`장부에 황금 도토코인 ${gs}개째가 찍혔다. 다음 생의 나무에 쓴다.`, 4500)); }
+        if (gs > goldStamps(prev) && !isLite) { play('goal_complete'); later(400, () => say(`장부에 황금 도토코인 ${gs}개째가 찍혔다. 다음 생의 나무에 쓴다.`, 4500)); }
         if (beat) scene({ id: 'ledger_' + beat, lines: STORY.ledger(beat, { cut: (() => { const r = ledgerRows(prev).find((x) => x.key === 'repeat'); return r ? Math.round((r.start * r.ratePct) / 100) : 0; })(), otherDebt: lenderDebtTotal(run), frame: !!useProto.getState().seen.momClue_frame, momLeft: ledgerRows(g).find((x) => x.key === 'mom')?.left ?? 0 }) });
       }
       // 모든 빚 0: 이 생을 닫을지 고른다(U-39 ⑧). 은퇴 = 엔딩 카드(도감에 남는다) → 환생, 계속 = 2막의 문턱 장면 하나 뒤에 그대로 이어 간다
@@ -844,7 +845,7 @@ export function startWatch(): void {
       // U-59: 처음 다 갚았으면 전광판이 풀린다(축하는 이 장면의 고르는 줄에서 뜬다, RankUnlockCheer)
       if (lenderDebtTotal(run) === 0 && lenderDebtTotal(prev.run) > 0) rankCleared();
       if (lenderDebtTotal(run) === 0 && lenderDebtTotal(prev.run) > 0) scene({ id: 'clear', lines: STORY.clear(), hold: true, choices: [
-        { id: 'retire', label: '은퇴한다', sub: `이번 생 마치기, 황금 도토코인 +${treeAward(run)}`, run: retireNow },
+        { id: 'retire', label: '은퇴한다', sub: isLite ? retireSubLite(g) : `이번 생 마치기, 황금 도토코인 +${treeAward(run)}`, run: retireNow },
         { id: 'continue', label: isLite ? '한 판 더 산다' : '계속 산다', sub: '빚 없이 이어 하기', primary: true, run: () => { useProto.getState().patch({ seen: { ...useProto.getState().seen, continued: true } }); scene({ id: 'act2Hook', lines: STORY.act2Hook() }); } },
       ] });
     }

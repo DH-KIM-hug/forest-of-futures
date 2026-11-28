@@ -47,11 +47,11 @@ describe('U-59 라이트 생의 자산 상한', () => {
   const T0 = 1_800_000_000_000;
   const win: TradeDetail = { market: 'FLY', dir: 1, lev: 200, margin: 50000, entryTs: T0, exitTs: T0 + 180_000, roe: 31, pnl: 15500 };
   const cs = [{ t: T0, h: 100.1, l: 100 }];
-  it('라이트는 생마다 −30만(빚 40만, 손에 10만)에서 잰다: 다음 생도 본편의 −40만이 아니다', () => {
-    expect(LIFE.liteStart).toBe(-300_000);
+  it('라이트는 생마다 −29만(빚 40만, 손에 10만, 도감 덤 +1만까지)에서 잰다: 다음 생도 본편의 −40만이 아니다', () => {
+    expect(LIFE.liteStart).toBe(-290_000);
     const life = { lifeNo: 3, settles: 1, peak: 0, trades: [win], lite: true };
-    // −300,000 + 15,500 × 1.1 + 1 × 18,000 = −264,950 이 상한(값은 0 보다 커야 하지만, 여기서는 상한 셈만 본다)
-    const bound = -300_000 + 15_500 * 1.1 + 18_000;
+    // −290,000 + 15,500 × 1.1 + 1 × 18,000 = −254,950 이 상한(값은 0 보다 커야 하지만, 여기서는 상한 셈만 본다)
+    const bound = -290_000 + 15_500 * 1.1 + 18_000;
     expect(checkLifeAgainstCandles(life, bound - 1, () => cs)).toBeNull();
     expect(checkLifeAgainstCandles({ ...life, lite: undefined } as any, bound - 1, () => cs)).toMatch(/tooHigh/); // 본편 다음 생이면 −40만에서
   });

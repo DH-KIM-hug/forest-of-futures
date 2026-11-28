@@ -29,7 +29,7 @@ export function newFamily(): FamilyState {
     pending: { peakNetWorth: 0, minedValue: 0, endingPoints: 0, simpleStreak: 0 },
     ledger: {}, peakNetWorth: 0, barehandPeak: 0, tipBook: {}, heirlooms: {}, traits: [], deepBlood: false,
     lenderRelations: {}, traces: [], lineage: [], stats: {}, retireStreak: 0, chainBroken: false,
-    gold: 0, goldEarned: 0, skill: {}, skillPick: {}, liteBook: {},
+    gold: 0, goldEarned: 0, skill: {}, skillPick: {}, liteBook: {}, fruit: 0, fruitEarned: 0,
   };
 }
 

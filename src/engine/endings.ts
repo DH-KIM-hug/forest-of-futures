@@ -5,7 +5,8 @@ import { forecast } from './settlement';
 import { determineCause } from './bankruptcy';
 import { netWorth } from './selectors';
 import { act1On, act1Text } from './act1';
-import { chooseLiteEnding, recordLite, LITE_ENDING_TOTAL } from './liteEndings';
+import { chooseLiteEnding, LITE_ENDING_TOTAL } from './liteEndings';
+import { liteSeenCount, recordLiteReward } from './liteFruit';
 import type { GameState, PendingEnding, PayId } from './types';
 
 type Snap = Record<string, any>;
@@ -216,18 +217,17 @@ function finalizeLiteEnding(g: GameState, ctx: SnapCtx): PendingEnding {
   const run = g.run;
   const f = g.family;
   const { ending, tags } = chooseLiteEnding(g);
-  f.liteBook ??= {};
-  const isNew = recordLite(f.liteBook, ending.id, f.generation);
+  const { isNew, reward } = recordLiteReward(g, ending.id); // 도감에 적고, 처음이면 열매와 공짜 가지와 도감 보상(U-62)
   const nw = Math.max(run.peakNetWorth, netWorth(run));
   f.peakNetWorth = Math.max(f.peakNetWorth, nw);
   f.lineage.push({ gen: f.generation, name: g.settings.name, endedBy: ending.id, branch: run.branch, peak: nw });
   f.stats.bankruptcies = (f.stats.bankruptcies ?? 0) + 1;
   f.stats.liqs = (f.stats.liqs ?? 0) + (run.stats.liqCount ?? 0);
   const pending: PendingEnding = {
-    id: ending.id, cause: ctx.cause, isNew, via: isNew ? 'normal' : 'repeat', nth: f.liteBook[ending.id].count, title: ending.title, line: ending.lines.join(' '),
+    id: ending.id, cause: ctx.cause, isNew, via: isNew ? 'normal' : 'repeat', nth: f.liteBook![ending.id].count, title: ending.title, line: ending.lines.join(' '),
     lastThree: run.eventLog.slice(-3), nearMisses: [], nextGen: { trait: null, trace: '', heirloom: null },
-    collected: Object.keys(f.liteBook).length, peakNetWorth: nw, settleNo: run.settleNo, offline: false, awayHours: null, snapshot: {},
-    lite: { lines: ending.lines, total: LITE_ENDING_TOTAL, tags, death: !!ending.death },
+    collected: liteSeenCount(f.liteBook), peakNetWorth: nw, settleNo: run.settleNo, offline: false, awayHours: null, snapshot: {},
+    lite: { lines: ending.lines, total: LITE_ENDING_TOTAL, tags, death: !!ending.death, reward },
   };
   g.pendingEnding = pending;
   return pending;

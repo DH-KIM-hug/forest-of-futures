@@ -112,5 +112,6 @@ export function repayBuys(g: GameState, keep: number): RepayBuys | null {
   const from = Math.round((cur / STAMP_STEP) * 100), to = Math.round((((cur + amount) % STAMP_STEP) / STAMP_STEP) * 100);
   const cut = interestCut(g, amount);
   const nn = (x: number) => Math.round(x).toLocaleString('ko-KR');
-  return { amount, mult: Math.max(1, mult), cut, stamps, from, to, text: `${nn(amount)} 갚으면 이자 −${nn(cut)}, ${stamps > 0 ? `황금 도토코인 +${stamps}` : `다음 황금 도토코인 ${to}%`}` };
+  const lite = !!g.run.lite; // 라이트(U-62): 황금이 없다. 갚으면 이자만 준다
+  return { amount, mult: Math.max(1, mult), cut, stamps, from, to, text: lite ? `${nn(amount)} 갚으면 이자 −${nn(cut)}` : `${nn(amount)} 갚으면 이자 −${nn(cut)}, ${stamps > 0 ? `황금 도토코인 +${stamps}` : `다음 황금 도토코인 ${to}%`}` };
 }
