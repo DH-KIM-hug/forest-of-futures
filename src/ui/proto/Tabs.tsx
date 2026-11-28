@@ -20,6 +20,8 @@ import { aliveStyle } from './alive';
 import { journeyOf } from './stops';
 import { claim } from './model';
 import { RankSign } from './RankingBoard';
+import { isLite } from './config';
+import { temptOnBorrow } from './lite/liteBeats';
 
 /** 가게 안 그림 한 띠(U-40): 그 가게의 방과 거기 서 있는 사람. 지도 카드 맨 위에 붙는다. */
 function PlaceArt({ id }: { id: string }) {
@@ -75,6 +77,8 @@ export function MapTab() {
     play(r.ok ? 'collector_paid' : 'insufficient');
     setMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '지금은 처리할 수 없어요');
     if (r.ok && id === 'shark1') onFirstOfficeLoan(before);
+    // 라이트: 이번 생 처음 빌리는 곳이면 빚의 유혹 만화(그 대출의 진짜 금액과 금리)
+    if (r.ok && isLite) temptOnBorrow(before, id, r.amount ?? 0);
     // 숲속 캐피탈에서 처음 빌렸다: 창구 너구리가 조건을 말한다(한도가 왜 그 숫자인지, 밀리면 어떻게 되는지)
     if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: ratePct(lenderById.capital.rate) }) });
   };
@@ -216,10 +220,10 @@ function CapitalTerms({ room }: { room: number }) {
   const od = g.run.debts.capital.overdue;
   return (
     <div className="pr-terms" data-terms="capital" aria-label="숲속 캐피탈 조건">
-      <div><i>값</i>{manTxt(unit)} 대출, 정산 이자 <b>+{comma(perUnit)}</b> <small>(바퀴 한 대의 정산당 예상 순수입 {comma(hm.net)})</small></div>
-      <div><i>한도</i>기본 {comma(l.limitByHouse![g.run.house])} + 쳇바퀴 한 대당 <b>+{comma(perWheel)}</b></div>
+      <div><i>값</i>{manTxt(unit)} 대출, 정산 이자 <b>+{comma(perUnit)}</b>{isLite ? null : <small> (바퀴 한 대의 정산당 예상 순수입 {comma(hm.net)})</small>}</div>
+      <div><i>한도</i>기본 {comma(l.limitByHouse![g.run.house])}{isLite ? null : <> + 쳇바퀴 한 대당 <b>+{comma(perWheel)}</b></>}</div>
       <div><i>걷기</i>정산 때 자동이체, 잔액 부족 시 연체</div>
-      <div className={od > 0 ? 'hot' : ''}><i>밀리면</i>{l.maxOverdue}회 연체 시 <b>비싼 바퀴부터</b> 압류{od > 0 ? `, 현재 ${od}회` : ''}</div>
+      <div className={od > 0 ? 'hot' : ''}><i>밀리면</i>{l.maxOverdue}회 연체 시 {isLite ? <b>파산</b> : <><b>비싼 바퀴부터</b> 압류</>}{od > 0 ? `, 현재 ${od}회` : ''}</div>
     </div>
   );
 }

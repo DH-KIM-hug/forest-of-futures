@@ -33,6 +33,7 @@ import { ownedCoins, lenderDebtTotal, interestDue, totalDebt } from '../../engin
 import { settle } from '../../engine/settlement';
 import { clone } from '../../engine/game';
 import { fx } from './fx';
+import { isLite } from './config';
 import { pushPop, treePing } from './popBus';
 import { rankOf, stampsOf, rankFeeText } from './frxRank';
 import { forestClose, forestTick, forestNewLife } from './forestWatch';
@@ -46,13 +47,14 @@ import { TELL_WINDOW } from '../../engine/feed/fly';
 import type { GameState, Position } from '../../engine/types';
 
 /** 포지션이 닫힌 것을 보고 이번 생 승률을 올리고, 이익이면 수익 인증서 물음을 띄운다(한 번 닫을 때 한 번). */
-export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: number; pnl: number; margin: number; claim: number; entry: number; exit: number; heldSec: number; gen: number; gold?: boolean }): void {
+export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: number; pnl: number; margin: number; claim: number; entry: number; exit: number; heldSec: number; gen: number; gold?: boolean; /** 이번 생 가장 크게 딴 판 */ record?: boolean }): void {
   const P = useProto.getState();
   const win = c.pnl > 0;
   const wins = P.wins + (win ? 1 : 0);
   const closes = P.closes + 1;
   // 인증서 물음은 볼 만한 이익에만(잔돈 이익마다 뜨지 않는다, U-38)
-  const card = win && worthCertificate(c.pnl, c.margin, c.claim);
+  // 라이트(LITE_CONTI 컷 C5): 인증서 물음은 대박 이상과 이번 생 신기록에만
+  const card = win && (isLite ? (burstTier(c.pnl, c.margin, c.claim)?.lv ?? 0) >= 4 || !!c.record : worthCertificate(c.pnl, c.margin, c.claim));
   P.patch({ wins, closes, profit: card ? { coin: marketById[c.market]?.name ?? c.market, dir: c.dir, lev: c.lev, roe: c.roe, pnl: c.pnl, entry: c.entry, exit: c.exit, heldSec: c.heldSec, wins, closes, gen: c.gen, date: new Date(), gold: c.gold, market: c.market, margin: c.margin, tier: burstTier(c.pnl, c.margin, c.claim)?.word } : null }); // 뒤에 닫힌 판이 있으면 앞 판의 인증서 물음은 지나간 일이다(U-46: 청산 · 연체 장면 사이에 옛 +117,651 이 다시 뜨던 것)
 }
 
@@ -421,7 +423,8 @@ export function guideCheck(): void {
     if (!P.loanTaken && run.settleNo === 0 && push('home')) return;
     if (!tipsLeft('home') && (run.stats.laborTaps ?? 0) >= HUD_TIP_TAPS && push('hud')) return;
   }
-  if (P.tab === 'map' && !P.loanTaken && push('map')) return;
+  // 라이트: 추심원이 오기 전의 지도에서는 사무소 설명을 미룬다(추심원이 먼저 문을 두드린다)
+  if (P.tab === 'map' && !P.loanTaken && (!isLite || P.waiting) && push('map')) return;
   // 첫 실전 판(U-55)은 조명 없이 지켜본다: 설명은 실전 판이 하나 닫힌 뒤의 포지션에서
   if (P.tab === 'phone' && P.tutorial === 'done' && P.closes > 0 && Object.keys(run.positions).length > 0) push('position');
 }
@@ -704,7 +707,7 @@ export function startWatch(): void {
         // 튜토리얼 거래는 승률·인증서·반응에 넣지 않는다
         if (!tut) {
           const c = claim(prev).total;
-          noteClose({ market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, margin: p.margin0, claim: c, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: lifeNo(g), gold: !!run.skill?.B4 || (!!run.skill?.B3a && p.lev >= 100 && pnl > 0) });
+          noteClose({ record: pnl > 0 && prevBest > 0 && pnl > prevBest, market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, margin: p.margin0, claim: c, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: lifeNo(g), gold: !!run.skill?.B4 || (!!run.skill?.B3a && p.lev >= 100 && pnl > 0) });
           // 세상이 그 거래에 반응한다(react.ts): 크기는 다음 청구액에 견준다
           const P = useProto.getState();
           const tiny = isTiny(pnl, c);
@@ -827,7 +830,7 @@ export function startWatch(): void {
       }
       if (lenderDebtTotal(run) === 0 && lenderDebtTotal(prev.run) > 0) scene({ id: 'clear', lines: STORY.clear(), hold: true, choices: [
         { id: 'retire', label: '은퇴한다', sub: `이번 생 마치기, 황금 +${treeAward(run)}`, run: retireNow },
-        { id: 'continue', label: '계속 산다', sub: '빚 없이 이어 하기', primary: true, run: () => { useProto.getState().patch({ seen: { ...useProto.getState().seen, continued: true } }); scene({ id: 'act2Hook', lines: STORY.act2Hook() }); } },
+        { id: 'continue', label: isLite ? '한 판 더 산다' : '계속 산다', sub: '빚 없이 이어 하기', primary: true, run: () => { useProto.getState().patch({ seen: { ...useProto.getState().seen, continued: true } }); scene({ id: 'act2Hook', lines: STORY.act2Hook() }); } },
       ] });
     }
     // 오픈 기념 문자: 진짜 시세로 거래소를 처음 보는 때(생마다 한 번 — 새 생은 새 계좌다)

@@ -9,7 +9,11 @@ import { netWorth } from '../../engine/selectors';
 import { prologueSeen } from './Prologue';
 import { KNOWN_AFTER_FIRST_LIFE } from './protoStore';
 import { balance, eventById, marketById } from '../../engine/data';
-import { pdev } from './config';
+import { pdev, isLite } from './config';
+import { createLiteGame, liteAfterLoan, liteStartRun } from '../../engine/lite';
+import { applyLiteText } from './lite/liteText';
+import { liteBoot, liteScene, mangaWanted, markMangaSeen } from './lite/liteDev';
+import { rebirthSeq } from './lite/liteBeats';
 import { resetGuide, setGuideOff, tips, MOMENT, type Moment } from './guide';
 import { tipArgs, firstVisitSec } from './model';
 import { applyBirth } from '../../engine/skilltree';
@@ -29,11 +33,13 @@ import { restoreProto, startAutosave } from './protoPersist';
 
 const q = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
 /** 프롤로그를 보여 줄까: 처음 실행이면 보여 준다. &prologue=1 은 다시 보기, &prologue=0 과 장면 건너뛰기(pdev)는 생략. */
-export const wantPrologue = (): boolean => !pdev && q.get('prologue') !== '0' && (q.get('prologue') === '1' || !prologueSeen());
+export const wantPrologue = (): boolean => isLite ? mangaWanted() : !pdev && q.get('prologue') !== '0' && (q.get('prologue') === '1' || !prologueSeen());
 
 /** 첫 생의 새 판. 정산 간격 덮어쓰기는 이 앞에서 끝나 있어야 한다. */
 export function freshGame(): ReturnType<typeof createGame> {
   const st = useGame.getState();
+  // 라이트: 도입 만화가 첫 대출까지 보여 준다(컷 7). 판은 그 뒤에서 열린다: 손에 10만, 빚 40만, FRX 앱
+  if (isLite) { const lg = createLiteGame({ seed: (Date.now() & 0xffff) | 1, prices: st.g.run.prices }); liteAfterLoan(lg); lg.settings.prologueSeen = true; return lg; }
   const g = createGame({ seed: (Date.now() & 0xffff) | 1, prices: st.g.run.prices });
   g.settings.prologueSeen = true;
   // 첫 생의 튜토리얼 동안은 정산이 20초다(U-47). 튜토리얼이 끝나면(전표를 넣는다) 60초가 된다(pace.ts endIntro)
@@ -46,6 +52,7 @@ export function freshGame(): ReturnType<typeof createGame> {
 export function bootProto(): void {
   persistFlag.on = false;
   const st = useGame.getState();
+  if (isLite) applyLiteText();
   // 튜토리얼 설명(guide.ts): &prologue=1 이나 &guide=1 이면 처음부터 다시, &guide=0 이나 장면 건너뛰기(pdev)에서는 끈다
   if (q.get('prologue') === '1' || q.get('guide') === '1') resetGuide();
   setGuideOff(q.get('guide') === '0' || (!!pdev && q.get('guide') !== '1'));
@@ -57,7 +64,8 @@ export function bootProto(): void {
     if (r.restored) return;
   }
   let g = freshGame();
-  if (pdev) g = scene(pdev, g);
+  if (isLite) liteBoot();
+  if (pdev) g = isLite ? liteScene(pdev, g) : scene(pdev, g);
   if (wantPrologue()) { useProto.getState().patch({ prologue: true }); st.setSpeed(0); }
   st.setGame(g);
   // 화면 확인용: &pguide=<때> 는 그 때의 설명 장면을 바로 띄운다(예: pdev=cabin0&guide=1&pguide=hamster)
@@ -73,6 +81,7 @@ export function endPrologue(): void {
   st.setGame(freshGame());
   useProto.getState().patch({ prologue: false });
   st.setSpeed(1);
+  if (isLite) { markMangaSeen(); liteBoot(true); return; } // 라이트: 만화가 끝나면 거래소(굴릴 쳇바퀴가 없다)
   st.act({ type: 'tap' });
 }
 
@@ -89,8 +98,11 @@ export function rebirthOverride(): void {
   run.settleIn = balance.settlement.intervalSec;
   g.run = run;
   g.family.traits = []; g.family.deepBlood = false; g.family.lenderRelations = {};
+  if (isLite) liteStartRun(run); // 라이트: 쳇바퀴 없이 코인 빚 30만에서
   applyBirth(g); // 스킬트리: 지난 생까지 산 노드가 이번 생에 켜진다
-  applyPostTutorial(g); // U-46: 새 생은 첫 생의 튜토리얼이 끝난 자리에서(손에 10만 · 빚 50만 · 쳇바퀴 둘 · 알바 둘 · 폰)
+  if (isLite) liteAfterLoan(g); // 라이트: 첫 대출을 받은 자리(빚 40만, 손에 10만, FRX 열림)
+  else applyPostTutorial(g);
+  if (isLite) window.setTimeout(rebirthSeq, 300); // 장면 E: 다시, 사흘 전 // U-46: 새 생은 첫 생의 튜토리얼이 끝난 자리에서(손에 10만 · 빚 50만 · 쳇바퀴 둘 · 알바 둘 · 폰)
   run.peakNetWorth = netWorth(run);
   st.setGame(g);
 }

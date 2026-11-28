@@ -1,0 +1,43 @@
+// 라이트 모드의 만화 시퀀스를 거는 곳: 대부에게 처음 빌리는 순간(빚의 유혹), 파산(절망의 표제지). 숫자는 엔진 값 그대로.
+import { useEffect } from 'react';
+import { useGame } from '../../../store/gameStore';
+import { lenderById } from '../../../engine/data';
+import { nextBorrowRate, lenderLimit, totalDebt } from '../../../engine/selectors';
+import { comma } from '../../../engine/util';
+import { RETIRE_CAUSE } from '../../../engine/act1';
+import { lifeNo } from '../model';
+import { pushSeq } from './liteStore';
+import { useUI } from '../../uiStore';
+import { temptPanels, despairPanel, rebirthPanels } from './manga';
+import type { GameState, LenderId } from '../../../engine/types';
+
+/** 빌리기 직전의 판으로 그 대출의 숫자를 센다(빌린 뒤에 부른다). 이번 생 처음 빌리는 곳이면 유혹의 만화 */
+export function temptOnBorrow(before: GameState, id: LenderId, got: number): void {
+  if (id === 'bank') return;
+  const first = ((before.run.stats[`borrow.${id}`] as number | undefined) ?? 0) === 0;
+  if (!first) return;
+  const l = lenderById[id];
+  const unit = Math.min(l.borrowUnit!, Math.max(0, lenderLimit(before, id) - before.run.debts[id].principal));
+  const rate = nextBorrowRate(before, id);
+  pushSeq({ id: 'tempt_' + id, label: '빚의 유혹', panels: temptPanels({ lender: id, unit, got: got || Math.floor(unit * (1 - (l.upfront ?? 0))), perSettle: Math.ceil(unit * rate - 1e-9), ratePct: Math.round(rate * 1000) / 10 }) });
+}
+
+/** 파산한 생: 엔딩 카드 앞에 절망의 표제지 한 장(생마다 한 번) */
+const shown = new Set<number>();
+export function useLiteBankrupt(): void {
+  const g = useGame((s) => s.g);
+  const run = g.run;
+  useEffect(() => {
+    if (!run.over || !run.bankruptcy || g.pendingEnding?.cause === RETIRE_CAUSE || shown.has(g.family.generation)) return;
+    shown.add(g.family.generation);
+    // 장면 D: 컷 1의 절망 표지를 진짜 숫자와 함께. 해설 상자 = 빌린 돈(지금 빚 전부) / 남은 돈(손의 돈)
+    const nar: [string, string] = [`빌린 돈 ${comma(Math.round(totalDebt(run)))}`, `남은 돈 ${comma(Math.max(0, Math.floor(run.cash)))}`];
+    pushSeq({ id: 'broke', label: '파산', panels: [despairPanel({ sub: `제${lifeNo(g)}화 파산`, nar })] });
+  });
+}
+
+/** 장면 E: 새 생이 열리면 「다시, 사흘 전」 */
+export function rebirthSeq(): void {
+  pushSeq({ id: 'reborn', label: '다시, 사흘 전', panels: rebirthPanels() });
+  useUI.getState().setTrade({ market: 'FLY' }); // 새 생도 날다람쥐코인부터
+}

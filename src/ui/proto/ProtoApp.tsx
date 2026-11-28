@@ -37,7 +37,13 @@ import { balance, DEBT_IDS } from '../../engine/data';
 import { Acorn, RowIcon } from './art';
 import { LiveBadge } from '../../net/hlDirect/LiveBadge';
 import { SoundBtn, SoundLab, useAudioDirector } from './AudioUi';
-import { pdev } from './config';
+import { pdev, isLite } from './config';
+import { LiteHud } from './lite/LiteHud';
+import { LiteManga } from './lite/LiteManga';
+import { MangaCut } from './lite/MangaCut';
+import { LiteSeqHost } from './lite/LiteManga';
+import { useLiteBankrupt } from './lite/liteBeats';
+import { mangaSeen } from './lite/liteDev';
 import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
 import { guideStep, allowedEl, type Guide } from './guided';
 import { nextTierCost } from '../../engine/equipment';
@@ -51,6 +57,10 @@ const TABS: { id: Tab; label: string; col: string }[] = [
   { id: 'lot', label: '집', col: '#E9C99A' },
   { id: 'phone', label: '거래소', col: '#9AD0C2' },
 ];
+/** 라이트 모드(&lite=1): 집이 없다. 지도(빌리고 갚는 곳)와 거래소 둘 */
+const LITE_TABS = TABS.filter((t) => t.id !== 'lot');
+/** 라이트에서 집 탭으로 가라는 말(장면 끝, 고르는 단추 등)은 거래소로(폰이 없으면 지도로) 바꿔 듣는다 */
+const liteTab = (t: Tab, futuresOpen: boolean): Tab => (isLite && t === 'lot' ? (futuresOpen ? 'phone' : 'map') : t);
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 function Hud() {
@@ -172,7 +182,7 @@ function TabBar() {
   };
   return (
     <nav className="pr-tabs" aria-label="탭">
-      {TABS.map((t) => {
+      {(isLite ? LITE_TABS : TABS).map((t) => {
         const ok = open(t.id);
         const on = tab === t.id;
         const b = ok ? badge(t.id) : null;
@@ -289,14 +299,20 @@ function useGuide(): Guide | null {
   const P = { prologue: useProto((s) => s.prologue), tutorial: useProto((s) => s.tutorial), tab: useProto((s) => s.tab), waiting: useProto((s) => s.waiting), loanTaken: useProto((s) => s.loanTaken), forceTrade: useProto((s) => s.forceTrade), panelOpen: useProto((s) => s.panelOpen) };
   const r = g.run;
   const extras = r.equipment.filter((u) => u.tier === EXTRA_WHEEL);
+  // 라이트: 이끄는 길은 첫 대출 한 걸음뿐(추심원 → 사무소 → 빌리기). 그 뒤 첫 판은 FRX 첫 실전 카드가 맞춰 준다
+  if (isLite) return P.loanTaken || P.prologue || !P.waiting ? null : P.tab === 'map' ? { step: 'borrow', allow: ['[data-borrow="shark1"]', '[data-choice="go"]'] } : { step: 'toMap', allow: ['[data-choice="go"]', '[data-tab="map"]'] };
   return guideStep({ life: lifeNo(g), ...P, momStaffed: !!r.coinWheels.DTC?.staffed, extras: extras.length, extrasStaffed: extras.filter((u) => u.staffed).length, canPlace: r.cash >= nextTierCost(r, EXTRA_WHEEL) });
 }
 
 export function ProtoApp() {
-  const tab = useProto((s) => s.tab);
+  const tab0 = useProto((s) => s.tab);
+  const futOpen = useGame((s) => s.g.run.futures.open);
+  const tab = liteTab(tab0, futOpen);
+  // 라이트: 집 탭으로 가라는 말이 오면 저장된 탭도 바로 고친다(그 사이 한 번은 위의 liteTab 이 막는다)
+  useEffect(() => { if (tab !== tab0) useProto.getState().setTab(tab); }, [tab, tab0]);
   const toast = useProto((s) => s.toast);
   const prologue = useProto((s) => s.prologue);
-  const [skip] = useState(() => prologueSeen());
+  const [skip] = useState(() => (isLite ? mangaSeen() : prologueSeen()));
   const openPos = useOpenPositions();
   const pc = useGame((s) => s.g.settings.priceColors);
   const dark = openPos.some((p) => isNearLiq(p));
@@ -359,12 +375,12 @@ export function ProtoApp() {
     { duration: 480, easing: 'linear' },
   );
   return (
-    <div ref={root} className={'pr' + (dark ? ' dark' : '') + ' tab-' + tab} data-pc={pc} data-guided={guide?.step ?? undefined} data-danger={vig > 0 ? vig.toFixed(2) : undefined}>
+    <div ref={root} className={'pr' + (isLite ? ' lite' : '') + (dark ? ' dark' : '') + ' tab-' + tab} data-pc={pc} data-guided={guide?.step ?? undefined} data-danger={vig > 0 ? vig.toFixed(2) : undefined}>
       {vig > 0 && <i className={'pr-vig' + (danger >= 0.7 ? ' beat' : '')} aria-hidden="true" style={{ ['--v' as string]: vig.toFixed(3) }} />}
-      <Hud />
+      {isLite ? <LiteHud /> : <Hud />}
       <main className="pr-main">
         <TabGuard key={tab}>
-          {tab === 'lot' && <Lot />}
+          {tab === 'lot' && !isLite && <Lot />}
           {tab === 'map' && <MapTab />}
           {tab === 'phone' && <PhoneTab />}
         </TabGuard>
@@ -374,6 +390,9 @@ export function ProtoApp() {
       <TabBar />
       <CutIn />
       <LiqStamp onShake={shake} />
+      {isLite && <MangaCut />}
+      {isLite && <LiteSeqHost />}
+      {isLite && <LiteBroke />}
       <SecondWind />
       <HomePops />
       <HomeBurst />
@@ -385,11 +404,14 @@ export function ProtoApp() {
       <DayNoteSheet />
       <RankBoard />
       <ForestBoard />
-      {prologue && <Prologue onDone={endPrologue} canSkip={skip} />}
+      {prologue && (isLite ? <LiteManga onDone={endPrologue} canSkip={skip} /> : <Prologue onDone={endPrologue} canSkip={skip} />)}
       {pdev === 'sounds' && <SoundLab />}
     </div>
   );
 }
+
+/** 라이트: 파산한 생은 엔딩 카드 앞에 절망의 표제지(lite/liteBeats.ts) */
+function LiteBroke() { useLiteBankrupt(); return null; }
 
 /** 한 탭의 화면이 그리다 넘어져도 게임 전체가 까맣게 꺼지지 않게(회차 13: 거래소가 넘어지면 화면이 통째로 꺼졌다).
  *  넘어지면 그 자리에 한 줄과 [다시 켜기]. 탭을 바꾸면 새로 그린다(key). 돈과 포지션은 엔진에 있어 그대로다 */

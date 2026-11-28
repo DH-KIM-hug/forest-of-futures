@@ -25,7 +25,7 @@ export function protoSaveKey(search: string): string | null {
   const q = new URLSearchParams(search);
   if (q.get('pdev') || q.get('prologue') === '1' || q.get('cheat') === '1') return null;
   const feed = q.get('feed') || 'hl';
-  return `${PROTO_SAVE_BASE}:${feed}${q.get('fast') === '1' ? ':fast' : ''}${q.get('e2e') === '1' ? ':e2e' : ''}`;
+  return `${PROTO_SAVE_BASE}:${feed}${q.get('fast') === '1' ? ':fast' : ''}${q.get('e2e') === '1' ? ':e2e' : ''}${q.get('lite') === '1' ? ':lite' : ''}`;
 }
 
 /** 화면 쪽 생의 기록 중 저장하는 것. 장면, 알림, 터지는 화면 같은 그 순간의 것은 넣지 않는다 */

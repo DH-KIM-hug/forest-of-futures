@@ -15,6 +15,7 @@ import { play } from './audio';
 import { RankRebirth } from './RankingBoard';
 import { closeBack } from '../../engine/futures';
 import { marketById } from '../../engine/data';
+import { isLite } from './config';
 
 /** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
@@ -78,7 +79,7 @@ export function EndingFlow() {
         <img src={sprite('hero')!.src} alt="" width={42} height={56} />
         <div>
           <h2>다시 눈을 뜬다</h2>
-          <p>{retired ? '완납 영수증을 넣어 둔 주머니에서 엄마 집 열쇠가 나온다. 해가 지고 있다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 다시 50만.' : '문턱에 짐차 바퀴 자국이 아직 젖어 있다. 손끝에 진흙이 묻는다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 50만.'}</p>
+          <p>{isLite ? (retired ? '완납 영수증을 액자에 넣었는데, 눈을 뜨니 손에 오소리의 봉투가 있다. 폰에는 FRX. 장부에 다시 40만.' : '폰 화면이 꺼졌다가 켜진다. 손에 오소리의 봉투, 장부에 40만. 또 그 아침이다.') : retired ? '완납 영수증을 넣어 둔 주머니에서 엄마 집 열쇠가 나온다. 해가 지고 있다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 다시 50만.' : '문턱에 짐차 바퀴 자국이 아직 젖어 있다. 손끝에 진흙이 묻는다. 또 그날, 첫 주문을 날린 저녁이다. 오소리 장부에 50만.'}</p>
         </div>
       </div>
       <div className="award" data-award={e.gold ?? 0}>

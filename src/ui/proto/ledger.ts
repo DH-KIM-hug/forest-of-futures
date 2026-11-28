@@ -38,7 +38,7 @@ export function ledgerRows(g: GameState): LedgerRow[] {
   row('repeat', '더 빌린 돈', repeatRate, repeatLeft, Math.max(0, borrows - 1) * unit);
   // 빌린 적이 없는데 이 줄에 돈이 있으면 못 낸 이자·생활비가 얹힌 것이다
   row('first', borrows >= 1 ? '처음 빌린 돈' : '밀려서 얹힌 돈', l.rate, firstLeft, borrows >= 1 ? unit : 0);
-  row('mom', '엄마 빚', momRate, momLeft, momStart, momFixed);
+  row('mom', g.run.lite ? '코인 빚' : '엄마 빚', momRate, momLeft, momStart, momFixed); // 라이트: 날다람쥐코인을 사려고 빌린 30만
   return rows;
 }
 
@@ -63,7 +63,7 @@ export function ledgerGoal(g: GameState): LedgerGoal | null {
   const need = Math.min(STAMP_STEP, cur + left);
   const rows = ledgerRows(g);
   const top = rows.find((r) => r.left > 0)!;
-  return { label: top.key === 'mom' ? `엄마 빚 잔액 ${man(left)}` : '오소리 빚 갚기, 높은 금리부터', cur, need, cut: interestCut(g, need - cur) };
+  return { label: top.key === 'mom' ? `${g.run.lite ? '코인 빚' : '엄마 빚'} 잔액 ${man(left)}` : '오소리 빚 갚기, 높은 금리부터', cur, need, cut: interestCut(g, need - cur) };
 }
 const man = (x: number) => (x % 10000 === 0 ? `${x / 10000}만` : Math.round(x).toLocaleString('ko-KR'));
 
