@@ -17,6 +17,7 @@ import { lendersMeta } from './data';
 import { onTaxPaid } from './generation';
 import { settleSec } from './pace';
 import { refreshShark2Open } from './loans';
+import { liteRefer } from './liteRefer';
 import { comma, logEvent, notify } from './util';
 import type { CoinId, DebtId, GameState, PayId, RunState } from './types';
 
@@ -144,6 +145,9 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
     }
   }
   rep.unpaid = Object.values(unpaid).reduce((a, b) => a + b, 0);
+  // 6-0. 라이트의 소개(U-65): 못 낸 돈을 다음 돈줄이 대신 낸다(연체가 아니다). rep.unpaid 는 모자랐던 돈 그대로.
+  // 소개로도 못 메우면(까마귀, 또는 다음 돈줄 한도가 모자람) 연체 없이 이 정산에 파산(아래 파산 검사)
+  const referBust = liteRefer(g, unpaid, rep);
 
   // 6-1. 알바 일당(U-30): 이자·생활비를 낸 뒤 남은 현금에서 한 마리씩. 못 받은 알바는 그 자리에서 나간다(빚으로 남지 않는다).
   const payWage = (w: number, leave: () => void) => {
@@ -189,6 +193,7 @@ export function settle(g: GameState, opts: { skipFunding?: boolean } = {}): void
   // 7. 연체 처리
   const trig: BankruptCtx[] = [];
   const note = (c: BankruptCtx) => void (trig.length || trig.push(c));
+  if (referBust) note(referBust);
   for (const id of LENDERS) {
     const d = run.debts[id];
     if (rollIds.includes(id as LenderId2)) {

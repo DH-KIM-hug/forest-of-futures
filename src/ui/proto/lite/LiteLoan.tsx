@@ -41,10 +41,14 @@ export function LoanIcon({ size = 30 }: { size?: number }) {
 /** 모르는 곳, 닫힌 곳의 한 줄 */
 const LOCK_HINT: Record<LenderId, string> = {
   shark1: '',
-  capital: '아직 연락이 없어요.',
-  bank: '아직 연락이 없어요.',
-  shark2: '아직 갈 일이 없는 골목이에요.',
+  capital: '오소리에서 밀리면 오는 곳',
+  bank: '',
+  shark2: '캐피탈에서 밀리면 오는 곳',
 };
+/** 이름 옆 작은 꼬리표(U-65): 금리 사다리 */
+const ROLE: Partial<Record<LenderId, string>> = { shark1: '제일 싼 곳', shark2: '불법 사채' };
+/** 라이트의 돈줄 사다리: 오소리 → 캐피탈 → 까마귀(엔진 shark2). 조합은 없다 */
+const LITE_IDS = LENDER_IDS.filter((id) => id !== 'bank');
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
@@ -64,8 +68,8 @@ export function LiteLoan() {
   }, [focus]);
   const run = g.run;
   const known = knownLenders(g, { loanTaken, capitalKnown, viperKnown });
-  const total = LENDER_IDS.reduce((a, id) => a + run.debts[id].principal, 0);
-  const od = LENDER_IDS.reduce((a, id) => a + run.debts[id].overdue, 0);
+  const total = LITE_IDS.reduce((a, id) => a + run.debts[id].principal, 0);
+  const od = LITE_IDS.reduce((a, id) => a + run.debts[id].overdue, 0);
   const sec = settleSec(run);
   const per = sec % 60 === 0 ? `${sec / 60}분마다` : `${sec}초마다`;
   return (
@@ -77,7 +81,7 @@ export function LiteLoan() {
       </header>
       {msg && <div className="ll-msg" role="status" data-loan-msg>{msg}</div>}
       <div className="ll-list">
-        {LENDER_IDS.map((id) => {
+        {LITE_IDS.map((id) => {
           const l = lenderById[id], d = run.debts[id], pl = PLACE[id];
           const face = sprite(LENDER_FACE[id]);
           const isKnown = known.includes(id);
@@ -88,7 +92,7 @@ export function LiteLoan() {
               <div key={id} className={'ll-row locked' + (isKnown ? '' : ' unknown')} data-loan-row={id} data-loan-locked
                 onClick={isKnown ? () => useProto.getState().pushScene({ id: 'owlRefuse', again: true, auto: 3500, lines: STORY.owlRefuse() }) : undefined}>
                 {face && <img className="ll-face" src={face.src} alt="" />}
-                <div className="ll-mid"><b>{pl.name}{isKnown && <small> {pl.npc}</small>}</b><p>{hint}</p></div>
+                <div className="ll-mid"><b>{isKnown ? pl.name : '???'}{isKnown && <small> {pl.npc}</small>}</b><p>{hint}</p></div>
               </div>
             );
           }
@@ -99,7 +103,7 @@ export function LiteLoan() {
             <div key={id} className={'ll-row' + (focus === id ? ' focus' : '') + (d.overdue > 0 ? ' od' : '')} data-loan-row={id}>
               {face && <img className="ll-face" src={face.src} alt="" />}
               <div className="ll-mid">
-                <b>{pl.name} <small>{pl.npc}</small></b>
+                <b>{pl.name} <small>{pl.npc}</small>{ROLE[id] && <i className={'ll-role r-' + id}>{ROLE[id]}</i>}</b>
                 <p className="ll-debt"><em>빚 {comma(d.principal)}</em>{d.overdue > 0 && <i className="ll-od" data-loan-od={d.overdue}>연체 {d.overdue}회</i>}</p>
                 <p data-loan-int={interestDue(g, id)}>이자 {per} {comma(interestDue(g, id))}</p>
                 {more && <p data-loan-more={more.extra}>더 빌리면 {manTxt(more.amt)}에 이자 +{comma(more.extra)}{l.upfront ? `, 선이자 ${l.upfront * 100}%` : ''}</p>}

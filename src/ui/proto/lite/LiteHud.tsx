@@ -20,6 +20,7 @@ import { openBoard } from '../ranking';
 import { dayNoteOpen } from '../daynote';
 import { play } from '../audio';
 import { useUnlock } from '../rankUnlock';
+import { DoorLine, Lurkers } from './Collectors';
 
 /** 머리의 작은 아이콘 셋(U-61): 전광판, 엔딩 도감, 도토리일보 */
 function HudIcons({ onBook }: { onBook: () => void }) {
@@ -76,6 +77,9 @@ export function LiteHud() {
       </div>
       {/* 프롤로그 뒤 날다람쥐코인 길잡이: 앱 뿌리(.pr)에 띄운다(머리 안에 있지 않다) */}
       <FlyTutorial />
+      {/* 빚진 돈줄마다 추심원 하나(U-65): 머리 오른쪽 얼굴, 정산 문 앞의 띠 */}
+      <Lurkers />
+      <DoorLine />
       {book && <LiteBook onClose={() => setBook(false)} />}
     </header>
   );

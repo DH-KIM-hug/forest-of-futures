@@ -1,14 +1,14 @@
 // 라이트 모드의 만화 시퀀스를 거는 곳: 대부에게 처음 빌리는 순간(빚의 유혹), 파산(엔딩 카드 뒤 절망의 표제지). 숫자는 엔진 값 그대로.
 import { useGame } from '../../../store/gameStore';
 import { lenderById } from '../../../engine/data';
-import { nextBorrowRate, lenderLimit, totalDebt } from '../../../engine/selectors';
+import { lenderRate, nextBorrowRate, lenderLimit, totalDebt } from '../../../engine/selectors';
 import { comma } from '../../../engine/util';
 import { RETIRE_CAUSE } from '../../../engine/act1';
 import { lifeNo } from '../model';
 import { pushSeq } from './liteStore';
 import { useUI } from '../../uiStore';
 import { temptPanels, despairPanel, rebirthPanels } from './manga';
-import type { GameState, LenderId } from '../../../engine/types';
+import type { GameState, LenderId, SettlementReport } from '../../../engine/types';
 
 /** 빌리기 직전의 판으로 그 대출의 숫자를 센다(빌린 뒤에 부른다). 이번 생 처음 빌리는 곳이면 유혹의 만화 */
 export function temptOnBorrow(before: GameState, id: LenderId, got: number): void {
@@ -19,6 +19,13 @@ export function temptOnBorrow(before: GameState, id: LenderId, got: number): voi
   const unit = Math.min(l.borrowUnit!, Math.max(0, lenderLimit(before, id) - before.run.debts[id].principal));
   const rate = nextBorrowRate(before, id);
   pushSeq({ id: 'tempt_' + id, label: '빚의 유혹', panels: temptPanels({ lender: id, unit, got: got || Math.floor(unit * (1 - (l.upfront ?? 0))), perSettle: Math.ceil(unit * rate - 1e-9), ratePct: Math.round(rate * 1000) / 10 }) });
+}
+
+/** 소개로 처음 빌린 곳(U-65): 캐피탈이면 너구리의 유혹, 까마귀면 인증 사진. 숫자는 소개 장부 그대로 */
+export function temptOnRefer(g: GameState, ref: NonNullable<SettlementReport['refer']>[number]): void {
+  if (!ref.first) return;
+  const rate = lenderRate(g, ref.to);
+  pushSeq({ id: 'tempt_' + ref.to, label: ref.to === 'shark2' ? '인증 사진' : '빚의 유혹', panels: temptPanels({ lender: ref.to, unit: ref.signed, got: ref.paid, perSettle: Math.ceil(ref.signed * rate - 1e-9), ratePct: Math.round(rate * 1000) / 10 }) });
 }
 
 /** 파산한 생(사용자 결정 2026-11-28): 엔딩 카드를 먼저 보이고, 그다음 절망의 표제지(진짜 숫자)에서 [환생하기]. 은퇴는 표제지 없이 바로 */

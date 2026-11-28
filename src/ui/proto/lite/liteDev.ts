@@ -6,6 +6,7 @@ import { balance } from '../../../engine/data';
 import { useUI } from '../../uiStore';
 import { pdev } from '../config';
 import { openLoan } from './LiteLoan';
+import { payAt } from '../loanActs';
 import { liteDevPick, liteEndingById, liteEndings } from '../../../engine/liteEndings';
 import type { GameState } from '../../../engine/types';
 import type { Action } from '../../../engine/actions';
@@ -55,8 +56,6 @@ export function liteScene(name: string, base: GameState): GameState {
     case 'lite_loan': { const g = ready(base); P.patch({ seen: { ...useProto.getState().seen, capitalSms: true } }); window.setTimeout(() => openLoan(), 600); return g; }
     // U-63 대출 탭: lite_loan_od = 오소리 사무소에 연체 1회, 대출 탭을 보는 자리
     case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
-    // U-63 대출 탭: lite_loan_od = 오소리 사무소에 연체 1회, 대출 탭을 보는 자리
-    case 'lite_loan_od': { const g = ready(base); g.run.debts.shark1.overdue = 1; P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: 'shark1' }); return g; }
     // 대출 계산 확인(LITE_LOANS.md): 캐피탈을 한도(20만)까지, 오소리 사무소는 1만씩 20번 갚아 20만, 손에 118,516, 정산 49초 전
     case 'lite_loan_math': {
       const g = ready(base);
@@ -64,6 +63,24 @@ export function liteScene(name: string, base: GameState): GameState {
       for (let i = 0; i < 20; i++) A(g, { type: 'stamp', lender: 'shark1', mult: 1 });
       g.run.cash = 118516; g.run.settleIn = 49;
       P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true }, mapFocus: null });
+      return g;
+    }
+    // 소개(U-65): lite_refer = 손에 0, 정산 2초 전(오소리 추심원이 캐피탈을 소개, 너구리의 유혹 만화). lite_crow = 캐피탈 빚이 있는데 손에 0(너구리가 까마귀를 소개, 인증 사진). &pftat=loan 이면 대출 탭
+    case 'lite_refer': case 'lite_crow': {
+      const g = ready(base);
+      if (name === 'lite_crow') { A(g, { type: 'borrow', lender: 'capital' }); A(g, { type: 'borrow', lender: 'capital' }); P.patch({ seen: { ...useProto.getState().seen, capitalSms: true } }); }
+      g.run.cash = 0; g.run.settleIn = 2;
+      if (new URLSearchParams(window.location.search).get('pftat') === 'loan') P.patch({ tab: 'map' });
+      return g;
+    }
+    // 추심원 줄(U-65): lite_collectors = 오소리, 캐피탈, 까마귀에 빚(추심원 셋), 손에 20만, 정산 13초 전(10초 전부터 똑똑, 정산에 문 앞 띠). lite_escape = 캐피탈 빚을 3초 뒤 다 갚는다(너구리가 「탈출!」)
+    case 'lite_collectors': case 'lite_escape': {
+      const g = ready(base);
+      A(g, { type: 'borrow', lender: 'capital' });
+      P.patch({ seen: { ...useProto.getState().seen, capitalSms: true, viperSms: true } });
+      if (name === 'lite_collectors') { g.run.debts.shark2.principal = 2500; g.run.shark2Open = true; g.run.settleIn = 13; }
+      g.run.cash = 200000;
+      if (name === 'lite_escape') window.setTimeout(() => payAt('capital', 'all', () => {}), 3000);
       return g;
     }
     case 'lite_quick': { const g = ready(base); g.run.cash = 2400; useUI.getState().setTrade({ market: 'FLY', pct: 25, keep: false }); return g; }

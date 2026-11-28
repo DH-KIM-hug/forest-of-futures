@@ -72,7 +72,8 @@ export function liteFacts(g: GameState, now: Date = new Date()): LiteFacts {
 export function factTags(f: LiteFacts): string[] {
   const t = [`mode:${f.mode}`, `life:${f.life}`, `clock:${f.clock}`];
   if (f.maxed) t.push('maxed');
-  if (f.lender) t.push(`lender:${f.lender}`);
+  // 라이트의 불법 사채는 까마귀(U-65, 엔진 자리 shark2): 독사 엔딩 대신 부두와 원양어선 쪽으로 기운다
+  if (f.lender) t.push(`lender:${f.lender === 'shark2' ? 'crow' : f.lender}`);
   if (f.coin) t.push(`coin:${f.coin}`);
   if (f.dir) t.push(`dir:${f.dir}`);
   if (f.lev) t.push(`lev:${f.lev}`);

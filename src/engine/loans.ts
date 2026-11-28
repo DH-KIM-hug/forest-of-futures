@@ -3,7 +3,7 @@ import { balance, lenderById, lendersMeta } from './data';
 import { ceilS, floorS } from './rng';
 import { traitVal } from './legacy';
 import { onTaxPaid, returnPawn } from './generation';
-import { lenderLimit, sharkDebt, totalDebt, interestDue, nextBorrowRate } from './selectors';
+import { lenderLimit, lenderRate, sharkDebt, totalDebt, interestDue, nextBorrowRate } from './selectors';
 import { addToSet, bump, stat } from './stats';
 import { friendsOn } from './friends';
 import { isNight, logEvent, notify } from './util';
@@ -56,8 +56,9 @@ export function borrow(g: GameState, id: LenderId, consent = false, unitOverride
   const received = floorS(unit * (1 - upfront));
   // 오소리 대부: 같은 생에 두 번째로 빌리는 돈부터는 더 높은 금리(그 몫에만)
   // rateCut = 마진콜 전화로 그 자리에서 빌릴 때의 금리 할인(스킬트리 B2 의 꼬리). 그 채권처의 보통 금리 아래로는 내려가지 않는다.
-  const rateNow = Math.max(l.rate, nextBorrowRate(g, id) - Math.max(0, rateCut));
-  if (rateNow !== l.rate) (run.debts[id].tranches ??= []).push({ amount: unit, rate: rateNow });
+  const base = lenderRate(g, id);
+  const rateNow = Math.max(base, nextBorrowRate(g, id) - Math.max(0, rateCut));
+  if (rateNow !== base) (run.debts[id].tranches ??= []).push({ amount: unit, rate: rateNow });
   run.cash += received;
   run.debts[id].principal += unit;
   // 갚은 원금은 "갚고 다시 빌린 만큼"을 뺀 순 갚음이다(회차 15: 빌리기 · 전부 갚기를 되풀이해 금박 도장과 황금 도토코인을 찍어 냈다)

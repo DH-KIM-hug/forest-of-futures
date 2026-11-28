@@ -75,7 +75,7 @@ export type SpriteId =
   | 'wheel' //     쳇바퀴(집 그림에서 오려 냄). 알바 없는 빈 쳇바퀴에 쓴다
   | 'trophyFrame' // 벽에 거는 나무 액자(가운데 빈 종이, 오른쪽 아래 도토리 메달)
   | 'floorPatch' // 엄마의 쳇바퀴 자리를 옆 바닥으로 덮은 조각(그 위에 쳇바퀴 그림을 따로 얹는다)
-  | 'collector' | 'boss' | 'weasel' | 'raccoon' | 'owl' | 'viper' //       컷인 반신
+  | 'collector' | 'boss' | 'weasel' | 'raccoon' | 'owl' | 'viper' | 'snake' //       컷인 반신(snake = 라이트에서 까마귀 사장의 추심원 독사, U-65)
   | 'cCollector' | 'cBoss' | 'cWeasel' | 'cRaccoon' | 'cOwl' | 'cViper' // 전신(집 · 지도의 가게)
   | 'wallet' //    콜드월렛 기기
   | 'goldcoin' //  황금 실물 도토코인(거래의 나무)
@@ -108,6 +108,7 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   raccoon: { src: bRaccoon, w: 403, h: 420 },
   owl: { src: bOwl, w: 361, h: 420 },
   viper: { src: bSnake, w: 387, h: 420 },
+  snake: { src: bSnake, w: 387, h: 420 },
   cCollector: { src: cCollector, w: 269, h: 300 },
   cBoss: { src: cBoss, w: 267, h: 300 },
   cWeasel: { src: cWeasel, w: 160, h: 300 },
@@ -153,7 +154,7 @@ export const SPRITES: Partial<Record<SpriteId, Sprite>> = {
   heroRunner: { src: heroRunStrip, w: 526, h: 600, n: 12 },
 };
 /** 컷인에 나오는 사람 → 반신 그림 */
-export const BUST_OF: Partial<Record<string, SpriteId>> = { collector: 'collector', boss: 'boss', weasel: 'weasel', raccoon: 'raccoon', owl: 'owl', viper: 'viper' };
+export const BUST_OF: Partial<Record<string, SpriteId>> = { collector: 'collector', boss: 'boss', weasel: 'weasel', raccoon: 'raccoon', owl: 'owl', viper: 'viper', snake: 'snake' };
 /** 지도의 가게(엔진 채권처 id) → 가게 안 그림과 거기 서 있는 사람 */
 export const PLACE_ART: Record<string, { scene: SpriteId; npc: SpriteId }> = {
   shark1: { scene: 'pOffice', npc: 'cBoss' },

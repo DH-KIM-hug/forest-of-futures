@@ -10,7 +10,7 @@ export const HOME_WHEEL_NAME = '엄마의 쳇바퀴';
 
 export const WHO_NAME: Record<Who, string> = {
   collector: COLLECTOR_NAME, boss: BOSS_NAME, weasel: '족제비 상인', hero: '다로미', sms: '문자', note: '',
-  raccoon: '창구 너구리', viper: '독사 대부', owl: '부엉이 지점장', news: '도토리일보',
+  raccoon: '창구 너구리', viper: '독사 대부', owl: '부엉이 지점장', news: '도토리일보', snake: '독사 추심원',
 };
 
 /** 지도에 보이는 장소 이름(엔진 채권처 id → 마을 이름). 데이터의 채권처 이름과 다르게 이야기 쪽 이름을 쓴다. */
@@ -186,7 +186,7 @@ export const STORY = {
 
   // ── 세상이 반응한다. 아래 장면은 전부 실제로 일어난 일(엔진 값)에 붙는다 ──
   /** 장면 23 빌린 뒤에 이자를 못 낸 정산: 얼마가 모자라는지, 무엇이 붙었는지, 다음에 무엇을 잃는지 */
-  overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean; living?: number; locked?: number; livingCapital?: number; short?: number }): Line[] => {
+  overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean; living?: number; locked?: number; livingCapital?: number; short?: number; lender?: string }): Line[] => {
     const short = Math.max(1, Math.round(o.short ?? o.interest));
     return [
       L('collector', `다시 세 봐도 ${n(short)} 모자라요.${o.nth > 1 ? ` 연체 ${o.nth}번째예요.` : ''}`, 'flat'),
@@ -288,6 +288,8 @@ export const STORY = {
     L('collector', '아, 일어나지 마세요. 오늘은 가방 두고 나왔어요.', 'smile'),
     L('hero', '차 한 잔 하고 가요. 문 열려 있어요.'),
   ],
+  /** 라이트의 소개(U-65): 못 낸 돈을 다음 돈줄이 대신 냈다. 본편에는 소개가 없다(lite/liteText.ts 가 채운다) */
+  refer: (_o: { from: 'shark1' | 'capital'; to: 'capital' | 'shark2'; paid: number; signed: number; first: boolean }): Line[] => [],
   // 장면 22 숲속 캐피탈(창구 너구리)
   capitalSms: (o: { unit: number; perUnit: number }): Line[] => [
     L('sms', `[숲속 캐피탈] 바퀴 굴리며 일하시는 분께. ${man(o.unit)} 빌리면 정산마다 이자 ${n(o.perUnit)}. 숲속중앙조합 옆문에서 집 담보 없이 상담해요.`),

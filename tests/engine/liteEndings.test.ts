@@ -15,7 +15,7 @@ import {
 const act1 = (on: boolean) => { if (on) (balance as { act1?: unknown }).act1 = { friends: false }; else delete (balance as { act1?: unknown }).act1; };
 afterEach(() => act1(false));
 
-const KNOWN = /^(mode:(liq|locked|overdue)|maxed|lender:(shark1|shark2|capital|bank)|coin:(FLY|DTC|BTH|MDT|SMS|JQQ)|dir:(long|short)|lev:(low|mid|high)|life:(short|mid|long)|clock:(dawn|morning|day|night)|peak:high)$/;
+const KNOWN = /^(mode:(liq|locked|overdue)|maxed|lender:(shark1|shark2|capital|bank|crow)|coin:(FLY|DTC|BTH|MDT|SMS|JQQ)|dir:(long|short)|lev:(low|mid|high)|life:(short|mid|long)|clock:(dawn|morning|day|night)|peak:high)$/;
 
 describe('라이트 엔딩 데이터', () => {
   it('40개 안팎, id 가 겹치지 않고, 글은 1~3줄, 꼬리표는 아는 말뿐', () => {
@@ -90,7 +90,7 @@ describe('라이트 파산 → 엔딩 → 도감', () => {
   it('연체 파산: 라이트 엔딩을 고르고 도감에 적고, 200개 장부는 건드리지 않는다', () => {
     act1(true);
     const g = createLiteGame({ seed: 9 });
-    settleOnce(g); settleOnce(g);
+    for (let i = 0; i < 6 && !g.run.over; i++) settleOnce(g); // 소개의 사다리(U-65): 캐피탈, 까마귀, 딱지, 파산
     expect(g.run.over).toBe(true);
     const p = g.pendingEnding!;
     expect(p.lite).toBeTruthy();
@@ -134,7 +134,7 @@ describe('라이트 파산 → 엔딩 → 도감', () => {
   it('도감은 생과 저장을 넘어 남는다', () => {
     act1(true);
     const g = createLiteGame({ seed: 4 });
-    settleOnce(g); settleOnce(g);
+    for (let i = 0; i < 6 && !g.run.over; i++) settleOnce(g); // 소개의 사다리(U-65): 캐피탈, 까마귀, 딱지, 파산
     const id = g.pendingEnding!.id;
     const back = migrate(JSON.parse(serialize(g, 1)))!;
     expect(back.family.liteBook![id]).toEqual({ count: 1, firstAt: g.family.generation });

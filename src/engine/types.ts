@@ -300,6 +300,8 @@ export interface SettlementReport {
   /** 낸 알바 일당 합과 일당을 못 받아 나간 알바 수(U-30) */
   wages: number;
   quit: number;
+  /** 라이트의 소개(U-65): 이 정산에 못 낸 돈을 다음 돈줄이 빌려 대신 냈다. paid = 대신 낸 돈, signed = 그 돈줄 장부에 적힌 돈(선이자 포함) */
+  refer?: { from: 'shark1' | 'capital'; to: 'capital' | 'shark2'; paid: number; signed: number; first: boolean }[];
 }
 
 export interface RunState {

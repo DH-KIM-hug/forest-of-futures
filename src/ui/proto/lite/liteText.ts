@@ -1,6 +1,10 @@
 // 라이트 모드의 대사(docs/gdd/LITE_MANGA.md). 엄마 이야기는 없다: 다로미는 오소리 사무소 돈 30만으로 날다람쥐코인을 샀다가 반 토막을 맞았다.
 // 쳇바퀴, 알바, 족제비, 엄마의 단서는 나오지 않는다. 라이트일 때만 STORY 의 몇 장면을 이 글로 바꿔 끼운다(applyLiteText). 숫자는 엔진 값을 받는다.
-import { STORY } from '../text';
+import { STORY, PLACE, WHO_NAME } from '../text';
+import { SPRITES } from '../sprites';
+import { RIVALS, rivalById } from '../rivals';
+import { QUESTS } from '../quests';
+import bCrow from '../img/v5/b_crow.webp';
 import type { Line, Who } from '../protoStore';
 import { josa } from '../../../engine/util';
 
@@ -23,7 +27,7 @@ export const LITE_STORY: Partial<typeof STORY> = {
       L('hero', o.cash < 1 ? '…코인이 반 토막 났다니까요.' : `${n(o.cash)}밖에 없어요.`),
       L('collector', '반 토막은 코인 사정이고요. 이자는 온 토막이에요.', 'flat'),
       L('collector', `사무소 가시면 ${man(o.lend)} 바로 내줘요. 거기서 오늘 거 떼고요.`, 'smile'),
-      L('collector', '그냥 가라고 하시면 연체로 적어요. 두 번이면 끝이고요.', 'flat'),
+      L('collector', '그냥 가라고 하시면 좋은 데 소개해 드려요. 거긴 좀 비싸요.', 'flat'),
     ];
   },
   /** 오소리 사무소에서 처음 빌렸다: 폰의 FRX 앱이 열린다 */
@@ -94,10 +98,28 @@ export const LITE_STORY: Partial<typeof STORY> = {
     : [L('collector', '오늘은 걷으러 온 거 아니에요. 지나가다 들렀어요.', 'smile'), L('hero', '차 한 잔 하고 가요.')],
   /** 새 생은 만화(다시, 어느 날)가 연다(lite/liteBeats.ts rebirthSeq) */
   reborn: () => [],
-  capitalSms: (o) => [L('sms', `[숲속 캐피탈] 선물 하시는 분께. ${man(o.unit)} 빌리면 정산마다 이자 ${n(o.perUnit)}. 조합 옆문에서 담보 없이 상담해요.`)],
+  capitalSms: (o) => [L('sms', `[숲속 캐피탈] 선물 하시는 분께. ${man(o.unit)} 빌리면 1분마다 이자 ${n(o.perUnit)}. 담보 없이 바로요.`)],
   capitalIntro: (o) => [
     L('raccoon', `네, ${man(o.amount)} 들어갔어요. 금액 맞는지 한번 봐 주세요.`, 'smile'),
-    L('raccoon', `정산 때마다 ${n((o.amount * o.ratePct) / 100)}씩 자동이체로 빠져요. 세 번 밀리면 전액 청구고요.`, 'smile'),
+    L('raccoon', `1분마다 ${n(Math.ceil((o.amount * o.ratePct) / 100 - 1e-9))}씩 빠져요. 밀리시면 반짝이는 거 좋아하는 분 소개해 드려요.`, 'smile'),
+  ],
+  /** 소개(U-65): 오소리 추심원이 캐피탈을, 캐피탈 너구리가 까마귀를. 연체가 아니다 */
+  refer: (o) => o.from === 'shark1' ? [
+    L('collector', `${n(o.paid)} 모자라네요. 괜찮아요, 좋은 데 소개해 드릴게요.`, 'smile'),
+    L('note', `영수증: 숲속 캐피탈에서 ${n(o.paid)} 빌려 오소리에 냈다.`),
+  ] : [
+    L('raccoon', `어머, ${n(o.paid)} 밀리셨네요. 반짝이는 거 좋아하는 분 아세요? 소개해 드릴게요.`, 'smile'),
+    L('viper', `까악. 서류는 내가 다 했어. 손에 ${n(o.paid)}, 장부엔 ${n(o.signed)}.`, 'smile'),
+    L('snake', '사장님 몫은 내가 걷는다. 1분마다.', 'flat'),
+    L('note', `영수증: 반짝 전당포에서 ${n(o.signed)} 빌려 캐피탈에 ${n(o.paid)} 냈다.`),
+  ],
+  /** 까마귀(불법 사채)는 소개로만 안다. 문자는 오지 않는다 */
+  viperSms: () => [],
+  viperOffer: (o) => [
+    L('viper', `까악. 세 봐. 손에 쥐는 건 ${josa(man(o.got), '이야', '야')}.`, 'flat'),
+    L('hero', `여기엔 ${josa(man(o.unit), '이라고', '라고')} 적혔는데요.`),
+    L('viper', `반짝이 수수료 ${man(o.unit - o.got)} 먼저 떼. 이자는 1분마다 ${o.ratePct}%.`, 'flat'),
+    L('snake', '여긴 소개해 줄 데 없다. 한 번 밀리면 내가 간다.', 'flat'),
   ],
   winClaim: (o) => [
     L('collector', o.first, 'smile'),
@@ -117,4 +139,28 @@ export function applyLiteText(): void {
   if (applied) return;
   applied = true;
   Object.assign(STORY, LITE_STORY);
+  // 라이트의 불법 사채는 까마귀(U-65): 엔진 자리는 shark2 그대로, 이름과 얼굴만 바꾼다. 조합은 라이트에 없다
+  PLACE.shark2 = { name: '반짝 전당포', npc: '까마귀 사장' };
+  WHO_NAME.viper = '까마귀 사장';
+  SPRITES.viper = { src: bCrow, w: CROW_W, h: 420 };
+  SPRITES.cViper = { src: bCrow, w: CROW_W, h: 420 };
+  // 숲 전광판(단타방, 의뢰판)에서도: 부엉이 지점장은 빠지고, 독사 자리는 까마귀
+  for (let i = RIVALS.length - 1; i >= 0; i--) if (RIVALS[i].id === 'owl') RIVALS.splice(i, 1);
+  for (let i = QUESTS.length - 1; i >= 0; i--) if (QUESTS[i].who === 'owl') QUESTS.splice(i, 1);
+  for (const q of QUESTS) if (q.who === 'viper') q.name = '까마귀 사장';
+  const crow = rivalById.viper;
+  if (crow) {
+    crow.name = '까마귀 사장';
+    crow.lines = {
+      open: ['까악. 다들 오른다길래 반대로.', '반짝이는 쪽 반대편에 돈이 떨어져 있지.', '100배. 그 아래는 저금이야.'],
+      win: ['봤어? 두 배. 반짝반짝.', '이 숲의 반짝이는 건 결국 내 둥지로 와.'],
+      liq: ['…아무도 못 봤지? 까악.', '오늘 일은 없던 일이다.'],
+      sl: ['까악.'],
+      bust: ['전당포 금고를 하나 더 열었다.', '맡긴 반지들 이자를 올렸다. 밑천은 그렇게 생기는 거야.'],
+      vsWin: ['다람쥐가 이기는 날도 있군. 사진은 찍어 뒀지.'],
+      vsLoss: ['청산 맞았다며? 전당포는 늘 열려 있어.'],
+    };
+  }
 }
+/** b_crow.webp 의 가로(높이 420 기준) */
+const CROW_W = 426;

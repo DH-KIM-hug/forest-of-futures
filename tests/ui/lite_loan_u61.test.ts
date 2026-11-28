@@ -13,13 +13,13 @@ import { openLoan } from '../../src/ui/proto/lite/LiteLoan';
 const fresh = () => { const g = createLiteGame({ seed: 7 }); liteAfterLoan(g); return g; };
 
 describe('U-61 아는 돈줄과 가장 싼 열린 곳', () => {
-  it('처음엔 오소리 사무소뿐, 캐피탈 문자 뒤 캐피탈과 조합, 뒷골목은 문자와 골목이 열린 뒤', () => {
+  it('처음엔 오소리 사무소뿐, 캐피탈 문자 뒤 캐피탈, 까마귀는 소개와 골목이 열린 뒤. 라이트에 조합은 없다(U-65)', () => {
     const g = fresh();
     expect(knownLenders(g, { loanTaken: false, capitalKnown: true, viperKnown: true })).toEqual(['shark1']);
     expect(knownLenders(g, { loanTaken: true, capitalKnown: false, viperKnown: false })).toEqual(['shark1']);
-    expect(knownLenders(g, { loanTaken: true, capitalKnown: true, viperKnown: true })).toEqual(['shark1', 'capital', 'bank']);
+    expect(knownLenders(g, { loanTaken: true, capitalKnown: true, viperKnown: true })).toEqual(['shark1', 'capital']);
     g.run.shark2Open = true;
-    expect(knownLenders(g, { loanTaken: true, capitalKnown: true, viperKnown: true })).toEqual(['shark1', 'capital', 'bank', 'shark2']);
+    expect(knownLenders(g, { loanTaken: true, capitalKnown: true, viperKnown: true })).toEqual(['shark1', 'capital', 'shark2']);
   });
   it('조합은 집이 없으면 닫혀 있고, 가장 싼 곳은 남은 한도가 있는 곳 가운데 다음 금리가 낮은 곳', () => {
     const g = fresh();

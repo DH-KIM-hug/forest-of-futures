@@ -14,7 +14,7 @@ const act1 = (on: boolean) => { if (on) (balance as { act1?: unknown }).act1 = {
 afterEach(() => act1(false));
 
 describe('라이트의 시작', () => {
-  it('손에 0, 코인 빚 30만(정산마다 1%), 쳇바퀴 · 지갑 · 설비가 없다', () => {
+  it('손에 0, 코인 빚 30만(오소리 금리 0.8%, U-65), 쳇바퀴 · 지갑 · 설비가 없다', () => {
     const g = createLiteGame({ seed: 3 });
     const r = g.run;
     expect(r.lite).toBe(true);
@@ -23,7 +23,7 @@ describe('라이트의 시작', () => {
     expect(r.equipment).toEqual([]);
     expect(r.debts.shark1.principal).toBe(300_000);
     expect(totalDebt(r)).toBe(300_000);
-    expect(interestDue(g, 'shark1')).toBe(3_000);
+    expect(interestDue(g, 'shark1')).toBe(2_400);
     expect(livingDue(g)).toBe(LITE.livingPerSettle);
     expect(r.settleIn).toBe(LITE.firstVisitSec);
     expect(r.intro).toBe(false);
@@ -53,7 +53,7 @@ describe('라이트의 돈은 빌리기와 거래로만 들어온다', () => {
     expect(f.mined).toBe(0);
     expect(f.wages).toBe(0);
     const claim = Math.round(f.interest + f.living);
-    expect(claim).toBe(3_000 + 1_300 + 1_000);
+    expect(claim).toBe(2_400 + 800 + 1_000);
     const before = g.run.cash;
     settleOnce(g);
     expect(g.run.lastSettlement!.mined).toBe(0);
@@ -62,13 +62,13 @@ describe('라이트의 돈은 빌리기와 거래로만 들어온다', () => {
     expect(g.run.cash).toBe(before - claim * 4);
     expect(g.run.over).toBe(false);
   });
-  it('거래 없이 버티면 18분쯤 산다(손에 94,700, 정산마다 5,300)', () => {
+  it('거래 없이 버티면 23분쯤 산다(손에 95,800, 정산마다 4,200)', () => {
     const g = createLiteGame();
     A(g, { type: 'borrow', lender: 'shark1' });
     A(g, { type: 'openAccount', sponsor: true });
     settleOnce(g);
-    expect(g.run.cash).toBe(94_700);
-    expect(Math.floor(g.run.cash / 5_300)).toBe(17);
+    expect(g.run.cash).toBe(95_800);
+    expect(Math.floor(g.run.cash / 4_200)).toBe(22);
   });
   it('200배 한 판이 이기면 이자 몇 번 치가 한 번에 들어온다(시세는 엔진에 넣은 값 그대로)', () => {
     const g = createLiteGame();
@@ -87,18 +87,24 @@ describe('라이트의 돈은 빌리기와 거래로만 들어온다', () => {
 });
 
 describe('라이트의 정산 · 연체 · 파산', () => {
-  it('빌리지 않고 추심원을 두 번 돌려보내면 실어 갈 것이 없어 그날로 파산한다', () => {
+  it('손에 0으로 버티면 소개의 사다리를 내려간다(U-65): 캐피탈, 까마귀, 그다음 밀리면 끝(3분)', () => {
     act1(true);
     const g = createLiteGame();
-    settleOnce(g);
-    expect(g.run.debts.shark1.overdue).toBe(1);
+    settleOnce(g); // 오소리 이자 + 생활비 3,400 → 캐피탈이 대신 낸다
+    expect(g.run.debts.shark1.overdue).toBe(0);
+    expect(g.run.debts.capital.principal).toBe(3_400);
+    settleOnce(g); // 또 3,400 캐피탈, 캐피탈 이자 51 → 까마귀(선이자 40%라 장부엔 85)
+    expect(g.run.debts.capital.principal).toBe(6_800);
+    expect(g.run.debts.shark2.principal).toBe(85);
+    expect(g.run.debts.capital.overdue).toBe(0);
     expect(g.run.over).toBe(false);
-    settleOnce(g);
+    settleOnce(g); // 까마귀는 넘길 곳이 없다: 연체 없이 파산(소개가 곧 봐주기)
     expect(g.run.over).toBe(true);
+    expect(g.run.bankruptcy?.lastLender).toBe('shark2');
     expect(g.run.bankruptcy).not.toBeNull();
     expect(g.pendingEnding).not.toBeNull();
   });
-  it('200배 몰빵이 청산되고 한도까지 다 빌려 쓰면, 오소리 연체 두 번에 파산한다(빚은 원금에 얹히고 압류할 것은 없다)', () => {
+  it('200배 몰빵이 청산되고 오소리와 캐피탈 한도까지 다 빌려 쓰면, 소개할 곳이 없어 그 정산에 바로 파산한다(U-65: 연체 없음)', () => {
     act1(true);
     const g = createLiteGame();
     A(g, { type: 'borrow', lender: 'shark1' });
@@ -114,14 +120,11 @@ describe('라이트의 정산 · 연체 · 파산', () => {
     g.run.prices.FLY = px;
     // 한도(50만)까지 더 빌려 다 잃었다고 치고 손을 비운다
     while (A(g, { type: 'borrow', lender: 'shark1' }).ok) { /* 한도까지 */ }
+    while (A(g, { type: 'borrow', lender: 'capital' }).ok) { /* 캐피탈도 한도까지: 소개가 안 된다 */ }
     g.run.cash = 0;
-    const debt0 = g.run.debts.shark1.principal;
-    settleOnce(g);
-    expect(g.run.debts.shark1.overdue).toBe(1);
-    expect(g.run.debts.shark1.principal).toBeGreaterThan(debt0);
-    expect(g.run.over).toBe(false);
     settleOnce(g);
     expect(g.run.over).toBe(true);
+    expect(g.run.bankruptcy?.lastLender).toBe('shark1');
     expect(g.pendingEnding?.title).toBeTruthy();
   });
   it('오소리 한도까지 다 쓴 뒤의 몰빵 청산은 그 자리에서 파산이다', () => {

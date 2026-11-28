@@ -15,7 +15,7 @@ import tBoss from '../img/manga/t_boss.webp';
 import tSilent from '../img/manga/t_silent.webp';
 import tGrab from '../img/manga/t_grab.webp';
 import tRaccoon from '../img/manga/t_raccoon.webp';
-import tViper from '../img/manga/t_viper.webp';
+import cPhoto from '../img/manga/c_photo.webp';
 
 /** say = 말풍선, shout = 뾰족 풍선, think = 생각 풍선, cap = 그림의 해설 상자, tag = 화면이 그리는 작은 흰 상자(장부 아래 글씨 등) */
 export interface Balloon { x: number; y: number; w: number; h: number; text: string; /** 글자 크기(그림 폭의 %) */ fs?: number; kind?: 'say' | 'shout' | 'think' | 'cap' | 'tag' }
@@ -68,7 +68,7 @@ export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: b
 function firstLoan(): { unit: number; per: number } {
   const l = lenderById.shark1;
   const unit = l.borrowUnit ?? 100_000;
-  return { unit, per: Math.ceil(unit * l.rate - 1e-9) };
+  return { unit, per: Math.ceil(unit * (LITE.rates?.shark1 ?? l.rate) - 1e-9) };
 }
 /** 코인 빚(엔진 값): 원금과 정산마다 이자 */
 function coinDebt(): { left: number; per: number } {
@@ -264,16 +264,28 @@ export function temptPanels(t: Tempt): Panel[] {
     id: 't_cap', src: tRaccoon, alt: '숲속 캐피탈 창구 너구리가 턱을 괴고 빨대를 문 채 웃는다. 다로미는 이미 돈뭉치로 손을 뻗었다.',
     balloons: [
       { x: 5, y: 7, w: 17, h: 20, text: `${won(t.unit)}, 바로 됩니다아~`, kind: 'say', fs: 2.3 },
-      { x: 27, y: 7, w: 15, h: 20, text: `정산마다 ${n(t.perSettle)}씩이에요 ♥`, kind: 'say', fs: 2 },
+      { x: 27, y: 7, w: 15, h: 20, text: `1분마다 ${n(t.perSettle)}씩이에요 ♥`, kind: 'say', fs: 2 },
       { x: 82, y: 79, w: 13, h: 14, text: '…얼마까지 돼요?', kind: 'say', fs: 1.8 },
     ],
   }];
+  // 라이트의 불법 사채 = 반짝 전당포의 까마귀(U-65): 처음 빌리는 날의 「인증 사진」. 다로미가 차용증을 얼굴 옆에 들고, 까마귀가 찰칵(두 컷, 같은 그림)
+  const alt = '보석 선반이 있는 어두운 전당포. 땀범벅 다로미가 억지 웃음으로 붉은 발도장 찍힌 차용증을 들었고, 주머니의 금빛 도토리가 반짝인다. 금목걸이와 보석 반지를 잔뜩 한 까마귀가 돋보기 안경을 번뜩이며 카메라 플래시를 터뜨린다.';
+  const paper: Word[] = [{ x: 32.5, y: 45, w: 11.5, h: 14, t: '차용증\n다로미', k: 'hand', fs: 2.4, d: 0.3 }];
   return [{
-    id: 't_vip', src: tViper, alt: '뒷골목 독사가 문간에 몸을 감고 빨대를 문 채 혀를 날름거린다. 다로미는 이미 돈다발을 껴안았다.',
+    id: 't_photo1', src: cPhoto, alt,
     balloons: [
-      { x: 5, y: 6, w: 17, h: 21, text: `${won(t.unit)}. 손에는 ${won(t.got)}.`, kind: 'say', fs: 2.2 },
-      { x: 31, y: 5, w: 17, h: 18, text: `이자는 ${t.ratePct}%. 싫으면 말고.`, kind: 'say', fs: 2 },
-      { x: 83, y: 80, w: 13, h: 14, text: '…얼마까지 돼요?', kind: 'say', fs: 1.8 },
+      { x: 72.5, y: 6, w: 23, h: 20, text: '웃어요. 반짝반짝하게.', kind: 'say', fs: 2.9 },
+      { x: 4, y: 7, w: 21, h: 18, text: '치, 치즈…', kind: 'say', fs: 3 },
     ],
+    words: paper,
+  }, {
+    id: 't_photo2', src: cPhoto, alt,
+    balloons: [
+      { x: 72.5, y: 6, w: 23, h: 20, text: '까악, 잘 나왔다. 이건 그냥… 기념사진.', kind: 'say', fs: 2.5 },
+      { x: 1.6, y: 92.2, w: 14.4, h: 5, text: '증거 1', kind: 'tag', fs: 2.4 },
+      { x: 18, y: 91.6, w: 54, h: 6, text: `받은 돈 ${n(t.got)} / 갚을 돈 ${n(t.unit)} / 1분마다 ${t.ratePct}%`, kind: 'tag', fs: 1.9 },
+    ],
+    words: paper,
+    sfx: [{ x: 44, y: 22, text: '찰칵!', rot: -10, fs: 6.5 }],
   }];
 }

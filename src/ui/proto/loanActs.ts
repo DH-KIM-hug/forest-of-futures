@@ -6,7 +6,7 @@ import { onFirstOfficeLoan, shortAtSettle } from './watch';
 import { clone } from '../../engine/game';
 import { act as engineAct } from '../../engine/actions';
 import { lenderById } from '../../engine/data';
-import { interestDue, lenderLimit, nextBorrowRate } from '../../engine/selectors';
+import { interestDue, lenderLimit, lenderRate, nextBorrowRate } from '../../engine/selectors';
 import type { GameState, LenderId } from '../../engine/types';
 import { comma } from '../../engine/util';
 import { forecast } from '../../engine/settlement';
@@ -23,7 +23,8 @@ export const manTxt = (x: number) => (x >= 10000 && x % 10000 === 0 ? `${x / 100
 
 /** 아는 돈줄: 오소리 사무소는 늘, 캐피탈과 조합은 캐피탈의 문자 뒤, 뒷골목은 모르는 번호의 문자 뒤(U-38) */
 export function knownLenders(g: GameState, s: { loanTaken: boolean; capitalKnown: boolean; viperKnown: boolean }): LenderId[] {
-  return LENDER_IDS.filter((id) => id === 'shark1' || (s.loanTaken && (id === 'shark2' ? s.viperKnown && g.run.shark2Open : s.capitalKnown)));
+  // 라이트에는 조합이 없다(U-65). 캐피탈은 문자나 소개 뒤, 까마귀(shark2)는 캐피탈의 소개 뒤
+  return LENDER_IDS.filter((id) => !(g.run.lite && id === 'bank') && (id === 'shark1' || (s.loanTaken && (id === 'shark2' ? s.viperKnown && g.run.shark2Open : s.capitalKnown))));
 }
 export const knownNow = (g: GameState): LenderId[] => {
   const P = useProto.getState();
@@ -72,7 +73,7 @@ export function borrowAt(id: LenderId, onMsg: (m: string) => void, agreed = fals
     const l2 = lenderById.shark2;
     const unit = Math.min(l2.borrowUnit!, Math.max(0, lenderLimit(before, 'shark2') - before.run.debts.shark2.principal));
     const got = Math.floor(unit * (1 - (l2.upfront ?? 0)));
-    useProto.getState().pushScene({ id: 'viperOffer', again: true, lines: STORY.viperOffer({ unit, got, ratePct: ratePct(l2.rate) }),
+    useProto.getState().pushScene({ id: 'viperOffer', again: true, lines: STORY.viperOffer({ unit, got, ratePct: ratePct(lenderRate(before, 'shark2')) }),
       choices: [
         { id: 'take', label: `${manTxt(got)} 받기`, sub: `빚 +${manTxt(unit)}`, primary: true, run: () => borrowAt('shark2', onMsg, true) },
         { id: 'leave', label: '돌아선다', run: () => onMsg('뒷골목: 등 뒤로 문고리가 제자리로 돌아간다.') },
@@ -85,7 +86,7 @@ export function borrowAt(id: LenderId, onMsg: (m: string) => void, agreed = fals
   onMsg(r.ok ? `${PLACE[id].name}: +${comma(r.amount ?? 0)}. 이제 정산마다 이자 ${comma(interestDue(useGame.getState().g, id))}.` : r.msg ?? '지금은 처리할 수 없어요');
   if (r.ok && id === 'shark1') onFirstOfficeLoan(before);
   if (r.ok && isLite) temptOnBorrow(before, id, r.amount ?? 0);
-  if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: ratePct(lenderById.capital.rate) }) });
+  if (r.ok && id === 'capital' && firstAt) useProto.getState().pushScene({ id: 'capitalIntro', lines: STORY.capitalIntro({ amount: r.amount ?? 0, ratePct: ratePct(lenderRate(before, 'capital')) }) });
 }
 
 /** 갚는다(도장 한 번 = stampUnit, 'all' = 손에 있는 만큼 전부). 처음 다 갚은 축하는 watch.ts 가 빚이 0 이 되는 것을 보고 띄운다 */

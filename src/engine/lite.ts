@@ -11,6 +11,8 @@ import type { GameState, RunState } from './types';
 
 export interface LiteData {
   start: { cash: number; debts: Record<string, number>; rateCap: Record<string, number> };
+  /** 돈줄마다 금리 하나(U-65) */
+  rates?: Record<string, number>;
   livingPerSettle: number;
   firstVisitSec: number;
   rebirthLoans: number;

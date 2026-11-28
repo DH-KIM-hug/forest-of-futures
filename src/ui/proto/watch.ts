@@ -27,7 +27,9 @@ import { dayBars, dayNote, noteToast } from './daynote';
 import { STAMP_STEP } from './ledger';
 import { reapplyAllPlans } from './exitPlan';
 import { ledgerBeat, goldStamps, ledgerRows, momClueDue, repaidOffice, repayBuys } from './ledger';
-import { lenderLimit, nextBorrowRate } from '../../engine/selectors';
+import { lenderLimit, lenderRate, nextBorrowRate } from '../../engine/selectors';
+import { temptOnRefer } from './lite/liteBeats';
+import { doorKnock, doorLine, owedLenders } from './lite/Collectors';
 import { useUI } from '../uiStore';
 import { callLoanCut, defaultSl, treeAward } from '../../engine/skilltree';
 import { ownedCoins, lenderDebtTotal, interestDue, totalDebt } from '../../engine/selectors';
@@ -540,6 +542,9 @@ export function startWatch(): void {
     if (settled) {
       const r = run.lastSettlement!;
       const od = overdueSum(g) > overdueSum(prev);
+      // 라이트의 소개(U-65): 못 낸 돈을 다음 돈줄이 대신 냈다(연체가 아니다)
+      const refer = r.refer ?? [];
+      const odId = DEBT_IDS.find((id) => g.run.debts[id].overdue > prev.run.debts[id].overdue);
       const net = Math.round(r.mined - r.power - (r.wages ?? 0) - r.interest - r.living);
       play('settle_bell');
       useProto.getState().patch({ paidLife: useProto.getState().paidLife + Math.round(r.paid) });
@@ -592,20 +597,33 @@ export function startWatch(): void {
         else if (od) {
           // 돈이 포지션에 묶여 있었는가
           const locked = Object.values(run.positions).reduce((a, p) => a + p.margin0, 0);
-          sceneHeld({ id: `overdue${run.settleNo}`, again: true, lines: STORY.overdue({ interest: badger, nth: (useProto.getState().odSeen += 1), tagged, seized: (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0), nothingLeft: run.equipment.length === 0 && ownedCoins(run).length === 0, living: lv, livingCapital: lvCap, locked, short: r.unpaid }), settle: meta },
+          sceneHeld({ id: `overdue${run.settleNo}`, again: true, lines: STORY.overdue({ lender: odId, interest: badger, nth: (useProto.getState().odSeen += 1), tagged, seized: (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0), nothingLeft: run.equipment.length === 0 && ownedCoins(run).length === 0, living: lv, livingCapital: lvCap, locked, short: r.unpaid }), settle: meta },
             '이자 미납. 상세 내역은 거래 뒤에 확인',
             // 한 번 더 밀리면 파산(어느 곳이든 연체가 한도 − 1)이거나 방금 무엇을 빼앗겼으면 기다리지 않는다
             (run.stats.assetsSeized ?? 0) > (prev.run.stats.assetsSeized ?? 0) || DEBT_IDS.some((id) => id !== 'tax' && run.debts[id].overdue >= lenderById[id].maxOverdue - 1));
         }
+        else if (refer.length) { /* 소개 장면이 아래에서 뜬다 */ }
         else if (no === 1) scene({ id: 'firstSettle', lines: lifeNo(g) <= 1 ? STORY.firstSettle(badger, tipArgs(g)) : STORY.rebornSettle(badger), settle: meta });
         else if (no <= FULL_CUTINS && Object.keys(run.positions).length === 0 && P.tab !== 'phone') scene({ id: `settle${run.settleNo}`, lines: STORY.settleWin(badger), settle: meta, auto: 4000 });
         else sayRemark();
         quitNow();
         // 빌린 뒤에도 이자를 못 낸 정산: 사채 문자
-        if (od && P.loanTaken) { sceneHeld({ id: 'sms', lines: STORY.sms(officeOffer(g).lend) }); if (!useProto.getState().seen.sms) useProto.getState().patch({ visited: { ...useProto.getState().visited, map: false } }); }
+        if (od && P.loanTaken && !isLite) { sceneHeld({ id: 'sms', lines: STORY.sms(officeOffer(g).lend) }); if (!useProto.getState().seen.sms) useProto.getState().patch({ visited: { ...useProto.getState().visited, map: false } }); }
         // 폰을 받은 뒤 첫 정산: 족제비가 알바를 권한다(막지 않는 한 줄)
         if (P.loanTaken && !od) scene({ id: 'hamsterHint', lines: STORY.hamsterHint(hamsterMath(g).wage, tipArgs(g)), auto: 5000 });
-      } else { sayRemark(); quitNow(); }
+      } else if (!refer.length) { sayRemark(); quitNow(); }
+      // 소개 장면: 추심원(또는 창구 너구리)이 다음 돈줄을 소개하고, 처음이면 그 돈줄의 유혹 만화(까마귀는 인증 사진). 그 돈줄은 이제 아는 곳
+      // 구독 안에서 장면과 만화를 겹쳐 부르지 않게 한 박자 뒤에
+      if (refer.length && !run.over) window.setTimeout(() => {
+        for (const ref of refer) {
+          const P = useProto.getState();
+          P.patch({ seen: { ...P.seen, ...(ref.to === 'capital' ? { capitalSms: true } : { capitalSms: true, viperSms: true }) } });
+          // 소개 장면을 다 읽으면 그 돈줄의 유혹 만화(처음일 때만)
+          sceneHeld({ id: `refer${run.settleNo}${ref.to}`, again: true, lines: STORY.refer(ref), onEnd: () => temptOnRefer(g, ref) }, ref.to === 'capital' ? '숲속 캐피탈이 대신 냈다' : '반짝 전당포가 대신 냈다');
+        }
+      }, 0);
+      // 라이트의 추심원 줄(U-65): 둘 넘게 빚졌으면 정산마다 문 앞에 나란히 서서 제 몫을 한 줄씩(소개, 연체, 파산 장면이 있는 정산은 빼고)
+      if (isLite && !run.over && !refer.length && !od) doorKnock(owedLenders(prev).filter((id) => interestDue(prev, id) > 0).map((id) => ({ id, line: doorLine(id, interestDue(prev, id), id === 'shark1' ? r.living : 0) })));
       // 알바를 들인 채 정산을 한 번 넘겼는데 중고폰이 아직 안 울렸다(U-46, 회차 5b 의 남은 흠): 엄마의 쳇바퀴에만 알바를 들이고 돈을 쥔 채 기다린 생. 이 정산 뒤에 울린다
       {
         const P = useProto.getState();
@@ -626,7 +644,7 @@ export function startWatch(): void {
         const P = useProto.getState();
         // 숲속 캐피탈: 튜토리얼이 끝나고 한 번 더 정산을 치른 뒤 문자가 온다
         if (P.loanTaken && P.tutorial === 'done' && !P.seen.capitalSms && run.settleNo >= 3 && !od) {
-          sceneCalm({ id: 'capitalSms', lines: STORY.capitalSms({ unit: lenderById.capital.borrowUnit ?? 50000, perUnit: Math.round((lenderById.capital.borrowUnit ?? 50000) * lenderById.capital.rate) }) });
+          sceneCalm({ id: 'capitalSms', lines: STORY.capitalSms({ unit: lenderById.capital.borrowUnit ?? 50000, perUnit: Math.ceil((lenderById.capital.borrowUnit ?? 50000) * lenderRate(g, 'capital') - 1e-9) }) });
           P.patch({ visited: { ...useProto.getState().visited, map: false } });
         }
         // 뒷골목: 오소리가 더는 안 빌려주는데 연체가 생겼거나, 캐피탈 한도까지 다 썼을 때 모르는 번호로 문자가 온다

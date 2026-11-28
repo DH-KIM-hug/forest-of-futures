@@ -33,7 +33,7 @@ describe('라이트 도입 만화(패러디 일곱 쪽)', () => {
     const coin = LITE.start.debts.shark1, unit = lenderById.shark1.borrowUnit!;
     expect(all).toContain(`${coin / 10000}만쯤이야!!`);
     expect(all).toContain(`빌린 돈 +${unit.toLocaleString('ko-KR')}`);
-    expect(all).toContain(`이자 +${Math.ceil(unit * lenderById.shark1.rate).toLocaleString('ko-KR')}`);
+    expect(all).toContain(`이자 +${Math.ceil(unit * LITE.rates!.shark1).toLocaleString('ko-KR')}`); // 라이트 금리(U-65)
     expect(all).toContain(`${unit.toLocaleString('ko-KR')} 도토리`);
     expect(all).toContain(`빚 ${(coin + unit).toLocaleString('ko-KR')}`);
   });
