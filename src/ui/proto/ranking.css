@@ -3,7 +3,7 @@
 .pr-rank .box { width: min(370px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 12px; background: #F6E9C8; border-color: #6B4A35;
   background-image: repeating-linear-gradient(0deg, rgba(107, 74, 53, .05) 0 2px, transparent 2px 9px); }
 .pr-rank .rk-mast { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 4px 6px; border-bottom: 3px double #6B4A35; }
-.pr-rank .rk-mast b { font-family: var(--dsp); font-weight: 400; font-size: 22px; letter-spacing: 1px; }
+.pr-rank .rk-mast b { font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: 1px; }
 .pr-rank .rk-mast span { font-size: 11px; font-weight: 800; color: var(--sub); white-space: nowrap; }
 .pr-rank .rk-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .pr-rank .rk-tabs button { min-height: 44px; padding: 4px 4px; border-radius: 11px; border: 2px solid var(--o); background: var(--cream); font: inherit; font-size: 12.5px; font-weight: 800; line-height: 1.2; color: var(--sub); cursor: pointer; touch-action: manipulation; }
@@ -12,12 +12,12 @@
 .pr-rank .rk-list { flex: 1 1 auto; min-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 2px; scrollbar-width: thin; scrollbar-color: #CDBF98 transparent; }
 .pr-rank .rk-empty { margin: 18px 6px; text-align: center; font-size: 13px; font-weight: 700; color: var(--sub); }
 .pr-rank .rk-row { flex: 0 0 auto; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; border-radius: 10px; background: var(--card); border: 2px solid rgba(74, 70, 64, .35); }
-.pr-rank .rk-row .no { font-style: normal; font-family: var(--dsp); font-size: 17px; text-align: center; font-variant-numeric: tabular-nums; }
+.pr-rank .rk-row .no { font-style: normal; font-family: var(--font-display); font-size: 17px; text-align: center; font-variant-numeric: tabular-nums; }
 .pr-rank .rk-row .who { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
 .pr-rank .rk-row .who b { font-size: 14px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pr-rank .rk-row .who em { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: var(--teal); color: #fff; font-style: normal; font-size: 11px; font-weight: 800; vertical-align: 1px; }
 .pr-rank .rk-row .who small { font-size: 11.5px; font-weight: 600; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pr-rank .rk-row .val { font-family: var(--dsp); font-weight: 400; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pr-rank .rk-row .val { font-family: var(--font-display); font-weight: 400; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pr-rank .rk-row.top1 { background: #FFF1B8; border-color: #C9A227; }
 .pr-rank .rk-row.top1 .no { color: #9A7414; }
 .pr-rank .rk-row.top2 { background: #F4F1EA; border-color: #A8A29A; }
@@ -34,7 +34,7 @@
 .rk-name .rk-no { font-size: 11.5px; font-weight: 700; color: var(--sub); font-variant-numeric: tabular-nums; }
 .rk-link { min-height: 32px; padding: 0 10px; border-radius: 9px; border: 2px solid var(--o); background: var(--cream); font: inherit; font-size: 12px; font-weight: 800; color: var(--o); cursor: pointer; }
 .rk-ask { display: flex; flex-direction: column; gap: 3px; padding: 9px 10px 10px; border-radius: 12px; background: #FFF3C4; border: 2px dashed #C98A2B; text-align: left; }
-.rk-ask label { font-family: var(--dsp); font-size: 16px; }
+.rk-ask label { font-family: var(--font-display); font-size: 16px; }
 .rk-ask small { font-size: 11.5px; font-weight: 600; color: var(--sub); }
 .rk-ask .row { display: flex; gap: 8px; margin-top: 4px; }
 .rk-ask input { flex: 1 1 auto; min-width: 0; min-height: 44px; padding: 0 10px; border-radius: 10px; border: 2px solid var(--o); background: #fff; font: inherit; font-size: 16px; font-weight: 700; color: var(--o); }
@@ -45,14 +45,14 @@
 .pr .pr-vmap .rk-sign { position: absolute; left: 3%; top: 47%; z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 0; margin: 0; background: none; border: 0; cursor: pointer; touch-action: manipulation; font: inherit; color: var(--o); min-width: 64px; min-height: 64px; }
 .pr .rk-sign .plank { display: flex; flex-direction: column; align-items: center; padding: 4px 9px 5px; border-radius: 7px; background: #C99B6A; border: 2.5px solid var(--o); box-shadow: inset 0 -3px 0 #A97C4E, 0 0 0 2px #fff, var(--drop); transform: rotate(-3deg);
   background-image: repeating-linear-gradient(180deg, transparent 0 9px, rgba(74, 70, 64, .14) 9px 11px); }
-.pr .rk-sign .plank b { font-family: var(--dsp); font-weight: 400; font-size: 15px; line-height: 1.1; color: #FFF8E4; text-shadow: 0 1.5px 0 var(--o); }
+.pr .rk-sign .plank b { font-family: var(--font-display); font-weight: 400; font-size: 15px; line-height: 1.1; color: #FFF8E4; text-shadow: 0 1.5px 0 var(--o); }
 .pr .rk-sign .plank small { font-size: 10.5px; font-weight: 800; line-height: 1.1; color: #3E2C1E; }
 .pr .rk-sign .posts { display: flex; gap: 22px; margin-top: -2px; }
 .pr .rk-sign .posts i { display: block; width: 6px; height: 14px; border-radius: 0 0 2px 2px; background: #8A6A4A; border: 2px solid var(--o); border-top: 0; }
 .pr .rk-sign:active .plank { transform: rotate(-3deg) scale(.94); }
 
 /* 환생 화면의 단추 */
-.pr .rk-open { min-height: 44px; padding: 0 20px; border-radius: 12px; border: 2.5px solid var(--o); background: #C99B6A; box-shadow: inset 0 -3px 0 #A97C4E, var(--drop); font: inherit; font-family: var(--dsp); font-size: 16px; color: #FFF8E4; text-shadow: 0 1.5px 0 var(--o); cursor: pointer; touch-action: manipulation; }
+.pr .rk-open { min-height: 44px; padding: 0 20px; border-radius: 12px; border: 2.5px solid var(--o); background: #C99B6A; box-shadow: inset 0 -3px 0 #A97C4E, var(--drop); font: inherit; font-family: var(--font-display); font-size: 16px; color: #FFF8E4; text-shadow: 0 1.5px 0 var(--o); cursor: pointer; touch-action: manipulation; }
 .pr .rk-open:active { transform: scale(.96); }
 .pr-end .rk-ask { width: min(360px, 100%); }
 .pr-end .rk-rebirth { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
@@ -76,7 +76,7 @@
 .rk-plaque { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 16px 18px; border-radius: 14px; background: #C99B6A; border: 3px solid var(--o); box-shadow: inset 0 -4px 0 #A97C4E; text-align: center;
   background-image: repeating-linear-gradient(180deg, transparent 0 13px, rgba(74, 70, 64, .14) 13px 15px); }
 .rk-plaque .lock.big { width: 44px; height: 54px; margin-top: 4px; }
-.rk-plaque b { font-family: var(--dsp); font-weight: 400; font-size: 20px; line-height: 1.3; color: #FFF8E4; text-shadow: 0 2px 0 var(--o); word-break: keep-all; }
+.rk-plaque b { font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 1.3; color: #FFF8E4; text-shadow: 0 2px 0 var(--o); word-break: keep-all; }
 .rk-plaque small { font-size: 12.5px; font-weight: 700; color: #3E2C1E; line-height: 1.4; word-break: keep-all; }
 .rk-tease { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .rk-tease li { flex: 1 1 0; padding: 8px 4px; border-radius: 10px; border: 2px dashed rgba(74, 70, 64, .45); text-align: center; font-size: 12px; font-weight: 800; color: rgba(74, 70, 64, .6); }
@@ -88,7 +88,7 @@
 .rk-cheer .rain span { position: absolute; top: -40px; display: block; animation: rkAcorn 2s cubic-bezier(.45, .05, .7, .6) both; }
 .rk-cheer .rain span svg { width: 100%; height: 100%; display: block; }
 @keyframes rkAcorn { 0% { transform: translateY(0) rotate(0); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(110vh) rotate(var(--rot)); opacity: 0; } }
-.rk-cheer-t { position: relative; margin: 0; font-family: var(--dsp); font-weight: 400; font-size: 46px; line-height: 1.1; color: #FFE27A; letter-spacing: 1px; text-shadow: 0 3px 0 var(--o), 0 0 0 var(--o), 3px 0 0 var(--o), -3px 0 0 var(--o), 0 -3px 0 var(--o), 0 8px 18px rgba(0, 0, 0, .45);
+.rk-cheer-t { position: relative; margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 46px; line-height: 1.1; color: #FFE27A; letter-spacing: 1px; text-shadow: 0 3px 0 var(--o), 0 0 0 var(--o), 3px 0 0 var(--o), -3px 0 0 var(--o), 0 -3px 0 var(--o), 0 8px 18px rgba(0, 0, 0, .45);
   animation: rkPop .55s .1s cubic-bezier(.34, 1.56, .64, 1) both; }
 @keyframes rkPop { 0% { transform: scale(.2) rotate(-8deg); opacity: 0; } 100% { transform: scale(1) rotate(-3deg); opacity: 1; } }
 .rk-cheer-col { position: relative; display: flex; align-items: flex-end; gap: 6px; width: min(360px, 100%); animation: slideUp .4s .5s cubic-bezier(.22, 1, .36, 1) both; }
@@ -97,7 +97,7 @@
 .rk-cheer-col .say b { display: block; font-size: 11.5px; color: var(--sub); }
 .rk-cheer-open { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(360px, 100%); padding: 18px 14px 12px; border-radius: 16px; background: #F6E9C8; border: 3px solid #6B4A35; box-shadow: 0 0 0 4px #fff, 0 10px 20px rgba(0, 0, 0, .35); text-align: center;
   animation: slideUp .4s 1.4s cubic-bezier(.22, 1, .36, 1) both; }
-.rk-cheer-open > b { font-family: var(--dsp); font-weight: 400; font-size: 24px; color: var(--o); }
+.rk-cheer-open > b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: var(--o); }
 .rk-cheer-open > small { font-size: 12.5px; font-weight: 700; color: var(--sub); word-break: keep-all; }
 .rk-cheer-open .lock { margin-top: 6px; }
 .rk-cheer-open .buy.wide { width: 100%; min-height: 52px; margin-top: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -107,7 +107,7 @@
 
 /* U-59 도토리일보 「오늘 망한 자들」 */
 .dn-bust { display: flex; flex-direction: column; gap: 5px; margin: 10px 0 6px; padding-top: 8px; border-top: 3px double var(--o); }
-.dn-bust h4 { margin: 0; font-family: var(--dsp); font-weight: 400; font-size: 17px; text-align: left; }
+.dn-bust h4 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 17px; text-align: left; }
 .pr .dn-bust .bn { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; margin: 0; padding: 5px 8px; border-radius: 9px; border: 2px solid rgba(74, 70, 64, .3); background: #FFFBEE; box-shadow: none; font: inherit; font-size: 12.5px; font-weight: 700; line-height: 1.35; color: var(--o); text-align: left; cursor: pointer; transform: none; filter: none; min-width: 0; }
 .pr .dn-bust .bn.real { border-color: var(--red); background: #FFF0E8; }
 .pr .dn-bust .bn span { flex: 1 1 auto; min-width: 0; word-break: keep-all; }

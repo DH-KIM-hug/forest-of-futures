@@ -2,12 +2,12 @@
 .lt-loan { --ink: #1E140E; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 6px 10px 14px; overflow-y: auto; color: var(--ink);
   background-color: #FFF6E2; background-image: radial-gradient(rgba(94, 58, 34, .10) .8px, transparent 1.1px); background-size: 4px 4px; animation: fadeIn .18s ease-out; }
 .lt-loan .ll-head { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 3px solid var(--ink); background: var(--ink); color: #fff; box-shadow: 4px 4px 0 #B8432C; }
-.lt-loan .ll-head > b { font-family: var(--dsp); font-weight: 400; font-size: 26px; line-height: 1; transform: skewX(-6deg); }
-.lt-loan .ll-head small { display: block; font-family: var(--dsp); font-size: 11.5px; line-height: 1.1; color: #E9D3A6; }
+.lt-loan .ll-head > b { font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1; transform: skewX(-6deg); }
+.lt-loan .ll-head small { display: block; font-family: var(--font-display); font-size: 11.5px; line-height: 1.1; color: #E9D3A6; }
 .lt-loan .ll-sum { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; }
 .lt-loan .ll-sum small { flex-basis: 100%; }
-.lt-loan .ll-sum em { font-style: normal; font-family: var(--dsp); font-size: 22px; line-height: 1.05; color: #FFB4A0; font-variant-numeric: tabular-nums; }
-.lt-loan .ll-clock { flex: 0 0 auto; text-align: right; font-family: var(--dsp); font-size: 22px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.lt-loan .ll-sum em { font-style: normal; font-family: var(--font-display); font-size: 22px; line-height: 1.05; color: #FFB4A0; font-variant-numeric: tabular-nums; }
+.lt-loan .ll-clock { flex: 0 0 auto; text-align: right; font-family: var(--font-display); font-size: 22px; line-height: 1.05; font-variant-numeric: tabular-nums; }
 .lt-loan .ll-msg { flex: 0 0 auto; padding: 5px 9px; border: 2.5px solid var(--ink); background: #EEF6E2; font-size: 13px; font-weight: 800; line-height: 1.35; box-shadow: 3px 3px 0 var(--ink); }
 .lt-loan .ll-list { display: flex; flex-direction: column; gap: 10px; }
 .lt-loan .ll-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 7px 10px; padding: 9px; border: 3px solid var(--ink); background: #fff; box-shadow: 4px 4px 0 var(--ink); }
@@ -19,14 +19,14 @@
 .lt-loan .ll-row.locked .ll-face { grid-row: 1; width: 48px; height: 48px; filter: grayscale(1); }
 .lt-loan .ll-row.unknown .ll-face { filter: brightness(0); opacity: .7; }
 .lt-loan .ll-mid { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.lt-loan .ll-mid b { font-family: var(--dsp); font-weight: 400; font-size: 18px; line-height: 1.15; }
+.lt-loan .ll-mid b { font-family: var(--font-display); font-weight: 400; font-size: 18px; line-height: 1.15; }
 .lt-loan .ll-mid b small { font-family: inherit; font-size: 12.5px; color: #5E3A22; }
 .lt-loan .ll-mid p { margin: 0; font-size: 12.5px; font-weight: 700; line-height: 1.3; color: #4A3A2C; }
 .lt-loan .ll-debt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
-.lt-loan .ll-debt em { font-style: normal; font-family: var(--dsp); font-size: 21px; color: var(--red-ink, #B8432C); }
-.lt-loan .ll-od { font-style: normal; font-family: var(--dsp); font-size: 13px; padding: 0 6px; background: var(--red-ink, #B8432C); color: #fff; transform: rotate(-3deg); }
+.lt-loan .ll-debt em { font-style: normal; font-family: var(--font-display); font-size: 21px; color: var(--red-ink, #B8432C); }
+.lt-loan .ll-od { font-style: normal; font-family: var(--font-display); font-size: 13px; padding: 0 6px; background: var(--red-ink, #B8432C); color: #fff; transform: rotate(-3deg); }
 .lt-loan .ll-btns { grid-column: 2; display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 6px; }
-.pr .lt-loan .ll-btns button { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px 4px; border: 2.5px solid var(--ink); border-radius: 0; background: #fff; color: var(--ink); box-shadow: 3px 3px 0 var(--ink); font-family: var(--dsp); font-size: 15px; line-height: 1.1; }
+.pr .lt-loan .ll-btns button { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px 4px; border: 2.5px solid var(--ink); border-radius: 0; background: #fff; color: var(--ink); box-shadow: 3px 3px 0 var(--ink); font-family: var(--font-display); font-size: 15px; line-height: 1.1; }
 .pr .lt-loan .ll-btns button small { font-family: inherit; font-size: 11.5px; color: #5E3A22; }
 .pr .lt-loan .ll-btns button.borrow:not(:disabled) { background: #E9B13A; }
 .pr .lt-loan .ll-btns button.pay:not(:disabled) { background: #CFE6DA; }
@@ -63,7 +63,7 @@
 .lt-qb .qb-bal::before { content: ''; position: absolute; left: -11px; top: 50%; margin-top: -7px; border: 7px solid transparent; border-right: 10px solid #1E140E; border-left: 0; }
 .lt-qb .qb-bal > span { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 800; line-height: 1.25; color: #B8432C; }
 .lt-qb .qb-bal > span small { display: block; font-size: 11px; color: #5E3A22; }
-.pr .pt .lt-qb .qb-go, .pr .lt-qb .qb-go { flex: 0 0 auto; min-height: 44px; padding: 0 10px; border: 2.5px solid #1E140E; border-radius: 0; background: #E9B13A; color: #1E140E; font-family: var(--dsp); font-size: 15px; box-shadow: 2px 2px 0 #1E140E; }
+.pr .pt .lt-qb .qb-go, .pr .lt-qb .qb-go { flex: 0 0 auto; min-height: 44px; padding: 0 10px; border: 2.5px solid #1E140E; border-radius: 0; background: #E9B13A; color: #1E140E; font-family: var(--font-display); font-size: 15px; box-shadow: 2px 2px 0 #1E140E; }
 .lt-qb.w-settle .qb-bal { background: #FFF0E8; }
 @keyframes llPop { from { transform: scale(.7); opacity: 0; } }
 @media (max-height: 720px) { .lt-qb .qb-face { width: 38px; height: 40px; } .lt-qb { grid-template-columns: 38px minmax(0, 1fr); } .lt-qb .qb-bal > span small { display: none; } }

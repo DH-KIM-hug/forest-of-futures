@@ -1,3 +1,6 @@
+// 표시용 글꼴 Jua 는 여기서 한 번만 부른다(@fontsource 번들, woff2). 글자 체계: docs/gdd/LITE_TYPE.md
+import '@fontsource/jua/korean-400.css';
+import '@fontsource/jua/latin-400.css';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { startLoop, useGame } from './store/gameStore';

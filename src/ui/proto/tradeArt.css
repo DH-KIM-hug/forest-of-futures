@@ -7,16 +7,16 @@
 }
 .pt-coininfo .ci-top { display: flex; align-items: center; gap: 10px; }
 .pt-coininfo .ci-nm { display: flex; flex-direction: column; min-width: 0; }
-.pt-coininfo .ci-nm b { font-family: var(--dsp); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.pt-coininfo .ci-nm b { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.1; }
 .pt-coininfo .ci-nm small { align-self: flex-start; margin-top: 2px; padding: 0 7px; border-radius: 7px; background: #E9D3A6; font-size: 11.5px; font-weight: 800; line-height: 17px; color: #5E3A22; }
 .pt-coininfo .ci-lore { margin: 0; font-size: 13.5px; font-weight: 600; line-height: 1.5; }
 .pt-coininfo .ci-rumor { margin: 0; padding: 6px 9px; border-radius: 9px; background: rgba(126, 154, 78, .16); border: 1.5px dashed #7E9A4E; font-size: 12.5px; font-weight: 700; line-height: 1.4; color: #3F4A26; }
-.pt-coininfo .ci-rumor b { display: block; font-family: var(--dsp); font-weight: 400; font-size: 13px; color: #4F6B34; }
+.pt-coininfo .ci-rumor b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 13px; color: #4F6B34; }
 .pt-coininfo .ci-facts { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .pt-coininfo .ci-facts div { padding: 5px 8px; border-radius: 9px; background: rgba(224, 168, 106, .2); }
 .pt-coininfo dt { font-size: 11px; font-weight: 800; color: #7A5A3A; }
-.pt-coininfo dd { margin: 0; display: flex; flex-direction: column; font-family: var(--dsp); font-size: 14.5px; line-height: 1.25; font-variant-numeric: tabular-nums; }
-.pt-coininfo dd small { font-family: -apple-system, 'Apple SD Gothic Neo', sans-serif; font-size: 11px; font-weight: 700; color: #6B5A48; }
+.pt-coininfo dd { margin: 0; display: flex; flex-direction: column; font-family: var(--font-display); font-size: 14.5px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.pt-coininfo dd small { font-family: var(--font-body); font-size: 11px; font-weight: 700; color: #6B5A48; }
 .pt-coininfo .ci-x { align-self: center; font-size: 11px; font-weight: 700; color: #8A7A66; }
 @media (max-height: 720px) { .pr .pt-wrap .pt .pt-coininfo { top: 44px; max-height: calc(100% - 60px); gap: 5px; padding: 8px 10px 10px; } .pt-coininfo .ci-lore { font-size: 12.5px; line-height: 1.42; } }
 @media (prefers-reduced-motion: reduce) { .pr .pt-wrap .pt .pt-coininfo { animation: none; } }

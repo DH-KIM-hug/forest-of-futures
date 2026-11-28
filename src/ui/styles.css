@@ -1,10 +1,6 @@
 /* 선물의 숲 UI — 방향 B "말랑한 잎사귀 버블" (docs/ui/SCREEN_PLAN_v1.md 5.2)
-   Jua(SIL OFL, public/fonts/OFL.txt) = 표시용. 약관·힌트 같은 차가운 문구는 기기 글꼴. */
-@font-face {
-  font-family: 'Jua';
-  src: url('/fonts/Jua-Regular.ttf') format('truetype');
-  font-display: swap;
-}
+   Jua(SIL OFL, public/fonts/OFL.txt) = 표시용. 약관·힌트 같은 차가운 문구는 기기 글꼴.
+   Jua 는 src/main.tsx 에서 @fontsource 번들로 부른다(옛 public/fonts/Jua-Regular.ttf 2.1MB 는 뺐다). */
 
 :root {
   --ink: #4a3120;

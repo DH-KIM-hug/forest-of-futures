@@ -46,7 +46,7 @@
 .pr .mga .pt .pt-quote .mood.m-sess { background: var(--ink); color: #fff; }
 .pr .mga .pt .pt-quote .mood.m-sess small { color: #E9D3A6; }
 /* 효과음은 차트 칸 오른쪽 위 귀퉁이(움직임의 크기와 방향만 말한다) */
-.pt-chart .plot .mga-sfx { position: absolute; right: 8px; top: 6px; z-index: 2; pointer-events: none; font-style: normal; font-family: var(--dsp); font-size: 19px; line-height: 1; color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; transform: rotate(7deg); white-space: nowrap; }
+.pt-chart .plot .mga-sfx { position: absolute; right: 8px; top: 6px; z-index: 2; pointer-events: none; font-style: normal; font-family: var(--font-display); font-size: 19px; line-height: 1; color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; transform: rotate(7deg); white-space: nowrap; }
 
 /* 바람 줄, 숲 한 줄, 출렁이는 곳: 얇은 칸 */
 .pr .mga .pt .pt-wind { border: 2px solid var(--ink); border-radius: 0; background: #fff; margin-bottom: 0; }
@@ -63,7 +63,7 @@
 .pr .mga .pt .pt-chart .area { fill: var(--ink); opacity: .09; }
 .pr .mga .pt .pt-chart .px { stroke-width: 3.2; }
 .pr .mga .pt .pt-chart .dot { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; background: #fff; border: 3px solid var(--ink); }
-.pr .mga .pt .pt-chart .tag { border-color: var(--ink); border-radius: 10px; font-family: var(--dsp); font-weight: 400; }
+.pr .mga .pt .pt-chart .tag { border-color: var(--ink); border-radius: 10px; font-family: var(--font-display); font-weight: 400; }
 .pr .mga .pt .pt-chart .tag b { font-weight: 400; }
 .pr .mga .pt .pt-chart .tag.now { background: var(--ink); }
 .pr .mga .pt .pt-win .seg { border-color: var(--ink); border-radius: 0; }
@@ -159,12 +159,12 @@
 .pr .mga .pt.mga-near .pt-pl:not(.res) > * { position: relative; }
 .pr .mga .pt .pt-pl:not(.res) .pt-pops { position: absolute; }
 .pr .mga .pt .pt-pl .me.sweat { width: 60px; height: 60px; object-fit: cover; object-position: 22% 46%; border: 2.5px solid var(--ink); background: #2a3550; transform: none; }
-.pt-pl .mga-thump { position: absolute !important; left: 4px; top: -17px; z-index: 6; pointer-events: none; font-family: var(--dsp); font-size: 22px; line-height: 1; color: #fff; -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; white-space: nowrap; transform: rotate(-7deg); animation: mgaThump .8s ease-in-out infinite; }
+.pt-pl .mga-thump { position: absolute !important; left: 4px; top: -17px; z-index: 6; pointer-events: none; font-family: var(--font-display); font-size: 22px; line-height: 1; color: #fff; -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; white-space: nowrap; transform: rotate(-7deg); animation: mgaThump .8s ease-in-out infinite; }
 @keyframes mgaThump { 0%, 100% { transform: rotate(-7deg) scale(1); } 18% { transform: rotate(-7deg) scale(1.2); } 36% { transform: rotate(-7deg) scale(1); } 52% { transform: rotate(-7deg) scale(1.12); } }
 .pt-chart .plot .mga-bal { position: absolute; right: 6px; top: 26%; z-index: 3; width: 176px; height: 74px; display: grid; place-items: center; pointer-events: none; animation: mgaBal .32s cubic-bezier(.3, 1.8, .5, 1) both, mgaShiver .14s .4s linear infinite alternate; }
 .pt-chart .plot .mga-bal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .pt-chart .plot .mga-bal polygon { fill: #fff; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.pt-chart .plot .mga-bal b { position: relative; font-family: var(--dsp); font-weight: 400; font-size: 21px; color: var(--red-ink); transform: rotate(-4deg); white-space: nowrap; }
+.pt-chart .plot .mga-bal b { position: relative; font-family: var(--font-display); font-weight: 400; font-size: 21px; color: var(--red-ink); transform: rotate(-4deg); white-space: nowrap; }
 @keyframes mgaBal { from { transform: scale(.3) rotate(-10deg); opacity: 0; } }
 @keyframes mgaShiver { from { transform: translate(-1px, 0); } to { transform: translate(1px, -1px); } }
 
@@ -183,10 +183,10 @@
 /* ── 크게 이긴 판: 이긴 컷이 차트 칸을 차지한다(번쩍!!, 대박!, 숫자는 릴처럼 한 자씩) ── */
 .mga-win { position: relative; flex: 1 1 0; min-height: 90px; overflow: hidden; cursor: pointer; border: 3px solid var(--ink); background: #FFF3C9; box-shadow: 4px 4px 0 var(--ink); animation: mgaWinIn .4s cubic-bezier(.3, 1.6, .5, 1) both; }
 .mga-win > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
-.mga-win .flash { position: absolute; left: 8px; top: 6px; z-index: 2; font-style: normal; font-family: var(--dsp); font-size: 36px; line-height: 1; color: #FFE27A; -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; transform: rotate(-9deg); animation: mgaFlash .9s ease-out both; }
-.mga-win .dstamp { position: absolute; right: 10px; top: 10px; z-index: 2; font-style: normal; padding: 1px 10px; font-family: var(--dsp); font-size: 25px; color: var(--up); border: 4px solid var(--up); border-radius: 6px; background: rgba(255, 255, 255, .88); transform: rotate(-12deg); animation: ptStamp .3s .35s cubic-bezier(.5, 0, .75, 0) both; }
+.mga-win .flash { position: absolute; left: 8px; top: 6px; z-index: 2; font-style: normal; font-family: var(--font-display); font-size: 36px; line-height: 1; color: #FFE27A; -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; transform: rotate(-9deg); animation: mgaFlash .9s ease-out both; }
+.mga-win .dstamp { position: absolute; right: 10px; top: 10px; z-index: 2; font-style: normal; padding: 1px 10px; font-family: var(--font-display); font-size: 25px; color: var(--up); border: 4px solid var(--up); border-radius: 6px; background: rgba(255, 255, 255, .88); transform: rotate(-12deg); animation: ptStamp .3s .35s cubic-bezier(.5, 0, .75, 0) both; }
 .mga-win .wn { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 12px 8px 6px; background: linear-gradient(rgba(255, 243, 201, 0), rgba(255, 243, 201, .9) 30%); }
-.mga-win .reel { display: flex; font-family: var(--dsp); font-weight: 400; font-size: 46px; line-height: 1; letter-spacing: -1.5px; color: var(--up); -webkit-text-stroke: 7px var(--ink); paint-order: stroke fill; font-variant-numeric: tabular-nums; }
+.mga-win .reel { display: flex; font-family: var(--font-display); font-weight: 400; font-size: 46px; line-height: 1; letter-spacing: -1.5px; color: var(--up); -webkit-text-stroke: 7px var(--ink); paint-order: stroke fill; font-variant-numeric: tabular-nums; }
 .mga-win .reel span { display: inline-block; animation: mgaReel .5s cubic-bezier(.3, 1.5, .5, 1) both; }
 .mga-win .wn small { padding: 2px 9px; border: 2.5px solid var(--ink); background: #fff; font-size: 12.5px; font-weight: 800; color: var(--ink); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .mga-win .wn small em { font-style: normal; color: var(--up); }
