@@ -33,7 +33,7 @@ export function protoSaveKey(search: string): string | null {
 export const PROTO_KEEP = [
   'tab', 'visited', 'everUnlocked', 'goalIdx', 'everOpened', 'seen', 'cutCount', 'negSettles', 'wins', 'closes',
   'winStreak', 'lossStreak', 'tinyStreak', 'feesLife', 'negRun', 'odSeen', 'loanTaken', 'sentAwayAt', 'tutorial', 'slotOf', 'gen',
-  'firstTry', 'frxStamps', 'bestWin', 'bestTrade', 'rankSeen', 'clueAt', 'tradeLife', 'claimWins', 'paidLife',
+  'firstTry', 'flyTut', 'frxStamps', 'bestWin', 'bestTrade', 'rankSeen', 'clueAt', 'tradeLife', 'claimWins', 'paidLife',
   'rolled', 'rolledKey', 'rolledTaps', 'claimWinRun', 'claimLossRun', 'claimRunSum',
   'quests', 'rivals',
 ] as const;

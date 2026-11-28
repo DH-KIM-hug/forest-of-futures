@@ -18,6 +18,7 @@ import { sprite } from '../sprites';
 import { play } from '../audio';
 import { reduced } from '../fx';
 import { isLite } from '../config';
+import { markTip } from '../guide';
 import { FT_STEPS, FT_LEV, FT_PCT, FT_SHOW_LEV, ftActDone, ftNext, ftJump, ftResume, ftSeenBefore, markFtSeen, type FtCtx, type FtTarget } from './flyTutSteps';
 import type { Position } from '../../../engine/types';
 import faceThink from '../img/manga/face_think.webp';
@@ -109,6 +110,12 @@ function FlyTutorialOn() {
   const hidden = scenes > 0 || prologue || tab !== 'phone';
 
   useEffect(() => { setRoot(document.querySelector('.pr') as HTMLElement | null); }, []);
+  // 오픈 기념 문자가 길잡이와 같은 때 떴으면 내려 두었다가 끝난 뒤에 다시 뜨게 한다(seen.ftHeldSms)
+  useEffect(() => {
+    const P = useProto.getState();
+    if (!P.scenes.some((x) => x.id === 'feeEventSms')) return;
+    P.patch({ scenes: P.scenes.filter((x) => x.id !== 'feeEventSms'), seen: { ...P.seen, feeEventSms: true, ftHeldSms: true } });
+  }, [scenes]);
   // 시작할 때: 거래소를 날다람쥐로, 첫 실전 카드가 뜨게. 첫 정산 장면은 이 길잡이가 대신 말한다. 오픈 기념 문자는 끝난 뒤로 미룬다
   useEffect(() => {
     const P = useProto.getState();
@@ -116,6 +123,8 @@ function FlyTutorialOn() {
     if (!seen.feeEventSms) { seen.feeEventSms = true; seen.ftHeldSms = true; }
     P.patch({ tab: 'phone', firstTry: Math.max(1, P.firstTry), cutCount: Math.max(1, P.cutCount), seen });
     useUI.getState().setTrade({ market: 'FLY' });
+    // 손익과 청산까지는 이 길잡이가 말한다: 다음 판에 같은 설명 컷인(guide.ts pos.net, pos.liq)이 또 뜨지 않게
+    markTip('pos.net'); markTip('pos.liq');
   }, []);
   // 판이 열려 있는 동안 마지막 모습을 들고 있다가, 닫히면 엔진의 거래 기록으로 손익을 센다
   useEffect(() => {

@@ -23,7 +23,12 @@ export function liteBoot(afterManga = false): void {
   useProto.getState().patch({ tab: 'phone', everUnlocked: { map: true, phone: true }, visited: { map: true, phone: true }, loanTaken: true, tutorial: 'done', firstTry: 3, seen: { ...useProto.getState().seen, office: true } });
   useUI.getState().setTrade({ market: 'FLY' });
   // 만화를 막 덮었다: 오소리 대부의 날다람쥐코인 길잡이(lite/FlyTutorial.tsx). 끝까지 보거나 건너뛰면 저장에 남는다(flyTut)
-  if (afterManga) useProto.getState().patch({ flyTut: 'run' });
+  if (afterManga) {
+    // 오픈 기념 수수료 문자는 길잡이가 끝난 뒤로(FlyTutorial 이 끝날 때 풀어 준다). 같은 틱에 문자가 먼저 뜨지 않게 여기서 잡는다
+    const seen = { ...useProto.getState().seen };
+    if (!seen.feeEventSms) { seen.feeEventSms = true; seen.ftHeldSms = true; }
+    useProto.getState().patch({ flyTut: 'run', seen });
+  }
 }
 
 const A = (g: GameState, action: Action) => stepMut(g, { type: 'action', action });
