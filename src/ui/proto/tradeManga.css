@@ -1,0 +1,253 @@
+/* ── 거래소 만화 지면(시안 A, U-60 사용자 결정) ─────────────────────────────
+   화면 한 장이 만화 한 쪽: 먹선 칸, 종이 망점, 효과음 글씨. 숫자 크기 차례와 덩이 묶음은 시안 B 를 따른다
+   (손익 > 시세 > 칸 안 숫자 > 설명). C 에서는 대박 릴(숫자가 한 자씩 떨어진다)과 청산까지 칸의 경광등만 빌린다.
+   모든 규칙은 .mga 아래에만 건다(trade.css 의 예전 층은 그대로 두고 위에 덮는다). 세로 글씨는 쓰지 않는다. */
+.pr .pt-wrap.mga { position: relative; }
+.pr .mga .pt {
+  --ink: #1E140E; --mg-paper: #FFF6E2; --mg-gold: #E9B13A; --mg-moss: #4F6B34;
+  background-color: var(--mg-paper);
+  background-image: radial-gradient(rgba(94, 58, 34, .10) .8px, transparent 1.1px); background-size: 4px 4px;
+  border-color: var(--ink); border-left-width: 3px; border-right-width: 3px; border-radius: 6px 6px 0 0;
+  box-shadow: none; color: var(--ink);
+}
+.pr .mga .pt.case-gold { box-shadow: 0 0 12px 2px rgba(232, 185, 58, .45); }
+/* 머리 = 검은 내레이션 띠(위 테두리 안). 칩들은 네모 칸 */
+.pr .mga .pt:not(.pa) > .pt-bar b { letter-spacing: -.2px; }
+.pr .mga .pt .pt-bar .pt-rank, .pr .mga .pt .pt-bar .pt-sum, .pr .mga .pt .pt-bar .pt-perk, .pr .mga .pt .pt-bar .pt-fee, .pr .mga .pt:not(.pa) > .pt-bar em { border-radius: 3px; }
+.pr .mga .pt:not(.pa) > .pt-bar .logo { border-radius: 3px; border-color: var(--ink); }
+
+/* 칸 공통 */
+.pr .mga .pt :is(.pt-quote, .pt-pl, .pt-order, .pt-tutb, .pt-gate, .pt-note) { border: 2.5px solid var(--ink); border-radius: 0; }
+
+/* 누르는 자리 넓히기(보이는 칸은 그대로, 위아래로 엄지 44px) */
+.pr .mga .pt :is(.pt-ct, .pt-ruler .nt, .pt-mg .pt-chip, .pt-cond)::after { content: ''; position: absolute; inset: -4px -1px; }
+
+/* ── 종목 칸 ── */
+.pr .mga .pt .pt-coins { gap: 4px; }
+.pr .mga .pt .pt-ct { min-height: 40px; border: 2.5px solid var(--ink); border-radius: 0; background: #fff; --sh: none; color: var(--ink); }
+.pr .mga .pt .pt-ct.on { background: var(--mg-gold); border-width: 3px; transform: rotate(-2deg); --sh: 3px 3px 0 var(--ink); z-index: 1; }
+.pr .mga .pt .pt-ct.on:active { transform: rotate(-2deg) scale(.96); }
+.pr .mga .pt .pt-ct.shut:not(.on) { background: #EFE6D6 repeating-linear-gradient(135deg, rgba(30, 20, 14, .16) 0 1.5px, transparent 1.5px 6px); color: #8a7663; }
+.pr .mga .pt .pt-ct small.swg { color: #5E3A22; }
+.pr .mga .pt .pt-ct .pd { border-radius: 0; border: 2px solid var(--ink); transform: rotate(6deg); z-index: 2; }
+.pr .mga .pt .pt-ct .wild { border-radius: 0; border-color: var(--ink); }
+.pr .mga .pt .pt-ct .inf { border-color: var(--ink); }
+
+/* ── 시세 칸: 값은 효과음 글씨 ── */
+.pr .mga .pt .pt-quote { position: relative; min-height: 44px; padding: 2px 8px; background: #fff; }
+.pr .mga .pt .pt-quote .px { align-items: center; }
+.pr .mga .pt .pt-quote .px .qn { color: var(--ink); font-size: 13.5px; line-height: 1.1; max-width: 64px; white-space: normal; }
+.pr .mga .pt .pt-quote .px b { font-size: 32px; letter-spacing: -1px; color: var(--ink); text-shadow: 1.5px 1.5px 0 rgba(30, 20, 14, .18); }
+.pr .mga .pt .pt-quote .px span { font-size: 15px; }
+.pr .mga .pt .pt-quote .mood { align-self: flex-end; margin-bottom: 4px; border-radius: 0; border: 0; background: var(--ink); color: #fff; font-size: 12.5px; padding: 2px 7px; transform: skewX(-6deg); }
+.pr .mga .pt .pt-quote .mood span { color: #E9D3A6; }
+.pr .mga .pt .pt-quote .mood .nw { color: var(--mg-gold); }
+.pr .mga .pt .pt-quote .mood.m-wild { background: #7A2E20; }
+.pr .mga .pt .pt-quote .mood.m-sess { background: var(--ink); color: #fff; }
+.pr .mga .pt .pt-quote .mood.m-sess small { color: #E9D3A6; }
+/* 효과음은 차트 칸 오른쪽 위 귀퉁이(움직임의 크기와 방향만 말한다) */
+.pt-chart .plot .mga-sfx { position: absolute; right: 8px; top: 6px; z-index: 2; pointer-events: none; font-style: normal; font-family: var(--dsp); font-size: 19px; line-height: 1; color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; transform: rotate(7deg); white-space: nowrap; }
+
+/* 바람 줄, 숲 한 줄, 출렁이는 곳: 얇은 칸 */
+.pr .mga .pt .pt-wind { border: 2px solid var(--ink); border-radius: 0; background: #fff; margin-bottom: 0; }
+.pr .mga .pt .pt-wind .gw { border-radius: 0; border-color: var(--ink); }
+.pr .mga .pt .pt-wind.came { background: #F1F6E6; } .pr .mga .pt .pt-wind.came.fake { background: #FBEFE9; }
+.pr .mga .pt-forest { margin: 0; }
+.pr .mga .pt-forest button { border-radius: 0; border-color: var(--ink); background: #fff; }
+.pr .mga .pt-forest .fq em { border-radius: 0; background: var(--ink); color: #fff; }
+.pr .mga .pt .pt-hot button { border-radius: 0; border-color: var(--ink); }
+
+/* ── 차트 칸 ── */
+.pr .mga .pt .pt-chart { --lc: var(--ink); transition: transform .35s cubic-bezier(.2, 1.4, .4, 1); }
+.pr .mga .pt .pt-chart .plot { border: 3px solid var(--ink); border-radius: 0; background-color: #fff; background-image: radial-gradient(rgba(30, 20, 14, .07) 1px, transparent 1.3px); background-size: 5px 5px; }
+.pr .mga .pt .pt-chart .area { fill: var(--ink); opacity: .09; }
+.pr .mga .pt .pt-chart .px { stroke-width: 3.2; }
+.pr .mga .pt .pt-chart .dot { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; background: #fff; border: 3px solid var(--ink); }
+.pr .mga .pt .pt-chart .tag { border-color: var(--ink); border-radius: 10px; font-family: var(--dsp); font-weight: 400; }
+.pr .mga .pt .pt-chart .tag b { font-weight: 400; }
+.pr .mga .pt .pt-chart .tag.now { background: var(--ink); }
+.pr .mga .pt .pt-win .seg { border-color: var(--ink); border-radius: 0; }
+.pr .mga .pt .pt-win .seg button.on { background: var(--ink); }
+.pr .mga .pt .pt-win .pt-zoom { border-radius: 0; border-color: var(--ink); }
+.pr .mga .pt-chart .plot .pr-lane { border-radius: 0; border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+
+/* ── 주문 덩이(B 의 묶음): 배율 칸 여덟, 증거금 작은 칸, 셈 한 줄 ── */
+.pr .mga .pt .pt-order { gap: 4px; padding: 4px; background: #fff; box-shadow: 3px 3px 0 var(--ink); }
+.pr .mga .pt .pt-order:empty { display: none; }
+.pr .mga .pt .pt-ruler { gap: 3px; }
+.pr .mga .pt .pt-ruler .nt { min-height: 40px; border: 2.5px solid var(--ink); border-radius: 0; background: #fff; --sh: none; }
+.pr .mga .pt .pt-ruler .nt b { font-size: 16px; color: var(--ink); }
+.pr .mga .pt .pt-ruler .nt.on { flex: 1.6 1 0; background: var(--ink); --sh: none; }
+.pr .mga .pt .pt-ruler .nt.on b { color: var(--mg-gold); font-size: 16px; padding: 0; }
+.pr .mga .pt .pt-ruler .nt.locked { border-style: dashed; background: #F6EFD8; }
+/* 100과 200은 톱니 칸 */
+.pr .mga .pt .pt-ruler .nt.hot { border: 0; background: #FFF0E8; box-shadow: inset 0 0 0 2.5px var(--ink);
+  clip-path: polygon(0 9%, 12% 0, 30% 7%, 50% 0, 70% 7%, 88% 0, 100% 9%, 95% 50%, 100% 91%, 88% 100%, 70% 93%, 50% 100%, 30% 93%, 12% 100%, 0 91%, 5% 50%); }
+.pr .mga .pt .pt-ruler .nt.hot b { color: var(--up); }
+.pr .mga .pt .pt-ruler .nt.hot.on { background: var(--up); box-shadow: inset 0 0 0 3px var(--ink); }
+.pr .mga .pt .pt-ruler .nt.hot.on b { color: #fff; }
+.pr .mga .pt .pt-mg { gap: 4px; }
+.pr .mga .pt .pt-chip { border: 2.5px solid var(--ink); border-radius: 0; background: #fff; --sh: none; color: var(--ink); }
+.pr .mga .pt .pt-mg .pt-chip { min-height: 42px; }
+.pr .mga .pt .pt-chip b { color: var(--ink); }
+.pr .mga .pt .pt-chip small { color: #5E3A22; }
+.pr .mga .pt .pt-chip.on { background: var(--mg-gold); border-color: var(--ink); --sh: 3px 3px 0 var(--ink); transform: translate(-1px, -1px); }
+.pr .mga .pt .pt-chip.keep { border-style: dashed; background: #fff; }
+.pr .mga .pt .pt-chip.keep.on { border-style: solid; background: var(--mg-gold); }
+.pr .mga .pt .pt-odds { color: var(--mg-moss); }
+.pr .mga .pt .pt-odds.warn, .pr .mga .pt .pt-risk b { color: var(--red-ink); }
+.pr .mga .pt .pt-water, .pr .mga .pt .pt-squeeze, .pr .mga .pt .pt-carry, .pr .mga .pt .pt-slow { border-radius: 0; }
+.pr .mga .pt .pt-slow.go { border-color: var(--ink); }
+
+/* 출구 줄 */
+.pr .mga .pt .pt-cond { min-height: 38px; border: 2.5px solid var(--ink); border-radius: 0; background: #fff; }
+.pr .mga .pt .pt-cond .more, .pr .mga .pt .pt-cond .vals .set { color: var(--ink); }
+.pr .mga .pt .pt-cond .more { padding: 1px 6px; background: var(--mg-gold); border: 2px solid var(--ink); }
+
+/* ── 오소리 대부의 추천 = 얼굴 + 말풍선 ── */
+.pr .mga .pt .pt-first { position: relative; grid-template-columns: 50px minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.pt-first .ft-boss { grid-column: 1; grid-row: 1 / 3; align-self: center; width: 50px; height: 54px; object-fit: cover; object-position: 50% 0; border: 2.5px solid var(--ink); background: var(--cream); }
+.pr .mga .pt .pt-first::before { content: ''; grid-column: 2 / 4; grid-row: 1 / 3; align-self: stretch; margin-left: 11px; border: 2.5px solid var(--ink); border-radius: 16px; background: #fff; }
+.pr .mga .pt .pt-first.set::before { background: #EEF6E2; }
+.pr .mga .pt .pt-first::after { content: ''; position: absolute; left: 51px; top: 50%; margin-top: -7px; border: 7px solid transparent; border-right: 11px solid var(--ink); border-left: 0; }
+.pr .mga .pt .pt-first > :not(.ft-boss) { position: relative; z-index: 1; }
+.pr .mga .pt .pt-first .ft-t { grid-column: 2; grid-row: 1; margin: 5px 0 0 22px; }
+.pr .mga .pt .pt-first .ft-t b { border-radius: 0; background: var(--ink); }
+.pr .mga .pt .pt-first p { grid-column: 2; grid-row: 2; margin: 1px 4px 6px 22px; color: var(--ink); font-size: 12.5px; }
+.pr .mga .pt .pt-first .ft-go { grid-column: 3; grid-row: 1 / 3; align-self: center; min-height: 44px; margin: 4px 8px 4px 2px; padding: 4px 9px; border-radius: 0; border: 2.5px solid var(--ink); background: var(--mg-gold); color: var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size: 14.5px; line-height: 1.15; }
+
+/* ── 롱 숏: 사선으로 갈라진 한 칸(롱! 붉게, 숏! 파랗게) ── */
+.pr .mga .pt .pt-orders[data-hl='orders'] { display: flex; gap: 0; margin: 2px 2px 1px; padding: 3px; background: var(--ink); box-shadow: 4px 4px 0 rgba(30, 20, 14, .35); }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn { flex: 1 1 0; min-height: 56px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; padding: 2px 14px 4px; border: 0; border-radius: 0; --sh: none; color: #fff; }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn.long { background: var(--up); margin-right: -16px; clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%); }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn.short { background: var(--down); margin-left: -16px; align-items: flex-end; clip-path: polygon(38px 0, 100% 0, 100% 100%, 16px 100%); }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn span { font-size: 30px; line-height: 1; color: #fff; -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; letter-spacing: -.5px; }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn .pt-tri { display: none; }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn small { font-size: 12.5px; color: #fff; }
+.pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn:disabled { background: #9A938A; }
+/* 들고 있을 때의 단추(추가 진입, 반 익절, 뒤집기, 정리하기): 네모 칸 + 먹 그림자 */
+.pr .mga .pt .pt-orders:not([data-hl='orders']) .pt-btn, .pr .mga .pt .pt-sheetgo .pt-btn { border: 3px solid var(--ink); border-radius: 0; --sh: 3px 3px 0 var(--ink); }
+.pr .mga .pt .pt-btn.close, .pr .mga .pt .pt-btn.cta { --bg: var(--mg-gold); }
+.pr .mga .pt .pt-btn.close.gain { --bg: #8FC3A8; }
+.pr .mga .pt .pt-btn.close.arm { --bg: var(--red); }
+
+/* ── 포지션 칸: 손익이 가장 큰 글씨 ── */
+.pr .mga .pt .pt-pl { background: #fff; box-shadow: 4px 4px 0 var(--ink); }
+.pr .mga .pt .pt-pl:not(.res) .roe { font-size: 36px; -webkit-text-stroke: 1px var(--ink); text-shadow: 2px 2px 0 var(--ink); letter-spacing: -1px; }
+.pr .mga .pt .pt-pl .liq { border: 2.5px solid var(--ink); border-radius: 0; }
+.pr .mga .pt .pt-pl .liq.hot { animation: mgaLamp .56s steps(1) infinite; }
+@keyframes mgaLamp { 0% { background: var(--red-ink); color: #fff; box-shadow: 0 0 0 3px rgba(232, 72, 50, .55), 0 0 12px 3px rgba(255, 90, 60, .6); } 50% { background: #fff; color: var(--red-ink); box-shadow: none; } }
+.pr .mga .pt .pt-pl .pl-all { border-radius: 0; border-color: var(--ink); }
+.pr .mga .pt .pt-pops .pop { border-color: var(--ink); border-radius: 3px; box-shadow: 3px 3px 0 var(--ink); }
+
+/* ── 청산 코앞: 망점이 가장자리부터, 차트 칸이 기울고, 땀 얼굴 컷, 쿵덕 쿵덕, 톱니 말풍선 ── */
+@property --mga-r { syntax: '<percentage>'; inherits: false; initial-value: 100%; }
+.pr .pt-wrap.mga:has(> .pt.mga-near)::after {
+  content: ''; position: absolute; inset: 0 8px; z-index: 7; pointer-events: none;
+  background-image: radial-gradient(rgba(30, 20, 14, .5) 1.2px, transparent 1.5px); background-size: 5px 5px;
+  -webkit-mask: radial-gradient(ellipse 82% 78% at 50% 50%, transparent var(--mga-r), #000 calc(var(--mga-r) + 40%));
+  mask: radial-gradient(ellipse 82% 78% at 50% 50%, transparent var(--mga-r), #000 calc(var(--mga-r) + 40%));
+  --mga-r: 56%; animation: mgaCreep 1.4s cubic-bezier(.2, .8, .3, 1) both;
+}
+@keyframes mgaCreep { from { --mga-r: 100%; } to { --mga-r: 56%; } }
+.pr .mga .pt.mga-near .pt-chart { transform: rotate(-.8deg); }
+.pr .mga .pt.mga-near .pt-chart .plot { border-color: var(--ink); }
+.pr .mga .pt.mga-near .pt-pl:not(.res) { overflow: visible; }
+.pr .mga .pt.mga-near .pt-pl:not(.res)::before { content: ''; position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  background: repeating-conic-gradient(from 0deg at 62% 40%, rgba(30, 20, 14, .5) 0deg 1.1deg, transparent 1.1deg 6deg);
+  -webkit-mask: radial-gradient(ellipse at 62% 40%, transparent 30%, #000 75%); mask: radial-gradient(ellipse at 62% 40%, transparent 30%, #000 75%); }
+.pr .mga .pt.mga-near .pt-pl:not(.res) > * { position: relative; }
+.pr .mga .pt .pt-pl:not(.res) .pt-pops { position: absolute; }
+.pr .mga .pt .pt-pl .me.sweat { width: 60px; height: 60px; object-fit: cover; object-position: 22% 46%; border: 2.5px solid var(--ink); background: #2a3550; transform: none; }
+.pt-pl .mga-thump { position: absolute !important; left: 4px; top: -17px; z-index: 6; pointer-events: none; font-family: var(--dsp); font-size: 22px; line-height: 1; color: #fff; -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; white-space: nowrap; transform: rotate(-7deg); animation: mgaThump .8s ease-in-out infinite; }
+@keyframes mgaThump { 0%, 100% { transform: rotate(-7deg) scale(1); } 18% { transform: rotate(-7deg) scale(1.2); } 36% { transform: rotate(-7deg) scale(1); } 52% { transform: rotate(-7deg) scale(1.12); } }
+.pt-chart .plot .mga-bal { position: absolute; right: 6px; top: 26%; z-index: 3; width: 176px; height: 74px; display: grid; place-items: center; pointer-events: none; animation: mgaBal .32s cubic-bezier(.3, 1.8, .5, 1) both, mgaShiver .14s .4s linear infinite alternate; }
+.pt-chart .plot .mga-bal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.pt-chart .plot .mga-bal polygon { fill: #fff; stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.pt-chart .plot .mga-bal b { position: relative; font-family: var(--dsp); font-weight: 400; font-size: 21px; color: var(--red-ink); transform: rotate(-4deg); white-space: nowrap; }
+@keyframes mgaBal { from { transform: scale(.3) rotate(-10deg); opacity: 0; } }
+@keyframes mgaShiver { from { transform: translate(-1px, 0); } to { transform: translate(1px, -1px); } }
+
+/* ── 결과 칸과 도장 ── */
+.pr .mga .pt .pt-pl.res { box-shadow: 4px 4px 0 var(--ink); }
+.pr .mga .pt .pt-pl.res.win { background: #FFF3C9; }
+.pr .mga .pt .pt-pl.res.lose { background: #F1EADB; }
+.pr .mga .pt .pt-pl.res .roe { -webkit-text-stroke: 1px var(--ink); text-shadow: 2px 2px 0 var(--ink); letter-spacing: -1px; }
+.pr .mga .pt .pt-pl.res .tags > * { border-radius: 0; }
+.pr .mga .pt .pt-pl .stamp { border-radius: 4px; border-width: 4px; font-size: 21px; transform: rotate(-12deg); }
+/* 강제 청산: 붉은 톱니 도장 + 망점 칸 */
+.pr .mga .pt .pt-pl.res.k-liq { background-color: #EDE3D2; background-image: radial-gradient(rgba(30, 20, 14, .2) 1.1px, transparent 1.4px); background-size: 5px 5px; }
+.pr .mga .pt .pt-pl.res.k-liq .stamp { border: 0; border-radius: 0; padding: 12px 16px; color: #fff; background: var(--red-ink); font-size: 20px; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill;
+  clip-path: polygon(50% 0, 60% 16%, 78% 4%, 78% 24%, 100% 22%, 88% 40%, 100% 56%, 82% 62%, 92% 82%, 70% 78%, 64% 100%, 50% 84%, 36% 100%, 30% 78%, 8% 82%, 18% 62%, 0 56%, 12% 40%, 0 22%, 22% 24%, 22% 4%, 40% 16%); }
+
+/* ── 크게 이긴 판: 이긴 컷이 차트 칸을 차지한다(번쩍!!, 대박!, 숫자는 릴처럼 한 자씩) ── */
+.mga-win { position: relative; flex: 1 1 0; min-height: 90px; overflow: hidden; cursor: pointer; border: 3px solid var(--ink); background: #FFF3C9; box-shadow: 4px 4px 0 var(--ink); animation: mgaWinIn .4s cubic-bezier(.3, 1.6, .5, 1) both; }
+.mga-win > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.mga-win .flash { position: absolute; left: 8px; top: 6px; z-index: 2; font-style: normal; font-family: var(--dsp); font-size: 36px; line-height: 1; color: #FFE27A; -webkit-text-stroke: 6px var(--ink); paint-order: stroke fill; transform: rotate(-9deg); animation: mgaFlash .9s ease-out both; }
+.mga-win .dstamp { position: absolute; right: 10px; top: 10px; z-index: 2; font-style: normal; padding: 1px 10px; font-family: var(--dsp); font-size: 25px; color: var(--up); border: 4px solid var(--up); border-radius: 6px; background: rgba(255, 255, 255, .88); transform: rotate(-12deg); animation: ptStamp .3s .35s cubic-bezier(.5, 0, .75, 0) both; }
+.mga-win .wn { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 12px 8px 6px; background: linear-gradient(rgba(255, 243, 201, 0), rgba(255, 243, 201, .9) 30%); }
+.mga-win .reel { display: flex; font-family: var(--dsp); font-weight: 400; font-size: 46px; line-height: 1; letter-spacing: -1.5px; color: var(--up); -webkit-text-stroke: 7px var(--ink); paint-order: stroke fill; font-variant-numeric: tabular-nums; }
+.mga-win .reel span { display: inline-block; animation: mgaReel .5s cubic-bezier(.3, 1.5, .5, 1) both; }
+.mga-win .wn small { padding: 2px 9px; border: 2.5px solid var(--ink); background: #fff; font-size: 12.5px; font-weight: 800; color: var(--ink); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.mga-win .wn small em { font-style: normal; color: var(--up); }
+@keyframes mgaWinIn { from { transform: scale(.88) rotate(-1.5deg); opacity: 0; } }
+@keyframes mgaFlash { 0% { transform: rotate(-9deg) scale(2); opacity: 0; } 40% { opacity: 1; transform: rotate(-9deg) scale(.95); } 100% { transform: rotate(-9deg) scale(1); } }
+@keyframes mgaReel { 0% { transform: translateY(-70%); opacity: 0; } 60% { opacity: 1; transform: translateY(8%); } 100% { transform: none; } }
+
+/* ── 시트, 한곳 정리, 소개 카드, 승급 카드도 같은 먹선 ── */
+.pr .mga .pt .pt-sheet, .pr .mga .pt .pt-sheetgo { background: var(--mg-paper); border-radius: 0; border-top-color: var(--ink); }
+.pr .mga .pt .pt-step { border: 2.5px solid var(--ink); border-radius: 0; background: #fff; }
+.pr .mga .pt .pt-x { border-radius: 0; border-color: var(--ink); }
+.pr .mga .pt .pt-tray { border-bottom: 3px solid var(--ink); }
+.pr .mga .pt .pt-tray .tr-close, .pr .mga .pt .pt-tray .tr-all { border-radius: 0; border-color: var(--ink); }
+.pr .mga .pt .pt-coininfo { border: 3px solid var(--ink); border-radius: 0; box-shadow: 5px 5px 0 var(--ink); }
+.pr .mga .pt-coininfo .ci-rumor, .pr .mga .pt-coininfo .ci-facts div, .pr .mga .pt-coininfo .ci-nm small { border-radius: 0; }
+.pr .mga .pt-rankcard .rc-in { border-radius: 4px; border-color: var(--ink); box-shadow: 5px 5px 0 var(--ink); }
+
+/* 낮은 화면(360×640): 칸은 그대로, 글씨와 높이만 줄인다 */
+@media (max-height: 720px) {
+  .pr .mga .pt .pt-ct { min-height: 30px; border-width: 2px; }
+  .pr .mga .pt .pt-quote { min-height: 30px; padding: 0 6px; border-width: 2px; }
+  .pr .mga .pt .pt-quote .px b { font-size: 25px; }
+  .pr .mga .pt .pt-quote .px .qn { font-size: 12px; }
+  .pt-chart .plot .mga-sfx { font-size: 15px; -webkit-text-stroke-width: 3px; }
+  .pr .mga .pt .pt-quote .px .qn { margin-right: 3px; }
+  .pr .mga .pt .pt-order { padding: 2px; gap: 2px; border-width: 2px; }
+  .pr .mga .pt .pt-ruler .nt { min-height: 32px; border-width: 2px; }
+  .pr .mga .pt .pt-mg .pt-chip { min-height: 32px; border-width: 2px; }
+  .pr .mga .pt .pt-cond { min-height: 30px; border-width: 2px; }
+  .pr .mga .pt .pt-orders[data-hl='orders'] { padding: 2px; }
+  .pr .mga .pt .pt-ruler .nt::after { inset: -8px -1px -4px; }
+  .pr .mga .pt .pt-mg .pt-chip::after { inset: -2px -1px -10px; }
+  .pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn { min-height: 44px; flex-direction: row; align-items: center; gap: 6px; }
+  .pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn.short { justify-content: flex-end; }
+  .pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn span { font-size: 24px; -webkit-text-stroke-width: 4px; }
+  .pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn small { font-size: 11.5px; }
+  .pr .mga .pt .pt-pl:not(.res) .roe { font-size: 29px; }
+  .pr .mga .pt .pt-pl .me.sweat { width: 46px; height: 46px; }
+  .pt-first .ft-boss { width: 42px; height: 44px; }
+  .pr .mga .pt .pt-first p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; }
+  .pr .mga .pt .pt-first .ft-t { margin-top: 3px; }
+  .pr .mga .pt .pt-first { grid-template-columns: 42px minmax(0, 1fr) auto; }
+  .pr .mga .pt .pt-first::after { left: 43px; }
+  .pr .mga .pt .pt-first p { font-size: 11.5px; margin-bottom: 4px; }
+  .pr .mga .pt .pt-first .ft-go { font-size: 13px; }
+  .pt-chart .plot .mga-bal { width: 140px; height: 58px; top: 18%; }
+  .pt-chart .plot .mga-bal b { font-size: 17px; }
+  .pt-pl .mga-thump { font-size: 18px; top: -14px; }
+  .mga-win .flash { font-size: 28px; }
+  .mga-win .dstamp { font-size: 20px; }
+  .mga-win .reel { font-size: 36px; }
+  .mga-win .wn { padding-top: 14px; }
+}
+@media (max-width: 372px) {
+  .pr .mga .pt .pt-orders[data-hl='orders'] .pt-btn { padding-left: 11px; padding-right: 11px; }
+  .pr .mga .pt .pt-quote .px .qn { max-width: 52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr .pt-wrap.mga:has(> .pt.mga-near)::after { animation: none; }
+  .pr .mga .pt .pt-chart { transition: none; }
+  .pt-pl .mga-thump, .pt-chart .plot .mga-bal, .mga-win, .mga-win .flash, .mga-win .reel span, .mga-win .dstamp { animation: none !important; }
+  .pr .mga .pt .pt-pl .liq.hot { animation: none; background: var(--red-ink); color: #fff; }
+}

@@ -59,9 +59,14 @@ import { sprite } from './sprites';
 const heroFront = sprite('hero')!.src; // 포지션 카드의 주인공: 폰을 보는 새 그림(U-33)
 import './trade.css';
 import './tradeArt.css';
+import './tradeManga.css';
+import mgaNear from './img/manga/cut_near.webp';
+import mgaWin from './img/manga/cut_win.webp';
 import coinInfoJson from '../../../data/coin_info.json';
 
 export const EXCHANGE_NAME = 'FRX 숲거래소';
+/** 만화 톱니 말풍선의 꼭짓점(200×90 칸, U-60) */
+const MGA_BURST = Array.from({ length: 44 }, (_, i) => { const a = (i / 44) * Math.PI * 2, r = i % 2 ? 0.7 : 1; return `${(100 + Math.cos(a) * 98 * r).toFixed(1)},${(45 + Math.sin(a) * 43 * r).toFixed(1)}`; }).join(' ');
 
 // 종목 색(§11.3의 바랜 값)과 동전 무늬
 const COIN: Record<string, { col: string; glyph: ReactNode }> = {
@@ -130,7 +135,7 @@ interface Tag { key: string; cls: string; label: string; price: number; edge?: '
 /** 날다람쥐 차트의 끝난 모양(U-57): 끝난 뒤에만. ago = 마지막 값에서 몇 초 전(시작, 끝), 꼭짓점은 옅은 점선으로 */
 export interface ChartPat { key: string; from: number; to: number; ok: boolean; label: string; pts: { ago: number; p: number }[] }
 /** 깨끗한 사각형 안에는 시세 선과 가로선뿐이다. 가격 꼬리표는 오른쪽 축 띠(차트 밖)에 둔다. */
-export function PChart({ market, hist, pos, win = 120, band = null, foot = null, footH = 0, note = '', onPlotTap, pats = [] }: { /** 끝난 차트 모양(U-57) */ pats?: ChartPat[]; /** 차트를 눌렀다(크게 · 작게, U-43) */ onPlotTap?: () => void; market: string; hist: number[]; pos: PositionView | null; win?: number; /** 지난 1분 폭(%): 지금 값 둘레에 그 폭만큼 띠를 그린다(청산선이 그 안에 들어오는지가 보인다) */ band?: number | null; /** 축 띠 맨 아래에 놓는 것(차트 창 고르기). 차트 안에는 아무것도 넣지 않는다 */ foot?: ReactNode; /** foot 의 높이(px): 꼬리표가 그 위에서 멈춘다 */ footH?: number; /** 축 띠에 적는 한 줄(화면 전체 폭). 자리가 넉넉할 때만 보인다 */ note?: string }) {
+export function PChart({ market, hist, pos, win = 120, band = null, foot = null, footH = 0, note = '', onPlotTap, pats = [], over = null }: { /** 차트 칸 위에 얹는 만화 말풍선(만화 지면 A, U-60) */ over?: ReactNode; /** 끝난 차트 모양(U-57) */ pats?: ChartPat[]; /** 차트를 눌렀다(크게 · 작게, U-43) */ onPlotTap?: () => void; market: string; hist: number[]; pos: PositionView | null; win?: number; /** 지난 1분 폭(%): 지금 값 둘레에 그 폭만큼 띠를 그린다(청산선이 그 안에 들어오는지가 보인다) */ band?: number | null; /** 축 띠 맨 아래에 놓는 것(차트 창 고르기). 차트 안에는 아무것도 넣지 않는다 */ foot?: ReactNode; /** foot 의 높이(px): 꼬리표가 그 위에서 멈춘다 */ footH?: number; /** 축 띠에 적는 한 줄(화면 전체 폭). 자리가 넉넉할 때만 보인다 */ note?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [h, setH] = useState(0);
   useLayoutEffect(() => {
@@ -225,6 +230,7 @@ export function PChart({ market, hist, pos, win = 120, band = null, foot = null,
         {n >= 1 && <i className="dot" style={{ left: `${X(n - 1)}%`, top: `${Y(last)}%` }} />}
         {n < 12 && <span className="warm">시세를 모으는 중…</span>}
         <PhoneLane />
+        {over}
       </div>
       <div className="axis" aria-hidden="true">
         {lims && <span className="lim" style={{ top: 2 }}>{fmtPrice(market, hi)}</span>}
@@ -468,6 +474,8 @@ export function ProtoTrade() {
   const netRoll = useCountUp(Math.round(netNow), 420, posKey + ':' + (rawPos?.halfs?.length ?? 0));
   const roeShow = rawPos ? (netRoll / Math.max(1, rawPos.margin0)) * 100 : 0;
   const danger = pos ? dangerOf(pos.liqDistPct, pos.lev, balance.trading.maintenanceRate as number) : 0;
+  /** 만화 지면(U-60): 청산 코앞이면 지면 가장자리에 망점, 차트 칸이 기울고, 땀 흘리는 얼굴 컷과 「쿵덕 쿵덕!!」, 톱니 말풍선 */
+  const nearA = !!pos && (call || danger >= 0.7);
   useEffect(() => {
     if (!pos || !rawPos || tutSt !== 'done') { lastNet.current = null; return; }
     const prevN = lastNet.current;
@@ -721,7 +729,7 @@ export function ProtoTrade() {
   const openNet = openTabs.reduce((a, t) => a + (t.posNet ?? 0), 0);
   const feeChipH = openingEvent() && useProto.getState().tutorial === 'done' && run.futures.open ? { ...feeEventChip(feeEventLeft(run), feeRate(g, tr.lev ?? run.futures.defaultLev) * 100), left: feeEventLeft(run) } : null;
   const frame = (body: ReactNode, cls = '') => (
-    <div className="pt-wrap">
+    <div className="pt-wrap mga">
       <div className={'pt' + cls + ' case-' + look.case} data-pc={g.settings.priceColors} data-mode={mode.mode} data-case={look.case} style={{ ['--bow' as string]: look.bow, ...(look.case !== 'teal' ? { borderColor: CASE_COL[look.case] } : {}) }}>
         <Charm r={charm} />
         <header className="pt-bar">
@@ -884,7 +892,7 @@ export function ProtoTrade() {
   );
   const chart = (
     <>
-      <PChart market={market} hist={chartHist} pos={pos} win={win} pats={flyPats(win, chartHist.length)} band={tn?.rangePct ?? null} foot={winCtl} footH={(sk.zoom ? 50 : 26) + (WINS.length > 3 ? 18 : 0)} note={spanLabel} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
+      <PChart market={market} hist={chartHist} pos={pos} win={win} pats={flyPats(win, chartHist.length)} band={tn?.rangePct ?? null} foot={winCtl} footH={(sk.zoom ? 50 : 26) + (WINS.length > 3 ? 18 : 0)} note={spanLabel} over={nearA ? <span className="mga-bal" aria-hidden="true"><svg viewBox="0 0 200 90" preserveAspectRatio="none"><polygon points={MGA_BURST} /></svg><b>청산 코앞!!</b></span> : <i className="mga-sfx" aria-hidden="true">{Math.abs(tab.pct) >= 1 ? (tab.pct > 0 ? '쭈욱!' : '뚝!') : '스~윽'}</i>} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
       {ins && ins.shortNotional > 0 && (
         <div className="pt-meta">
           <span>지갑 평가액 {comma(Math.floor(ins.walletValue))}, 숏으로 상쇄하는 비율 {ins.ratioPct}%</span>
@@ -1046,6 +1054,7 @@ export function ProtoTrade() {
   };
   const firstCard = firstShow ? (
     <div className={'pt-first' + (firstSet ? ' set' : '')} data-first={firstSet ? 'set' : 'ask'} data-hl="cond" role="status">
+      <img className="ft-boss" src={sprite('boss')!.src} alt="" aria-hidden="true" />
       <div className="ft-t"><b>FRX 첫 실전</b><span>{marketById[FIRST.market].name} {FIRST.lev}배, {FIRST.pct}%</span></div>
       <p>익절 <b className="up">+{comma(Math.round(cl.total))}</b> 손절 <b className="down">−{comma(Math.round(cl.total))}</b>{firstSet ? <>, 이제 롱이나 숏.</> : <>, 이자 한 번 치. 어느 쪽이 먼저 닿을지는 아무도 모른다.</>}</p>
       {!firstSet && <button className="ft-go" data-first-go onClick={firstGo}>이대로 맞추기</button>}
@@ -1072,8 +1081,8 @@ export function ProtoTrade() {
         </>
       ) : (
         <>
-          <button className="pt-btn long" disabled={!!prev.reason} onClick={() => doOpen(1)}><span><Tri up size={13} />롱</span><small>오른다 {lev}배</small></button>
-          <button className="pt-btn short" disabled={!!prev.reason} onClick={() => doOpen(-1)}><span><Tri up={false} size={13} />숏</span><small>내린다 {lev}배</small></button>
+          <button className="pt-btn long" disabled={!!prev.reason} onClick={() => doOpen(1)}><span><Tri up size={13} />롱!</span><small>오른다 {lev}배</small></button>
+          <button className="pt-btn short" disabled={!!prev.reason} onClick={() => doOpen(-1)}><span><Tri up={false} size={13} />숏!</span><small>내린다 {lev}배</small></button>
         </>
       )}
     </div>
@@ -1127,16 +1136,17 @@ export function ProtoTrade() {
           </div>
         ) : pos ? (
           <div key={'p' + entered} ref={plRef} className={'pt-pl ' + (plus ? 'plus' : 'minus') + (call ? ' call' : '') + (entered ? ' in' : '')} aria-label="내 포지션">
+            {nearA && <span className="mga-thump" aria-hidden="true">쿵덕 쿵덕!!</span>}
             <div className="pl-top">
               {/* 들고 있는 동안 쳇바퀴를 굴린다(U-42): 주인공을 누르면 한 번 굴린다 — 눈은 폰에, 발은 쳇바퀴에. 굴려 번 돈은 따로 센다 */}
               {freeWheel ? (
               <button className={'pt-roll' + (rollK ? ' on' : '')} data-roll data-rolled={Math.round(rolledNow)} disabled={tutSt !== 'done'} onPointerDown={doRoll} aria-label={`쳇바퀴 굴리기 (들고 있는 동안 굴려 번 돈 ${comma(Math.round(rolledNow))})`}>
-                <img className={'me' + (call ? ' shake' : '')} src={heroFront} alt="" />
+                <img className={'me' + (call ? ' shake' : '') + (nearA ? ' sweat' : '')} src={nearA ? mgaNear : heroFront} alt="" />
                 <i key={rollK} className={'wh' + (rollK ? ' spin' : '')} aria-hidden="true"><img src={(sprite('wheelEmpty') ?? sprite('wheel'))!.src} alt="" /></i>
                 {rollGain && <span key={'g' + rollK} className="gain" aria-hidden="true">{rollGain}</span>}
                 <small>{rolledNow >= 1 ? `+${comma(Math.round(rolledNow))}` : '굴리기'}</small>
               </button>
-              ) : <img className={'me' + (call ? ' shake' : '')} src={heroFront} alt="" />}
+              ) : <img className={'me' + (call ? ' shake' : '') + (nearA ? ' sweat' : '')} src={nearA ? mgaNear : heroFront} alt="" />}
               <div className={'big' + (whyOpen ? ' more' : '')} data-hl="posNet" onClick={() => setWhyOpen((v) => !v)}>
                 <div key={flash ? 'f' + flash.k : 'f'} className={'roe' + (flash ? (flash.up ? ' fl-up' : ' fl-dn') : '')} data-netroe>{Math.abs(roeShow) >= 100 ? `${sign(roeShow)}${Math.abs(roeShow).toFixed(0)}%` : roeTxt(roeShow)}</div>
                 <div className="sub" data-net><b>{money(netRoll)}</b>{share ? <i className="shr"> {share}</i> : ' 도토리'}</div>
@@ -1219,7 +1229,20 @@ export function ProtoTrade() {
       </div>
     );
   })() : null;
-  return frame(<>{coins}{quote}{windLine}{tutSt === 'done' && !bigOn && <ForestLine />}{rankRow}{chart}{unbig}{lower}{rankCardEl}{info && <CoinInfoCard id={info} now={now} r1={info === market && flyChart ? recentRange(chartHist) : rangeOf(info)} typ={typicalRange(info === market && flyChart ? chartHist : liveHistoryOf(info))} onClose={() => setInfo(null)} />}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : ''));
+  // 만화 지면(U-60): 크게 이긴 판(넣은 돈의 두 배 넘게)은 결과 카드가 떠 있는 동안 차트 칸을 이긴 컷이 차지한다. 누르면 차트로
+  const winT = result && result.kind !== 'liq' ? burstTier(result.pnl, result.margin, cl.total) : null;
+  const winPanel = result && winT && winT.lv >= 3 ? (
+    <div key={'w' + result.k} className={'mga-win lv' + winT.lv} data-mga-win={winT.lv} role="status" onClick={() => setResult(null)}>
+      <img src={mgaWin} alt="" />
+      <i className="flash" aria-hidden="true">번쩍!!</i>
+      <i className="dstamp" aria-hidden="true">{winT.lv >= 4 ? '대박!' : winT.word + '!'}</i>
+      <div className="wn">
+        <b className="reel" aria-label={money(result.pnl)}>{money(result.pnl).split('').map((c, i) => <span key={i} style={{ animationDelay: `${i * 70}ms` }}>{c}</span>)}</b>
+        <small>{result.dirText} {result.lev}배 {result.kind === 'tp' ? '익절' : '정리'}, 넣은 돈 {comma(Math.round(result.margin))} → <em>{comma(Math.round(result.margin + result.pnl))}</em> {((result.margin + result.pnl) / Math.max(1, result.margin)).toFixed(1)}배</small>
+      </div>
+    </div>
+  ) : null;
+  return frame(<>{coins}{quote}{windLine}{tutSt === 'done' && !bigOn && <ForestLine />}{rankRow}{winPanel ?? chart}{unbig}{lower}{rankCardEl}{info && <CoinInfoCard id={info} now={now} r1={info === market && flyChart ? recentRange(chartHist) : rangeOf(info)} typ={typicalRange(info === market && flyChart ? chartHist : liveHistoryOf(info))} onClose={() => setInfo(null)} />}{burst && <WinBurst key={burst.k} {...burst} onDone={() => { if (useProto.getState().burst?.k === burst.k) useProto.getState().patch({ burst: null }); }} />}</>, (sheet ? ' sheet-open' : '') + (call ? ' near' : '') + (bigOn ? ' big' : '') + (pos && danger >= 0.7 ? ' edge' : '') + (nearA ? ' mga-near' : '') + (winPanel ? ' mga-won' : ''));
 }
 
 /** 거래 화면이 잠겼는데 열린 판(회차 14): 종목, 손익, [정리] — 정리는 한곳 정리 판과 같은 행동(close) */
