@@ -282,6 +282,7 @@ export function temptPanels(t: Tempt): Panel[] {
     id: 't_photo2', src: cPhoto, alt,
     balloons: [
       { x: 72.5, y: 6, w: 23, h: 20, text: '까악, 잘 나왔다. 이건 그냥… 기념사진.', kind: 'say', fs: 2.5 },
+      { x: 4, y: 7, w: 21, h: 18, text: '그 사진은 어디에…', kind: 'say', fs: 2.7 },
       { x: 1.6, y: 92.2, w: 14.4, h: 5, text: '증거 1', kind: 'tag', fs: 2.4 },
       { x: 18, y: 91.6, w: 54, h: 6, text: `받은 돈 ${n(t.got)} / 갚을 돈 ${n(t.unit)} / 1분마다 ${t.ratePct}%`, kind: 'tag', fs: 1.9 },
     ],
