@@ -27,7 +27,7 @@ export function attachHlFeed(feed: HlDirectFeed, host: Host, onHistory?: (h: Rec
         // 세대 시작가 = 그 세대가 시작한 틱의 가격
         for (const [id, c] of Object.entries(t.p)) { g.run.refPrice[id] = c[0]; g.run.prices[id] = c[0]; }
       }
-      stepMut(g, { type: 'tick', tick: t });
+      stepMut(g, { type: 'tick', tick: t, frozen: !!host.frozen?.(t.n) }); // U-58: 가려진 동안의 틱은 정산 시계를 멈춘 채
     });
   });
 

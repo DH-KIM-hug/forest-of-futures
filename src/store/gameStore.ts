@@ -18,6 +18,7 @@ import { openSocket, postJson } from '../net/hlDirect/io';
 import { prependHistory } from '../ui/priceHistory';
 import { setDayHistory } from '../ui/dayHistory';
 import { simCatchUp, SIM_AWAY_CAP, type FeedMark } from '../ui/proto/protoSave';
+import { awayClock, wireAwayClock } from '../net/awayClock';
 
 const adapter = localStorageAdapter();
 let lastSaved = 0;
@@ -91,7 +92,8 @@ interface Store {
   net: NetInfo;
   act: (a: Action) => Res;
   setGame: (g: GameState) => void;
-  advance: (seconds: number) => void;
+  /** frozen = 가려진 동안(U-58): 시세와 포지션만 움직이고 정산 시계는 멈춘 채 */
+  advance: (seconds: number, frozen?: boolean) => void;
   reset: () => void;
   hydrate: () => Promise<string | null>;
   setSpeed: (n: number) => void;
@@ -111,11 +113,11 @@ export const useGame = create<Store>((set, get) => ({
     return res;
   },
   setGame: (g) => set({ g }),
-  advance: (seconds) => {
+  advance: (seconds, frozen = false) => {
     if (feedMode === 'server') return; // 서버 시계는 앞당길 수 없다
     if (feedMode === 'hl' && !get().net.fallback) return; // 실시간 시세도 앞당길 수 없다
     let g = get().g;
-    for (let i = 0; i < seconds; i++) g = step(g, { type: 'tick', tick: (replayFeed ?? simFeed).next() });
+    for (let i = 0; i < seconds; i++) g = step(g, { type: 'tick', tick: (replayFeed ?? simFeed).next(), frozen });
     set({ g });
     if (g.run.settleNo !== lastSaved) persist(g);
   },
@@ -129,6 +131,7 @@ export const useGame = create<Store>((set, get) => ({
 }));
 
 export async function startLoop(): Promise<void> {
+  wireAwayClock(); // U-58: 가려진 지 5초가 넘으면 정산 시계가 멈춘다
   if (feedMode === 'server') {
     const url = serverUrl(window.location, (import.meta as any).env?.VITE_SERVER_URL);
     const feed = new ServerFeed({ baseUrl: url });
@@ -140,6 +143,7 @@ export async function startLoop(): Promise<void> {
         if (g.run.settleNo !== lastSaved) persist(g);
       },
       onAway: (away) => useGame.setState((s) => ({ net: { ...s.net, away } })),
+      frozen: () => awayClock.frozenNow(Date.now()), // 서버 틱 번호는 벽시계가 아니다. 다시 보인 뒤의 재생 틱은 session 이 따로 멈춘다
     });
     // 서버의 hello 에 실린 최근 1분 봉(U-55): 지금 출렁이는 곳이 접속하자마자 뜬다
     const onHello = feed.helloHandler;
@@ -156,7 +160,7 @@ export async function startLoop(): Promise<void> {
     feed.connect();
     return;
   }
-  if (feedMode === 'hl') startHl();
+  if (feedMode === 'hl') startHl((n) => awayClock.frozenAt(n)); // 실시간 시세의 틱 번호 = 벽시계 초
   if (feedMode === 'sim') simResume();
   if (feedMode === 'replay') {
     const rec: Recording = (await import('../../docs/gdd/v2/sim/data/hl_3m.json')).default as unknown as Recording;
@@ -164,12 +168,12 @@ export async function startLoop(): Promise<void> {
   }
   setInterval(() => {
     const { speed, advance, g } = useGame.getState();
-    if (!g.run.over) advance(speed);
+    if (!g.run.over) advance(speed, awayClock.frozenNow(Date.now())); // 연습 시세의 틱 번호는 벽시계가 아니다: 지금 가려졌는지로
   }, 1000);
 }
 
 /** 브라우저 직결 실시간 시세. 못 붙으면 연습 시세로 내려간다. */
-function startHl(): void {
+function startHl(frozen: (n: number) => boolean): void {
   const r = resumeHint.r;
   const g0 = useGame.getState().g;
   // 저장에서 이어 가면(U-55) 값은 저장된 가상 가격에서 시작하고, 실시간 시세로 저장한 판이면 떠난 사이를 진짜 1분 봉으로 메운다
@@ -186,6 +190,7 @@ function startHl(): void {
       },
       onAway: (away) => useGame.setState((s) => ({ net: { ...s.net, away } })),
       paused: () => useGame.getState().speed === 0,
+      frozen,
     },
     (h, day) => { prependHistory(h); if (day) setDayHistory(day); },
   );

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { A, fresh, giveEquip, giveWheel, settleOnce, tapN, tickN } from './helpers';
+import { A, flatBars, fresh, giveEquip, giveWheel, settleOnce, tapN, tickN } from './helpers';
 import { ownedCoins, stage } from '../../src/engine/selectors';
 import { wheelOffers, wheelStatus } from '../../src/engine/progression';
-import { economyCatchUp, offlineSettlementBudget } from '../../src/engine/offline';
+import { catchUp } from '../../src/engine/offline';
 import { removeWheel, tapValue } from '../../src/engine/equipment';
 import { stepMut } from '../../src/engine/game';
 
@@ -95,33 +95,15 @@ describe('B. 진행 단계·첫 쳇바퀴(U-29: 줍기 없음, 쳇바퀴에서 �
     expect(g.run.minedValue).toBe(180);
   });
 
-  it('AC-v2-14 쳇바퀴가 없는 판(단계 0)은 8시간 뒤 돌아와도 정산 0회(현금·빚 그대로)', () => {
-    const g = wheelless();
-    const snap = JSON.stringify([g.run.cash, g.run.debts]);
-    expect(offlineSettlementBudget(g)).toBe(0);
-    expect(economyCatchUp(g, 8 * 3600)).toBe(0);
-    expect(JSON.stringify([g.run.cash, g.run.debts])).toBe(snap);
-    expect(g.run.settleNo).toBe(0);
-  });
-
-  it('AC-v2-92(경제 부분) 단계 1 은 8시간 뒤 정산 6회분만(U-47: 2 -> 6), idle 2단계면 12회분', () => {
-    const g = fresh();
-    g.run.cash = 100000; // 연체 걱정이 없어야 상한까지 돈다
-    expect(offlineSettlementBudget(g)).toBe(6);
-    expect(economyCatchUp(g, 8 * 3600)).toBe(6);
-    expect(g.run.settleNo).toBe(6);
-    const h = fresh();
-    h.run.cash = 100000;
-    h.family.tree.idle = 2;
-    expect(offlineSettlementBudget(h)).toBe(12); // U-47: idle 단계마다 3번
-    expect(economyCatchUp(h, 8 * 3600)).toBe(12);
-  });
-
-  it('AC-v2-92(경제 부분) 시작한 그대로(현금 0) 떠나면 연체가 되는 정산 앞에서 멈춘다(0회)', () => {
-    const g = fresh();
-    expect(offlineSettlementBudget(g)).toBe(6);
-    expect(economyCatchUp(g, 8 * 3600)).toBe(0);
-    expect(g.run.debts.shark1).toMatchObject({ principal: 300000, overdue: 0 });
+  it('AC-v2-14 → U-58 어느 단계든 8시간 비워도 정산 0회(현금, 빚, 남은 초 그대로)', () => {
+    for (const g of [wheelless(), fresh(), (() => { const h = fresh(); h.run.cash = 100000; h.family.tree.idle = 2; return h; })()]) {
+      g.run.settleIn = 37;
+      const snap = JSON.stringify([g.run.cash, g.run.debts, g.run.settleNo, g.run.settleIn]);
+      g.run.lastSeenTick = 100000;
+      const rep = catchUp(g, flatBars(g, 480), 8 * 3600);
+      expect(rep.economySettlements).toBe(0);
+      expect(JSON.stringify([g.run.cash, g.run.debts, g.run.settleNo, g.run.settleIn])).toBe(snap);
+    }
   });
 
   it('AC-v2-15 빌리지 않고 초당 1.5회로 굴리기만 하면: 첫 정산 연체·딱지, 둘째 정산에 쳇바퀴 압류, 셋째 정산에 파산', () => {

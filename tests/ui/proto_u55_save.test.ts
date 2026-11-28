@@ -103,10 +103,12 @@ describe('U-55 떠난 사이 메우기(연습 시세)', () => {
   it('짧게(1분 안) 비웠으면 보고서 없이 그만큼 틱을 돌린다', () => {
     const { g, feed } = midGame();
     const t0 = g.run.tick;
+    const left0 = g.run.settleIn, settle0 = g.run.settleNo;
     expect(simCatchUp(g, () => feed.next(), AWAY_REPORT_MIN - 5)).toBeNull();
     expect(g.run.tick).toBe(t0 + AWAY_REPORT_MIN - 5);
+    expect([g.run.settleNo, g.run.settleIn]).toEqual([settle0, left0]); // U-58: 그 틱도 정산 시계를 멈춘 채
   });
-  it('저장에서 이어 간 뒤 오래 비웠으면 엔진 따라잡기: 정산이 돌고, 열린 포지션은 봉마다 움직이고, 보고서 한 장', () => {
+  it('저장에서 이어 간 뒤 오래 비웠으면 엔진 따라잡기: 정산은 멈춘 채(U-58), 열린 포지션은 봉마다 움직이고, 보고서 한 장', () => {
     const { g, feed } = midGame();
     const o = stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: 50, margin: 10_000 } }); expect(o).toMatchObject({ ok: true });
     expect(g.run.positions.DTC).toBeTruthy();
@@ -118,12 +120,14 @@ describe('U-55 떠난 사이 메우기(연습 시세)', () => {
     const f2 = new SimFeed(99);
     f2.rebase(g2.run.prices, u.env.feed.n);
     expect(f2.snapshot().p.DTC[0]).toBe(g2.run.prices.DTC);
-    const settle0 = g2.run.settleNo;
+    const settle0 = g2.run.settleNo, left0 = g2.run.settleIn, debts0 = JSON.stringify(g2.run.debts);
     const r = simCatchUp(g2, () => f2.next(), 3 * 3600);
     expect(r).not.toBeNull();
     expect(r!.awaySec).toBe(3 * 3600);
-    expect(r!.economySettlements).toBeGreaterThan(0);
-    expect(g2.run.settleNo).toBe(settle0 + r!.economySettlements);
+    expect(r!.economySettlements).toBe(0);
+    expect(g2.run.settleNo).toBe(settle0);
+    expect(g2.run.settleIn).toBe(left0);
+    expect(JSON.stringify(g2.run.debts)).toBe(debts0);
     expect(r!.openAtLeave.map((p) => p.market)).toEqual(['DTC']);
     // 50배는 세 시간 연습 시세를 못 버틴다: 봉 안에서 청산되어 보고서에 적힌다
     expect(g2.run.positions.DTC).toBeUndefined();

@@ -8,6 +8,7 @@ import type { Tick } from '../engine/feed/types';
 import type { HelloMsg } from './protocol';
 import type { ServerFeed } from './serverFeed';
 import { marketDefs } from '../engine/data';
+import { FREEZE_GRACE_SEC } from './awayClock';
 
 export interface Host {
   get(): GameState;
@@ -15,6 +16,8 @@ export interface Host {
   onAway?(r: AwayReport): void;
   /** 화면이 게임 시계를 멈춰 두었는가(프롤로그, 추심원이 기다리는 동안). 멈춘 동안 온 틱은 버린다. */
   paused?(): boolean;
+  /** 틱 번호(초) n 이 가려진 동안의 것인가(U-58, net/awayClock.ts). 그 틱은 정산 시계를 멈춘 채 넣는다 */
+  frozen?(n: number): boolean;
 }
 
 const NINETY_DAYS = 90 * 86400;
@@ -55,6 +58,10 @@ export function attachServerFeed(feed: ServerFeed, host: Host, opts: SessionOpts
   let localRan = false;
   const startedAt = now();
   let started = true;
+  // U-58: 서버 판은 가려지면 연결을 닫고, 다시 보이면 떠난 틱부터 이어 받는다(60틱 이하는 재생). 그 재생 틱은 가려진 동안의 것이라 정산 시계를 멈춘 채 넣는다
+  let hidAt: { ms: number; n: number } | null = null;
+  let frozenN: [number, number] | null = null;
+  const replayFrozen = (n: number) => !!frozenN && n > frozenN[0] && n <= frozenN[1];
 
   const patch = (fn: (g: GameState) => void) => {
     const g = clone(host.get());
@@ -84,7 +91,7 @@ export function attachServerFeed(feed: ServerFeed, host: Host, opts: SessionOpts
         // 세대 시작가 = 그 세대가 시작한 틱의 서버 가격 (3.9)
         for (const [id, c] of Object.entries(t.p)) { g.run.refPrice[id] = c[0]; g.run.prices[id] = c[0]; }
       }
-      stepMut(g, { type: 'tick', tick: t });
+      stepMut(g, { type: 'tick', tick: t, frozen: replayFrozen(t.n) || !!host.frozen?.(t.n) });
     });
   });
 
@@ -132,12 +139,18 @@ export function attachServerFeed(feed: ServerFeed, host: Host, opts: SessionOpts
     },
     localTicksRan: () => localRan,
     background() {
+      hidAt = { ms: now(), n: host.get().run.lastSeenTick };
       patch((g) => { onBackground(g); });
       feed.disconnect();
     },
     foreground() {
       const g = host.get();
       patch((x) => { onForeground(x); });
+      if (hidAt) {
+        const sec = Math.floor((now() - hidAt.ms) / 1000);
+        frozenN = sec > FREEZE_GRACE_SEC ? [hidAt.n + FREEZE_GRACE_SEC, hidAt.n + sec] : null;
+        hidAt = null;
+      }
       if (!localRan && g.run.lastSeenTick > 0) feed.resumeFrom(g.run.lastSeenTick);
       feed.connect();
     },

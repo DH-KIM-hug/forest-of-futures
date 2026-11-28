@@ -18,7 +18,8 @@ import type { Tick } from './feed/types';
 export const SAVE_VERSION = 2;
 
 export type Input =
-  | { type: 'tick'; tick: Tick }
+  /** frozen = 자리를 비운 동안의 틱(U-58): 시세와 포지션은 움직이고, 정산 시계(남은 초, 캐는 값, 정산)는 멈춘다 */
+  | { type: 'tick'; tick: Tick; frozen?: boolean }
   | { type: 'action'; action: Action }
   | { type: 'hello'; avg: Record<string, { vol180: number; range180: number; range300s: number }> };
 
@@ -92,8 +93,8 @@ export function createGame(opts: NewGameOpts = {}): GameState {
 
 export const clone = <T>(x: T): T => structuredClone(x);
 
-/** 틱 하나(1초). 가격 갱신, 정산 카운트다운, 정산. */
-function tickMut(g: GameState, t: Tick): void {
+/** 틱 하나(1초). 가격 갱신, 정산 카운트다운, 정산. frozen 이면 정산 시계는 그대로(U-58: 자리를 비운 동안은 걷지 않는다) */
+function tickMut(g: GameState, t: Tick, frozen = false): void {
   const run = g.run;
   if (run.over) return;
   run.tick += 1;
@@ -110,6 +111,7 @@ function tickMut(g: GameState, t: Tick): void {
   if (run.view.tab === 'trade' && Object.keys(run.positions).length) bump(run, 'watchSec', 1);
   const wv = walletValue(run);
   if (wv > run.walletPeakValue) run.walletPeakValue = wv;
+  if (frozen) return; // U-58: 정산 시계가 멈춘 동안은 캐지도 걷지도 않는다. 남은 초가 그대로 남는다
   creditMining(g, 1); // 캐는 값은 틱마다 1초어치씩 들어온다(U-43). 정산은 걷어 가기만 한다
   run.settleIn -= 1;
   if (run.settleIn <= 0) {
@@ -136,7 +138,7 @@ export function stepMut(g: GameState, input: Input) {
     return { ok: true };
   }
   if (input.type === 'tick') {
-    tickMut(g, input.tick);
+    tickMut(g, input.tick, !!input.frozen);
     checkSurplus(g);
     return { ok: true };
   }

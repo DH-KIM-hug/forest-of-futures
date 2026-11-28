@@ -1,47 +1,14 @@
-// 오프라인 따라잡기 중 경제 부분(GDD_v2 3.13 3번). 포지션·봉 처리는 M2.
-import { balance, DEBT_IDS, lenderById } from './data';
-import { treeLevel } from './legacy';
-import { stage } from './selectors';
-import { settle } from './settlement';
-import { clone, stepMut } from './game';
+// 자리를 비운 사이(GDD_v2 3.13 → U-58). 사용자 결정 U-58: "접속 안 했을 때 걷어가면 안 된다".
+//   - 정산 시계는 멈춘다: 이자, 생활비, 일당, 연체, 압류, 펀딩비, 캐는 값, 정산 횟수가 떠난 순간 그대로. 돌아오면 남은 초부터 다시 간다
+//   - 열린 포지션은 진짜 시세를 탄다: 떠난 구간의 봉마다 청산, 손절, 익절(시세는 실제 값이라 멈춘 척하지 않는다)
+import { stepMut } from './game';
 import { closePosition as closeAtMarket } from './futures';
 import type { Tick } from './feed/types';
 import type { GameState } from './types';
-import { settleSec } from './pace';
 
-/** 떠난 동안 돌릴 경제 정산 횟수: 0단계는 0, 그 밖은 6 + 3 × idle 단계(U-47). */
-export function offlineSettlementBudget(g: GameState): number {
-  if (stage(g.run) === 0) return balance.progression.stage0OfflineSettlements;
-  return balance.offline.maxSettlements + 3 * treeLevel(g.family, 'idle'); // U-47: 정산 60초 — 단계마다 3번(예전 3분)
-}
-
-/** 어느 곳이든 연체가 (한도 - 1)이 되는 정산이면 true. 그 앞에서 멈춘다. */
-function wouldReachGuard(g: GameState): boolean {
-  const run = g.run;
-  if (DEBT_IDS.some((id) => id !== 'tax' && run.debts[id].overdue >= lenderById[id].maxOverdue - 1)) return true;
-  return run.upkeepOverdue >= balance.living.upkeepMaxOverdue - 1 && run.house > 0 && run.upkeepArrears > 0;
-}
-
-/** 자리를 비운 동안의 경제 정산을 현재 가격으로 돌린다. 처리한 정산 수를 돌려준다. */
-export function economyCatchUp(g: GameState, awaySec: number): number {
-  const budget = Math.min(offlineSettlementBudget(g), Math.floor(awaySec / settleSec(g.run)) + (awaySec > balance.offline.replayMaxSec ? 99 : 0));
-  let done = 0;
-  for (let i = 0; i < budget; i++) {
-    if (g.run.over) break;
-    if (balance.offline.protectFromOverdueBankruptcy) {
-      const probe = clone(g);
-      settle(probe);
-      if (probe.run.over || wouldReachGuard(probe)) break;
-    }
-    settle(g);
-    done += 1;
-  }
-  return done;
-}
-
-// ── 포지션은 전 구간, 경제는 상한까지 (GDD_v2 3.13) ─────────────────────
+// ── 포지션은 전 구간, 경제는 멈춤 (U-58) ─────────────────────
 import { balance as bal } from './data';
-import { processBar, applyFundingOne, positionList, liqPrice } from './futures';
+import { processBar, positionList, liqPrice } from './futures';
 import { logEvent, notify } from './util';
 import { bump } from './stats';
 import type { Bar } from './feed/types';
@@ -55,7 +22,7 @@ export function onBackground(g: GameState): Res {
   if (!ps.length) return { ok: true };
   let near = Infinity;
   for (const p of ps) near = Math.min(near, (Math.abs(run.prices[p.market] - liqPrice(p)) / run.prices[p.market]) * 100);
-  notify(run, `열어 둔 포지션 ${ps.length}개 — 자리를 비워도 계속 움직입니다. 가장 가까운 청산가까지 ${near.toFixed(1)}%`, 'wire', `wire:away:${run.tick}`);
+  notify(run, `열어 둔 포지션 ${ps.length}개 — 자리를 비워도 계속 움직입니다. 가장 가까운 청산가까지 ${near.toFixed(1)}%. 정산 시계는 멈춥니다`, 'wire', `wire:away:${run.tick}`);
   return { ok: true };
 }
 export function onForeground(g: GameState): Res {
@@ -72,9 +39,10 @@ export function visit(g: GameState, place: string): Res {
 
 /**
  * 60초를 넘게 비웠다가 돌아왔을 때. bars = 떠난 틱 이후의 1분 봉(종목마다). 제자리 수정, 시간표를 돌려준다.
- * - 포지션: 봉마다 불리한 쪽 먼저, 청산 > 손절 > 익절. 정지 구간의 봉은 건너뛰고 펀딩비도 붙지 않는다. 펀딩비는 180틱 경계마다.
- * - 경제: `6 + 3 × idle` 회분(0단계는 0회)만, 떠난 직후 정산 시각에, 그 시각의 봉 종가로. 연체가 한도-1 이 되는 정산 앞에서 멈춘다.
- * 60초 이하의 끊김은 이 함수가 아니라 1초 틱을 그대로 재생한다(`replayTicks`).
+ * - 포지션: 봉마다 불리한 쪽 먼저, 청산 > 손절 > 익절. 정지 구간의 봉은 건너뛴다.
+ * - 경제(U-58): 돌리지 않는다. 정산 횟수, 남은 초(settleIn), 현금의 이자와 생활비, 빚, 연체가 떠날 때 그대로. 펀딩비도 정산에 붙으므로 붙지 않는다.
+ *   걸어 둔 증거금은 포지션 쪽이라 시세대로만 움직이고, 아무도 걷어 가지 않는다.
+ * 60초 이하의 끊김은 이 함수가 아니라 1초 틱을 frozen 으로 재생한다(`replayTicks`).
  */
 export function catchUp(g: GameState, bars: Bar[], awaySec: number): AwayReport {
   const run = g.run;
@@ -84,15 +52,9 @@ export function catchUp(g: GameState, bars: Bar[], awaySec: number): AwayReport 
   const openAtLeave = positionList(run).map((p) => ({ market: p.market, dir: p.dir, lev: p.lev, margin: p.margin }));
   run.report = [];
   run.stats.awayHours = Math.round((awaySec / 3600) * 100) / 100;
-  let budget = offlineSettlementBudget(g);
-  const sum = { mined: 0, power: 0, interest: 0 };
-  let econDone = 0;
-  let validTicks = 0;
   let lastN = leaveN;
-  const interval = settleSec(run);
-  const keep = bal.offline.barSec * 90 * 24 * 60; // 보관 기간 90일(초) — 1분 봉 기준
-  void keep;
   const tooLong = awaySec > 90 * 24 * 3600;
+  const span = bal.offline.barSec;
 
   const groups = new Map<number, Bar[]>();
   for (const b of sorted) {
@@ -103,45 +65,13 @@ export function catchUp(g: GameState, bars: Bar[], awaySec: number): AwayReport 
     if (run.over) break;
     const group = groups.get(n0)!;
     run.tick = fromTick + (n0 - leaveN);
-    const span = bal.offline.barSec;
-    const halted = group.every((b) => b.st === 'halted');
-    if (!halted) {
-      for (const b of group) {
-        if (b.st === 'halted') continue;
-        processBar(g, b);
-        run.prices[b.market] = b.c;
-        if (run.over) break;
-      }
-      validTicks += span;
-      while (validTicks >= interval && !run.over) {
-        validTicks -= interval;
-        for (const p of positionList(run)) {
-          applyFundingOne(g, p);
-          if (run.over) break;
-        }
-      }
+    for (const b of group) {
+      if (b.st === 'halted') continue;
+      processBar(g, b);
+      run.prices[b.market] = b.c;
+      if (run.over) break;
     }
     lastN = n0 + span;
-    // 경제 정산: 떠난 직후부터, 상한까지
-    while (!run.over && econDone < budget && lastN - leaveN >= interval * (econDone + 1)) {
-      if (bal.offline.protectFromOverdueBankruptcy) {
-        const probe = clone(g);
-        probe.run.report = null;
-        settle(probe, { skipFunding: true });
-        if (probe.run.over || wouldReachGuard(probe)) {
-          budget = econDone;
-          break;
-        }
-      }
-      settle(g, { skipFunding: true });
-      econDone += 1;
-      const ls = g.run.lastSettlement;
-      if (ls) {
-        sum.mined += ls.mined;
-        sum.power += ls.power;
-        sum.interest += ls.interest;
-      }
-    }
   }
   if (tooLong && !run.over) {
     for (const p of positionList(run)) {
@@ -165,12 +95,12 @@ export function catchUp(g: GameState, bars: Bar[], awaySec: number): AwayReport 
   run.report = null;
   logEvent(run, 'back', '돌아옴');
   return {
-    awayHours: run.stats.awayHours, awaySec, fromTick, toTick: run.tick, economySettlements: econDone, openAtLeave,
-    entries, bankrupt: run.over, settlementSummary: sum,
+    awayHours: run.stats.awayHours, awaySec, fromTick, toTick: run.tick, economySettlements: 0, openAtLeave,
+    entries, bankrupt: run.over, settlementSummary: { mined: 0, power: 0, interest: 0 },
   };
 }
 
-/** 60초 이하 끊김: 받은 1초 틱을 순서대로 그대로 재생한다(경제 포함). */
-export function replayTicks(g: GameState, ticks: Tick[]): void {
-  for (const t of ticks) stepMut(g, { type: 'tick', tick: t });
+/** 60초 이하 끊김: 받은 1초 틱을 순서대로 재생한다. frozen 이면 정산 시계는 멈춘 채(U-58: 가려진 동안의 틱) */
+export function replayTicks(g: GameState, ticks: Tick[], frozen = false): void {
+  for (const t of ticks) stepMut(g, { type: 'tick', tick: t, frozen });
 }

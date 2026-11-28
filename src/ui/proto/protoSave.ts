@@ -2,7 +2,8 @@
 //   - 엔진 상태(GameState)는 engine/save.ts 의 migrate 로 읽는다(버전 사슬, 모자란 칸 채우기, 깨진 것 거르기를 그대로 쓴다)
 //   - 거기에 화면 쪽 생의 기록(튜토리얼 끝, 등급 도장, 최고의 판 …)과 주문 칸, 시세 출처가 이어 붙일 값(틱 번호, 실제 값)을 한 봉투에 담는다
 //   - 주소 값마다 키가 다르다: 장면 건너뛰기(&pdev), 다시 보기(&prologue=1), 치트(&cheat)는 읽지도 쓰지도 않는다. &e2e, &fast, 시세 출처(feed)는 저마다 다른 키
-//   - 떠난 동안: 실시간 시세는 거래소의 진짜 1분 봉으로, 연습 시세는 그 시간만큼 돌린 연습 봉으로 엔진 따라잡기(offline.ts catchUp)를 돌린다
+//   - 떠난 동안: 실시간 시세는 거래소의 진짜 1분 봉으로, 연습 시세는 그 시간만큼 돌린 연습 봉으로 엔진 따라잡기(offline.ts catchUp)를 돌린다.
+//     U-58: 포지션만 그 봉을 타고, 정산 시계(남은 초, 정산 횟수, 이자, 생활비)는 떠날 때 그대로
 import { migrate } from '../../engine/save';
 import { barsFromTicks } from '../../engine/feed/simFeed';
 import { catchUp } from '../../engine/offline';
@@ -88,12 +89,12 @@ export function unpack(raw: string | null): Unpacked {
   return { ok: true, env: { v: x.v, at: x.at, feed, g, p: pickProto(x.p), trade: x.trade && typeof x.trade === 'object' ? x.trade : null, hist } };
 }
 
-/** 연습 시세로 떠난 시간을 메운다(제자리 수정). next = 연습 시세의 다음 틱. 짧으면 틱을 그대로 돌리고 null, 길면 1분 봉으로 엔진 따라잡기를 돌리고 그 보고서 */
+/** 연습 시세로 떠난 시간을 메운다(제자리 수정). next = 연습 시세의 다음 틱. 짧으면 틱을 정산 시계를 멈춘 채 돌리고 null, 길면 1분 봉으로 엔진 따라잡기를 돌리고 그 보고서 */
 export function simCatchUp(g: GameState, next: () => Tick, awaySec: number): AwayReport | null {
   const sec = Math.floor(Math.max(0, Math.min(awaySec, SIM_AWAY_CAP)));
   if (sec < 1 || g.run.over) return null;
   if (sec < AWAY_REPORT_MIN) {
-    for (let i = 0; i < sec && !g.run.over; i++) stepMut(g, { type: 'tick', tick: next() });
+    for (let i = 0; i < sec && !g.run.over; i++) stepMut(g, { type: 'tick', tick: next(), frozen: true });
     return null;
   }
   const ticks: Tick[] = [];

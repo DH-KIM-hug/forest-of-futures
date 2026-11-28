@@ -271,7 +271,7 @@ function scene(name: string, base: ReturnType<typeof createGame>) {
       stepMut(g, { type: 'action', action: { type: 'open', market: 'DTC', dir: 1, lev: name === 'hold200' ? 200 : name === 'squeeze' ? 10 : 50, marginPct: name === 'squeeze' || name === 'awaypos' ? 100 : name === 'hold200' ? 25 : 50, sl: null, tp: null } });
       g.run.settleIn = name === 'squeeze' ? Math.min(48, balance.settlement.intervalSec - 2) : Math.round(balance.settlement.intervalSec * 0.7);
       g = clone(g);
-      if (name === 'awaypos') window.setTimeout(() => devAway(12, 2.2), 2600); // 12분 비움: 50배 전부가 청산되고, 정산은 두 번만 돈다
+      if (name === 'awaypos') window.setTimeout(() => devAway(12, 2.2), 2600); // 12분 비움: 50배 전부가 청산되고, 정산은 멈춘 채(U-58)
       return g;
     }
     case 'multi': case 'multihome': {

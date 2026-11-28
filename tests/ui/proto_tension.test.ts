@@ -142,19 +142,22 @@ describe('자리를 비운 사이', () => {
   it('시간 표기', () => {
     expect([40, 720, 3700, 90000].map(awayDur)).toEqual(['40초', '12분', '1시간 1분', '1일 1시간']);
   });
-  it('청산과 나간 알바가 줄로, 나간 지 얼마 만인지와 함께', () => {
+  it('U-58 포지션에 일어난 일만 줄로, 나간 지 얼마 만인지와 함께(정산 쪽 기록은 적지 않는다)', () => {
     const c = awayCard(rep(), { cash: 60000, debt: 500000 }, { cash: 4000, debt: 500000 }, o);
     expect(c.title).toBe('자리를 비운 12분');
-    expect(c.rows.map((r) => r.text)).toEqual(['멍도토 롱 50배 강제 청산', '알바 햄스터가 일당을 못 받고 나갔다']);
+    expect(c.rows.map((r) => r.text)).toEqual(['멍도토 롱 50배 강제 청산']);
     expect(c.rows[0]).toMatchObject({ amount: -52000, tone: 'loss', after: '나간 지 2분' });
     expect(c.left).toEqual(['멍도토 롱 50배']);
     expect(c.cashDelta).toBe(-56000);
     expect(c.debtDelta).toBe(0);
   });
-  it('추심원 쪽지: 정산은 두 번만 돌았다(12분이면 네 번 올 시간)', () => {
-    expect(awayCard(rep(), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBe('안 계셔서 2번 걷고 갔어요. 이자 29,000, 영수증 두고 가요. 빈집에서는 두 번까지만 받아요.');
-    expect(awayCard(rep({ awaySec: 200, economySettlements: 1 }), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBe('안 계셔서 1번 걷고 갔어요. 이자 29,000, 영수증 두고 가요.');
-    expect(awayCard(rep({ awaySec: 90, economySettlements: 0, entries: [] }), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note).toBeNull();
+  it('U-58 추심원 쪽지: 문 앞에서 기다렸고 이자는 안 붙었다. 정산 한 번 길이도 안 비웠으면 쪽지 없음', () => {
+    const note = (awaySec: number) => awayCard(rep({ awaySec, economySettlements: 0 }), { cash: 0, debt: 0 }, { cash: 0, debt: 0 }, o).note;
+    expect(note(720)).toBe('문 앞에서 기다렸어요. 안 계시면 안 받아요. 이자도 안 붙였어요.');
+    expect(note(3 * 3600)).toBe('문 앞에 쭈그려 앉아 기다렸어요. 다리 저려요. 이자는 안 붙였어요.');
+    expect(note(2 * 86400)).toBe('문 앞에서 밤을 샜어요. 이자는 안 붙였어요. 대신 이제 놓치지 않아요.');
+    expect(note(90)).toBeNull();
+    for (const s of [720, 3 * 3600, 2 * 86400]) expect(note(s)).not.toContain('·');
   });
   it('익절은 이익으로 적힌다', () => {
     const c = awayCard(rep({ entries: [{ tick: 1100, kind: 'tp', text: '멍도토 롱 50배 익절', amount: 26000 }] }), { cash: 0, debt: 0 }, { cash: 78000, debt: 0 }, o);
