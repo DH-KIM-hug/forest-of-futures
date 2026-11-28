@@ -5,7 +5,7 @@ import type { Who } from './protoStore';
 
 export interface TrophyDef { id: string; name: string; how: string; who: Who }
 export const EXTRA_TROPHIES: TrophyDef[] = [
-  { id: 'rival_top', name: '단타방 1위 현수막', how: '이번 생 거래 손익으로 단타방 1위(거래 다섯 판 넘게)', who: 'boss' },
+  { id: 'rival_top', name: '단타방 1위 현수막', how: '단타방 1위 하기', who: 'boss' },
   { id: 'rival_opp', name: '반대편의 눈물', how: '같은 종목 반대편에 든 라이벌이 지고, 나는 이긴 판', who: 'viper' },
   { id: 'rival_bust', name: '너구리의 찢긴 장부', how: '창구 너구리가 파산하는 것을 보기', who: 'raccoon' },
 ];

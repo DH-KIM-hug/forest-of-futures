@@ -248,7 +248,7 @@ describe('U-45 글', () => {
     const name = (id: string) => ({ DTC: '도토코인' } as Record<string, string>)[id] ?? id;
     expect(detailText('roe', { market: 'DTC', lev: 200, dir: 1, entryTs: 0, exitTs: 180_000 }, name)).toBe('도토코인 200배 롱 3분');
     expect(detailText('pnl', { market: 'DTC', lev: 25, dir: -1, entryTs: 0, exitTs: 42_000 }, name)).toBe('도토코인 25배 숏 42초');
-    expect(detailText('networth', { lifeNo: 3, settles: 41 }, name)).toBe('3번째 생 정산 41번');
+    expect(detailText('networth', { lifeNo: 3, settles: 41 }, name)).toBe('정산 41번 버팀');
     expect(holdText(3 * 3600e3 + 5 * 60e3)).toBe('3시간 5분');
     expect(valueText('roe', 123.456)).toBe('+123.5%');
     expect(valueText('pnl', 1234567)).toBe('1,234,567');

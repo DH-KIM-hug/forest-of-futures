@@ -49,7 +49,6 @@ export function RankNameAsk({ compact }: { compact?: boolean }) {
   return (
     <form className={'rk-ask' + (compact ? ' compact' : '')} data-rank-ask onSubmit={(e) => { e.preventDefault(); save(); }}>
       <label htmlFor="rk-name-in">장부에 적을 이름</label>
-      <small>전광판에 붙는 이름. 1~12글자, 뒤에 장부 번호 #{myLedgerNo()} 가 붙는다. 나중에 고칠 수 있다.</small>
       <div className="row">
         <input id="rk-name-in" data-rank-input value={v} maxLength={24} autoComplete="off" placeholder="예: 도토리부자" onChange={(e) => setV(e.target.value)} />
         <button type="submit" className={'buy' + (ok ? ' on' : '')} disabled={!ok} data-rank-save><span>적는다</span></button>
@@ -84,8 +83,7 @@ function RankLocked() {
         <div className="rk-plaque" data-rank-locked>
           <i className="lock big" aria-hidden="true" />
           <b>{LOCK_TEASER}</b>
-          <small>어느 생이든 장부의 빚을 0 으로 만드는 날 자물쇠가 풀린다. 한 번 풀리면 다음 생에도 열려 있다.</small>
-          <small>그 전에 낸 기록은 올라가지 않는다.</small>
+          <small>빚을 0 으로 만드는 날 자물쇠가 풀린다.</small>
         </div>
         <ul className="rk-tease" aria-label="열리면 붙는 판">
           {BOARDS.map((b) => <li key={b}>{BOARD_LABEL[b].tab}</li>)}
@@ -102,7 +100,7 @@ export const CHEER_LINES = {
   collector: '장부를 덮겠습니다. 덮을 일이 없을 줄 알고 풀칠해 뒀는데, 뜯느라 혼났어요.',
   collector2: '이제 이름 석 자는 장부 말고 전광판에 적으세요.',
   open: '숲 전광판이 열렸다',
-  sub: '빚을 다 갚은 자만 이름을 올리는 판. 지금부터 낸 기록이 붙는다.',
+  sub: '빚을 다 갚은 자만 이름을 올리는 판.',
 };
 export function RankUnlockCheer() {
   const on = useUnlock((s) => s.cheer);
@@ -177,7 +175,7 @@ export function RankBoard() {
   return (
     <div className="pr-notice pr-rank" role="dialog" aria-label="마을 전광판" data-rank-board onClick={closeBoard}>
       <div className="box" onClick={(e) => e.stopPropagation()}>
-        <div className="rk-mast"><b>마을 전광판</b><span>실제 시세로 낸 기록만 붙는다</span></div>
+        <div className="rk-mast"><b>마을 전광판</b><span>숲의 기록</span></div>
         {!named && <RankNameAsk />}
         <div className="rk-tabs" role="tablist">
           {BOARDS.map((b) => (
@@ -206,9 +204,9 @@ export function RankBoard() {
         )}
         {!me && rows && !fake && <p className="rk-fine" data-rank-none>내 기록은 아직 이 판에 없다.</p>}
         {named && <RankNameAsk />}
-        {off === 'sim' && <p className="rk-fine warn" data-rank-off="sim">지금은 연습 시세다. 연습 시세로 낸 기록은 전광판에 올라가지 않는다.</p>}
+        {off === 'sim' && <p className="rk-fine warn" data-rank-off="sim">지금은 시세가 끊겨 기록이 올라가지 않는다.</p>}
         {off === 'dev' && <p className="rk-fine warn" data-rank-off="dev">개발 판이라 기록을 올리지 않는다.</p>}
-        {rejected > 0 && <p className="rk-fine" data-rank-rejected={rejected}>검증되지 않아 올라가지 않은 기록 {rejected}개</p>}
+        {rejected > 0 && <p className="rk-fine" data-rank-rejected={rejected}>올라가지 못한 기록 {rejected}개</p>}
         <button className="buy on wide" data-rank-close onClick={closeBoard}><span>접는다</span></button>
       </div>
     </div>

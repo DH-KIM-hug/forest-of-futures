@@ -16,7 +16,7 @@ import { positionView } from '../vm/trade';
 import { balance } from '../../engine/data';
 import { tips, tipsLeft, type Moment } from './guide';
 import { STORY, WHO_NAME } from './text';
-import { comma } from '../../engine/util';
+import { comma, josa } from '../../engine/util';
 import { DEBT_IDS, eventById, lenderById, marketById } from '../../engine/data';
 import { levCapNow, tradeGate } from '../../engine/progression';
 import { forecast } from '../../engine/settlement';
@@ -87,7 +87,7 @@ export function loudNoteLine(now = Date.now()): string | null {
   if (!loud.length) return null;
   const top = loud.reduce((a, b) => (b.loud1m! > a.loud1m! ? b : a));
   const left = untilHourMin(top.loudHour!, new Date(now));
-  return `[도토리일보] 지난 하루 가장 큰 1분 변동: ${top.loudHour}시 무렵 ${top.name} ${top.loud1m!.toFixed(2)}%. ${left === 0 ? '지금이 그 시각.' : `같은 시각까지 ${spanText(left)}.`}`;
+  return `[도토리일보] 어제 ${top.loudHour}시 무렵 ${josa(top.name, '이', '가')} 제일 크게 뛰었다. ${left === 0 ? '바로 지금 그 시각.' : `${spanText(left)} 뒤가 그 시각.`}`;
 }
 const openSaid = new Set<string>();
 /** 따라가는 손절(U-50): 포지션마다 마지막으로 팝을 띄운 손절(ROE %) */
@@ -301,7 +301,7 @@ export const FLY_NEWS_PCT = 3;
 /** 속보 사이 최소 간격(틱 = 초) */
 export const FLY_NEWS_GAP = 300;
 let flyPointT: number | undefined;
-const QUIET_HERO = ['어느 줄을 봐도 비슷하네.', '바퀴 소리만 잘 들린다.'];
+const QUIET_HERO = ['어느 줄을 봐도 비슷하네.', '숲이 너무 조용하다.'];
 function marketTick(g: GameState): void {
   const P = useProto.getState();
   const run = g.run;
@@ -335,7 +335,7 @@ function marketTick(g: GameState): void {
       const w = fh.slice(-60);
       const up = w[w.length - 1] >= w[0];
       play('news_alarm');
-      say(`[도토리일보 속보] ${marketById.FLY.name}, 1분 새 ${r.toFixed(1)}% 출렁. 지금은 ${up ? '▲오르는' : '▼내리는'} 쪽`, 6500);
+      say(`[도토리일보 속보] ${marketById.FLY.name}, 크게 출렁인다! 지금은 ${up ? '▲오르는' : '▼내리는'} 쪽`, 6500);
       if (P.tab !== 'phone') { useProto.getState().patch({ pointTab: 'phone' }); window.clearTimeout(flyPointT); flyPointT = window.setTimeout(() => { if (!useProto.getState().forceTrade && useProto.getState().pointTab === 'phone') useProto.getState().patch({ pointTab: null }); }, 4500); }
       return;
     }
@@ -344,7 +344,7 @@ function marketTick(g: GameState): void {
   if (P.tab === 'phone' && P.scenes.length === 0 && !P.seen.dayNoteHint && P.seen.feeEventSms && !P.toast && Object.keys(run.positions).length === 0) {
     const ms = Object.values(marketById).filter((m) => m.tradable).map((m) => ({ id: m.id, name: m.name }));
     const note = dayNote(ms, Object.fromEntries(ms.map((m) => [m.id, dayBars(m.id)])), Date.now());
-    if (note.spanMin >= 30) { P.patch({ seen: { ...useProto.getState().seen, dayNoteHint: true } }); say(`${noteToast(note)} (장 분위기 칸을 누르면 시세면)`, 8000); return; }
+    if (note.spanMin >= 30) { P.patch({ seen: { ...useProto.getState().seen, dayNoteHint: true } }); say(noteToast(note), 8000); return; }
   }
   if (P.tab !== 'phone' || P.scenes.length > 0 || Object.keys(run.positions).length > 0) { mk.quietFor = 0; return; }
   const ranges = Object.values(marketById).filter((m) => m.tradable).map((m) => ({ id: m.id, r: recentRange(liveHistoryOf(m.id)) }));
@@ -356,7 +356,7 @@ function marketTick(g: GameState): void {
     useProto.getState().patch({ think: { text: QUIET_HERO[mk.n++ % QUIET_HERO.length], k: run.tick } });
     window.clearTimeout(thinkTimer);
     thinkTimer = window.setTimeout(() => useProto.getState().patch({ think: null }), 6500);
-    if (!P.seen.quietBoss) { P.patch({ seen: { ...useProto.getState().seen, quietBoss: true } }); later(7000, () => say('시세 수신 중. 최근 변동 없음.', 5500)); }
+    if (!P.seen.quietBoss) { P.patch({ seen: { ...useProto.getState().seen, quietBoss: true } }); later(7000, () => say('오소리 대부: 조용한 날엔 다들 졸아요. 그러다 한 번에 터지죠.', 5500)); }
     // 두 번째로 조용한 때부터(U-42): 신문이 "지난 하루에 언제가 시끄러웠는지"를 한 줄로 — 기다릴지 말지는 내가 정한다
     else if (!P.seen.loudNote) { const ln = loudNoteLine(); if (ln) { P.patch({ seen: { ...useProto.getState().seen, loudNote: true } }); later(7000, () => say(ln, 8000)); } }
     return;
@@ -365,7 +365,7 @@ function marketTick(g: GameState): void {
   const top = liveliest(ranges);
   if (mk.wasQuiet && top && top.r >= LIVELY_PCT) {
     mk.wasQuiet = false;
-    useProto.getState().patch({ think: { text: `${marketById[top.id]?.name ?? top.id} 봐. 방금 1분에 ${top.r.toFixed(2)}%나 움직였어.`, k: run.tick } });
+    useProto.getState().patch({ think: { text: `${marketById[top.id]?.name ?? top.id} 봐. 방금 확 움직였어!`, k: run.tick } });
     window.clearTimeout(thinkTimer);
     thinkTimer = window.setTimeout(() => useProto.getState().patch({ think: null }), 6500);
   }
@@ -692,7 +692,7 @@ export function startWatch(): void {
           // 이긴 판이 터지면 그 상자에 「승급」 칩이 같이 뜬다(장면이 덮기 전에 보이게). 아니면 0.7초 뒤 한 줄과 팡파르
           if (after.r > before.r && tierB) later(900, () => play('goal_complete'));
           // 승급 한 줄은 거래소 밖에서만(거래소에서는 승급 카드가 같은 말을 한다). 청산이면 도장이 걷힌 뒤에(회차 15: 승급 카드, 청산 도장, 알림이 세 겹)
-          if (after.r > before.r && !tierB && useProto.getState().tab !== 'phone') later(endKind === 'liq' ? LIQ_QUIET_MS + 300 : 700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 이제 ${rankFeeText(after.r)}. 다음은 ${after.next}(${after.need - after.have}개 더).`, 5500, true); });
+          if (after.r > before.r && !tierB && useProto.getState().tab !== 'phone') later(endKind === 'liq' ? LIQ_QUIET_MS + 300 : 700, () => { play('win_fanfare'); say(`[FRX 숲거래소] ${after.name} 회원이 되셨어요 ♥ 수수료를 깎아 드릴게요.`, 5500, true); });
         }
         if (tierB) {
           const P0 = useProto.getState();
@@ -815,7 +815,7 @@ export function startWatch(): void {
           treePing('C1', `따라가는 손절 +${lt.sl}%`);
         }
       }
-      if (run.futures.waiver && !prev.run.futures.waiver) later(400, () => say('[FRX 숲거래소] 위험 고지 확인서 접수. 이번 생은 200배까지 주문할 수 있습니다.', 4500));
+      if (run.futures.waiver && !prev.run.futures.waiver) later(400, () => say('[FRX 숲거래소] 확인서 접수. 이제 200배까지 주문할 수 있어요.', 4500));
     }
     // ── 이야기 사건 ──
     if (!run.over && sameLife) {

@@ -9,11 +9,16 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefO
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
 import { TUT, hamsterMath, claim, lifeNo } from './model';
-import { flySecOf, windNow, donePatterns, PATTERN_ODDS_TEXT } from './flyWind';
+import { flySecOf, windNow, donePatterns } from './flyWind';
 import { flySeconds } from '../../engine/feed/fly';
 import { ForestLine, forestOpen } from './ForestBoard';
 import { rankFeeText, rankFeePct } from './frxRank';
-import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier, slowHint, typicalRange } from './tension';
+import { tensionOf, orderOdds, claimShare, squeezeOf, dangerOf, burstTier, slowHint, typicalRange, soonText, waitText, type Odds } from './tension';
+/** 라이트의 「이자까지」 한 줄: 셈 설명 없이 얼마 맞히면 얼마인지만 */
+const liteOdds = (o: Odds, claimTotal: number): string => {
+  const pc = (x: number) => (x >= 10 ? x.toFixed(0) : x >= 1 ? x.toFixed(1) : x.toFixed(2));
+  return o.liqFirst ? '이자 벌기 전에 청산이 먼저 와요.' : `${pc(o.needPct)}% 맞히면 +${comma(Math.round(claimTotal))}`;
+};
 import { closedMath, tradeNet, say as toast, liqQuietLeft } from './watch';
 import { exitFee, fundingRateNow } from '../../engine/futures';
 import { exitFeeMul } from '../../engine/skilltree';
@@ -468,7 +473,7 @@ export function ProtoTrade() {
   const netNow = pos && rawPos ? tradeNet(rawPos, pos.back) : 0;
   // 들고 있는 동안의 긴장(U-39 ①): 청산까지의 거리를 지난 1분 폭에 견주고, 정산 때 낼 돈이 묶여 있는지 본다
   const tn = pos ? tensionOf(pos.liqDistPct, liveHist) : null;
-  const share = pos ? claimShare(netNow, cl.total) : null;
+  const share = pos && !isLite ? claimShare(netNow, cl.total) : null;
   // 큰 숫자 = 이 거래로 지금까지 늘거나 준 돈의 비율(수수료 포함). 그 아래에 왜 그 숫자인지(시세 · 수수료)
   const netRoe = pos && rawPos ? (netNow / Math.max(1, rawPos.margin0)) * 100 : 0;
   const feesNow = pos && rawPos ? Math.round(rawPos.feesPaid + exitFee(rawPos, exitFeeMul(run))) : 0;
@@ -591,7 +596,7 @@ export function ProtoTrade() {
     // 걸어 둔 익절 폭이 지난 기록에 한 번도 없었다(조용한 장): 이번 생에 한 번, 오소리 대부가 있는 그대로 말한다 — 기다리는 동안에도 정산은 온다(U-41 ⑩)
     if (tpK !== null && acOrder?.tpMove != null && hist.length >= 60 && swingCount(hist, acOrder.tpMove) === 0 && !useProto.getState().seen.farTp) {
       useProto.getState().patch({ seen: { ...useProto.getState().seen, farTp: true } });
-      window.setTimeout(() => toast(`오소리 대부: 그 익절 폭(${acOrder.tpMove!.toFixed(2)}%)은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 한 번도 안 나왔습니다. 정산은 그동안에도 와요.`, 7000), 1200);
+      window.setTimeout(() => toast('오소리 대부: 익절이 좀 머네요. 기다리는 동안에도 정산은 와요.', 6000), 1200);
     }
     // 도토리로 건 출구: 실제로 들어간 크기(쪼개 넣기면 셋 가운데 하나)에 맞춰 다시 건다
     if (tpK !== null || slK !== null) { plan.current[market] = { tp: tpK !== null ? tpK * cl.total : null, sl: slK !== null ? slK * cl.total : null }; reapply(); }
@@ -803,7 +808,7 @@ export function ProtoTrade() {
           if (t.id === market && tutSt === 'done') { play('ui_tap'); setInfo((v) => (v ? null : t.id)); return; }
           setTrade({ market: t.id });
           // 날다람쥐코인(FLY)을 처음 열었다: 숲 신문 한 줄(생마다 한 번)
-          if (marketById[t.id].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[t.id].name} 상장. 실체 없는 숲 밈코인, 값은 바람이 정한다.`, 6000); }
+          if (marketById[t.id].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[t.id].name} 상장. 숲이 들썩인다.`, 6000); }
         }}>
           <Coin id={t.id} size={22} />
           {t.id === market && tutSt === 'done' && <i className="inf" aria-hidden="true">i</i>}
@@ -853,7 +858,7 @@ export function ProtoTrade() {
     const mins = Math.min(...rk0.map((x) => x.bars));
     return (
       <div className="pt-hot" data-hot={rk0.map((x) => x.id).join(',')} role="group" aria-label="지금 출렁이는 곳">
-        <button className="hd" onClick={() => { play('ui_tap'); toast(`지금 출렁이는 곳: 실제 시세 1분 봉의 높낮이 폭을 지난 ${mins}분 평균으로 줄 세웠다. 날다람쥐코인과 본장이 닫힌 종목은 뺐다.`, 6000); }}>지금 출렁이는 곳</button>
+        <button className="hd" onClick={() => { play('ui_tap'); toast('지금 크게 움직이는 코인들.', 3500); }}>지금 출렁이는 곳</button>
         {rk0.map((x, i) => (
           <button key={x.id} className={'it' + (x.id === market ? ' on' : '')} data-hot-id={x.id} onClick={() => { if (x.id === market) return; play('ui_tap'); setTrade({ market: x.id }); }}>
             <i>{i + 1}</i>{marketById[x.id].short ?? marketById[x.id].name}<b>{x.pct < 0.095 ? x.pct.toFixed(2) : x.pct.toFixed(1)}%</b>
@@ -894,7 +899,7 @@ export function ProtoTrade() {
   );
   const chart = (
     <>
-      <PChart market={market} hist={chartHist} pos={pos} win={win} pats={flyPats(win, chartHist.length)} band={tn?.rangePct ?? null} foot={winCtl} footH={(sk.zoom ? 50 : 26) + (WINS.length > 3 ? 18 : 0)} note={spanLabel} over={nearA ? <span className="mga-bal" aria-hidden="true"><svg viewBox="0 0 200 90" preserveAspectRatio="none"><polygon points={MGA_BURST} /></svg><b>청산 코앞!!</b></span> : <i className="mga-sfx" aria-hidden="true">{Math.abs(tab.pct) >= 1 ? (tab.pct > 0 ? '쭈욱!' : '뚝!') : '스~윽'}</i>} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
+      <PChart market={market} hist={chartHist} pos={pos} win={win} pats={flyPats(win, chartHist.length)} band={tn?.rangePct ?? null} foot={winCtl} footH={(sk.zoom ? 50 : 26) + (WINS.length > 3 ? 18 : 0)} note={isLite ? '' : spanLabel} over={nearA ? <span className="mga-bal" aria-hidden="true"><svg viewBox="0 0 200 90" preserveAspectRatio="none"><polygon points={MGA_BURST} /></svg><b>청산 코앞!!</b></span> : <i className="mga-sfx" aria-hidden="true">{Math.abs(tab.pct) >= 1 ? (tab.pct > 0 ? '쭈욱!' : '뚝!') : '스~윽'}</i>} onPlotTap={() => { if (useProto.getState().scenes.length) return; play('ui_tap'); setBigChart((v) => !v); }} />
       {ins && ins.shortNotional > 0 && (
         <div className="pt-meta">
           <span>지갑 평가액 {comma(Math.floor(ins.walletValue))}, 숏으로 상쇄하는 비율 {ins.ratioPct}%</span>
@@ -945,7 +950,7 @@ export function ProtoTrade() {
       {AK[kind].map((k) => {
         // 그 폭이 지난 몇 분에 실제로 몇 번 나왔는가(칩마다): 조용한 장에서는 작은 출구를, 시끄러운 장에서는 큰 출구를 고를 수 있게
         const a = sctx ? acornStops(sctx, kind === 'tp' ? k * cl.total : null, kind === 'sl' ? k * cl.total : null) : null;
-        const cnt = a ? chipCount(hist, kind === 'tp' ? a.tpMove : a.slMove) : null;
+        const cnt = a && !isLite ? chipCount(hist, kind === 'tp' ? a.tpMove : a.slMove) : null;
         return (
         <button key={k} role="radio" aria-checked={acIs(kind, k)} className={'pt-chip' + (acIs(kind, k) ? ' on' : '')} data-ak={kind + k} data-cnt={cnt ?? undefined} onClick={() => setAcorn(kind, k)}>
           <b>{akName(k)}</b><small>{kind === 'tp' ? '+' : '−'}{comma(Math.round(k * cl.total))}{cnt && <i> {cnt}</i>}</small>
@@ -980,8 +985,8 @@ export function ProtoTrade() {
   const sqHold = pos ? squeezeOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, holding: true }) : null;
   const stillNow = swingOf(rangeOf(market)) === 'still';
   // 도토리로 건 출구가 있으면 그 줄이 "이자까지" 줄을 대신한다. 그 폭이 지난 몇 분에 실제로 몇 번 나왔는지도 센다(약속이 아니라 센 것)
-  const planTxt = !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist }) : null;
-  const oddsSwing = odds ? swingCountText(hist, odds.needPct) : null;
+  const planTxt = !isLite && !pos && acOrder && (tpK !== null || slK !== null) ? planLine({ tpNet: tpK !== null ? tpK * cl.total : null, slNet: slK !== null ? slK * cl.total : null, st: acOrder, hist }) : null;
+  const oddsSwing = odds && !isLite ? swingCountText(hist, odds.needPct) : null;
   const carry = pos && rawPos ? carryOf({ cash: run.cash, income, due: dueAll, settleIn: run.settleIn, notional: rawPos.notional, fundingRate: fundingRateNow()}) : null;
   const firstShowEarly = tutSt === 'done' && firstTry > 0 && lifeNo(g) === 1 && !pos && !result && cl.total > 0 && !sheet;
   // 느린 판(U-51): 평소대로면 목표까지 5분 넘게 걸리는 판이면 그렇다고, 지금 더 빨리 움직이는 종목이 있으면 그 이름을 — 손 놓고 기다리지 않게. 눌러서 그 종목으로 간다
@@ -992,7 +997,7 @@ export function ProtoTrade() {
     : odds && !odds.liqFirst && !prev.reason ? slowHint({ needPct: odds.needPct, rangePct: typicalRange(liveHist), goal: '이자 한 번', alt: altM, ownR: rangeOf(market) }) : null;
   const slowLine = slow ? (
     <button className={'pt-slow' + (slow.alt ? ' go' : '')} data-slow={Math.round(slow.sec)} disabled={!slow.alt} onClick={() => { if (!altM) return; play('ui_tap'); setTrade({ market: altM.id }); }}>
-      <span>{slow.text}</span>{slow.alt && <b>보러 가기 ›</b>}
+      <span>{isLite ? `이대로면 ${slow.sec >= 86400 ? '하루 넘게' : waitText(slow.sec) + '쯤'} 걸려요.${slow.alt && altM ? ` ${josa(altM.name, '이', '가')} 더 빨라요.` : ''}` : slow.text}</span>{slow.alt && <b>보러 가기 ›</b>}
     </button>
   ) : null;
   const noteLine = note && <div key={note.k} className={'pt-note' + (note.bad ? ' bad' : '')} role="status">{note.text}</div>;
@@ -1032,11 +1037,11 @@ export function ProtoTrade() {
         </div>
         {oddsShown && (planTxt
           ? <div className="pt-odds plan" data-odds data-plan>{planTxt}</div>
-          : odds!.tight ? <div className="pt-odds warn" data-odds data-tight>{odds!.tight}</div>
-          : <div className={'pt-odds' + (odds!.liqFirst ? ' no' : '')} data-odds>{odds!.text}{!odds!.liqFirst && oddsSwing ? `, ${oddsSwing}` : ''}</div>)}
+          : odds!.tight ? <div className="pt-odds warn" data-odds data-tight>{isLite ? '청산선이 아주 가까워요. 한 번 출렁이면 끝.' : odds!.tight}</div>
+          : <div className={'pt-odds' + (odds!.liqFirst ? ' no' : '')} data-odds>{isLite ? liteOdds(odds!, cl.total) : odds!.text}{!odds!.liqFirst && oddsSwing ? `, ${oddsSwing}` : ''}</div>)}
         {/* 지금 고른 종목이 자고 있다: 이자까지의 셈 대신, 다른 종목이 깨어 있으면 어디가 움직이는지, 전부 조용하면 그렇다고 말한다(가짜 출렁임은 없다) */}
         {quietShown && (
-          <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 모든 종목 값이 거의 그대로다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? '본장 마감이라' : '지금'} 거의 안 움직인다. 움직이는 곳은 ${marketById[wild.id].name} (1분 ${wild.r.toFixed(2)}%)` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
+          <div className="pt-quiet" data-quiet={quietAll ? 'all' : 'one'}>{quietAll ? '지금은 모든 종목 값이 거의 그대로다.' : wild ? `${josa(m.name, '은', '는')} ${sess?.state === 'closed' ? '본장 마감이라' : '지금'} 거의 안 움직인다. 움직이는 곳은 ${marketById[wild.id].name}.` : `${josa(m.name, '은', '는')} 지금 거의 안 움직인다.`}</div>
         )}
       </div>}
       {!pos && !prev.reason && tutSt === 'done' && sqOrder && <div className="pt-squeeze" data-squeeze="order">{sqOrder.text}</div>}
@@ -1052,13 +1057,13 @@ export function ProtoTrade() {
   const firstGo = () => {
     play('ui_tap');
     setTrade({ market: FIRST.market, lev: FIRST.lev, pct: FIRST.pct, keep: false, tpK: 1, slK: 1, tp: null, sl: null });
-    if (marketById[FIRST.market].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[FIRST.market].name} 상장. 실체 없는 숲 밈코인, 값은 바람이 정한다.`, 6000); }
+    if (marketById[FIRST.market].synthetic && !useProto.getState().seen.flyNews) { useProto.getState().patch({ seen: { ...useProto.getState().seen, flyNews: true } }); toast(`[도토리일보] ${marketById[FIRST.market].name} 상장. 숲이 들썩인다.`, 6000); }
   };
   const firstCard = firstShow ? (
     <div className={'pt-first' + (firstSet ? ' set' : '')} data-first={firstSet ? 'set' : 'ask'} data-hl="cond" role="status">
       <img className="ft-boss" src={sprite('boss')!.src} alt="" aria-hidden="true" />
       <div className="ft-t"><b>FRX 첫 실전</b><span>{marketById[FIRST.market].name} {FIRST.lev}배, {FIRST.pct}%</span></div>
-      <p>익절 <b className="up">+{comma(Math.round(cl.total))}</b> 손절 <b className="down">−{comma(Math.round(cl.total))}</b>{firstSet ? <>, 이제 롱이나 숏.</> : <>, 이자 한 번 치. 어느 쪽이 먼저 닿을지는 아무도 모른다.</>}</p>
+      <p>익절 <b className="up">+{comma(Math.round(cl.total))}</b> 손절 <b className="down">−{comma(Math.round(cl.total))}</b>{firstSet ? <>, 이제 롱이나 숏.</> : <>, 이자 한 번 치.</>}</p>
       {!firstSet && <button className="ft-go" data-first-go onClick={firstGo}>이대로 맞추기</button>}
     </div>
   ) : null;
@@ -1100,7 +1105,7 @@ export function ProtoTrade() {
           <div className="sh-title"><b>손절과 익절</b><span>{pos ? `${m.name} ${pos.dirText} ${pos.lev}배` : '다음 주문에 적용'}</span></div>
           <button className="pt-x" aria-label="출구 닫기" onClick={() => setSheet(null)}><Cross /></button>
         </div>
-        {cl.total > 0 && <>{acRow('tp')}{acRow('sl')}<p className="pt-acnote" data-acnote>이자 한 번 = 다음 수금(이자 + 생활비) {comma(cl.total)}.{hist.length >= 60 ? ` 「n번」은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 그 폭이 나온 횟수.` : ''}</p></>}
+        {cl.total > 0 && <>{acRow('tp')}{acRow('sl')}{!isLite && <p className="pt-acnote" data-acnote>이자 한 번 = 다음 수금(이자 + 생활비) {comma(cl.total)}.{hist.length >= 60 ? ` 「n번」은 지난 ${Math.max(1, Math.round(hist.length / 60))}분에 그 폭이 나온 횟수.` : ''}</p>}</>}
         {stops}
         {sk.dayLimit && (
           <div className="pt-stops day" data-daylimit>
@@ -1174,7 +1179,7 @@ export function ProtoTrade() {
             {tn && (
               <div className={'pt-tense r-' + tn.reach} data-tense={tn.reach} data-hl="posTense" role="status">
                 <span className="dots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={i < (call ? 5 : tn.dots) ? 'on' : ''} />)}</span>
-                <span className="tx">청산까지 {tn.text}</span>
+                <span className="tx">청산까지 {isLite && tn.sec !== null ? soonText(tn.sec) : tn.text}</span>
               </div>
             )}
             {sqHold ? <div className="pt-squeeze" data-squeeze="hold">{sqHold.text}</div> : carry && run.settleIn <= CARRY_SHOW_SEC ? <div className="pt-carry" data-carry>{carry.text}</div> : (
@@ -1228,7 +1233,7 @@ export function ProtoTrade() {
             <svg className="rc-bow" width="34" height="44" viewBox="0 0 34 44"><path d="M17 0v19" stroke="#4A4640" strokeWidth="2" strokeLinecap="round" /><path d="M17 24 6 17.5v13z M17 24l11-6.5v13z" fill="var(--bow)" stroke="#4A4640" strokeWidth="2" strokeLinejoin="round" /><path d="M15 26l-4 10 5-2.4z M19 26l4 10-5-2.4z" fill="var(--bow)" stroke="#4A4640" strokeWidth="1.8" strokeLinejoin="round" /><circle cx="17" cy="24" r="3.4" fill="var(--bow)" stroke="#4A4640" strokeWidth="2" /></svg>
           </div>
           <p className="gift">선물 <em>{lk.gift}</em></p>
-          <p className="fee" data-rankcard-fee>이제 거래 {rankFeeText(rankCard.r)}{rankCard.r > 0 && rankFeePct(rankCard.r) < rankFeePct(rankCard.r - 1) ? <small> (전 {+rankFeePct(rankCard.r - 1).toFixed(4)}%)</small> : null}</p>
+          <p className="fee" data-rankcard-fee>이제 거래 {rankFeeText(rankCard.r)}{!isLite && rankCard.r > 0 && rankFeePct(rankCard.r) < rankFeePct(rankCard.r - 1) ? <small> (전 {+rankFeePct(rankCard.r - 1).toFixed(4)}%)</small> : null}</p>
           <p className="nx">다음 {rankName(rankCard.r + 1)}까지 도장 {need}개, 선물은 {nx.gift}</p>
         </div>
       </div>
@@ -1267,7 +1272,7 @@ function LockedPositions({ ps }: { ps: { market: string; dir: 1 | -1; lev: numbe
 }
 
 const COIN_INFO = (coinInfoJson as { coins: Record<string, { lore: string; rumor: string }> }).coins;
-const COIN_KIND: Record<string, string> = { DTC: '코인', BTH: '코인', MDT: '밈코인', SMS: '주식', JQQ: '지수', FLY: '숲 밈코인' };
+const COIN_KIND: Record<string, string> = { DTC: '코인', BTH: '코인', MDT: '밈코인', SMS: '주식', JQQ: '지수', FLY: '밈코인' };
 const pctFmt = (r: number) => (r < 0.1 ? r.toFixed(3) : r.toFixed(2)) + '%';
 /** 종목 소개 카드: 로고, 이름, 설명, 숲의 소문, 거래 시간과 평소 1분 폭(실시간). 보기만 하고, 아무 데나 누르면 닫힌다 */
 function CoinInfoCard({ id, now, r1, typ, onClose }: { id: string; now: Date; r1: number | null; typ: number | null; onClose: () => void }) {
@@ -1275,7 +1280,7 @@ function CoinInfoCard({ id, now, r1, typ, onClose }: { id: string; now: Date; r1
   const t = COIN_INFO[id];
   if (!m || !t) return null;
   const ses = SESSIONS[id] ? sessionOf(id, now, r1) : null;
-  const hours = SESSIONS[id] ? `평일 본장 ${sessionHoursKst(id, now)} (한국 시간)` : m.synthetic ? '24시간, 바람은 쉬지 않는다' : '24시간, 주말에도 쉬지 않는다';
+  const hours = SESSIONS[id] ? `평일 본장 ${sessionHoursKst(id, now)} (한국 시간)` : '24시간, 주말에도 쉬지 않는다';
   const nowTxt = ses ? (ses.state === 'open' ? '지금 장중' : ses.state === 'after' ? '지금 본장 마감, 그래도 조금 움직인다' : ses.state === 'holiday' ? '장중인데 조용함, 휴장인 듯' : '지금 본장 마감') : '지금 열려 있음';
   return (
     <div className="pt-coininfo" data-coininfo={id} role="dialog" aria-label={`${m.name} 소개`} onClick={onClose}>
@@ -1284,7 +1289,7 @@ function CoinInfoCard({ id, now, r1, typ, onClose }: { id: string; now: Date; r1
       <p className="ci-rumor"><b>숲의 소문</b>{t.rumor}</p>
       <dl className="ci-facts">
         <div><dt>거래 시간</dt><dd>{hours}<small>{nowTxt}</small></dd></div>
-        <div><dt>평소 1분 폭</dt><dd data-ci-typ>{typ === null ? '재는 중' : pctFmt(typ)}<small>{r1 === null ? '지난 1분 재는 중' : `지난 1분 ${pctFmt(r1)}`}</small></dd></div>
+        {!isLite && <div><dt>평소 1분 폭</dt><dd data-ci-typ>{typ === null ? '재는 중' : pctFmt(typ)}<small>{r1 === null ? '지난 1분 재는 중' : `지난 1분 ${pctFmt(r1)}`}</small></dd></div>}
       </dl>
       <span className="ci-x">누르면 닫힘</span>
     </div>

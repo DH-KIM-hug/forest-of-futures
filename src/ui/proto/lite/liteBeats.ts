@@ -25,10 +25,8 @@ export function temptOnBorrow(before: GameState, id: LenderId, got: number): voi
 export function despairThenRebirth(g: GameState, rebirth: () => void): void {
   const run = g.run;
   if (!run.bankruptcy || g.pendingEnding?.cause === RETIRE_CAUSE) { rebirth(); return; }
-  // 장면 D: 프롤로그 4쪽(절망의 표제지)을 진짜 숫자와 함께. 숫자 상자 = 빌린 돈(지금 빚 전부) / 남은 돈(손의 돈)
-  // 판을 쥔 채 이자를 못 내 파산했으면 그 돈도 적는다(걸어 둔 증거금은 압류되지도, 이자로 나가지도 않는다)
-  const onTable = Object.values(run.positions).reduce((a, p) => a + p.margin, 0);
-  const nar: [string, string] = [`빌린 돈 ${comma(Math.round(totalDebt(run)))}`, `남은 돈 ${comma(Math.max(0, Math.floor(run.cash)))}${onTable >= 1000 ? `, 판에 걸려 있던 돈 ${comma(Math.round(onTable))}` : ''}`];
+  // 장면 D: 프롤로그 4쪽(절망의 표제지)을 진짜 숫자와 함께. 숫자 상자 = 빚(지금 빚 전부) / 남은 돈(손의 돈)
+  const nar: [string, string] = [`빚 ${comma(Math.round(totalDebt(run)))}`, `남은 돈 ${comma(Math.max(0, Math.floor(run.cash)))}`];
   pushSeq({ id: 'broke', label: '파산', panels: [despairPanel({ sub: `제${lifeNo(g)}화 파산`, nar })], endBtn: '환생하기', onEnd: rebirth });
 }
 

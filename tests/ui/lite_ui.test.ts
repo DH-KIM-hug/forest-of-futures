@@ -66,9 +66,9 @@ describe('라이트 대사와 컷', () => {
     expect(LITE_STORY.clear!().map((l) => l.text)).toContain('완납입니다.');
   });
   it('파산 표지는 진짜 숫자를 해설 칸에 싣는다', () => {
-    const p = despairPanel({ sub: '제2화 파산', nar: ['빌린 돈 512,300', '남은 돈 0'] });
+    const p = despairPanel({ sub: '제2화 파산', nar: ['빚 512,300', '남은 돈 0'] });
     const t = (p.words ?? []).map((w) => w.t);
-    expect(t).toContain('빌린 돈 512,300');
+    expect(t).toContain('빚 512,300');
     expect(t).toContain('남은 돈 0');
     expect(t).toContain('제2화 파산');
     expect(t).not.toContain('신연재!!!');

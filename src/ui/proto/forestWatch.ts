@@ -71,14 +71,14 @@ export function forestTick(g: GameState, say: Say): void {
       if (st.gustSaid !== gw.endsAt && P.scenes.length === 0) {
         st.gustSaid = gw.endsAt;
         play('news_alarm', { vol: 0.7 });
-        say(`[도토리일보 돌풍 특보] 앞으로 ${Math.max(1, Math.ceil((gw.endsAt - fs) / 60))}분, 날다람쥐코인에 돌풍. 돌풍 의뢰: 이 바람에 이익 한 판, 도장 +${GUST_QUEST.reward}`, 7000, true);
+        say(`[도토리일보 돌풍 특보] ${Math.max(1, Math.ceil((gw.endsAt - fs) / 60))}분 동안 날다람쥐코인에 돌풍! 이익 한 판이면 도장 +${GUST_QUEST.reward}`, 7000, true);
       }
     } else {
       if (board.gust && fs >= board.gust.endsAt) board = setGust(board, null);
       const nx = flyGust(gw.endsAt);
       if (nx.mul >= GUST_MUL && gw.endsAt - fs <= 60 && st.foreSaid !== gw.endsAt && P.scenes.length === 0) {
         st.foreSaid = gw.endsAt;
-        say(`[도토리일보 예보] 1분 뒤 날다람쥐코인에 돌풍(평소의 ${nx.mul.toFixed(1)}배 흔들림). 날다람쥐들이 나뭇가지를 꽉 붙든다.`, 6500);
+        say('[도토리일보 예보] 1분 뒤 날다람쥐코인에 돌풍. 날다람쥐들이 나뭇가지를 꽉 붙든다.', 6500);
       }
     }
   }
@@ -100,7 +100,7 @@ export function forestTick(g: GameState, say: Say): void {
   const closes = useProto.getState().closes;
   const rows = standings(rv, useProto.getState().tradeLife, run.prices);
   const top = rows[0]?.me && closes >= 5 && rows[0].pnl > 0;
-  if (top && !st.top) { st.top = true; trophy('rival_top', g, say); if (P.tab === 'phone') say(`[숲 단타방] 이번 생 손익 1위. ${rows[1] ? `${rows[1].name}: 「운이야, 운.」` : ''}`, 4500); }
+  if (top && !st.top) { st.top = true; trophy('rival_top', g, say); if (P.tab === 'phone') say(`[숲 단타방] 손익 1위! ${rows[1] ? `${rows[1].name}: 「운이야, 운.」` : ''}`, 4500); }
   if (!top) st.top = false;
 }
 

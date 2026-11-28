@@ -1,7 +1,7 @@
 // U-57(회차 16): 날다람쥐 교과서 모양의 화면 쪽(끝난 뒤에만 이름), 숲 소문 걷기, 장면 순서, 튜토리얼 계단, 나무 화폐 이름
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { donePatterns, windNow, PATTERN_ODDS_TEXT, FLY_1M_PCT } from '../../src/ui/proto/flyWind';
+import { donePatterns, windNow, FLY_1M_PCT } from '../../src/ui/proto/flyWind';
 import { flyEpisodesBetween, flyCandles } from '../../src/engine/feed/fly';
 import { collapseHeld, LIQ_QUIET_MS, liqQuietLeft } from '../../src/ui/proto/watch';
 import { historyOf, pushPrices, pushOne, dropLast, beginScript, endScript, resetHistory } from '../../src/ui/priceHistory';
@@ -29,8 +29,6 @@ describe('끝난 차트 모양(앞일은 말하지 않는다)', () => {
       expect(w.rec.ok / w.rec.n).toBeLessThan(0.85);
     }
     expect(seen).toBeGreaterThan(10);
-    expect(PATTERN_ODDS_TEXT).toMatch(/열에 7쯤 교과서대로/);
-    expect(PATTERN_ODDS_TEXT).not.toMatch(/·/);
   });
   it('평소 1분 폭(화면의 말)은 시세 함수의 1분 봉 폭과 맞는다', () => {
     const cs = flyCandles(T0, T0 + 48 * 3600);

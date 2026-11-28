@@ -76,8 +76,8 @@ describe('정산 때 낼 돈이 포지션에 묶이는가', () => {
   it('회차 2 에서 겪은 일: 전부 걸면 손에 0, 알바가 캐 오는 9,335 로는 이자·생활비·일당 19,100 을 못 낸다', () => {
     const s = squeezeOf({ cash: 0, income: 9335, due: 19100, settleIn: 125, holding: false })!;
     expect(s).toMatchObject({ due: 19100, have: 9335, short: 9765 });
-    expect(s.text).toBe('거래 후 잔액 9,335, 2:05 뒤 낼 돈 19,100. 그때 잔액이 모자라면 연체');
-    expect(squeezeOf({ cash: 0, income: 9335, due: 19100, settleIn: 42, holding: true })!.text).toBe('0:42 뒤 낼 돈 19,100, 손에 9,335. 판에 건 돈은 압류 안 되지만 닫아야 낸다');
+    expect(s.text).toBe('걸고 나면 손에 9,335. 2:05 뒤 낼 돈 19,100, 모자라면 연체');
+    expect(squeezeOf({ cash: 0, income: 9335, due: 19100, settleIn: 42, holding: true })!.text).toBe('0:42 뒤 낼 돈 19,100, 손에 9,335. 닫아야 낼 수 있다');
   });
   it('낼 돈이 남으면 아무 말도 없다', () => {
     expect(squeezeOf({ cash: 50000, income: 9335, due: 19100, settleIn: 60, holding: false })).toBeNull();

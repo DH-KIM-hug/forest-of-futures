@@ -62,7 +62,7 @@ export function ProfitPrompt() {
       {stage === 'done' && thumb ? (
         <>
           <img className="th" src={thumb} alt="수익 인증서 미리보기" />
-          <div className="tx"><b>{note}</b><small>카드 아래 QR 코드로 게임을 열 수 있어요</small></div>
+          <div className="tx"><b>{note}</b><small>카드의 QR로 친구도 바로 들어와요</small></div>
           <div className="bt"><button className="no" onClick={close} aria-label="닫기">닫기</button></div>
         </>
       ) : (

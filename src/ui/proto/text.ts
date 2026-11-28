@@ -189,7 +189,7 @@ export const STORY = {
   overdue: (o: { interest: number; nth: number; tagged: boolean; seized: boolean; nothingLeft: boolean; living?: number; locked?: number; livingCapital?: number; short?: number }): Line[] => {
     const short = Math.max(1, Math.round(o.short ?? o.interest));
     return [
-      L('collector', `다시 세 봐도 ${n(short)} 모자라요.${o.nth > 1 ? ` 이번 생 연체 ${o.nth}회예요.` : ''}`, 'flat'),
+      L('collector', `다시 세 봐도 ${n(short)} 모자라요.${o.nth > 1 ? ` 연체 ${o.nth}번째예요.` : ''}`, 'flat'),
       // 돈이 없어서가 아니라 거래에 묶여 있어서 못 낸 정산: 그렇다고 말해 준다
       ...(o.locked && o.locked >= short ? [L('collector', `${won(o.locked, '은', '는')} 아직 거래에 걸려 있잖아요. 그건 지금 받을 수가 없어요.`, 'flat')] : []),
       L('collector', o.living ? `못 받은 이자하고 생활비 ${won(o.living, '은', '는')} 원금에 보탰습니다.` : '못 받은 이자는 원금에 보탰습니다.', 'flat'),
@@ -222,14 +222,14 @@ export const STORY = {
   /** 장면 33 위험 고지 확인서(U-47): 50배 위의 칸을 처음 누르면 오소리 대부가 종이를 민다. 막는 문이 아니라 발도장 한 번이다 */
   waiverAsk: (lev: number): Line[] => [
     L('boss', '잠깐만요. 그 배율은 종이 한 장이 더 필요해요.', 'smile'),
-    L('note', '오소리 대부가 탁자 너머로 종이를 민다. 「위험 고지 확인서」. 맨 아래에 발바닥 모양 빈칸이 있다.'),
-    L('note', `${lev}배는 반대로 약 ${+(100 / lev).toFixed(1)}% 움직이면 넣은 돈을 전부 잃습니다.`),
-    L('boss', '여기 발도장 하나면 돼요. 오늘 하루 말고, 이번 생 내내요.', 'smile'),
+    L('note', '오소리 대부가 종이를 민다. 「위험 고지 확인서」. 맨 아래에 발바닥 모양 빈칸.'),
+    L('note', `「${lev}배는 반대로 약 ${+(100 / lev).toFixed(1)}% 움직이면 넣은 돈을 전부 잃습니다.」`),
+    L('boss', '글씨는 작으니까 안 읽으셔도 돼요. 발도장 하나면 끝.', 'smile'),
   ],
   /** 장면 33 확인서에 도장을 찍은 뒤 */
   waiver: (): Line[] => [
-    L('note', '발도장 자국이 종이에 번진다. 확인서 아래에 오늘 날짜가 찍힌다.'),
-    L('note', '200배 주문 가능. 반대로 약 0.5% 움직이면 증거금을 잃을 수 있습니다.'),
+    L('note', '발도장 자국이 종이에 번진다.'),
+    L('boss', '축하해요. 이제 큰손이시네요.', 'smile'),
   ],
   /** 마진콜 전화(거래의 나무 B2) */
   marginCall: (o: { name: string; dir: 1 | -1; lev: number; broke: boolean }): Line[] => [
@@ -276,7 +276,7 @@ export const STORY = {
   feeEventEnd: (o: { ratePct: number; trades: number; saved: number; lev: number }): Line[] => [
     L('sms', `[FRX 숲거래소] 오늘부터 주문 수수료 ${o.ratePct}%.`),
     L('sms', o.trades > 0 ? `무료 기간 이용 ${o.trades}건, 아낀 수수료 ${n(o.saved)}. 이용해 주셔서 고마워요 ♥` : `무료 기간 이용 0건. 다음 주문부터 수수료 ${o.ratePct}%가 적용됩니다 ♥`),
-    L('note', `${o.lev}배로 거래하면 수수료는 넣은 돈의 ${+(o.ratePct * o.lev).toFixed(2)}%예요. 들어갈 때와 나올 때 각각 붙어요.`),
+    L('hero', `${o.lev}배면 들어갈 때마다, 나올 때마다 넣은 돈의 ${+(o.ratePct * o.lev).toFixed(2)}%씩 나가네.`),
   ],
   // ── 장면 36 빚 없는 생을 이어 간다([계속 산다]): 모은 돈의 고비 ──
   savings: (k: number): Line[] => k === 0 ? [

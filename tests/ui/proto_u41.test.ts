@@ -223,11 +223,11 @@ describe('도토리일보 시세면 (U-41)', () => {
     expect(b.ratio!).toBeLessThan(0.1);
     expect(c.loudHour).toBe(23);
     expect(c.loud1m!).toBeCloseTo(0.8, 1);
-    expect(n.headline).toBe(`지난 6시간, 가코인의 고저 폭 ${a.range!.toFixed(2)}%`);
+    expect(n.headline).toBe('지난 6시간, 가코인이 제일 크게 출렁였다');
     expect(n.sub).toContain('나코인');
     expect(n.boss).toMatch(/^(오늘은|지금은)/);
     expect(n.boss).toContain('어제 다코인이 크게 움직인 게 23시 무렵');
-    expect(noteToast(n)).toMatch(/^\[도토리일보 시세면\] 지난 6시간 변동 폭 1위 가코인/);
+    expect(noteToast(n)).toMatch(/^\[도토리일보\] 지난 6시간 제일 크게 출렁인 곳은 가코인/);
     expect(Math.round(n.spanMin)).toBe(1440);
   });
   it('기록이 모자라면 모자란 대로: 빈 칸은 "–", 30분 치면 30분이라고 말한다', () => {

@@ -60,7 +60,7 @@ export function WinBurst({ tier, pnl, margin, streak, lev, onDone, name, dir, ho
         <small className="cap">넣은 돈 {comma(Math.round(margin))} → {comma(Math.round(margin + pnl))} <em>{roe >= 100 ? `${(1 + roe / 100).toFixed(1)}배` : `+${roe.toFixed(0)}%`}</em></small>
         {(streak >= 2 || lev >= 100 || record || rankUp) && (
           <span className="chips">
-            {record && <i className="rec" data-record>이번 생 신기록</i>}
+            {record && <i className="rec" data-record>신기록</i>}
             {rankUp && <i className="rec rk" data-rankup>FRX {rankUp} 승급</i>}
             {streak >= 2 && <i className="streak" data-streak={streak}>{streak}연승</i>}
             {lev >= 100 && <i className="lev">{lev}배</i>}
@@ -158,7 +158,7 @@ export function SecondWind() {
       <i className="ring" aria-hidden="true" />
       <div className="stamp">한 번 더 산다</div>
       <b className="amt">오소리 대부 +{comma(w.amount)}</b>
-      <p>{w.name} 청산가가 한 칸 물러났다. 정리할 때 돌려준다.</p>
+      <p>{w.name} 청산이 한 칸 물러났다.</p>
     </div>
   );
 }

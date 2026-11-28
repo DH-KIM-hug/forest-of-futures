@@ -169,7 +169,7 @@ export const holdText = (ms: number): string => {
 /** 줄 아래 작은 글: "도토코인 200배 롱 3분" · "3번째 생 정산 41번" */
 export function detailText(board: Board, d: any, marketName: (id: string) => string): string {
   if (!d || typeof d !== 'object') return '';
-  if (board === 'networth') return `${d.lifeNo}번째 생 정산 ${d.settles}번`;
+  if (board === 'networth') return `정산 ${d.settles}번 버팀`;
   return `${marketName(d.market)} ${d.lev}배 ${d.dir === 1 ? '롱' : '숏'} ${holdText(d.exitTs - d.entryTs)}`;
 }
 const commaN = (x: number): string => Math.round(x).toLocaleString('ko-KR');
@@ -180,7 +180,7 @@ export function valueText(board: Board, v: number): string {
 export const BOARD_LABEL: Record<Board, { tab: string; title: string; toast: string }> = {
   roe: { tab: '최고 수익률', title: '한 번의 거래로 가장 크게 불린 비율', toast: '수익률' },
   pnl: { tab: '최고 수익금', title: '한 번의 거래로 가장 많이 번 도토리', toast: '수익금' },
-  networth: { tab: '최고 자산', title: '한 생에 가장 많이 모은 자산(빚을 뺀 것)', toast: '자산' },
+  networth: { tab: '최고 자산', title: '가장 많이 모은 자산(빚을 뺀 것)', toast: '자산' },
 };
 
 /** 별명: 1~12글자, 꺾쇠 · 제어 문자는 뺀다. 서버(cleanName)는 장부 번호를 붙인 18글자까지 받는다 */

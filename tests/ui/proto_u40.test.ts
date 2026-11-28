@@ -117,7 +117,7 @@ describe('오픈 기념 딱지와 대사', () => {
     expect(t).toContain('0.02%');
     expect(t).toContain('7건');
     expect(t).toContain('12,400');
-    expect(t).toContain('200배로 거래하면 수수료는 넣은 돈의 4%예요');
+    expect(t).toContain('200배면 들어갈 때마다, 나올 때마다 넣은 돈의 4%씩');
     expect(STORY.feeEventEnd({ ratePct: 0.02, trades: 0, saved: 0, lev: 50 })[1].text).toContain('이용 0건');
     expect(STORY.feeEventSms({ left: 20, reborn: false })[0]).toMatchObject({ who: 'sms' });
     expect(STORY.feeEventSms({ left: 20, reborn: false })[0].text).toContain('정산 20번');

@@ -66,8 +66,8 @@ export function dayNote(markets: { id: string; name: string }[], bars: Record<st
   const win = span(Math.min(360, spanMin));
   const top = got.reduce((a, b) => (b.range! > a.range! ? b : a));
   const low = got.reduce((a, b) => (b.range! < a.range! ? b : a));
-  const headline = `지난 ${win}, ${top.name}의 고저 폭 ${top.range!.toFixed(2)}%`;
-  const sub = top.id === low.id ? '다른 종목은 아직 기록이 모자랍니다.' : `가장 조용했던 곳은 ${low.name} (${low.range!.toFixed(2)}%)`;
+  const headline = `지난 ${win}, ${josa(top.name, '이', '가')} 제일 크게 출렁였다`;
+  const sub = top.id === low.id ? '다른 종목은 아직 기록이 모자랍니다.' : `제일 조용했던 곳은 ${low.name}`;
   // 오소리 대부: 지금이 평소보다 조용한가 시끄러운가(가운데 값의 비), 하루 중 언제가 시끄러웠는가
   const rs = rows.filter((r) => r.ratio !== null);
   const loud = rows.filter((r) => r.loudHour !== null);
@@ -78,7 +78,7 @@ export function dayNote(markets: { id: string; name: string }[], bars: Record<st
     const lt = loud.length ? loud.reduce((a, b) => (b.loud1m! > a.loud1m! ? b : a)) : null;
     const when = lt ? ` 어제 ${josa(lt.name, '이', '가')} 크게 움직인 게 ${lt.loudHour}시 무렵이었죠.` : '';
     boss = avg < 0.6 ? `오늘은 조용하네요.${when}`
-      : `지금은 ${hot.name}의 변동 폭이 가장 커요.${when}`;
+      : `지금은 ${josa(hot.name, '이', '가')} 제일 시끄러워요.${when}`;
   } else boss = spanMin < 60 ? '한 시간쯤 지나면 첫 시세면이 나와요.' : '기록이 모자란 종목은 뺐습니다.';
   return { spanMin, rows, headline, sub, boss };
 }
@@ -87,7 +87,7 @@ export const cell = (x: number | null): string => (x === null ? '–' : pc(x));
 /** 한 줄 알림용(거래소를 처음 펼 때): "[도토리일보 시세면] 지난 6시간, 삼솔전자의 고저 폭 2.10% · 가장 조용했던 곳은 멍도토 (0.31%)" */
 export const noteToast = (n: DayNote): string => {
   const got = n.rows.filter((r) => r.range !== null);
-  if (got.length < 2) return `[도토리일보 시세면] ${n.headline}. ${n.sub}`;
+  if (got.length < 2) return `[도토리일보] ${n.headline}. ${n.sub}`;
   const top = got.reduce((a, b) => (b.range! > a.range! ? b : a)), low = got.reduce((a, b) => (b.range! < a.range! ? b : a));
-  return `[도토리일보 시세면] 지난 ${span(Math.min(360, n.spanMin))} 변동 폭 1위 ${top.name} ${top.range!.toFixed(2)}%. 가장 잔잔했던 종목은 ${low.name}(${low.range!.toFixed(2)}%).`;
+  return `[도토리일보] 지난 ${span(Math.min(360, n.spanMin))} 제일 크게 출렁인 곳은 ${top.name}, 제일 조용했던 곳은 ${low.name}.`;
 };

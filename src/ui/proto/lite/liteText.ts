@@ -51,6 +51,17 @@ export const LITE_STORY: Partial<typeof STORY> = {
   hamstersQuit: () => [],
   momClue: () => [],
   phoneRing: () => [],
+  /** 이자를 못 낸 정산: 라이트에는 바퀴가 없다. 다음에 잃는 것은 폰 */
+  overdue: (o) => {
+    const short = Math.max(1, Math.round(o.short ?? o.interest));
+    return [
+      L('collector', `다시 세 봐도 ${n(short)} 모자라요.${o.nth > 1 ? ` 연체 ${o.nth}번째예요.` : ''}`, 'flat'),
+      ...(o.locked && o.locked >= short ? [L('collector', `${won(o.locked, '은', '는')} 거래에 걸려 있잖아요. 그건 못 받아요.`, 'flat')] : []),
+      L('collector', '못 받은 건 원금에 얹었어요.', 'flat'),
+      ...(o.livingCapital ? [L('note', `영수증: 미납 생활비 ${n(o.livingCapital)}, 숲속 캐피탈에 갚을 돈.`)] : []),
+      ...(o.seized ? [] : [L('collector', o.nothingLeft ? '이젠 가져갈 것도 없네요. 한 번 더 밀리면 그날로 끝이에요.' : '또 밀리면 폰 가져갑니다.', 'flat')]),
+    ];
+  },
   repay: () => [
     L('boss', '받았습니다. 원금 갚은 영수증이에요. 이게 제일 귀한 종이예요.', 'smile'),
     L('hero', '처음 받아 보는 종이예요.'),

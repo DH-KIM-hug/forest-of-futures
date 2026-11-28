@@ -42,7 +42,7 @@ const n = (x: number): string => Math.round(x).toLocaleString('ko-KR');
 export const PAGE7_AR = 1024 / 1536;
 export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: boolean }): Panel {
   // 세로 한 쪽(2:3). 폰에서 자르지도 훑지도 않고 한 화면에 다 보인다
-  const nar = ['어째서 사람은\n그 순간이\n올 때까지', '절망의 때에\n서 있다는 걸\n눈치채지\n못하는 걸까'];
+  const nar = ['왜\n끝나기\n전엔', '끝인 줄\n모를까'];
   const broke = !!o.nar;
   // 파산이면 진짜 숫자 두 줄을 읽히는 크기의 상자로(해설 칸은 그대로 두고, 폰 불빛 아래 책상 위에)
   const facts: Word[] = (o.nar ?? []).map((t, i) => ({ x: 40, y: 75.6 + i * 5.8, w: 58, h: 5.3, t, k: 'tag', fs: t.length > 22 ? 2.7 : 3.4, d: 2.6 + i * 0.3 }));
@@ -53,12 +53,11 @@ export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: b
       { x: 2, y: 2, w: 33, h: 16, t: '시간을\n되돌려\n주세요', k: 'white', fs: 7, d: 0.2 },
       { x: 14.5, y: 20.5, w: 13, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 0.5 },
       { x: 5.5, y: 41, w: 10.5, h: 9.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 0.7 },
-      { x: 86, y: 2, w: 12, h: 22, t: '이루어진다면', k: 'white', v: true, fs: 5, d: 0.9 },
+      { x: 86, y: 2, w: 12, h: 22, t: '딱 한 번만', k: 'white', v: true, fs: 5, d: 0.9 },
       { x: 79.5, y: 27, w: 12, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 1.1 },
       { x: 86, y: 48, w: 9.5, h: 10.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 1.3 },
       { x: 13, y: 73.6, w: 25, h: 9.6, t: nar[0], k: 'tag', fs: 3.2, d: 1.6 },
       { x: 3, y: 83, w: 25, h: 15.5, t: nar[1], k: 'tag', fs: 3.2, d: 2 },
-      { x: 0, y: 52, w: 12, h: 22, t: '빌어라。', k: 'ghost', v: true, fs: 8, d: 0 },
       broke ? { x: 40, y: 89, w: 58, h: 10.5, t: o.sub, k: 'logo', fs: 7, d: 2.3 } : { x: 38, y: 80.5, w: 60, h: 18, t: o.sub, k: 'logo', fs: 11, d: 2.3 },
       ...facts,
     ],

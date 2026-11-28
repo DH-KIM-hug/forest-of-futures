@@ -198,7 +198,7 @@ export function MangaCut() {
   const danger = near?.d ?? 0.8;
   const beat = `${(0.95 - 0.45 * Math.min(1, danger)).toFixed(2)}s`;
   const pass = cut.kind === 'near' || cut.kind === 'pray';
-  const label = { pray: '평가손 기도', near: '청산이 코앞', liq: '강제 청산', first: cut.win?.record ? '이번 생 신기록' : '첫 실전 승리', win: '크게 이겼다', lev: '고배율 진입' }[cut.kind];
+  const label = { pray: '평가손 기도', near: '청산이 코앞', liq: '강제 청산', first: cut.win?.record ? '신기록' : '첫 실전 승리', win: '크게 이겼다', lev: '고배율 진입' }[cut.kind];
   const w = cut.win;
   const px = (v: number) => (w ? v.toLocaleString('ko-KR', { minimumFractionDigits: Math.min(w.dec, 6), maximumFractionDigits: Math.min(w.dec, 6) }) : String(v));
   const at = cut.at ?? new Date();

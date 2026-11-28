@@ -1,6 +1,6 @@
 // 날다람쥐코인의 바람 세기와 끝난 차트 모양(U-57). 셈은 전부 시세 함수와 같은 씨앗(engine/feed/fly.ts) — 꾸민 말이 없다.
 // 모양은 끝난 뒤에만 이름을 붙인다(「쌍바닥 완성」, 「박스권 가짜 돌파」). 생기는 중에는 아무 말도 하지 않는다(앞일을 알려 주지 않는다).
-import { flyPrice, flyGust, flyEpisodesBetween, FLY_FAKE_RATE, type FlyEpisode } from '../../engine/feed/fly';
+import { flyPrice, flyGust, flyEpisodesBetween, type FlyEpisode } from '../../engine/feed/fly';
 import { SIM_FLY_EPOCH, simFly } from '../../engine/feed/simFeed';
 
 /** 지금 날다람쥐 값이 셈된 시각(초): 받은 틱 번호가 유닉스 초(실시간) 또는 연습 시세의 번호. 값이 그 시각의 함수 값과 같은 것을 고른다(모르면 null) */
@@ -15,9 +15,6 @@ export type GustWord = '잔바람' | '보통 바람' | '센바람' | '돌풍';
 export const gustWord = (mul: number): GustWord => (mul < 0.75 ? '잔바람' : mul < 1.35 ? '보통 바람' : mul < 1.9 ? '센바람' : '돌풍');
 /** 날다람쥐 평소 1분 폭(%) — 시세 함수를 오래 센 1분 봉 높낮이 폭의 가운데 값(시험 fly.test 가 같은 셈) */
 export const FLY_1M_PCT = 0.75;
-/** 교과서대로 끝나는 몫(말로) */
-export const PATTERN_ODDS_TEXT = `날다람쥐 차트의 모양은 열에 ${Math.round((1 - FLY_FAKE_RATE) * 10)}쯤 교과서대로 끝나고, 열에 ${Math.round(FLY_FAKE_RATE * 10)}쯤은 속임수다`;
-
 export interface WindNow {
   gust: { mul: number; word: GustWord; leftSec: number; pct1m: number };
   /** 방금(SHOW_AFTER 초 안에) 끝난 모양 */

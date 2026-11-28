@@ -161,8 +161,8 @@ export function squeezeOf(o: { cash: number; income: number; due: number; settle
   if (!(o.due > 0) || have >= o.due) return null;
   const mm = `${Math.floor(Math.max(0, o.settleIn) / 60)}:${String(Math.max(0, o.settleIn) % 60).padStart(2, '0')}`;
   const text = o.holding
-    ? `${mm} 뒤 낼 돈 ${n(o.due)}, 손에 ${n(have)}. 판에 건 돈은 압류 안 되지만 닫아야 낸다`
-    : `거래 후 잔액 ${n(have)}, ${mm} 뒤 낼 돈 ${n(o.due)}. 그때 잔액이 모자라면 연체`;
+    ? `${mm} 뒤 낼 돈 ${n(o.due)}, 손에 ${n(have)}. 닫아야 낼 수 있다`
+    : `걸고 나면 손에 ${n(have)}. ${mm} 뒤 낼 돈 ${n(o.due)}, 모자라면 연체`;
   return { due: Math.round(o.due), have, short: Math.round(o.due - have), text };
 }
 

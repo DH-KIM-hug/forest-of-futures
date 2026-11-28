@@ -5,10 +5,9 @@ import { useProto, type Who } from './protoStore';
 import { questById, QUESTS, GUST_QUEST, progText } from './quests';
 import { RIVALS, rivalById, roeOf, standings } from './rivals';
 import { TROPHIES, loadTrophies, onTrophies } from './trophies';
-import { rankOf, rankFeeText } from './frxRank';
+import { rankOf } from './frxRank';
 import { flySecOf } from './flyWind';
 import { marketById } from '../../engine/data';
-import { openingEvent, feeEventLeft } from '../../engine/skilltree';
 import { comma } from '../../engine/util';
 import { sprite, type SpriteId } from './sprites';
 import { play } from './audio';
@@ -43,7 +42,6 @@ export function ForestBoard() {
   const close = () => useProto.getState().patch({ forest: null });
   const set = (t: 'quest' | 'rival' | 'trophy') => { play('ui_tap'); useProto.getState().patch({ forest: t }); };
   const rk = rankOf(stamps);
-  const evOn = !!openingEvent() && feeEventLeft(g.run) > 0;
   const fs = flySecOf(g.run);
   const book = loadTrophies();
   const have = TROPHIES.filter((t) => book[t.id]).length;
@@ -57,7 +55,7 @@ export function ForestBoard() {
         </div>
         {tab === 'quest' && (
           <div className="fb-body" data-fb="quest">
-            {!quests && <p className="sub">첫 주문을 치르고 나면 마을 사람들이 의뢰를 붙인다.</p>}
+            {!quests && <p className="sub">첫 판을 끝내면 의뢰가 붙는다.</p>}
             {quests?.gust && !quests.gust.done && (
               <div className="fb-q gust" data-fbq="gust">
                 <Face who="news" />
@@ -74,16 +72,15 @@ export function ForestBoard() {
                 <em className="rw">{progText(s, q)}<small>도장 +{q.reward}</small></em>
               </div>
             ); })}
-            {quests && <p className="fb-foot" data-fb-fee>이번 생 끝낸 의뢰 {quests.done}개. 도장은 FRX 등급으로 간다: 지금 {rk.name}, {evOn ? '오픈 기념이 끝나면 ' : ''}{rankFeeText(rk.r)}. {rk.next}까지 {rk.need - rk.have}개, 그러면 {rankFeeText(rk.r + 1)}.</p>}
+            {quests && <p className="fb-foot" data-fb-fee>지금 {rk.name}. {rk.next}까지 도장 {rk.need - rk.have}개.</p>}
           </div>
         )}
         {tab === 'rival' && (
           <div className="fb-body" data-fb="rival">
-            {!rivals ? <p className="sub">첫 주문을 치르고 나면 단타방에 들어간다.</p> : (() => {
+            {!rivals ? <p className="sub">첫 판을 끝내면 단타방에 들어간다.</p> : (() => {
               const rows = standings(rivals, tradeLife, g.run.prices);
               return (
                 <>
-                  <p className="fb-lead">돈을 빌려준 사람들도 몰래 선물을 한다. 같은 시세, 이번 생 거래 손익.</p>
                   <div className="fb-rank" role="table">
                     {rows.map((r, i) => { const d = rivalById[r.id]; const o = d ? rivals.r[r.id] : null; const p = o?.pos; const px = p ? g.run.prices[p.market] : 0; return (
                       <div key={r.id} className={'fb-row' + (r.me ? ' me' : '')} role="row" data-fbr={r.id}>
@@ -110,10 +107,10 @@ export function ForestBoard() {
             <p className="fb-lead">{have} / {TROPHIES.length}</p>
             <div className="fb-tro">
               {TROPHIES.map((t) => { const on = !!book[t.id]; return (
-                <button key={t.id} className={'tro' + (on ? ' on' : '')} data-tro={t.id} data-have={on ? 1 : 0} onClick={() => { play('ui_tap'); }} aria-label={on ? `${t.name}, ${book[t.id].gen}번째 생` : `잠김, ${t.how}`}>
+                <button key={t.id} className={'tro' + (on ? ' on' : '')} data-tro={t.id} data-have={on ? 1 : 0} onClick={() => { play('ui_tap'); }} aria-label={on ? t.name : `잠김, ${t.how}`}>
                   <Face who={t.who} off={!on} size={30} />
                   <b>{on ? t.name : '???'}</b>
-                  <small>{on ? `${book[t.id].gen}번째 생에 얻음` : t.how}</small>
+                  <small>{t.how}</small>
                 </button>
               ); })}
             </div>

@@ -1,8 +1,7 @@
-// 날다람쥐코인 길잡이(라이트, 프롤로그 바로 뒤). 오소리 대부가 빨대를 물고 자기 거래소를 보여 준다.
+// 날다람쥐코인 길잡이(라이트, 프롤로그 바로 뒤). 오소리 대부가 빨대를 물고 거래소를 보여 준다.
 // 순수한 걸음표: 걸음 순서, 대사(엔진 값을 받아 끼운다), 행동 걸음이 끝났는지, 판이 닫히면 어디로 뛰는지, 건너뛰기를 보여도 되는지.
 // 화면(FlyTutorial.tsx)은 이 표를 읽어 말풍선과 스포트라이트를 그리고, 비춘 단추 하나만 눌리게 한다.
 // 시세는 짜지 않는다: 진짜 날다람쥐 값 그대로 가고, 판이 지고 있으면 대부도 지고 있다고 말한다.
-import { FLY_FAKE_RATE } from '../../../engine/feed/fly';
 
 /** 대부와 다로미. 얼굴 그림은 sprites 의 boss, hero */
 export type FtWho = 'boss' | 'hero';
@@ -38,8 +37,6 @@ export interface FtStep {
 }
 
 const n = (x: number) => Math.round(Math.abs(x)).toLocaleString('ko-KR');
-const pctTxt = (x: number) => (Math.round(x * 10) / 10).toString();
-const tenth = ['', '하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'][Math.round(FLY_FAKE_RATE * 10)] ?? String(Math.round(FLY_FAKE_RATE * 10));
 const upWord = (c: FtCtx) => (c.pc === 'intl' ? '초록' : '빨강');
 const downWord = (c: FtCtx) => (c.pc === 'intl' ? '빨강' : '파랑');
 
@@ -51,7 +48,7 @@ export const FT_SHOW_LEV = 200;
 /** 걸음 전부. 적힌 순서가 나오는 순서다. */
 export const FT_STEPS: FtStep[] = [
   // ── 1. 날다람쥐코인이 무엇인가 ──
-  { id: 'hi', kind: 'text', phase: 'pre', who: 'boss', line: () => '어서 와요, 다로미 씨. 제 거래소 구경 좀 하죠.' },
+  { id: 'hi', kind: 'text', phase: 'pre', who: 'boss', line: () => '어서 와요, 다로미 씨. 거래소 구경 좀 하죠.' },
   { id: 'fly', kind: 'text', phase: 'pre', who: 'boss', target: 'flyTab', line: () => '이게 날다람쥐코인이에요.' },
   { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '요즘 숲에서 제일 핫한 코인이에요. 누구나 벌 수 있어요.' },
   { id: 'shape', kind: 'text', phase: 'pre', who: 'boss', target: 'wind', line: () => '가끔 쭉 오르고 쭉 빠져요. 그때 잡으면 대박이죠.' },
@@ -77,7 +74,7 @@ export const FT_STEPS: FtStep[] = [
   { id: 'pnl', kind: 'text', phase: 'hold', who: 'boss', target: 'posNet', line: (c) => (c.net === null ? '이 숫자가 지금 손익이에요.' : c.net >= 0 ? `이 숫자가 지금 손익. 벌써 +${n(c.net)}이네요.` : `이 숫자가 지금 손익. −${n(c.net)}. 그런 날도 있죠.`) },
   { id: 'posLiq', kind: 'text', phase: 'hold', who: 'boss', target: 'posLiq', line: () => '이게 0이 되면 끝이에요.' },
   // ── 8. 닫기(한 번 누르기, 아니면 익절 손절이 알아서) ──
-  { id: 'wait', kind: 'wait', phase: 'hold', who: 'boss', target: 'close', line: (c) => `익절이나 손절에 닿으면 알아서 닫혀요. 급하면 정리하기 한 번.${c.net === null ? '' : c.net >= 0 ? ` 지금 +${n(c.net)}.` : ` 지금 −${n(c.net)}. 그런 날도 있죠.`}` },
+  { id: 'wait', kind: 'wait', phase: 'hold', who: 'boss', target: 'close', line: () => '익절이나 손절에 닿으면 알아서 닫혀요. 급하면 정리하기.' },
   { id: 'result', kind: 'text', phase: 'post', who: 'boss', line: resultLine },
   { id: 'resultHero', kind: 'text', phase: 'post', who: 'hero', line: (c) => (c.closed && c.closed.pnl > 0 ? '이거… 되는데?' : '…다음 판은 다르다.') },
   // ── 9. 정산과 빚 ──

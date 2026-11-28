@@ -30,7 +30,7 @@ export function brag(d: Pick<CardData, 'roe' | 'lev' | 'heldSec' | 'pnl' | 'coin
   if (d.lev >= 200 && d.heldSec < 60) return pick(`${d.coin} 200배, ${Math.max(1, Math.round(d.heldSec))}초. 숨도 안 쉬었다.`, '200배는 용기가 아니라 손가락 운동이다.');
   if (d.lev >= 100) return pick('청산가가 코앞이었는데 안 닿았다. 실력이다.', '배율은 높게, 기대는 더 높게.');
   if (d.roe >= 100) return pick('넣은 돈이 두 배가 됐다. 빚은 그대로다.', '오소리 대부한테는 비밀로 해 주세요.');
-  if (d.heldSec >= 600) return pick('버티는 것도 실력이다. 쳇바퀴가 증인이다.', '정산 종이 몇 번을 울려도 안 닫았다.');
+  if (d.heldSec >= 600) return pick('버티는 것도 실력이다. 추심원이 증인이다.', '정산 종이 몇 번을 울려도 안 닫았다.');
   return pick('오늘은 숲이 내 편이었다.', '이자 낼 돈, 시장이 대신 내 줬다.', '추심원보다 먼저 웃었다.');
 }
 
@@ -144,7 +144,7 @@ export async function renderCard(d: CardData): Promise<HTMLCanvasElement> {
     ...(d.margin ? [['넣은 돈 → 받은 돈', `${comma(d.margin)} → ${comma(d.margin + d.pnl)}`] as [string, string]] : []),
     ['진입가 → 정리가', `${px(d.entry)} → ${px(d.exit)}`],
     ['버틴 시간', heldText(d.heldSec)],
-    ['이번 생 승률', `${d.closes ? Math.round((d.wins / d.closes) * 100) : 0}%  (${d.wins}승 / ${d.closes}번, ${d.gen}번째 생)`],
+    ['승률', `${d.closes ? Math.round((d.wins / d.closes) * 100) : 0}%  (${d.wins}승 / ${d.closes}번)`],
   ].slice(0, 4) as [string, string][];
   rows.forEach(([k, v], i) => {
     const y = 818 + i * 58;
@@ -183,7 +183,7 @@ export async function renderCard(d: CardData): Promise<HTMLCanvasElement> {
   text(c, '카메라로 비추면 숲으로 갑니다', 370, 1166, 26, '#625c53');
   text(c, `${d.date.getFullYear()}.${String(d.date.getMonth() + 1).padStart(2, '0')}.${String(d.date.getDate()).padStart(2, '0')} ${String(d.date.getHours()).padStart(2, '0')}:${String(d.date.getMinutes()).padStart(2, '0')}`, 370, 1214, 28, '#625c53');
 
-  text(c, '※ 이 수익은 다음 청산 전까지 유효합니다.', CARD_W / 2, 1304, 28, '#8a8478', 'center');
+  text(c, '이 수익은 다음 청산 전까지 유효합니다.', CARD_W / 2, 1304, 28, '#8a8478', 'center');
   return cv;
 }
 
