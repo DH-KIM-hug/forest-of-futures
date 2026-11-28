@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { useGame } from '../../../store/gameStore';
 import type { Panel } from './manga';
 
-export interface Seq { k: number; id: string; label: string; panels: Panel[]; onEnd?: () => void }
+export interface Seq { k: number; id: string; label: string; panels: Panel[]; onEnd?: () => void; /** 마지막 쪽에 찍는 단추(예: 환생하기). 없으면 「눌러서 닫기」 */ endBtn?: string }
 interface S { seq: Seq | null; queue: Seq[]; speedBefore: number | null }
 export const useLite = create<S>(() => ({ seq: null, queue: [], speedBefore: null }));
 

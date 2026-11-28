@@ -64,7 +64,7 @@ export function LiteEndingCard({ onNext }: { onNext: () => void }) {
         <button className="le-booksbtn" data-book onClick={() => { play('ui_tap'); setBookOpen(true); }}>엔딩 도감 <b>{p.collected} / {p.lite.total}</b></button>
         {!p.isNew && <small className="le-nth">{p.nth}번째로 본 엔딩</small>}
       </div>
-      <button className="go le-go" data-rebirth onClick={onNext}>환생하기</button>
+      <button className="go le-go" data-ending-next onClick={onNext}>다음</button>
       {bookOpen && <LiteBook onClose={() => setBookOpen(false)} hi={p.id} />}
     </div>
   );

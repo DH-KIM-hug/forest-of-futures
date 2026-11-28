@@ -43,7 +43,6 @@ import { LiteManga } from './lite/LiteManga';
 import { MangaCut } from './lite/MangaCut';
 import { LiteCuts } from './lite/LiteCuts';
 import { LiteSeqHost } from './lite/LiteManga';
-import { useLiteBankrupt } from './lite/liteBeats';
 import { mangaSeen } from './lite/liteDev';
 import { clockText, useClock, useCountUp, useFx, reduced } from './fx';
 import { guideStep, allowedEl, type Guide } from './guided';
@@ -51,6 +50,8 @@ import { nextTierCost } from '../../engine/equipment';
 import { EXTRA_WHEEL } from './model';
 import { HomeBurst, HomePops, SecondWind, usePosPops } from './Juice';
 import './proto.css';
+import tabMapArt from './img/ui/tab_map.webp';
+import tabPhoneArt from './img/ui/tab_phone.webp';
 
 const TABS: { id: Tab; label: string; col: string }[] = [
   // 탭 셋(U-29·U-30): 집이 가운데(늘 한 단 높다). 지도와 거래소는 이야기 사건으로 열린다.
@@ -60,6 +61,8 @@ const TABS: { id: Tab; label: string; col: string }[] = [
 ];
 /** 라이트 모드(&lite=1): 집이 없다. 지도(빌리고 갚는 곳)와 거래소 둘 */
 const LITE_TABS = TABS.filter((t) => t.id !== 'lot');
+/** 탭 그림(GPT, docs/art/v5/ui/pair_icons.png): 지도와 거래소. 집은 아직 코드 그림 */
+const TAB_ART: Partial<Record<Tab, string>> = { map: tabMapArt, phone: tabPhoneArt };
 /** 라이트에서 집 탭으로 가라는 말(장면 끝, 고르는 단추 등)은 거래소로(폰이 없으면 지도로) 바꿔 듣는다 */
 const liteTab = (t: Tab, futuresOpen: boolean): Tab => (isLite && t === 'lot' ? (futuresOpen ? 'phone' : 'map') : t);
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -191,7 +194,7 @@ function TabBar() {
           <button key={t.id} data-tab={t.id} data-hl={t.id === 'map' ? 'tabMap' : undefined} className={'st' + (t.id === 'lot' ? ' home' : '') + (on ? ' on' : '') + (ok ? '' : ' lock') + (shake === t.id ? ' no' : '') + (point === t.id && ok && !on ? ' point' : '') + (force && t.id === 'map' ? ' dim' : '')} aria-current={on ? 'page' : undefined}
             onClick={() => { if (useProto.getState().scenes.length > 0) return; /* 장면이 떠 있거나 뜨려는 중(U-55): 닫을 때까지 탭은 바뀌지 않는다 */ if (ok && force && t.id === 'map') { say(FORCE_NUDGE); setShake(t.id); window.setTimeout(() => setShake(null), 400); return; } if (ok) setTab(t.id); else { setShake(t.id); window.setTimeout(() => setShake(null), 400); } }} aria-label={ok ? t.label : '잠긴 탭'}>
             {on && <i className="base" />}
-            <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? <RowIcon kind={t.id} size={t.id === 'lot' ? 44 : on ? 38 : 32} /> : '?'}</span>
+            <span className="c" style={ok ? { background: t.col } : undefined}>{ok ? (TAB_ART[t.id] ? <img className="tic" src={TAB_ART[t.id]} alt="" draggable={false} /> : <RowIcon kind={t.id} size={t.id === 'lot' ? 44 : on ? 38 : 32} />) : '?'}</span>
             <small>{ok ? t.label : ''}</small>
             {ok && !visited[t.id] && <i className="dot" />}
             {b && <i className={'bdg' + (b.hot ? ' hot' : '')}>{b.t}</i>}
@@ -394,7 +397,6 @@ export function ProtoApp() {
       {isLite && <MangaCut />}
       {isLite && <LiteCuts />}
       {isLite && <LiteSeqHost />}
-      {isLite && <LiteBroke />}
       <SecondWind />
       <HomePops />
       <HomeBurst />
@@ -413,7 +415,6 @@ export function ProtoApp() {
 }
 
 /** 라이트: 파산한 생은 엔딩 카드 앞에 절망의 표제지(lite/liteBeats.ts) */
-function LiteBroke() { useLiteBankrupt(); return null; }
 
 /** 한 탭의 화면이 그리다 넘어져도 게임 전체가 까맣게 꺼지지 않게(회차 13: 거래소가 넘어지면 화면이 통째로 꺼졌다).
  *  넘어지면 그 자리에 한 줄과 [다시 켜기]. 탭을 바꾸면 새로 그린다(key). 돈과 포지션은 엔진에 있어 그대로다 */

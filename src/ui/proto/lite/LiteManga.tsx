@@ -20,7 +20,7 @@ function Words({ b, i }: { b: Balloon; i: number }) {
 export function TitleLogo({ sub, style }: { sub: string; style?: CSSProperties }) {
   return (
     <div className="lp-logo" style={style} aria-label={`선물의 숲, ${sub}`}>
-      <i>FRX Fighter CHIPMUNK</i>
+      <i>FRX Fighter DAROMI</i>
       <svg viewBox="0 0 120 16" aria-hidden="true"><path d="M0 9 H40 L46 9 L50 2 L55 15 L59 6 L62 9 H120" fill="none" stroke="#E23B3B" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /></svg>
       <b>선물의 숲</b>
       <small>{sub}</small>
@@ -57,7 +57,7 @@ function PanelView({ p, cur, k }: { p: Panel; cur: boolean; k: number }) {
   );
 }
 
-export function MangaReader({ panels, onDone, canSkip, label, endHint = '눌러서 시작', id }: { panels: Panel[]; onDone: () => void; canSkip: boolean; label: string; endHint?: string; id?: string }) {
+export function MangaReader({ panels, onDone, canSkip, label, endHint = '눌러서 시작', id, endBtn }: { panels: Panel[]; onDone: () => void; canSkip: boolean; label: string; endHint?: string; id?: string; endBtn?: string }) {
   const [i, setI] = useState(0);
   const [k, setK] = useState(0);
   const at = useRef(performance.now());
@@ -84,7 +84,8 @@ export function MangaReader({ panels, onDone, canSkip, label, endHint = '눌러�
       <div className="lm-page" ref={page}>
         {panels.slice(Math.max(0, i - 2), i + 1).map((pp, j, arr) => <PanelView key={pp.id} p={pp} cur={j === arr.length - 1} k={k} />)}
       </div>
-      <p className="lm-hint" aria-hidden="true">{last ? endHint : '눌러서 넘기기'}</p>
+      {last && endBtn ? <button className="lm-endbtn" data-manga-end onClick={(e) => { e.stopPropagation(); if (performance.now() - at.current < 380) return; onDone(); }}>{endBtn}</button>
+        : <p className="lm-hint" aria-hidden="true">{last ? endHint : '눌러서 넘기기'}</p>}
     </div>
   );
 }
@@ -130,5 +131,5 @@ export function LiteManga({ onDone, canSkip }: { onDone: () => void; canSkip: bo
 export function LiteSeqHost() {
   const seq = useLite((s) => s.seq);
   if (!seq) return null;
-  return <MangaReader key={seq.k} panels={seq.panels} onDone={endSeq} canSkip label={seq.label} endHint="눌러서 닫기" id={seq.id} />;
+  return <MangaReader key={seq.k} panels={seq.panels} onDone={endSeq} canSkip label={seq.label} endHint="눌러서 닫기" id={seq.id} endBtn={seq.endBtn} />;
 }

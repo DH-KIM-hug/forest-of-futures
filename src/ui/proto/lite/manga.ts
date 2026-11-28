@@ -117,7 +117,7 @@ export function prologuePages(): Panel[] {
       id: 'p6', src: pg6, ar: 1046 / 1503, alt: '컬러 세 칸. 초록빛 모니터에 파란 봉이 떨어진다. 어두운 파란 방, 모니터 앞에 웅크린 다로미의 뒷모습. 분홍빛으로 번쩍이는 칸.',
       balloons: [],
       words: [
-        { x: 30, y: 1.2, w: 40, h: 2.6, t: 'FRX Fighter CHIPMUNK', k: 'white', fs: 2, d: 0 },
+        { x: 30, y: 1.2, w: 40, h: 2.6, t: 'FRX Fighter DAROMI', k: 'white', fs: 2, d: 0 },
         { x: 0.6, y: 6, w: 8.6, h: 90, t: '어리바리 다람쥐의 조금 위험한(?) 선물 이야기♥', k: 'white', v: true, fs: 3.6, c: '#FFE27A', d: 0 },
         { x: 70, y: 8.5, w: 18.8, h: 21, t: '어느 날', k: 'box', fs: 5, d: 0.2 },
         { x: 25.3, y: 13, w: 3.9, h: 3.6, t: '딸깍', k: 'say', fs: 1.25, d: 0.5 },

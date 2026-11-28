@@ -17,6 +17,7 @@ import { closeBack } from '../../engine/futures';
 import { marketById } from '../../engine/data';
 import { isLite } from './config';
 import { LiteEndingCard } from './lite/LiteEnding';
+import { despairThenRebirth } from './lite/liteBeats';
 
 /** 사건 기록의 물건 이름을 집에 적힌 이름으로(채권처 이름은 데이터가 이미 지도의 이름이다, U-39 ⑦) */
 const placeName = (t: string): string => t.replace(/도토코인 쳇바퀴/g, '엄마의 쳇바퀴');
@@ -39,7 +40,7 @@ export function EndingFlow() {
   if (!e) return null;
   if (e.step === 'card') {
     // 라이트(docs/gdd/LITE_ENDINGS.md): 엔딩 40개 중 하나의 그림 카드
-    if (isLite && g.pendingEnding?.lite) return <LiteEndingCard onNext={() => act({ type: 'estateNext' })} />;
+    if (isLite && g.pendingEnding?.lite) return <LiteEndingCard onNext={() => despairThenRebirth(g, () => act({ type: 'estateNext' }))} />;
     const m = endingCardModel(g);
     if (!m) return null;
     const retired = m.cause === 'RETIRE'; // 빚을 다 갚고 닫은 생(U-39 ⑧): 도장만 다르고 흐름은 같다

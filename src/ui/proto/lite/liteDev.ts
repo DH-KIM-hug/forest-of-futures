@@ -22,7 +22,8 @@ export const mangaWanted = (): boolean => q.get('pmanga') === '1' || (!pdev && q
 export function liteBoot(afterManga = false): void {
   useProto.getState().patch({ tab: 'phone', everUnlocked: { map: true, phone: true }, visited: { map: true, phone: true }, loanTaken: true, tutorial: 'done', firstTry: 3, seen: { ...useProto.getState().seen, office: true } });
   useUI.getState().setTrade({ market: 'FLY' });
-  if (afterManga) window.setTimeout(() => void import('../watch').then((m) => m.say('오소리 대부: 오를 것 같으면 롱, 내릴 것 같으면 숏. 배율은 마음대로요.', 7000)), 900);
+  // 만화를 막 덮었다: 오소리 대부의 날다람쥐코인 길잡이(lite/FlyTutorial.tsx). 끝까지 보거나 건너뛰면 저장에 남는다(flyTut)
+  if (afterManga) useProto.getState().patch({ flyTut: 'run' });
 }
 
 const A = (g: GameState, action: Action) => stepMut(g, { type: 'action', action });
@@ -44,6 +45,14 @@ export function liteScene(name: string, base: GameState): GameState {
   const P = useProto.getState();
   switch (name) {
     case 'lite_trade': { const g = ready(base); useUI.getState().setTrade({ market: 'FLY' }); return g; }
+    case 'lite_tut': {
+      // 프롤로그를 막 덮은 자리의 날다람쥐코인 길잡이(확인용). 판은 첫 대출 뒤, 첫 실전 카드가 뜬다. &pftskip=1 이면 끝까지 본 적이 있는 기기(건너뛰기가 보인다)
+      const g = ready(base);
+      P.patch({ firstTry: 3, cutCount: 0, seen: { office: true }, flyTut: 'run' });
+      useUI.getState().setTrade({ market: 'FLY', lev: null, pct: 25, keep: false, tpK: null, slK: null });
+      try { if (new URLSearchParams(window.location.search).get('pftskip') === '1') localStorage.setItem('fof.lite.flytut.v1', '1'); else localStorage.removeItem('fof.lite.flytut.v1'); } catch { /* 저장 막힘 */ }
+      return g;
+    }
     case 'lite_settle': { const g = ready(base); g.run.settleIn = 4; P.patch({ cutCount: 0 }); return g; }
     case 'lite_near': {
       // 청산까지 0.1% 남짓: 굳은 화면에서 만화 컷(스~윽, 쿵덕 쿵덕)을 본다. 0.7초 뒤 시계를 멈춘다(연습 시세는 빨라서 곧 청산된다)

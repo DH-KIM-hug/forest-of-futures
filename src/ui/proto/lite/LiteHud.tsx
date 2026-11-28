@@ -11,6 +11,7 @@ import { comma } from '../../../engine/util';
 import { forecast } from '../../../engine/settlement';
 import { settleSec } from '../../../engine/pace';
 import { DEBT_IDS } from '../../../engine/data';
+import { FlyTutorial } from './FlyTutorial';
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
@@ -45,6 +46,8 @@ export function LiteHud() {
         <span>정산 <b>{mmss(left)}</b></span>
         <span>이자 {comma(Math.round(f.interest))} + 생활비 {comma(Math.round(f.living))} = <b>−{comma(due)}</b>{short ? <em> 모자람</em> : null}</span>
       </div>
+      {/* 프롤로그 뒤 날다람쥐코인 길잡이: 앱 뿌리(.pr)에 띄운다(머리 안에 있지 않다) */}
+      <FlyTutorial />
     </header>
   );
 }

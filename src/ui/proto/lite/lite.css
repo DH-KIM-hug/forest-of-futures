@@ -197,3 +197,8 @@
 @keyframes lpStart { from { opacity: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(2.6); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-4deg) scale(1); } }
 @keyframes lpStartBeat { 0%, 100% { transform: translate(-50%, -50%) rotate(-4deg) scale(1); } 50% { transform: translate(-50%, -50%) rotate(-4deg) scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { .lp-sheet .lp-start { animation: none; } }
+
+/* 절망의 표제지 아래 [환생하기]: 표제지를 다 본 뒤 직접 누르는 단추(사용자 결정 2026-11-28) */
+.lite-manga .lm-endbtn { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 18px); transform: translateX(-50%); min-width: 200px; min-height: 52px; padding: 10px 28px; border-radius: 26px; border: 3px solid #3A2412; background: linear-gradient(180deg, #E0582E, #B83A1E); color: #FFF6DC; font-family: var(--dsp); font-size: 21px; letter-spacing: .04em; text-shadow: 0 2px 0 #3A2412; box-shadow: 0 0 0 3px #FFF6DC, 0 6px 0 #3A2412; cursor: pointer; animation: lmEndIn .5s 1.6s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes lmEndIn { from { opacity: 0; transform: translateX(-50%) scale(1.8); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .lite-manga .lm-endbtn { animation: none; } }
