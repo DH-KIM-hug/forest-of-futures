@@ -92,6 +92,7 @@ export const rateTxt = (perSecond: number): string => { const a = Math.abs(perSe
 export const secOf = (perSettle: number, run: RunState): string => rateTxt(perSec(perSettle, run));
 /** 알바 한 마리가 붙은 쳇바퀴의 정산당 숫자: 캐서 판 값, 일당, 남는 돈 */
 export function hamsterMath(g: GameState, coin: CoinId = WHEEL_COIN): { sold: number; wage: number; net: number } {
+  if (g.run.lite) return { sold: 0, wage: 0, net: 0 }; // 라이트: 쳇바퀴도 알바도 없다("쳇바퀴 한 대 n정산치" 같은 비교를 하지 않는다)
   const sold = Math.floor(staffedWheelGross(coin) * (1 - sellFeeRate(g.run)));
   const wage = laborWage();
   return { sold, wage, net: sold - wage };

@@ -3,9 +3,12 @@ import { balance, COINS, DEBT_IDS, friendDefs, housePrice, lenderById, tierById,
 import { floorS, ceilS } from './rng';
 import { treeLevel, traitMul, traitVal } from './legacy';
 import type { CoinId, DebtId, EquipmentUnit, GameState, LenderId, RunState } from './types';
+import liteJson from '../../data/lite.json';
+/** 라이트 생의 생활비(data/lite.json, 집이 없는 한 값) */
+const LITE_LIVING: number = (liteJson as { livingPerSettle: number }).livingPerSettle;
 
 export const ownedCoins = (run: RunState): CoinId[] => COINS.filter((c) => run.coinWheels[c]);
-export const stage = (run: RunState): 0 | 1 | 2 => (ownedCoins(run).length === 0 ? 0 : run.futures.open ? 2 : 1);
+export const stage = (run: RunState): 0 | 1 | 2 => (ownedCoins(run).length === 0 && !run.lite ? 0 : run.futures.open ? 2 : 1);
 export const price = (run: RunState, coin: string): number => run.prices[coin] ?? run.refPrice[coin];
 export const refPrice = (run: RunState, coin: string): number => run.refPrice[coin];
 
@@ -129,6 +132,7 @@ export function nextBorrowRate(g: GameState, id: LenderId): number {
 }
 
 export function livingDue(g: GameState): number {
+  if (g.run.lite) return ceilS(LITE_LIVING * traitMul(g, 'livingMul'));
   return ceilS(balance.living.byHouse[g.run.house] * traitMul(g, 'livingMul'));
 }
 

@@ -370,6 +370,8 @@ export interface RunState {
   intro?: boolean;
   /** FRX 회원 등급(U-56 ③, 사용자 결정): 새싹 0, 단골 1 … 등급마다 수수료가 조금 준다(skilltree.ts baseFeeRate). 화면이 도장으로 셈해 넣는다(setFeeTier) */
   feeTier?: number;
+  /** 라이트 모드의 생(engine/lite.ts): 쳇바퀴가 없어도 시세와 주문 칸이 열린다(selectors stage) */
+  lite?: boolean;
 }
 
 export interface PendingEnding {

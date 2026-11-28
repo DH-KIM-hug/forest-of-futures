@@ -1,7 +1,7 @@
 // 파산 확정과 원인 판정(GDD_v2 3.6, 3.15 원인 순서). 엔딩 고르기는 M3.
 import { balance, DEBT_IDS } from './data';
 import { brokenCount } from './friends';
-import { ownedCoins, totalDebt, walletValue } from './selectors';
+import { lenderLimit, ownedCoins, totalDebt, walletValue } from './selectors';
 import { logEvent, notify } from './util';
 import { finalizeEnding } from './endings';
 import { openEstate } from './generation';
@@ -58,6 +58,8 @@ export function checkLiquidationWipeout(g: GameState): boolean {
   const run = g.run;
   if (run.over) return false;
   const eq = run.cash + walletValue(run) + Object.values(run.positions).reduce((a, p) => a + p.margin, 0);
+  // 라이트(engine/lite.ts): 쳇바퀴가 원래 없다. 오소리 사무소가 아직 더 빌려주는 동안은 살아 있다(빌리러 갈 수 있다). 한도까지 다 쓴 뒤의 몰빵 청산은 그 자리에서 끝
+  if (run.lite && lenderLimit(g, 'shark1') - run.debts.shark1.principal > 0) return false;
   if (eq < balance.trading.wipeoutBelow && run.equipment.length === 0 && ownedCoins(run).length === 0 && totalDebt(run) > 0) {
     declareBankruptcy(g, { lastLender: null, shortfall: 0, immediate: true });
     return true;
