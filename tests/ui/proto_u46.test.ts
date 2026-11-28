@@ -48,11 +48,11 @@ describe('말이 되는 줄 (U-46)', () => {
     expect(STORY.momClue('mirror')[0].text.startsWith('대부가 장부를 넘기자')).toBe(true);
   });
   it('크게 딴 판에 추심원은 이자 단위로 말하지 않는다(U-67)', () => {
-    const r = tradeReaction({ pnl: 22000, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { claim: 12500, wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} });
-    expect(r?.lines[0]).toBe('많이 버셨네요. 종 칠 때 들를게요.');
+    const r = tradeReaction({ pnl: 22000, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} });
+    expect(r?.lines[0]).toBe('거신 돈의 두 배를 버셨네요. 종 칠 때 들를게요.'); // 넣은 돈 9,000 에 +22,000 = +244%
   });
   it('세 판째 본전: 서로 다른 종목이어도 맞는 말(수수료가 공짜였던 것만 말한다)', () => {
-    const r = tradeReaction({ pnl: 0, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { claim: 15500, wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 3, feesLife: 0, seen: {} });
+    const r = tradeReaction({ pnl: 0, margin: 9000, lev: 10, liq: false, heldSec: 3, fundedBy: null, allIn: false }, { wheelNet: 4867, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 3, feesLife: 0, seen: {} });
     expect(r?.lines[0]).toBe('세 번이나 사고파셨는데 본전이네요. 지금 수수료 안 받을 때라 다행이죠.');
   });
   it('튜토리얼 뒤 "이제부터 시세는" 줄은 실제 시세 · 연습 시세 둘 다에서 맞다', () => {

@@ -77,7 +77,7 @@ describe('들어가기 전의 셈: 목표 돈까지', () => {
 });
 
 describe('주인공의 몸', () => {
-  const o = { hasPos: true, roe: 0, pnl: 0, claim: 15500, reach: 'far' as const, nearLiq: false };
+  const o = { hasPos: true, roe: 0, pnl: 0, reach: 'far' as const, nearLiq: false };
   it('포지션이 없으면 그대로, 있으면 폰만 본다', () => {
     expect(heroMood({ ...o, hasPos: false })).toBe('idle');
     expect(heroMood(o)).toBe('phone');
@@ -85,7 +85,8 @@ describe('주인공의 몸', () => {
   it('크게 잃는 중이면 서성이고, 크게 따는 중이면 들썩인다', () => {
     expect(heroMood({ ...o, roe: -30, pnl: -8000 })).toBe('pace');
     expect(heroMood({ ...o, roe: 30, pnl: 8000 })).toBe('hop');
-    expect(heroMood({ ...o, roe: 3, pnl: 5000 })).toBe('hop'); // 넣은 돈에 견줘 작아도 이자의 3할이면 큰돈이다
+    expect(heroMood({ ...o, roe: 3, pnl: 5000 })).toBe('phone'); // 크기는 넣은 돈에 견준다: 3%는 큰 판이 아니다(정산 청구액에 견주지 않는다)
+    expect(heroMood({ ...o, roe: 25, pnl: 1000 })).toBe('hop');
   });
   it('청산이 흔들리는 폭 안이면 굳는다', () => {
     expect(heroMood({ ...o, reach: 'edge', roe: 80, pnl: 9000 })).toBe('frozen');
@@ -94,18 +95,21 @@ describe('주인공의 몸', () => {
 });
 
 describe('들고 있는 동안의 속마음', () => {
-  const s: HoldSnap = { pnl: 0, roe: 0, heldSec: 10, claim: 15500, reach: 'far', peakPnl: 0, lowRoe: 0, settles: 0 };
+  const s: HoldSnap = { pnl: 0, roe: 0, heldSec: 10, claim: 15500, reach: 'far', peakPnl: 0, peakRoe: 0, lowRoe: 0, settles: 0 };
   it('아무 일도 없으면 말이 없다', () => {
     expect(holdBeat(s, {})).toBeNull();
   });
-  it('크게 벌고 있으면 그 숫자를 말한다(U-67: 이자 단위 없이)', () => {
-    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, {})).toEqual({ key: 'claim', text: '지금 닫으면 16,000. 손가락만 떼면 내 거다.' });
+  it('크게 벌고 있으면(넣은 돈의 +50% 넘게) 그 숫자를 말한다(U-67: 이자 단위 없이)', () => {
+    expect(holdBeat({ ...s, pnl: 16000, roe: 64, peakPnl: 16000, peakRoe: 64 }, {})).toEqual({ key: 'big', text: '지금 닫으면 16,000. 손가락만 떼면 내 거다.' });
+    // 정산 청구액(15,500)보다 많아도 넣은 돈에 견줘 작으면 말하지 않는다
+    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000, peakRoe: 16 }, {})).toBeNull();
   });
   it('같은 말은 포지션마다 한 번', () => {
-    expect(holdBeat({ ...s, pnl: 16000, roe: 16, peakPnl: 16000 }, { claim: true })).toBeNull();
+    expect(holdBeat({ ...s, pnl: 16000, roe: 64, peakPnl: 16000, peakRoe: 64 }, { big: true })).toBeNull();
   });
-  it('벌었다가 토해 내면: 아까 닫을 걸', () => {
-    expect(holdBeat({ ...s, pnl: 2000, peakPnl: 9000 }, {})?.key).toBe('gaveBack');
+  it('벌었다가 토해 내면(+25% 넘게 떴다가 3할 아래로): 아까 닫을 걸', () => {
+    expect(holdBeat({ ...s, pnl: 2000, roe: 8, peakPnl: 9000, peakRoe: 36 }, {})?.key).toBe('gaveBack');
+    expect(holdBeat({ ...s, pnl: 2000, roe: 8, peakPnl: 9000, peakRoe: 20 }, {})).toBeNull();
   });
   it('절반이 녹으면, 물렸다가 본전이 되면', () => {
     expect(holdBeat({ ...s, pnl: -14000, roe: -52, lowRoe: -52 }, {})?.key).toBe('half');
@@ -188,9 +192,9 @@ describe('배율과 종목에 맞춘 게이지(U-49)', () => {
     expect(o10.tight).toBeNull();
   });
   it('이긴 판의 등급: ROE 등급뿐(U-67: 「이자 벌었다」는 뺐다)', () => {
-    expect(burstTier(-5, 100, 10)).toBeNull();
-    expect(burstTier(3, 100, 10)).toBeNull();
-    expect(burstTier(12, 1000, 10)).toBeNull();
-    expect(burstTier(120, 100, 10)!.lv).toBe(3);
+    expect(burstTier(-5, 100)).toBeNull();
+    expect(burstTier(3, 100)).toBeNull();
+    expect(burstTier(12, 1000)).toBeNull();
+    expect(burstTier(120, 100)!.lv).toBe(3);
   });
 });

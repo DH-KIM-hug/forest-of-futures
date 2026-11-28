@@ -49,16 +49,17 @@ describe('이자 한 번 치를 버는 목표로 쓰지 않는다 (U-67)', () =>
     expect(applyClose(b, C({ dir: 1, roe: 210, pnl: 21000 }), 200).finished).toEqual(['long2']);
   });
   it('「이자 벌었다」 등급, 팝, 반응, 속마음, 장부 한 줄에 이자 단위가 없다', () => {
-    expect(burstTier(12, 1000, 10)).toBeNull();
-    expect(burstTier(600, 1000, 10)!.word).not.toMatch(/이자/);
+    expect(burstTier(12, 1000)).toBeNull();
+    expect(burstTier(600, 1000)!.word).not.toMatch(/이자/);
     expect(journeyOf({ tradeNet: 31_000, claim: 15_500, settles: 14, paid: 85_400, claimWins: 1 }).text).not.toMatch(BAD);
-    const ctx = { claim: 15_500, wheelNet: 0, cashAfter: 50_000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} };
+    const ctx = { wheelNet: 0, cashAfter: 50_000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} };
     const end = { margin: 9000, lev: 50, liq: false, heldSec: 30, fundedBy: null, allIn: false };
-    const said = [20_000, -20_000, 60_000].flatMap((pnl) => [1, 2, 3, 4].map((k) => tradeReaction({ ...end, pnl }, { ...ctx, claimWins: k, seen: k > 1 ? { winClaim1: true, bigWin: true } : {} })?.lines.join(' ') ?? ''));
+    const said = [20_000, -20_000, 60_000].flatMap((pnl) => [1, 2, 3, 4].map((k) => tradeReaction({ ...end, pnl }, { ...ctx, bigWins: k, seen: k > 1 ? { winClaim1: true, bigWin: true } : {} })?.lines.join(' ') ?? ''));
     expect(said.filter((l) => BAD.test(l) || /이자랑 생활비/.test(l))).toEqual([]);
-    const hb = holdBeat({ pnl: 16000, roe: 16, peakPnl: 16000, lowRoe: 0, claim: 15500, reach: 'far', heldSec: 10, settles: 0 } as never, {});
-    expect(hb?.text ?? '').not.toMatch(/이자/);
-    const win = LITE_STORY.winClaim!({ first: '많이 버셨네요.', pnl: 16_000, claim: 15_500, spins: null, stampLeft: null, momLeft: 0 });
+    const hb = holdBeat({ pnl: 16000, roe: 64, peakPnl: 16000, peakRoe: 64, lowRoe: 0, claim: 15500, reach: 'far', heldSec: 10, settles: 0 }, {});
+    expect(hb?.key).toBe('big');
+    expect(hb!.text).not.toMatch(/이자/);
+    const win = LITE_STORY.winClaim!({ first: '거신 돈만큼 버셨네요.', pnl: 16_000, spins: null, stampLeft: null, momLeft: 0 });
     expect(win.map((l) => l.text).filter((t) => BAD.test(t) || /1분 이자를/.test(t))).toEqual([]);
   });
 });

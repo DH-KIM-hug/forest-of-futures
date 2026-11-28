@@ -251,24 +251,25 @@ export const STORY = {
     L('sms', `[FRX 숲거래소] 새 계좌가 열렸어요 ♥ 앞으로 정산 ${o.left}번 동안 거래 수수료 무료.`),
     L('hero', o.reborn ? `이 문자는 또 ${o.left}번을 다 주네.` : '무료라는 글씨가 금액보다 크네.'),
   ],
-  /** 장면 20 한 판에 이자와 생활비 한 번 치를 벌었다(이번 생 처음): 추심원 → 다로미. 숫자는 전부 그 거래와 지금 살림의 것 */
-  winClaim: (o: { first: string; pnl: number; claim: number; spins: number | null; stampLeft: number | null; momLeft: number }): Line[] => [
+  /** 장면 20 한 판에 넣은 돈만큼 넘게 땄다(ROE +100% 이상, 이번 생 처음, 11-28 결정): 추심원 → 다로미. 숫자는 전부 그 거래와 지금 살림의 것 */
+  winClaim: (o: { first: string; pnl: number; spins: number | null; stampLeft: number | null; momLeft: number }): Line[] => [
     L('collector', o.first, 'smile'),
     L('hero', o.spins !== null && o.spins >= 2 ? `+${n(o.pnl)}. 바퀴 한 대로 ${o.spins}번 정산할 돈이다.` : `+${n(o.pnl)}. 손가락 한 번이다.`),
-    L('hero', '지금 갚으면 다음번엔 덜 내겠지.'),
+    // 갚을 오소리 빚이 남았을 때만(다 갚았으면 고르기도 이 줄도 없다)
+    ...(o.momLeft > 0 ? [L('hero', '지금 갚으면 다음번엔 덜 내겠지.')] : []),
     ...(o.momLeft > 0 && o.stampLeft !== null ? [L('hero', `황금 도토코인까지 ${n(o.stampLeft)}.`)] : []),
   ],
-  /** 장면 29 이자와 생활비 한 번 치를 두 판 연달아 땄다(이번 생에 한 번) */
+  /** 장면 29 넣은 돈만큼 넘게 딴 판(ROE +100% 이상)이 두 판 연달아(이번 생에 한 번, 11-28 결정) */
   winRun: (o: { sum: number; stampPct: number | null }): Line[] => [
     L('boss', `두 판 합쳐 +${won(o.sum, '이네요', '네요')}. 장부 펴 놓을까요?`, 'smile'),
     L('hero', '첫 판 끝났을 땐 갚으려고 했는데.'),
   ],
-  /** 장면 29 이자와 생활비 한 번 치를 두 판 연달아 잃었다(이번 생에 한 번) */
-  lossRun: (o: { sum: number; spins: number | null; cash: number; claim: number }): Line[] => [
+  /** 장면 29 넣은 돈의 반 넘게 잃은 판(ROE −50% 이하, 청산 포함)이 두 판 연달아(이번 생에 한 번, 11-28 결정) */
+  lossRun: (o: { sum: number; spins: number | null; cash: number; due: number }): Line[] => [
     L('collector', `두 판 손실이 ${won(o.sum, '이네요', '네요')}.`, 'flat'),
     ...(o.spins !== null && o.spins >= 2 ? [L('hero', `저 바퀴가 ${o.spins}번 정산을 채워야 버는 돈인데.`)] : []),
-    // claim = 다음 정산에 나갈 돈 전부(이자 + 생활비 + 일당)
-    L('hero', o.cash >= o.claim ? `${n(o.cash)} 남았다. 이번 정산은 낼 수 있어.` : `${n(o.cash)} 남았다. 이번 정산에 ${n(o.claim)} 필요한데.`),
+    // due = 다음 정산에 나갈 돈 전부(이자 + 생활비 + 일당). 장면을 부른 문턱이 아니라 실제로 나가는 돈이다
+    L('hero', o.cash >= o.due ? `${n(o.cash)} 남았다. 이번 정산은 낼 수 있어.` : `${n(o.cash)} 남았다. 이번 정산에 ${n(o.due)} 필요한데.`),
   ],
   /** 포지션을 든 채 처음 정산을 넘겼다: 무슨 일이 있었는지 한 줄(1막은 펀딩비가 없다) */
   carried: (o: { paid: number }): string => `현금에서 ${n(o.paid)} 납부. 포지션 유지.`,

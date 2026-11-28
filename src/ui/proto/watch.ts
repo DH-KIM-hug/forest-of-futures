@@ -20,7 +20,7 @@ import { comma, josa } from '../../engine/util';
 import { DEBT_IDS, eventById, lenderById, marketById } from '../../engine/data';
 import { levCapNow, tradeGate } from '../../engine/progression';
 import { forecast } from '../../engine/settlement';
-import { tradeReaction, settleRemark, remarkIsRoutine, ROUTINE_GAP_MS, isTiny, worthCertificate } from './react';
+import { tradeReaction, settleRemark, remarkIsRoutine, ROUTINE_GAP_MS, roeOf, nextBigRun, closeScene, offersRepay, worthCertificate } from './react';
 /** 되풀이 정산 한 줄을 마지막으로 말한 때(U-53) */
 let routineAt = 0;
 import { dayBars, dayNote, noteToast } from './daynote';
@@ -49,17 +49,17 @@ import type { GameState, Position } from '../../engine/types';
 import { featureOpen, liteTrades, liteTradeClosed } from './lite/liteUnlock';
 
 /** 포지션이 닫힌 것을 보고 이번 생 승률을 올리고, 이익이면 수익 인증서 물음을 띄운다(한 번 닫을 때 한 번). */
-export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: number; pnl: number; margin: number; claim: number; entry: number; exit: number; heldSec: number; gen: number; gold?: boolean; /** 이번 생 가장 크게 딴 판 */ record?: boolean }): void {
+export function noteClose(c: { market: string; dir: 1 | -1; lev: number; roe: number; pnl: number; margin: number; entry: number; exit: number; heldSec: number; gen: number; gold?: boolean; /** 이번 생 가장 크게 딴 판 */ record?: boolean }): void {
   const P = useProto.getState();
   const win = c.pnl > 0;
   const wins = P.wins + (win ? 1 : 0);
   const closes = P.closes + 1;
   // 인증서 물음은 볼 만한 이익에만(잔돈 이익마다 뜨지 않는다, U-38)
   // 라이트(LITE_CONTI 컷 C5): 인증서 물음은 대박 이상과 이번 생 신기록에만
-  const card = win && (isLite ? (burstTier(c.pnl, c.margin, c.claim)?.lv ?? 0) >= 4 || !!c.record : worthCertificate(c.pnl, c.margin, c.claim));
+  const card = win && (isLite ? (burstTier(c.pnl, c.margin)?.lv ?? 0) >= 4 || !!c.record : worthCertificate(c.pnl, c.margin));
   // 라이트 첫 경험(U-68): 이 기기에서 닫은 판을 센다(길잡이 판은 빼고). 판 수에 따라 종목, 도토리일보, 의뢰가 열린다
   if (isLite) liteTradeClosed({ tutorial: P.flyTut === 'run' });
-  P.patch({ wins, closes, profit: card ? { coin: marketById[c.market]?.name ?? c.market, dir: c.dir, lev: c.lev, roe: c.roe, pnl: c.pnl, entry: c.entry, exit: c.exit, heldSec: c.heldSec, wins, closes, gen: c.gen, date: new Date(), gold: c.gold, market: c.market, margin: c.margin, tier: burstTier(c.pnl, c.margin, c.claim)?.word } : null }); // 뒤에 닫힌 판이 있으면 앞 판의 인증서 물음은 지나간 일이다(U-46: 청산 · 연체 장면 사이에 옛 +117,651 이 다시 뜨던 것)
+  P.patch({ wins, closes, profit: card ? { coin: marketById[c.market]?.name ?? c.market, dir: c.dir, lev: c.lev, roe: c.roe, pnl: c.pnl, entry: c.entry, exit: c.exit, heldSec: c.heldSec, wins, closes, gen: c.gen, date: new Date(), gold: c.gold, market: c.market, margin: c.margin, tier: burstTier(c.pnl, c.margin)?.word } : null }); // 뒤에 닫힌 판이 있으면 앞 판의 인증서 물음은 지나간 일이다(U-46: 청산 · 연체 장면 사이에 옛 +117,651 이 다시 뜨던 것)
 }
 
 const overdueSum = (g: GameState): number => DEBT_IDS.reduce((a, id) => a + g.run.debts[id].overdue, 0);
@@ -68,7 +68,7 @@ let toastTimer: number | undefined;
 let cheerTimer: number | undefined;
 /** 크게 딴 뒤 집이 들썩이는 시간(ms) */
 export const CHEER_MS = 45_000;
-/** 크게 닫힌 판(청산, 넣은 돈의 15% 넘게 딴 판, 이번 수금보다 많이 딴 판) 뒤 장면을 미루는 시간(ms, U-48) */
+/** 크게 닫힌 판(청산, 넣은 돈의 15% 넘게 딴 판) 뒤 장면을 미루는 시간(ms, U-48) */
 export const BEAT_MS = 2600;
 let collTimer: number | undefined;
 /** 이긴 판의 소리(U-49 새 소리): 등급이 오를수록 겹이 는다. 짭짤하다 = 도토리 쏟아지는 소리, 한 방 = + 팡파르, 두 배 = 팡파르가 먼저, 대박 · 전설 = 잭팟 */
@@ -78,9 +78,9 @@ export function winSound(lv: number): void {
   play('win_coins');
   if (lv >= 2) later(260, () => play('win_fanfare'));
 }
-/** 집의 잔치를 (다시) 켠다: 한 판에 이자 한 번 치를 벌었다. 장면이 떠 있던 동안 지나간 시간은 세지 않게, 장면이 끝날 때 다시 부른다(U-42 ⑤) */
-export function cheerOn(amount: number, worth: number): void {
-  useProto.getState().patch({ cheer: { at: Date.now(), amount: Math.round(amount), worth } });
+/** 집의 잔치를 (다시) 켠다: 크게 딴 판(등급이 터진 판, 넣은 돈만큼 넘게 딴 판). roe = 그 판의 ROE(%). 장면이 떠 있던 동안 지나간 시간은 세지 않게, 장면이 끝날 때 다시 부른다(U-42 ⑤) */
+export function cheerOn(amount: number, roe: number): void {
+  useProto.getState().patch({ cheer: { at: Date.now(), amount: Math.round(amount), roe: Math.round(roe) } });
   window.clearTimeout(cheerTimer);
   cheerTimer = window.setTimeout(() => useProto.getState().patch({ cheer: null }), CHEER_MS);
 }
@@ -241,7 +241,7 @@ function holdTick(g: GameState): void {
   const run = g.run;
   for (const m of Object.keys(holds)) if (!run.positions[m] || run.positions[m].openTick !== holds[m].openTick) delete holds[m];
   if (P.tutorial !== 'done' || run.over) return;
-  const c = claim(g).total;
+  const c = claim(g).total; // 쳇바퀴를 굴린 돈의 견줌에만 쓴다(손익의 속마음은 ROE 로, 11-28 결정)
   let short: boolean | null = null;
   for (const p of Object.values(run.positions)) {
     const h = (holds[p.market] ??= { openTick: p.openTick, seen: {}, peakPnl: 0, lowRoe: 0, settle0: run.settleNo, lastAt: -99 });
@@ -287,7 +287,7 @@ function holdTick(g: GameState): void {
     }
     const squeezed = run.settleIn <= 60 && run.settleIn > 2 && (short ??= wouldBeShort(g));
     // 같은 줄이 판마다 되풀이되지 않게 포지션 순번으로 번갈아 쓴다. 포지션이 둘 이상이면 어느 종목 얘기인지 앞에 붙인다(U-40)
-    const b = holdBeat({ pnl, roe, heldSec: run.tick - p.openTick, claim: c, reach: tensionOf(v.liqDistPct, liveHistoryOf(p.market)).reach, peakPnl: h.peakPnl, lowRoe: h.lowRoe, settles: run.settleNo - h.settle0, squeezed, feesPaid: p.feesPaid, rolled: rolledFor(holdKey()) }, h.seen, (run.stats.tradesOpened as number | undefined) ?? 0);
+    const b = holdBeat({ pnl, roe, heldSec: run.tick - p.openTick, claim: c, reach: tensionOf(v.liqDistPct, liveHistoryOf(p.market)).reach, peakPnl: h.peakPnl, peakRoe: (h.peakPnl / Math.max(1, p.margin0)) * 100, lowRoe: h.lowRoe, settles: run.settleNo - h.settle0, squeezed, feesPaid: p.feesPaid, rolled: rolledFor(holdKey()) }, h.seen, (run.stats.tradesOpened as number | undefined) ?? 0);
     if (!b) continue;
     h.seen[b.key] = true;
     h.lastAt = run.tick;
@@ -576,7 +576,8 @@ export function startWatch(): void {
       if (firstPositive) P0.patch({ seen: { ...P0.seen, posSettle: true } });
       const fcN = forecast(g);
       const posPnl = Object.values(run.positions).reduce((a, p) => { const v = positionView(g, p.market); return a + (v ? tradeNet(p, v.back) : 0); }, 0);
-      const rctx = { nth: run.settleNo, short: r.unpaid, interest: badger, other, net, cashAfter: run.cash, nextClaim: fcN.interest + fcN.living, nextNet: fcN.net, overdue: od, posOpen: Object.keys(run.positions).length > 0, posPnl, negStreak: net < 0 ? useProto.getState().negRun : 0, firstPositive };
+      const posMargin = Object.values(run.positions).reduce((a, p) => a + p.margin0, 0); // 걸어 둔 건의 크기는 넣은 돈에 견준다(11-28 결정)
+      const rctx = { nth: run.settleNo, short: r.unpaid, interest: badger, other, net, cashAfter: run.cash, nextClaim: fcN.interest + fcN.living, nextNet: fcN.net, overdue: od, posOpen: Object.keys(run.positions).length > 0, posPnl, posMargin, negStreak: net < 0 ? useProto.getState().negRun : 0, firstPositive };
       const remark = () => settleRemark(rctx);
       // 되풀이 한 줄은 55초에 한 번(U-53): 연습 속도에서 추심원이 말 자리를 차지하지 않게. 이야기가 있는 줄은 늘
       const sayRemark = () => { if (remarkIsRoutine(rctx)) { if (Date.now() - routineAt < ROUTINE_GAP_MS) return; routineAt = Date.now(); } say(remark(), 4500); };
@@ -688,7 +689,7 @@ export function startWatch(): void {
     // 판이 닫힌 순간의 숨(U-48): 거래소를 보고 있으면 결과 카드, 청산 도장, 축하가 먼저 보이고, 장면(추심원의 말 등)은 그 뒤에 온다
     // U-49: 집이나 지도에 있어도 같다(크게 이긴 판은 어디서든 터진다)
     if (closedPs.length) {
-      const big = closedPs.some((p) => { const cmx = closedMath(run, p); return cmx.kind === 'liq' || cmx.pnl / Math.max(1, p.margin0) >= 0.15 || cmx.pnl >= claim(prev).total; });
+      const big = closedPs.some((p) => { const cmx = closedMath(run, p); return cmx.kind === 'liq' || cmx.pnl / Math.max(1, p.margin0) >= 0.15; });
       useProto.getState().patch({ beatUntil: Date.now() + (big ? BEAT_MS : 700) });
     }
     for (const p of liqPs) fx.emit({ kind: 'liq', market: marketById[p.market]?.name ?? p.market, lost: Math.round(-closedMath(run, p).pnl), lev: p.lev });
@@ -701,12 +702,14 @@ export function startWatch(): void {
         // 걸어 둔 출구에 닿아 닫혔는데 거래소를 보고 있지 않았다(U-41): 어디서든 한 줄로 알린다(결과 카드는 거래소 탭에만 뜬다)
         const autoOut = !tut && (endKind === 'tp' || endKind === 'sl') && useProto.getState().tab !== 'phone';
         // 이긴 판의 등급(U-48 → U-49): 어느 탭에서든 화면이 터진다. 집이면 도토리 비가 집 안으로 쏟아지고 햄스터들이 들썩인다
-        const tierB = !tut && endKind !== 'liq' ? burstTier(pnl, p.margin0, claim(prev).total) : null;
+        const tierB = !tut && endKind !== 'liq' ? burstTier(pnl, p.margin0) : null;
+        // 이 판의 ROE(%): 반응의 크기는 전부 이것으로 잰다(사용자 결정 11-28: 정산 청구액에 견주지 않는다). 청산이면 −100
+        const roe = roeOf({ pnl, margin: p.margin0, liq: endKind === 'liq' });
         // FRX 회원 등급(U-65)은 예탁금과 거래액으로 forestTick 이 본다. 여기서는 이번 생 가장 크게 딴 판만
         const prevBest = useProto.getState().bestWin;
         if (!tut) {
           // FRX 의뢰판(U-56): 이 판이 의뢰를 끝냈으면 의뢰인의 사례금(U-65)
-          forestClose(g, { market: p.market, dir: p.dir, lev: p.lev, margin: p.margin0, pnl, roe: endKind === 'liq' ? -100 : (pnl / Math.max(1, p.margin0)) * 100, heldSec: run.tick - p.openTick, kind: endKind, claim: claim(prev).total, fly: !!marketById[p.market]?.synthetic }, say);
+          forestClose(g, { market: p.market, dir: p.dir, lev: p.lev, margin: p.margin0, pnl, roe, heldSec: run.tick - p.openTick, kind: endKind, claim: claim(prev).total, fly: !!marketById[p.market]?.synthetic }, say);
           const P2 = useProto.getState();
           if (pnl > 0 && pnl > P2.bestWin) P2.patch({ bestTrade: { pnl: Math.round(pnl), market: p.market, lev: p.lev, dir: p.dir, roe: (pnl / Math.max(1, p.margin0)) * 100 } });
           P2.patch({ bestWin: Math.max(P2.bestWin, pnl) });
@@ -714,14 +717,13 @@ export function startWatch(): void {
         if (tierB) {
           const P0 = useProto.getState();
           const record = pnl > 0 && prevBest > 0 && pnl > prevBest; // 이번 생 가장 크게 딴 판(첫 이긴 판은 신기록이라 부르지 않는다)
-          const c0 = claim(prev).total;
           const fire = () => {
             const P3 = useProto.getState();
             P3.patch({ burst: { k: (P3.burst?.k ?? 0) + 1, tier: tierB, pnl, margin: p.margin0, streak: pnl > 0 ? P0.winStreak + 1 : 0, lev: p.lev, market: p.market, dir: p.dir, name: marketById[p.market]?.name ?? p.market, how: endKind === 'tp' ? 'tp' : endKind === 'sl' ? 'sl' : 'close', record },
               // 큰 등급의 상자는 2.6초보다 오래 남는다(U-52): 장면이 그 꼬리를 덮지 않게 숨을 늘린다
               beatUntil: Math.max(P3.beatUntil, Date.now() + burstMs(tierB.lv)) });
             winSound(tierB.lv);
-            if (P3.tab !== 'phone') { cheerOn(pnl, c0 > 0 ? pnl / c0 : 0); later(420, () => play('hamster_cheer')); }
+            if (P3.tab !== 'phone') { cheerOn(pnl, roe); later(420, () => play('hamster_cheer')); }
           };
           // 장면(컷인)이 이미 떠 있으면 그 밑에서 터지지 않게 장면이 걷힌 뒤에 터진다(U-52)
           if (covered()) burstWait = fire; else fire();
@@ -735,48 +737,45 @@ export function startWatch(): void {
         if (autoOut && !tierB) { play(pnl > 0 ? 'close_profit' : 'close_loss'); say(`[FRX 숲거래소] ${marketById[lc.market]?.name ?? lc.market} ${p.dir === 1 ? '롱' : '숏'} ${p.lev}배 ${endKind === 'tp' ? '익절' : '손절'} ${pnl >= 0 ? '+' : '−'}${comma(Math.abs(Math.round(pnl)))}`, 5000); }
         // 튜토리얼 거래는 승률·인증서·반응에 넣지 않는다
         if (!tut) {
-          const c = claim(prev).total;
-          noteClose({ record: pnl > 0 && prevBest > 0 && pnl > prevBest, market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, margin: p.margin0, claim: c, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: lifeNo(g), gold: !!run.skill?.B4 || (!!run.skill?.B3a && p.lev >= 100 && pnl > 0) });
-          // 세상이 그 거래에 반응한다(react.ts): 크기는 다음 청구액에 견준다
+          noteClose({ record: pnl > 0 && prevBest > 0 && pnl > prevBest, market: lc.market, dir: p.dir, lev: p.lev, roe: lc.liq ? -100 : roePct(p, exit), pnl, margin: p.margin0, entry: p.entry, exit, heldSec: lc.tick - p.openTick, gen: lifeNo(g), gold: !!run.skill?.B4 || (!!run.skill?.B3a && p.lev >= 100 && pnl > 0) });
+          // 세상이 그 거래에 반응한다(react.ts): 크기는 넣은 돈에 견준다(ROE, 11-28 결정. 다음 정산 청구액에 견주지 않는다)
           const P = useProto.getState();
-          const tiny = isTiny(pnl, c);
+          // 크게 연달아 딴 판(+100% 이상), 잃은 판(−50% 이하, 청산 포함)(U-42): 본전치기(±5% 안)는 끊지 않는다. 두 판째에 이번 생 한 번씩 장면
+          const big = nextBigRun({ winRun: P.claimWinRun, lossRun: P.claimLossRun, runSum: P.claimRunSum }, pnl, roe);
+          const { tiny, bigWin, winRun, runSum } = big;
           const st = { winStreak: pnl > 0 && !tiny ? P.winStreak + 1 : 0, lossStreak: pnl < 0 && !tiny ? P.lossStreak + 1 : 0, tinyStreak: tiny ? P.tinyStreak + 1 : 0, feesLife: P.feesLife + p.feesPaid * (lc.liq ? 1 : 2) }; // 들어갈 때 낸 수수료 + 나올 때(같은 크기로 어림)
-          // 이번 생에 거래가 벌어 온 돈 · 한 판에 이자 한 번 치를 번 횟수(U-41: 집 판과 장부의 한 줄)
-          const bigOne = c > 0 && pnl >= c;
-          const claimWins = P.claimWins + (bigOne ? 1 : 0);
-          const re = tradeReaction({ pnl, margin: p.margin0, lev: p.lev, liq: !!lc.liq, heldSec: lc.tick - p.openTick, fundedBy: p.fundedBy, allIn: p.marginPct >= 100 },
-            { feeFree: p.feesPaid === 0, claim: c, wheelNet: hamsterMath(g).net, cashAfter: run.cash, liqs: (run.stats.liqCount as number | undefined) ?? 0, ...st, seen: P.seen, claimWins });
-          P.patch({ ...st, tradeLife: P.tradeLife + pnl, claimWins, seen: re?.once ? { ...P.seen, [re.key]: true } : P.seen,
-            // 한 판에 이자 한 번 치: 집이 들썩인다(알바가 뛰고 쳇바퀴에 불이 켜진다)
-          });
-          if (bigOne) { if (!tierB) later(500, () => play('goal_complete')); cheerOn(pnl, pnl / c); }
-          // 이자 한 번 치를 연달아 딴 · 잃은 판(U-42): 본전치기는 끊지 않는다. 두 판째에 이번 생 한 번씩 장면
-          const bigLoss = c > 0 && pnl <= -c;
-          const winRun = bigOne ? P.claimWinRun + 1 : tiny ? P.claimWinRun : 0, lossRun = bigLoss ? P.claimLossRun + 1 : tiny ? P.claimLossRun : 0;
-          const runSum = (bigOne && winRun > 1) || (bigLoss && lossRun > 1) ? P.claimRunSum + pnl : bigOne || bigLoss ? pnl : tiny ? P.claimRunSum : 0;
-          useProto.getState().patch({ claimWinRun: winRun, claimLossRun: lossRun, claimRunSum: runSum });
-          const wn = hamsterMath(g).net;
+          // 이번 생에 거래가 벌어 온 돈, 넣은 돈만큼 넘게 딴 판의 수(U-41: 집 판과 장부의 한 줄). 저장 칸 이름(claimWins …)은 옛 저장과 맞추려고 그대로 둔다
+          const bigWins = P.claimWins + (bigWin ? 1 : 0);
+          // 오소리 빚([갚으러 간다]가 갚는 곳): 다 갚았으면 갚으라는 줄과 장면(winRun, 대부의 「장부에서 지워 드릴까요」)은 빠진다
           const debt = run.debts.shark1.principal;
+          const re = tradeReaction({ pnl, margin: p.margin0, lev: p.lev, liq: !!lc.liq, heldSec: lc.tick - p.openTick, fundedBy: p.fundedBy, allIn: p.marginPct >= 100 },
+            { feeFree: p.feesPaid === 0, wheelNet: hamsterMath(g).net, cashAfter: run.cash, liqs: (run.stats.liqCount as number | undefined) ?? 0, ...st, seen: P.seen, bigWins, debt });
+          P.patch({ ...st, tradeLife: P.tradeLife + pnl, claimWins: bigWins, seen: re?.once ? { ...P.seen, [re.key]: true } : P.seen });
+          // 넣은 돈만큼 넘게 땄다: 집이 들썩인다(알바가 뛰고 쳇바퀴에 불이 켜진다). 이 판은 늘 등급(두 배 이상)이 터져 제 소리가 나므로 goal_complete 는 등급이 없을 때만
+          if (bigWin) { if (!tierB) later(500, () => play('goal_complete')); cheerOn(pnl, roe); }
+          useProto.getState().patch({ claimWinRun: winRun, claimLossRun: big.lossRun, claimRunSum: runSum });
+          const wn = hamsterMath(g).net;
           // [갚으러 간다]가 사는 것(U-42 ⑤): 다음 정산에 낼 돈은 남기고 갚으면 이자가 얼마 줄고 금박 도장이 어디까지 차는가. 두 단추 가운데 어느 쪽도 밀지 않는다
           const fcW = forecast(g);
           const buys = repayBuys(g, fcW.interest + fcW.living + fcW.wages);
-          const repayChoices = (keepSub: string) => (debt > 0 ? [
-            { id: 'repay', label: '갚으러 간다', sub: buys ? buys.text : isLite ? '대출 → 오소리 사무소' : '지도 → 오소리 사무소', run: () => { cheerOn(pnl, pnl / c); useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); } },
-            { id: 'keep', label: '쥐고 있는다', sub: keepSub, run: () => { cheerOn(pnl, pnl / c); } },
+          const repayChoices = (keepSub: string) => (offersRepay(debt) ? [
+            { id: 'repay', label: '갚으러 간다', sub: buys ? buys.text : isLite ? '대출 → 오소리 사무소' : '지도 → 오소리 사무소', run: () => { cheerOn(pnl, roe); useProto.getState().patch({ mapFocus: 'shark1' }); useProto.getState().setTab('map'); } },
+            { id: 'keep', label: '쥐고 있는다', sub: keepSub, run: () => { cheerOn(pnl, roe); } },
           ] : undefined);
-          if (re?.key === 'winClaim1') {
+          const pick = closeScene(re, big, P.seen, offersRepay(debt));
+          if (pick === 'winClaim1' && re) {
             // 이번 생 처음: 장면 + 고르기(갚으러 간다 / 쥐고 있는다). 숫자는 그 거래와 지금 장부의 것. 떠 있는 동안 시계가 멈춘다(정산도 잔치도 기다린다)
             const toNext = debt > 0 ? Math.min(debt, STAMP_STEP - (((run.stats['repaid.shark1'] as number | undefined) ?? 0) % STAMP_STEP)) : null;
-            scene({ id: 'react_winClaim1', again: true, hold: true, lines: STORY.winClaim({ first: re.lines[0], pnl, claim: c, spins: wn > 0 ? Math.round(pnl / wn) : null, stampLeft: toNext, momLeft: debt }),
+            scene({ id: 'react_winClaim1', again: true, hold: true, lines: STORY.winClaim({ first: re.lines[0], pnl, spins: wn > 0 ? Math.round(pnl / wn) : null, stampLeft: toNext, momLeft: debt }),
               choices: repayChoices(`남겨 둘 돈 ${comma(Math.floor(run.cash))}`) });
           }
-          else if (bigOne && winRun === 2 && !P.seen.react_winRun) {
+          else if (pick === 'winRun') {
             scene({ id: 'react_winRun', hold: true, lines: STORY.winRun({ sum: runSum, stampPct: debt > 0 ? Math.round((runSum / STAMP_STEP) * 100) : null }),
               choices: repayChoices(`현금 ${comma(Math.floor(run.cash))}`) });
           }
-          else if (bigLoss && lossRun === 2 && !P.seen.react_lossRun) {
+          else if (pick === 'lossRun') {
             if (re?.scene) scene({ id: 'react_' + re.key, again: true, lines: re.lines.map((text) => ({ who: re.who, text })) });
-            scene({ id: 'react_lossRun', hold: true, lines: STORY.lossRun({ sum: Math.abs(runSum), spins: wn > 0 ? Math.round(Math.abs(runSum) / wn) : null, cash: Math.floor(run.cash), claim: (() => { const f = forecast(g); return Math.round(f.interest + f.living + f.wages); })() }),
+            scene({ id: 'react_lossRun', hold: true, lines: STORY.lossRun({ sum: Math.abs(runSum), spins: wn > 0 ? Math.round(Math.abs(runSum) / wn) : null, cash: Math.floor(run.cash), due: Math.round(fcW.interest + fcW.living + fcW.wages) }),
               choices: [
                 { id: 'home', label: '집으로 간다', run: () => { useProto.getState().setTab('lot'); } },
                 { id: 'stay', label: '폰을 더 본다', sub: `현금 ${comma(Math.floor(run.cash))}`, run: () => { /* 그대로 */ } },

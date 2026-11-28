@@ -18,6 +18,7 @@ import { comma } from '../../engine/util';
 import type { GameState } from '../../engine/types';
 import { isLite } from './config';
 import { featureOpen, liteTrades } from './lite/liteUnlock';
+import { isBigLoss, isBigWin } from './react';
 
 type Say = (text: string, ms?: number, keep?: boolean) => void;
 const gen = (g: GameState): number => g.family.generation ?? 1;
@@ -150,10 +151,10 @@ function rivalSay(e: RivalEvent, g: GameState, say: Say): void {
   }
 }
 
-/** 내 판이 닫힌 뒤 라이벌 한 명이 한마디(이긴 판, 진 판 가운데 크게 움직인 것만). 결과 카드 밑에 */
-export function rivalTaunt(pnl: number, claimTotal: number, tick: number): string | null {
+/** 내 판이 닫힌 뒤 라이벌 한 명이 한마디(이긴 판, 진 판 가운데 크게 움직인 것만: 넣은 돈만큼 넘게 땄거나 반 넘게 잃었다, 11-28 결정). 결과 카드 밑에 */
+export function rivalTaunt(pnl: number, roe: number, tick: number): string | null {
   const P = useProto.getState();
-  if (!P.rivals || claimTotal <= 0 || Math.abs(pnl) < claimTotal) return null;
+  if (!P.rivals || !(pnl > 0 ? isBigWin(roe) : isBigLoss(roe))) return null;
   const ids = Object.keys(P.rivals.r);
   const d = rivalById[ids[tick % ids.length]];
   const xs = pnl > 0 ? d.lines.vsWin : d.lines.vsLoss;

@@ -13,7 +13,6 @@ import { useOpenPositions } from '../Lot';
 import { historyOf } from '../../priceHistory';
 import { closedMath } from '../watch';
 import { dangerOf, burstTier } from '../tension';
-import { claim } from '../model';
 import { reduced, useFx } from '../fx';
 import { balance, marketById } from '../../../engine/data';
 import { liqPrice } from '../../../engine/futures';
@@ -168,7 +167,7 @@ export function MangaCut() {
           show({ kind: 'first', market: p.market, win: { name: def?.name ?? p.market, dir: p.dir, lev: p.lev, entry: p.entry, exit: m.exit, movePct: ((m.exit - p.entry) / p.entry) * 100, pnl: m.pnl, roe: (m.pnl / Math.max(1, p.margin0)) * 100, cash: run.cash, dec: def?.decimals ?? 2, record: !firstWin } }, true);
           continue;
         }
-        const t = burstTier(m.pnl, p.margin0, claim(prev).total);
+        const t = burstTier(m.pnl, p.margin0);
         if (t && t.lv >= 4) show({ kind: 'win', market: p.market, pnl: m.pnl });
       }
       prev = g1;

@@ -100,10 +100,9 @@ export function Lot() {
   const sum = homeSummary(g);
   const near = pos.some((p) => isNearLiq(p));
   // 주인공의 몸: 가장 급한 포지션 하나가 정한다(굳는다 > 서성인다 > 들썩인다 > 폰만 본다)
-  const cl = claim(g).total;
   const RANK: HeroMood[] = ['idle', 'phone', 'hop', 'pace', 'frozen'];
   const mood = pos.reduce<HeroMood>((best, p) => {
-    const m = heroMood({ hasPos: true, roe: p.netRoe, pnl: p.net, claim: cl, reach: tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach, nearLiq: isNearLiq(p) });
+    const m = heroMood({ hasPos: true, roe: p.netRoe, pnl: p.net, reach: tensionOf(p.liqDistPct, liveHistoryOf(p.market)).reach, nearLiq: isNearLiq(p) });
     return RANK.indexOf(m) > RANK.indexOf(best) ? m : best;
   }, 'idle');
   const tapTimer = useRef<number | undefined>(undefined);

@@ -124,12 +124,12 @@ export const LITE_STORY: Partial<typeof STORY> = {
   winClaim: (o) => [
     L('collector', o.first, 'smile'),
     L('hero', `+${n(o.pnl)}. 손가락 한 번이었다.`),
-    L('hero', '지금 갚으면 다음번엔 덜 내겠지.'),
-    ...(o.stampLeft !== null ? [L('hero', `금박 도장까지 ${n(o.stampLeft)}.`)] : []),
+    // 라이트에는 금박 도장이 없다(U-62): 남은 오소리 빚을 그대로 말한다. 다 갚았으면 갚는 얘기는 빠진다
+    ...(o.momLeft > 0 ? [L('hero', '지금 갚으면 다음번엔 덜 내겠지.'), L('hero', `오소리 빚 ${n(o.momLeft)} 남았다.`)] : []),
   ],
   lossRun: (o) => [
     L('collector', `두 판 손실이 ${won(o.sum, '이네요', '네요')}.`, 'flat'),
-    L('hero', o.cash >= o.claim ? `${n(o.cash)} 남았다. 이번 정산은 낼 수 있어.` : `${n(o.cash)} 남았다. 이번 정산에 ${n(o.claim)} 필요한데.`),
+    L('hero', o.cash >= o.due ? `${n(o.cash)} 남았다. 이번 정산은 낼 수 있어.` : `${n(o.cash)} 남았다. 이번 정산에 ${n(o.due)} 필요한데.`),
   ],
 };
 

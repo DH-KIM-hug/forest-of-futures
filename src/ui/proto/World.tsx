@@ -23,7 +23,7 @@ import { reduced } from './fx';
 import { hamsterMath, perSec, rateTxt } from './model';
 import { balance } from '../../engine/data';
 import { Think } from './Think';
-import type { HeroMood } from './tension';
+import { winTier, type HeroMood } from './tension';
 
 /** 그림 픽셀 → SVG 단위(390 너비) */
 const K = 390 / HOME_IMG.w;
@@ -526,7 +526,7 @@ export function World({ near, mood = 'idle', cover, open, onRoll, hold = null }:
           {cheering && cheer && (
             <g className="pr-cheerbn" data-cheer-banner>
               <text x={hx + 26} y={hy - hh * 1.1 - 30} textAnchor="middle" fontSize={17} className="pa-t pa-lbl">+{comma(cheer.amount)}</text>
-              <text x={hx + 26} y={hy - hh * 1.1 - 13} textAnchor="middle" fontSize={11.5} className="pa-t pa-lbl s">이자와 생활비 {cheer.worth >= 2 ? `${cheer.worth.toFixed(1)}번` : '한 번'} 치!</text>
+              <text x={hx + 26} y={hy - hh * 1.1 - 13} textAnchor="middle" fontSize={11.5} className="pa-t pa-lbl s">{winTier(cheer.roe).word || '땄다'}!</text>
             </g>
           )}
           {floats.map((f) => <text key={f.id} x={f.x} y={f.y} textAnchor="middle" className={'pa-float ' + f.cls} style={f.to ? { ['--tx' as string]: `${f.to[0].toFixed(1)}px`, ['--ty' as string]: `${f.to[1].toFixed(1)}px` } : undefined}>{f.t}</text>)}

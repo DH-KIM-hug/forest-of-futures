@@ -117,13 +117,15 @@ interface P {
   away: AwayCard | null;
   /** 도토리일보 시세면이 펴져 있다(daynote.ts) */
   dayNote: boolean;
-  /** 이번 생에 거래가 벌어 온 돈(수수료 포함, 튜토리얼 거래는 빼고) · 한 판에 이자 한 번 치를 번 횟수 · 정산 때 낸 돈의 합(U-41: 집 판과 장부의 한 줄) */
+  /** 이번 생에 거래가 벌어 온 돈(수수료 포함, 튜토리얼 거래는 빼고), 넣은 돈만큼 넘게 딴 판(ROE +100% 이상)의 수, 정산 때 낸 돈의 합(U-41: 집 판과 장부의 한 줄).
+   *  claimWins 는 저장 칸 이름이라 그대로 둔다(11-28 결정: 세는 문턱만 ROE 로 바꿨다) */
   tradeLife: number; claimWins: number; paidLife: number;
-  /** 방금 크게 땄다: 집이 잠깐 들썩인다(알바가 뛰고 쳇바퀴에 불이 켜진다). at = 그때(ms), amount = 딴 돈, worth = 이자 몇 번 치 */
-  cheer: { at: number; amount: number; worth: number } | null;
+  /** 방금 크게 땄다: 집이 잠깐 들썩인다(알바가 뛰고 쳇바퀴에 불이 켜진다). at = 그때(ms), amount = 딴 돈, roe = 그 판의 ROE(%, 11-28 결정) */
+  cheer: { at: number; amount: number; roe: number } | null;
   /** 포지션을 든 채 쳇바퀴를 굴려 번 돈(U-42): rolledKey = 그 판의 열쇠(가장 먼저 연 포지션의 틱), rolled = 번 돈, rolledTaps = 굴린 횟수 */
   rolled: number; rolledKey: number | null; rolledTaps: number;
-  /** 이자 한 번 치를 연달아 딴 · 잃은 판 수(본전치기는 끊지 않는다)와 그 합(U-42: 연달아 이긴 · 진 판의 장면) */
+  /** 크게 연달아 딴 판(ROE +100% 이상), 잃은 판(−50% 이하) 수(본전치기 ±5% 는 끊지 않는다)와 그 합(U-42: 연달아 이긴, 진 판의 장면).
+   *  저장 칸 이름(claim…)은 옛 저장과 맞추려고 그대로 둔다(11-28 결정: 문턱만 ROE 로 바꿨다) */
   claimWinRun: number; claimLossRun: number; claimRunSum: number;
   /** 아래 탭 하나를 잠깐 가리킨다(U-43: 알바가 쳇바퀴를 다 돌리면 주인공은 폰을 본다) */
   pointTab: Tab | null;

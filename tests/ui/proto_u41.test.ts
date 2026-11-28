@@ -193,13 +193,16 @@ describe('이번 생의 길 (U-41)', () => {
     expect(journeyOf({ tradeNet: -8_000, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).text).toBe('이번 생 낸 돈 18,300, 거래로 −8,000');
     expect(journeyOf({ tradeNet: 500, claim: 15_500, settles: 3, paid: 18_300, claimWins: 0 }).short).toBe('거래 +500');
   });
-  it('한 판에 이자 한 번 치(이번 생 처음)의 장면: 오소리 대부 → 추심원 → 주인공, 숫자는 받은 것 그대로', () => {
-    const L = STORY.winClaim({ first: '15,500은 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.', pnl: 15_812, claim: 15_500, spins: 3, stampLeft: 50_000, momLeft: 300_000 });
+  it('넣은 돈만큼 넘게 딴 판(이번 생 처음)의 장면: 추심원 → 주인공, 숫자는 받은 것 그대로', () => {
+    const L = STORY.winClaim({ first: '15,500은 따로 두세요. 그럼 이번 이자랑 생활비는 돼요.', pnl: 15_812, spins: 3, stampLeft: 50_000, momLeft: 300_000 });
     expect(L.map((l) => l.who)).toEqual(['collector', 'hero', 'hero', 'hero']); // 개정 대본 장면 20: 추심원 → 다로미
     expect(L[0].text).toContain('15,500');
     expect(L[1].text).toContain('15,812');
     expect(L[3].text).toContain('황금 도토코인까지 50,000');
-    expect(STORY.winClaim({ first: 'x', pnl: 15_812, claim: 15_500, spins: null, stampLeft: null, momLeft: 0 })).toHaveLength(3);
+    // 오소리 빚을 다 갚았으면 「지금 갚으면…」도 도토코인 줄도 없다(고르기도 없다)
+    const paid = STORY.winClaim({ first: 'x', pnl: 15_812, spins: null, stampLeft: null, momLeft: 0 });
+    expect(paid).toHaveLength(2);
+    expect(paid.map((l) => l.text).join(' ')).not.toMatch(/갚/);
   });
 });
 

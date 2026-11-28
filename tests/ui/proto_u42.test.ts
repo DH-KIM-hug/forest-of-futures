@@ -129,15 +129,15 @@ describe('본장까지 남은 시간 (U-42: 달력으로 아는 것만)', () => 
 
 describe('연달아 이긴 · 진 판, 들고 있는 동안 굴린 돈 (U-42)', () => {
   it('장면의 줄: 숫자는 받은 값 그대로, 엄마 이야기는 건드리지 않는다(빚이 어디서 왔는지는 아직 아무도 말하지 않는다)', () => {
-    const w = STORY.winRun({ sum: 31_402, stampPct: 63 }), l = STORY.lossRun({ sum: 31_000, spins: 7, cash: 95_100, claim: 15_500 });
+    const w = STORY.winRun({ sum: 31_402, stampPct: 63 }), l = STORY.lossRun({ sum: 31_000, spins: 7, cash: 95_100, due: 15_500 });
     expect(w.map((x) => x.who)).toEqual(['boss', 'hero']); // 개정 대본 장면 29
     expect(w[0].text).toContain('+31,402'); // U-44: 금박 도장 몇 %는 장부가 보여 준다(대사에서 뺐다)
     expect(l[0].text).toContain('31,000'); expect(l[1].text).toContain('7번 정산'); expect(l[2].text).toContain('95,100');
-    expect(STORY.lossRun({ sum: 31_000, spins: null, cash: 9_000, claim: 15_500 })[1].text).toContain('이번 정산에 15,500 필요한데');
+    expect(STORY.lossRun({ sum: 31_000, spins: null, cash: 9_000, due: 15_500 })[1].text).toContain('이번 정산에 15,500 필요한데');
     for (const x of [...w, ...l]) expect(x.text).not.toMatch(/엄마|어머님/);
   });
   it('속마음: 굴린 돈이 다음 정산의 5%를 넘으면 한 번 — 숫자가 그대로 들어간다', () => {
-    const base = { pnl: 100, roe: 0.2, heldSec: 50, claim: 15_500, reach: 'far' as const, peakPnl: 200, lowRoe: -1, settles: 0 };
+    const base = { pnl: 100, roe: 0.2, heldSec: 50, claim: 15_500, reach: 'far' as const, peakPnl: 200, peakRoe: 0.4, lowRoe: -1, settles: 0 };
     expect(holdBeat({ ...base, rolled: 500 }, {})).toBeNull();
     const b = holdBeat({ ...base, rolled: 1_240 }, {})!;
     expect(b.key).toBe('rolled'); expect(b.text).toContain('1,240'); expect(b.text).toContain('8%');

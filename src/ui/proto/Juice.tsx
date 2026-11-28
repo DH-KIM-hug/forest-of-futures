@@ -12,7 +12,6 @@ import { dangerOf, nextMilestone, type WinTier } from './tension';
 import { useProto } from './protoStore';
 import { useGame } from '../../store/gameStore';
 import { balance } from '../../engine/data';
-import { claim } from './model';
 import { useOpenPositions } from './Lot';
 import { coinLogo } from './coins';
 import { play, later } from './audio';
@@ -94,7 +93,7 @@ export function HomeBurst() {
 }
 
 // ── 들고 있는 동안의 고비(U-48 → U-49: 모든 포지션, 어느 탭에서든) ──
-interface Mark { best: number; claim: boolean; half: boolean; peakDanger: number; saved: boolean }
+interface Mark { best: number; half: boolean; peakDanger: number; saved: boolean }
 const marks: Record<string, Mark> = {};
 /** 틱마다 열린 포지션 전부를 보고, 새로 넘은 고비를 팝으로 띄운다(포지션마다 고비당 한 번). ProtoApp 에서 한 번 부른다 */
 export function usePosPops(): void {
@@ -103,12 +102,11 @@ export function usePosPops(): void {
   const tut = useProto((s) => s.tutorial);
   useEffect(() => {
     if (tut !== 'done') return;
-    const cl = claim(g).total;
     const maint = balance.trading.maintenanceRate as number;
     for (const p of ps) {
       const raw = g.run.positions[p.market];
       if (!raw) continue;
-      const mk = (marks[p.market + ':' + raw.openTick] ??= { best: 0, claim: false, half: false, peakDanger: 0, saved: false });
+      const mk = (marks[p.market + ':' + raw.openTick] ??= { best: 0, half: false, peakDanger: 0, saved: false });
       mk.peakDanger = Math.max(mk.peakDanger, dangerOf(p.liqDistPct, p.lev, maint));
       const ms = nextMilestone(mk.best, p.netRoe);
       if (ms) {

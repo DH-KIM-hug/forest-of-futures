@@ -13,41 +13,43 @@ import { friendsOn } from '../../src/engine/friends';
 import { josa } from '../../src/engine/util';
 
 const T = (o: Partial<TradeEnd> = {}): TradeEnd => ({ pnl: 0, margin: 20000, lev: 10, liq: false, heldSec: 30, fundedBy: null, allIn: false, ...o });
-const C = (o: Partial<TradeCtx> = {}): TradeCtx => ({ claim: 15500, wheelNet: 4667, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {}, ...o });
+const C = (o: Partial<TradeCtx> = {}): TradeCtx => ({ wheelNet: 4667, cashAfter: 50000, liqs: 0, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {}, ...o });
 
 describe('거래에 대한 반응 (tradeReaction)', () => {
   it('잔돈 손익에는 아무도 말하지 않는다(58도토리 잃었다고 추심원이 오지 않는다)', () => {
     expect(tradeReaction(T({ pnl: -58 }), C())).toBeNull();
     expect(tradeReaction(T({ pnl: +88 }), C())).toBeNull();
-    expect(isTiny(-58, 15500)).toBe(true);
+    expect(isTiny(-0.29)).toBe(true); // 넣은 돈 2만에 −58 = −0.29%
   });
-  it('첫 이익·첫 손실 대사는 청구액의 10%를 넘는 거래에만, 한 생에 한 번', () => {
+  it('첫 이익, 첫 손실 대사는 넣은 돈의 10% 넘게 움직인 거래에만, 한 생에 한 번', () => {
+    expect(tradeReaction(T({ pnl: 1990 }), C())).toBeNull(); // 9.95%
     const w = tradeReaction(T({ pnl: 2000 }), C())!;
     expect(w).toMatchObject({ key: 'firstWin', who: 'boss', scene: false, once: true });
     expect(tradeReaction(T({ pnl: 2000 }), C({ seen: { firstWin: true } }))).toBeNull();
     expect(tradeReaction(T({ pnl: -2000 }), C())!.key).toBe('firstLoss');
   });
-  it('크게 따거나 잃으면 한마디 한다(U-67: 이자 단위로 말하지 않는다)', () => {
-    const w = tradeReaction(T({ pnl: 20000 }), C())!;
+  it('크게 따거나 잃으면 한마디 한다(U-67: 이자 단위로 말하지 않는다. 크기는 넣은 돈에 견준다: +100%, −50%)', () => {
+    const w = tradeReaction(T({ pnl: 20000 }), C())!; // 넣은 돈 2만에 +2만 = +100%
     expect(w.who).toBe('collector'); // 개정 대본 장면 20: 추심원이 청구액만큼 따로 두라고 한다
-    expect(w.lines[0]).toBe('많이 버셨네요. 종 칠 때 들를게요.');
+    expect(w.lines[0]).toBe('거신 돈만큼 버셨네요. 종 칠 때 들를게요.'); // 돈의 크기가 아니라 넣은 돈의 몇 배(11-28 결정: 문턱이 ROE 다)
     expect(w.lines.join(' ')).not.toMatch(/이자/);
     // U-44: 쳇바퀴로 치면 얼마는 결과 카드의 꼬리표와 주인공의 속마음이 말한다(대부가 되풀이하지 않는다)
     expect(wheelWorth(20000, 4667)).toBe('쳇바퀴 한 대 4.3정산치');
     // U-41: 이번 생 처음은 장면(한 번), 그 뒤로는 오소리 대부 · 추심원 · 족제비가 번갈아 한 줄(되풀이)
     expect(w).toMatchObject({ key: 'winClaim1', scene: true, once: true });
     const seen = { winClaim1: true };
-    const again = [2, 3, 4].map((k) => tradeReaction(T({ pnl: 20000 }), C({ seen, claimWins: k }))!);
+    const again = [2, 3, 4].map((k) => tradeReaction(T({ pnl: 20000 }), C({ seen, bigWins: k }))!);
     expect(again.map((r) => r.who)).toEqual(['boss', 'collector', 'hero']);
     expect(again.every((r) => !r.scene && !r.once)).toBe(true);
     expect(again[0].lines[0]).toContain('사무소');
-    expect(tradeReaction(T({ pnl: -16000 }), C())!).toMatchObject({ who: 'collector', key: 'lossClaim' });
+    expect(tradeReaction(T({ pnl: -16000 }), C())!).toMatchObject({ who: 'collector', key: 'lossClaim' }); // −80%
   });
-  it('크게 딴 날은 오소리 대부가 장면으로 나온다(한 생에 한 번)', () => {
-    const r = tradeReaction(T({ pnl: 50000 }), C())!;
+  it('아주 크게 딴 날(+300% 넘게)은 오소리 대부가 장면으로 나온다(한 생에 한 번)', () => {
+    const r = tradeReaction(T({ pnl: 60000 }), C())!;
     expect(r).toMatchObject({ key: 'bigWin', who: 'boss', scene: true });
-    expect(r.lines).toHaveLength(1);
-    expect(tradeReaction(T({ pnl: 50000 }), C({ seen: { bigWin: true } }))!.key).toBe('winClaim1');
+    expect(r.lines).toEqual(['거신 돈의 세 배를 버셨네요. 그중에 얼마쯤 장부에서 지워 드릴까요?']);
+    expect(tradeReaction(T({ pnl: 59_800 }), C())!.key).toBe('winClaim1'); // +299%
+    expect(tradeReaction(T({ pnl: 60000 }), C({ seen: { bigWin: true } }))!.key).toBe('winClaim1');
   });
   it('청산: 전부 걸고 빈털터리 > 빌린 돈으로 > 세 번째 > 첫 청산 > 번갈아 한 줄', () => {
     expect(tradeReaction(T({ liq: true, allIn: true, pnl: -90000 }), C({ cashAfter: 0, liqs: 1 }))!).toMatchObject({ key: 'liqAllIn', scene: true, who: 'boss' });
@@ -74,11 +76,11 @@ describe('거래에 대한 반응 (tradeReaction)', () => {
     expect(wheelWorth(-30120, 4667)).toBe('쳇바퀴 한 대 6.5정산치');
     expect(wheelWorth(228514, 4667)).toBe('쳇바퀴 한 대 49정산치');
   });
-  it('수익 인증서는 볼 만한 이익에만 묻는다', () => {
-    expect(worthCertificate(88, 11000, 15500)).toBe(false);
-    expect(worthCertificate(5000, 100000, 15500)).toBe(true);
-    expect(worthCertificate(3000, 5000, 15500)).toBe(true);
-    expect(worthCertificate(-1, 5000, 15500)).toBe(false);
+  it('수익 인증서는 볼 만한 이익(넣은 돈의 절반 넘게)에만 묻는다', () => {
+    expect(worthCertificate(88, 11000)).toBe(false);
+    expect(worthCertificate(5000, 100000)).toBe(false); // 청구액보다 많아도 넣은 돈의 5%면 묻지 않는다
+    expect(worthCertificate(3000, 5000)).toBe(true);
+    expect(worthCertificate(-1, 5000)).toBe(false);
   });
 });
 

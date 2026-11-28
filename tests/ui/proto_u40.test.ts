@@ -125,7 +125,7 @@ describe('오픈 기념 딱지와 대사', () => {
 });
 
 describe('되풀이되지 않는 줄', () => {
-  const snap: HoldSnap = { pnl: -100, roe: -1, heldSec: 90, claim: 15000, reach: 'far', peakPnl: 0, lowRoe: -1, settles: 0 };
+  const snap: HoldSnap = { pnl: -100, roe: -1, heldSec: 90, claim: 15000, reach: 'far', peakPnl: 0, peakRoe: 0, lowRoe: -1, settles: 0 };
   it('속마음은 포지션 순번으로 번갈아 나온다. 첫 줄은 회차 2 그대로', () => {
     const a = holdBeat(snap, {}, 0)!, b = holdBeat(snap, {}, 1)!, c = holdBeat(snap, {}, 2)!;
     expect(a.text).toBe('값은 그대론데 수수료만 나갔다.');
@@ -138,7 +138,7 @@ describe('되풀이되지 않는 줄', () => {
     expect(holdBeat({ ...snap, feesPaid: 120 }, {}, 0)!.text).toBe('값은 그대론데 수수료만 나갔다.');
   });
   it('청산 반응도 무료일 때는 수수료를 벌었다고 하지 않는다. 본전 세 판은 낸 수수료가 있을 때만 수수료 얘기', () => {
-    const ctx = { claim: 15000, wheelNet: 3000, cashAfter: 50000, liqs: 1, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} };
+    const ctx = { wheelNet: 3000, cashAfter: 50000, liqs: 1, winStreak: 0, lossStreak: 0, tinyStreak: 0, feesLife: 0, seen: {} };
     const t = { pnl: -30000, margin: 30000, lev: 50, liq: true, heldSec: 40, fundedBy: null, allIn: false };
     expect(tradeReaction(t, { ...ctx, feeFree: true })!.lines[0]).toContain('수수료도 없었어요');
     expect(tradeReaction(t, ctx)!.lines[0]).toContain('수수료도 나갔어요');

@@ -9,7 +9,7 @@ import { GIcon } from './icons';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useGame } from '../../store/gameStore';
 import { tutorialOpen, tutorialIntro, tutorialMargin } from './tutorial';
-import { TUT, hamsterMath, claim, lifeNo } from './model';
+import { TUT, hamsterMath, lifeNo } from './model';
 import { flySecOf, windNow, donePatterns } from './flyWind';
 import { flySeconds } from '../../engine/feed/fly';
 import { ForestLine, forestOpen } from './ForestBoard';
@@ -450,7 +450,6 @@ export function ProtoTrade() {
   const tab = tabs.find((t) => t.id === market)!;
   const lev = pos ? pos.lev : tr.lev ?? run.futures.defaultLev;
   const lev0 = lev;
-  const cl = claim(g);
   const fc = forecast(g);
   const dueAll = fc.interest + fc.living + fc.wages;
   // 정산까지 더 들어올 돈: 캐는 값은 틱마다 들어온다(U-43) — 이번 구간에 아직 안 들어온 몫만 센다
@@ -528,7 +527,7 @@ export function ProtoTrade() {
       const sv = useProto.getState().tutorial === 'run' ? { saved: 0, by: null } : savedFees(was.p, fees, liq);
       setResult((r) => ({ k: (r?.k ?? 0) + 1, tick: run.tick, market: was.p.market, kind, dir: was.p.dir, pnl, margin: was.p.margin0, roe: (pnl / Math.max(1, was.p.margin0)) * 100, name: m.name, dirText: was.p.dir === 1 ? '롱' : '숏', lev: was.p.lev, move, fees, worth: wheelWorth(pnl, hamsterMath(useGame.getState().g).net), saved: sv.saved, savedBy: sv.by, rolled: Object.keys(run.positions).length === 0 ? Math.round(rolledFor(was.p.openTick)) : 0, bonus: (() => { const lb = run.stats.lastBonus as { market: string; tick: number; amount: number } | undefined; return lb && lb.market === was.p.market && lb.tick === run.tick ? lb.amount : 0; })() }));
       // 청산 소리와 이긴 판의 등급 소리는 watch.ts 가 낸다(U-49: 어느 탭에서든)
-      if (!liq && !burstTier(pnl, was.p.margin0, cl.total)) play(pnl > 0 ? 'close_profit' : 'close_loss');
+      if (!liq && !burstTier(pnl, was.p.margin0)) play(pnl > 0 ? 'close_profit' : 'close_loss');
       // 닫힌 판의 속마음은 지나간 일이다(U-48: 닫은 뒤에도 "지금 닫으면 …"이 남아 있던 것)
       if (useProto.getState().think) useProto.getState().patch({ think: null });
       if (pnl > 0) { flyAcorns(plRef.current?.getBoundingClientRect() ?? null, Math.min(7, 3 + Math.floor(pnl / 8000))); swing(true); }
@@ -1232,7 +1231,7 @@ export function ProtoTrade() {
     );
   })() : null;
   // 만화 지면(U-60): 크게 이긴 판(넣은 돈의 두 배 넘게)은 결과 카드가 떠 있는 동안 차트 칸을 이긴 컷이 차지한다. 누르면 차트로
-  const winT = result && result.kind !== 'liq' ? burstTier(result.pnl, result.margin, cl.total) : null;
+  const winT = result && result.kind !== 'liq' ? burstTier(result.pnl, result.margin) : null;
   const winPanel = result && winT && winT.lv >= 3 ? (
     <div key={'w' + result.k} className={'mga-win lv' + winT.lv} data-mga-win={winT.lv} role="status" onClick={() => setResult(null)}>
       <img src={mgaWin} alt="" />

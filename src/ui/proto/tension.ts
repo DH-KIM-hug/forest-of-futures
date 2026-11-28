@@ -62,14 +62,11 @@ export function tensionOf(liqDistPct: number, hist: number[]): Tension {
   return { rangePct, steps, reach, dots, sec, text };
 }
 
-/** 이긴 판의 등급(U-48). 터지지 않으면 null. claimTotal 은 예전 「이자 벌었다」 자리(U-67 에 뺐다, 부르는 곳을 그대로 두려고 받기만 한다) */
-export function burstTier(pnl: number, margin: number, claimTotal: number): WinTier | null {
+/** 이긴 판의 등급(U-48). 터지지 않으면 null. U-67(사용자: "이자 한 번 버는 거 의미 없어"): 「이자 벌었다」 등급은 뺐다. 터지는 판은 ROE 등급뿐이다 */
+export function burstTier(pnl: number, margin: number): WinTier | null {
   if (!(pnl > 0)) return null;
   const t = winTier((pnl / Math.max(1, margin)) * 100);
-  if (t.lv > 0) return t;
-  // U-67(사용자: "이자 한 번 버는 거 의미 없어"): 「이자 벌었다」 등급은 뺐다. 터지는 판은 ROE 등급뿐이다
-  void claimTotal;
-  return null;
+  return t.lv > 0 ? t : null;
 }
 
 export interface Odds {
@@ -105,10 +102,12 @@ export function orderOdds(o: { margin: number; lev: number; claim: number; feeRa
 // ── 주인공의 몸 ──────────────────────────────────────────────────────────
 /** idle = 포지션 없음, phone = 폰만 본다, pace = 쳇바퀴 옆을 서성인다(잃는 중), hop = 들썩인다(따는 중), frozen = 굳었다(청산이 흔들리는 폭 안) */
 export type HeroMood = 'idle' | 'phone' | 'pace' | 'hop' | 'frozen';
-export function heroMood(o: { hasPos: boolean; roe: number; pnl: number; claim: number; reach: Reach; nearLiq: boolean }): HeroMood {
+/** 크게 따는 중, 크게 잃는 중: 넣은 돈의 25%(11-28 결정: 정산 청구액에 견주던 갈래는 뺐다) */
+export const MOOD_BIG_ROE = 25;
+export function heroMood(o: { hasPos: boolean; roe: number; pnl: number; reach: Reach; nearLiq: boolean }): HeroMood {
   if (!o.hasPos) return 'idle';
   if (o.nearLiq || o.reach === 'edge') return 'frozen';
-  const big = Math.abs(o.roe) >= 25 || Math.abs(o.pnl) >= Math.max(1, o.claim) * 0.3;
+  const big = Math.abs(o.roe) >= MOOD_BIG_ROE;
   if (big && o.pnl < 0) return 'pace';
   if (big && o.pnl > 0) return 'hop';
   return o.reach === 'tight' ? 'pace' : 'phone';
@@ -117,8 +116,9 @@ export function heroMood(o: { hasPos: boolean; roe: number; pnl: number; claim: 
 // ── 들고 있는 동안의 속마음(포지션마다 한 번씩) ──────────────────────────
 export interface HoldSnap {
   /** 지금 정리하면 넣은 돈에 더해지거나 빠지는 돈 */ pnl: number;
-  roe: number; heldSec: number; claim: number; reach: Reach;
-  /** 이 포지션에서 본 가장 큰 이익 · 가장 깊은 손실(ROE %) */ peakPnl: number; lowRoe: number;
+  roe: number; heldSec: number; reach: Reach;
+  /** 다음 정산에 낼 돈(이자 + 생활비). 들고 있는 사이 쳇바퀴를 굴린 돈(rolled)에만 견준다. 손익의 크기는 ROE 로 잰다(11-28 결정) */ claim: number;
+  /** 이 포지션에서 본 가장 큰 이익(돈, ROE %), 가장 깊은 손실(ROE %) */ peakPnl: number; peakRoe: number; lowRoe: number;
   /** 들고 있는 사이 지나간 정산 수 */ settles: number;
   /** 다음 정산에 낼 돈이 포지션에 묶여 있다(그리고 정산이 1분 안이다) */ squeezed?: boolean;
   /** 이 포지션에 낸 수수료(0 이면 오픈 기념 무료 — "수수료만 냈다"는 말은 거짓이 된다) */ feesPaid?: number;
@@ -127,6 +127,8 @@ export interface HoldSnap {
 /** 같은 열쇠의 줄을 포지션마다 번갈아 쓴다(U-40): nth = 이번 생에 연 포지션 순번. 첫 줄은 회차 2 의 줄 그대로다. */
 const rot = (nth: number, ...v: string[]): string => v[((nth % v.length) + v.length) % v.length];
 export interface HoldBeat { key: string; text: string }
+/** 들고 있는 동안의 속마음 문턱(넣은 돈에 견준 %, 11-28 결정): big = 닫으면 내 거다, gaveBack = 이만큼 떴다가 3할 아래로 토해 냈다, flatPeak = 이보다 높이 뜬 적이 없어야 「안 움직인다」 */
+export const HOLD_ROE = { big: 50, gaveBack: 25, flatPeak: 8 } as const;
 /** 포지션 하나를 들고 있는 동안 주인공이 속으로 하는 말. 위에서부터 처음 맞는 것 하나, 포지션마다 열쇠당 한 번. 전부 실제 숫자에서 나온다. */
 export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): HoldBeat | null {
   const claim = Math.max(1, s.claim);
@@ -136,13 +138,13 @@ export function holdBeat(s: HoldSnap, seen: Record<string, boolean>, nth = 0): H
     ?? (s.reach === 'tight' && s.pnl < 0 ? B('tight', '저 선까지만은 오지 마라.') : null)
     ?? (s.squeezed ? B('squeeze', '종 칠 텐데. 꺼내려면 지금 닫아야 해.') : null)
     ?? (s.roe >= 100 ? B('double', '건 돈만큼 벌었다. 손가락만 떼면 내 건데.') : null)
-    ?? (s.pnl >= claim ? B('claim', `지금 닫으면 ${n(s.pnl)}. 손가락만 떼면 내 거다.`) : null)
-    ?? (s.peakPnl >= claim * 0.5 && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `아까 +${n(s.peakPnl)} 떴을 때 왜 그냥 봤지.`) : null)
+    ?? (s.roe >= HOLD_ROE.big ? B('big', `지금 닫으면 ${n(s.pnl)}. 손가락만 떼면 내 거다.`) : null)
+    ?? (s.peakRoe >= HOLD_ROE.gaveBack && s.pnl <= s.peakPnl * 0.3 ? B('gaveBack', `아까 +${n(s.peakPnl)} 떴을 때 왜 그냥 봤지.`) : null)
     ?? (s.roe <= -50 ? B('half', '반이나 없어졌어.') : null)
     ?? (s.lowRoe <= -25 && s.pnl >= 0 ? B('even', '아까는 본전만 오면 나간다 그랬는데.') : null)
     ?? ((s.rolled ?? 0) >= claim * 0.05 ? B('rolled', `기다리면서 ${n(s.rolled!)} 벌었다. 낼 돈의 ${Math.round((s.rolled! / claim) * 100)}%쯤.`) : null)
     ?? (s.settles >= 1 ? B('settled', '종 벌써 쳤네. 이건 아직 그대로네.') : null)
-    ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakPnl < claim * 0.1
+    ?? (s.heldSec >= 75 && Math.abs(s.roe) < 4 && s.lowRoe > -8 && s.peakRoe < HOLD_ROE.flatPeak
       ? (free ? B('flat', '폰 멈췄나?', '딴 종목도 이런가.')
         : B('flat', '값은 그대론데 수수료만 나갔다.', '들어온 값이랑 똑같네. 들어온 돈은 아니고.')) : null);
 }

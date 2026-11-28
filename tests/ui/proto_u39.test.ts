@@ -64,11 +64,16 @@ describe('첫 생의 첫 추심원은 60초 뒤 (U-39 ⑤)', () => {
 
 describe('정산 알림: 들고 있는 포지션을 추심원이 흘끗 본다', () => {
   const c = { interest: 14500, other: 0, net: -6000, cashAfter: 80000, nextClaim: 15500, nextNet: -6000, overdue: false, posOpen: true, negStreak: 1, firstPositive: false };
-  it('이자의 3할이 넘는 이익 · 손실은 숫자로, 작으면 전처럼', () => {
-    expect(settleRemark({ ...c, posPnl: 9000 })).toContain('걸어 두신 건 아직 +9,000이네요.');
-    expect(settleRemark({ ...c, posPnl: -9000 })).toContain('걸어 두신 건 아직 −9,000이네요.');
-    expect(settleRemark({ ...c, posPnl: -300 })).toContain('폰 보고 계세요.');
+  it('넣은 돈의 25% 넘게 움직인 이익, 손실은 숫자로, 작으면 전처럼(11-28 결정: 이자에 견주지 않는다)', () => {
+    expect(settleRemark({ ...c, posPnl: 9000, posMargin: 30_000 })).toContain('걸어 두신 건 아직 +9,000이네요.');
+    expect(settleRemark({ ...c, posPnl: -9000, posMargin: 30_000 })).toContain('걸어 두신 건 아직 −9,000이네요.');
+    expect(settleRemark({ ...c, posPnl: -300, posMargin: 30_000 })).toContain('폰 보고 계세요.');
     expect(settleRemark({ ...c })).toContain('폰 보고 계세요.');
+  });
+  it('이자가 크든 작든 같은 %에서: 넣은 돈 30만에 +9,000(+3%)은 흘끗, 이자 1,000 에 넣은 돈 4,000 의 +1,000(+25%)은 숫자로', () => {
+    expect(settleRemark({ ...c, posPnl: 9000, posMargin: 300_000 })).toContain('폰 보고 계세요.');
+    expect(settleRemark({ ...c, interest: 1000, posPnl: 300, posMargin: 10_000 })).toContain('폰 보고 계세요.');
+    expect(settleRemark({ ...c, interest: 1000, posPnl: 1000, posMargin: 4_000 })).toContain('걸어 두신 건 아직 +1,000이네요.');
   });
 });
 
