@@ -5,7 +5,7 @@
 //   first C4 이번 생 처음 이긴 실전 판, 그 뒤로는 이번 생 신기록: 울다 웃는 칩멍크, 세로 다짐, 흑 흐끅 하하, 진짜 거래의 WIN 상자와 잔액
 //   win   C5 대박 이상(넣은 돈의 네 배 이상): 별 눈, 번쩍!!, 두둥!!
 //   lev   장면 B 50배 넘게 걸 때, 생마다 처음 한 번: 간다…!
-// pray 와 near 는 누름이 그대로 지나간다([정리하기]를 가리지 않는다). 나머지는 누르면 닫힌다. 1.3~2.6초(first 만 4.5초), 서로 20초 간격. 움직임 줄이기면 흔들지 않는다.
+// pray 와 near 는 누름이 그대로 지나간다([정리하기]를 가리지 않는다). 나머지는 누르면 닫힌다. 1.3~2.6초(first 만 4.5초), 서로 20초 간격, near 는 90초 pray 는 2분에 한 번. 움직임 줄이기면 흔들지 않는다.
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../../store/gameStore';
 import { useProto } from '../protoStore';
@@ -34,6 +34,8 @@ interface Cut { k: number; kind: Kind; market: string; pnl?: number; lost?: numb
 
 const MS: Record<Kind, number> = { pray: 2600, near: 1800, liq: 2200, win: 1900, lev: 1300, first: 4500 };
 const GAP_MS = 20_000;
+/** 200배는 거의 판마다 청산 근처를 지난다: 청산 직전 컷은 90초에 한 번, 기도는 2분에 한 번만(드물어야 특별하다) */
+export const NEAR_GAP_MS = 90_000, PRAY_GAP_MS = 120_000;
 /** 평가손 기도: 넣은 돈의 이만큼(%) 넘게 잃고 있을 때. 청산 위험이 이보다 낮을 때만(곧 청산될 판에는 C2 가 뜬다) */
 export const PRAY_ROE = -50, PRAY_MAX_DANGER = 0.72;
 /** 결심 컷은 이 배율을 넘을 때 */
@@ -100,6 +102,7 @@ export function MangaCut() {
   const lastAt = useRef(0);
   const seen = useRef(new Set<string>());
   const levLife = useRef(-1);
+  const kindAt = useRef<Partial<Record<Kind, number>>>({});
   const best = useRef({ gen: -1, pnl: 0 });
   const kRef = useRef(0);
   const timer = useRef<number | undefined>(undefined);
@@ -182,8 +185,9 @@ export function MangaCut() {
       if (!raw) continue;
       const key = p.market + ':' + raw.openTick;
       // 청산 직전은 간격을 무시한다(줄을 서서라도 뜬다). 기도는 간격에 막히면 다음 기회에(본 것으로 치지 않는다)
-      if (d >= 0.7 && !seen.current.has('near:' + key)) { seen.current.add('near:' + key); show({ kind: 'near', market: p.market }, true); return; }
-      if (p.netRoe <= PRAY_ROE && d < PRAY_MAX_DANGER && !seen.current.has('pray:' + key)) { if (show({ kind: 'pray', market: p.market, pnl: p.net, at: new Date() })) seen.current.add('pray:' + key); return; }
+      const now = Date.now();
+      if (d >= 0.7 && !seen.current.has('near:' + key)) { seen.current.add('near:' + key); if (now - (kindAt.current.near ?? -1e9) >= NEAR_GAP_MS) { kindAt.current.near = now; show({ kind: 'near', market: p.market }, true); } return; }
+      if (p.netRoe <= PRAY_ROE && d < PRAY_MAX_DANGER && !seen.current.has('pray:' + key) && now - (kindAt.current.pray ?? -1e9) >= PRAY_GAP_MS) { if (show({ kind: 'pray', market: p.market, pnl: p.net, at: new Date() })) { seen.current.add('pray:' + key); kindAt.current.pray = now; } return; }
     }
   });
 

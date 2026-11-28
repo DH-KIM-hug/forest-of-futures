@@ -31,7 +31,9 @@ export function useLiteBankrupt(): void {
     if (!run.over || !run.bankruptcy || g.pendingEnding?.cause === RETIRE_CAUSE || shown.has(g.family.generation)) return;
     shown.add(g.family.generation);
     // 장면 D: 컷 1의 절망 표지를 진짜 숫자와 함께. 해설 상자 = 빌린 돈(지금 빚 전부) / 남은 돈(손의 돈)
-    const nar: [string, string] = [`빌린 돈 ${comma(Math.round(totalDebt(run)))}`, `남은 돈 ${comma(Math.max(0, Math.floor(run.cash)))}`];
+    // 판을 쥔 채 이자를 못 내 파산했으면 그 돈도 적는다(걸어 둔 증거금은 압류되지도, 이자로 나가지도 않는다)
+    const onTable = Object.values(run.positions).reduce((a, p) => a + p.margin, 0);
+    const nar: [string, string] = [`빌린 돈 ${comma(Math.round(totalDebt(run)))}`, `남은 돈 ${comma(Math.max(0, Math.floor(run.cash)))}${onTable >= 1000 ? `, 판에 걸려 있던 돈 ${comma(Math.round(onTable))}` : ''}`];
     pushSeq({ id: 'broke', label: '파산', panels: [despairPanel({ sub: `제${lifeNo(g)}화 파산`, nar })] });
   });
 }

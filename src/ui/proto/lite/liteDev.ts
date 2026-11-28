@@ -68,6 +68,15 @@ export function liteScene(name: string, base: GameState): GameState {
       g.run.settleNo = 4;
       return g;
     }
+    case 'lite_vip': {
+      // 오소리 한도를 다 쓰고 뒷골목이 열렸다: 처음 빌리면 독사의 조건 → 유혹 컷
+      const g = ready(base);
+      while (A(g, { type: 'borrow', lender: 'shark1' }).ok) { /* 한도까지 */ }
+      g.run.shark2Open = true;
+      P.patch({ tab: 'map', seen: { ...useProto.getState().seen, capitalSms: true, viperSms: true }, mapFocus: 'shark2' });
+      g.run.settleNo = 6;
+      return g;
+    }
     case 'lite_clear': {
       // 빚이 1만 남았다: 지도에서 [전부 갚기] → 완납 장면(장면 F)
       const g = ready(base);
@@ -101,6 +110,8 @@ export function liteScene(name: string, base: GameState): GameState {
       // 마지막 연체 직전: 손에 0, 오소리 연체 1회, 정산 3초 전. 엔진 정산이 파산을 선언한다
       const g = ready(base);
       while (A(g, { type: 'borrow', lender: 'shark1' }).ok) { /* 한도까지 */ }
+      // 판에 전부 걸어 둔 채(10배 롱) 이자를 못 낸다: 걸어 둔 돈은 압류되지도 이자로 나가지도 않는다
+      A(g, { type: 'open', market: 'FLY', dir: 1, lev: 10, marginPct: 100, sl: null, tp: null });
       g.run.cash = 0;
       g.run.debts.shark1.overdue = 1;
       g.run.settleIn = 3;
