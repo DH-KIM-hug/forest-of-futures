@@ -28,17 +28,17 @@ export interface Sfx { x: number; y: number; text: string; rot?: number; fs?: nu
  */
 export interface Word {
   x: number; y: number; w: number; h: number; t: string; k: 'say' | 'out' | 'white' | 'sfx' | 'hand' | 'box' | 'tag' | 'hollow' | 'ghost' | 'wave' | 'logo';
-  fs: number; rot?: number; /** 글자 색 */ c?: string; /** 덧붙는 모양: red(빨간 글), ink(검은 테 흰 글), beat(박동), drip(흘러내림) */ cls?: string; /** 나타나는 때(초) */ d?: number;
+  fs: number; rot?: number; /** 세로쓰기 */ v?: boolean; /** 글자 색 */ c?: string; /** 덧붙는 모양: red(빨간 글), ink(검은 테 흰 글), beat(박동), drip(흘러내림) */ cls?: string; /** 나타나는 때(초) */ d?: number;
 }
-/** 쪽을 넘기기 전에 쪽 위에 따로 뜨는 카드(반전): beat = 짧은 앞말, stamp = 크게 찍히는 말, lines = 아래 숫자 줄 */
+/** card = 그림 없는 흰 칸에 손글씨 한 줄, words = 쪽 위의 글, ar = 그림의 가로/세로(없으면 3:2) */
 export interface Twist { beat: string; stamp: string; lines: string[] }
-/** card = 그림 없는 흰 칸에 손글씨 한 줄, words = 쪽 위의 글, ar = 그림의 가로/세로(없으면 3:2), twist = 넘길 때 먼저 뜨는 반전 카드 */
+/** twist = 넘길 때 먼저 뜨는 반전 카드 */
 export interface Panel { id: string; src?: string; alt: string; balloons: Balloon[]; sfx?: Sfx[]; card?: string; words?: Word[]; ar?: number; twist?: Twist }
 
 const won = (x: number): string => (x >= 10000 && x % 10000 === 0 ? `${x / 10000}만` : Math.round(x).toLocaleString('ko-KR'));
 const n = (x: number): string => Math.round(x).toLocaleString('ko-KR');
 
-// ── 절망의 표제지(프롤로그 7쪽, 장면 D 파산): 기도 글, 해설 두 칸, 하아 넷, 표제 로고 ──
+// ── 절망의 표제지(프롤로그 7쪽, 장면 D 파산): 세로 기도 글, 해설 두 칸, 하아 넷, 표제 로고 ──
 export const PAGE7_AR = 1024 / 1536;
 export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: boolean }): Panel {
   // 세로 한 쪽(2:3). 폰에서 자르지도 훑지도 않고 한 화면에 다 보인다
@@ -53,12 +53,12 @@ export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: b
       { x: 2, y: 2, w: 33, h: 16, t: '시간을\n되돌려\n주세요', k: 'white', fs: 7, d: 0.2 },
       { x: 14.5, y: 20.5, w: 13, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 0.5 },
       { x: 5.5, y: 41, w: 10.5, h: 9.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 0.7 },
-      { x: 76, y: 3, w: 23, h: 14, t: '이루어\n진다면', k: 'white', fs: 5.4, rot: 6, d: 0.9 },
+      { x: 86, y: 2, w: 12, h: 22, t: '이루어진다면', k: 'white', v: true, fs: 5, d: 0.9 },
       { x: 79.5, y: 27, w: 12, h: 12, t: '하아', k: 'say', cls: 'red', fs: 4, d: 1.1 },
       { x: 86, y: 48, w: 9.5, h: 10.5, t: '하아', k: 'say', cls: 'red', fs: 3.6, d: 1.3 },
       { x: 13, y: 73.6, w: 25, h: 9.6, t: nar[0], k: 'tag', fs: 3.2, d: 1.6 },
       { x: 3, y: 83, w: 25, h: 15.5, t: nar[1], k: 'tag', fs: 3.2, d: 2 },
-      { x: 0, y: 58, w: 25, h: 9, t: '빌어라.', k: 'ghost', fs: 6.6, rot: -8, d: 0 },
+      { x: 0, y: 52, w: 12, h: 22, t: '빌어라。', k: 'ghost', v: true, fs: 8, d: 0 },
       broke ? { x: 40, y: 89, w: 58, h: 10.5, t: o.sub, k: 'logo', fs: 7, d: 2.3 } : { x: 38, y: 80.5, w: 60, h: 18, t: o.sub, k: 'logo', fs: 11, d: 2.3 },
       ...facts,
     ],
@@ -120,14 +120,15 @@ export function prologuePages(): Panel[] {
       balloons: [],
       words: [
         { x: 30, y: 1.2, w: 40, h: 2.6, t: 'FRX Fighter DAROMI', k: 'white', fs: 2, d: 0 },
+        { x: 0.6, y: 6, w: 8.6, h: 90, t: '어리바리 다람쥐의 조금 위험한 선물 이야기', k: 'white', v: true, fs: 3.6, c: '#FFE27A', d: 0 },
         { x: 70, y: 8.5, w: 18.8, h: 21, t: '어느 날', k: 'box', fs: 5, d: 0.2 },
         { x: 25.3, y: 13, w: 3.9, h: 3.6, t: '딸깍', k: 'say', fs: 1.25, d: 0.5 },
-        { x: 21, y: 19, w: 8.6, h: 11.4, t: '힉', k: 'say', c: '#E8731A', fs: 6, rot: -12, d: 0.65 },
+        { x: 21, y: 19, w: 8.6, h: 11.4, t: '힉', k: 'say', v: true, c: '#E8731A', fs: 6, d: 0.65 },
         { x: 63.1, y: 7, w: 3.8, h: 3.6, t: '딸깍', k: 'say', fs: 1.25, d: 0.8 },
-        { x: 54.6, y: 15, w: 7, h: 11.4, t: '힉', k: 'say', c: '#E8731A', fs: 6, rot: 10, d: 0.95 },
+        { x: 54.6, y: 15, w: 7, h: 11.4, t: '힉', k: 'say', v: true, c: '#E8731A', fs: 6, d: 0.95 },
         { x: 39.7, y: 28.4, w: 3.3, h: 3.4, t: '딸깍', k: 'say', fs: 1.25, d: 1.1 },
-        { x: 24, y: 40, w: 7, h: 7, t: '힉', k: 'say', c: '#E8731A', fs: 5, rot: -10, d: 1.3 },
-        { x: 59.4, y: 32.4, w: 7.4, h: 7.6, t: '힉', k: 'say', c: '#E8731A', fs: 5, rot: -14, d: 1.4 },
+        { x: 24, y: 40, w: 7, h: 7, t: '힉', k: 'say', v: true, c: '#E8731A', fs: 5, d: 1.3 },
+        { x: 59.4, y: 32.4, w: 7.4, h: 7.6, t: '힉', k: 'say', v: true, c: '#E8731A', fs: 5, d: 1.4 },
         { x: 62, y: 41, w: 3.5, h: 3.4, t: '딸깍', k: 'say', fs: 1.25, d: 1.5 },
         { x: 70.5, y: 35, w: 15.8, h: 18.5, t: '신이시여…\n제발', k: 'say', fs: 3.2, d: 1.7 },
         { x: 12.5, y: 47, w: 15.3, h: 15, t: '이 돈은\n안 돼요…', k: 'say', fs: 2.7, d: 2 },
@@ -160,14 +161,14 @@ export function prologuePages(): Panel[] {
       words: [
         { x: 1, y: 2, w: 13, h: 12, t: `${won(d.left)}이나\n있으면…`, k: 'say', fs: 2.4, d: 0 },
         { x: 76, y: 0.5, w: 13.5, h: 9.5, t: '다 갚고도\n남는데…', k: 'say', fs: 2.3, d: 0.1 },
-        { x: 54, y: 4, w: 19, h: 14, t: '쿵덕', k: 'sfx', fs: 7.4, rot: -12, cls: 'beat', d: 0.3 },
+        { x: 56, y: 1, w: 15, h: 26, t: '쿵덕', k: 'sfx', v: true, fs: 9, cls: 'beat', d: 0.3 },
         { x: 26, y: 33, w: 25, h: 26, t: '진다는 건\n있을 수\n없어…!', k: 'say', fs: 4.2, d: 0.6 },
-        { x: 76, y: 30, w: 20, h: 15, t: '쿵덕', k: 'sfx', fs: 8, rot: 10, cls: 'beat', d: 0.8 },
-        { x: 0, y: 24, w: 24, h: 18, t: '쿵덕', k: 'sfx', fs: 10, rot: -14, cls: 'beat', d: 1 },
-        { x: 4, y: 62, w: 34, h: 22, t: '쿵덕!!', k: 'sfx', fs: 10, rot: -10, cls: 'beat', d: 1.2 },
+        { x: 78, y: 27, w: 14, h: 27, t: '쿵덕', k: 'sfx', v: true, fs: 10, cls: 'beat', d: 0.8 },
+        { x: 0, y: 19, w: 22, h: 34, t: '쿵덕', k: 'sfx', v: true, fs: 13, cls: 'beat', d: 1 },
+        { x: 13, y: 57, w: 24, h: 40, t: '쿵덕!!', k: 'sfx', v: true, fs: 12, cls: 'beat', d: 1.2 },
         { x: 54, y: 33.5, w: 10, h: 5, t: '으흑', k: 'out', fs: 3.6, rot: -8, d: 1.5 },
-        { x: 36, y: 70, w: 8, h: 12, t: '주륵\n주륵', k: 'out', fs: 3, rot: 10, d: 1.7 },
-        { x: 88.5, y: 60, w: 8, h: 12, t: '주륵\n주륵', k: 'out', fs: 3, rot: -10, d: 1.8 },
+        { x: 37, y: 68, w: 6, h: 16, t: '주륵 주륵', k: 'out', v: true, fs: 3, rot: 10, d: 1.7 },
+        { x: 89.5, y: 58, w: 6, h: 16, t: '주륵 주륵', k: 'out', v: true, fs: 3, rot: -10, d: 1.8 },
         { x: 29, y: 84, w: 12, h: 5, t: '부들…', k: 'out', fs: 3, rot: -6, d: 2 },
         { x: 81, y: 75, w: 12, h: 5, t: '부들…', k: 'out', fs: 3, rot: 6, d: 2.1 },
       ],
@@ -175,6 +176,7 @@ export function prologuePages(): Panel[] {
     despairPanel({ sub: '제1화 기도', fresh: true }),
     {
       id: 'p5', src: pg5, ar: 1034 / 1497, alt: '오소리 대부가 빨대 컵을 들고 바짝 다가와 달콤하게 웃는다. 아래 두 칸: 웃는 대부, 곁눈질하며 땀 흘리는 다로미.',
+      twist: { beat: '그리고…', stamp: '빌렸다.', lines: [`빌린 돈 +${n(f.unit)}`, `정산마다 이자 +${n(f.per)}`] },
       balloons: [],
       words: [
         { x: 1, y: 1, w: 21, h: 17, t: 'ㅅ', k: 'sfx', fs: 22, rot: -8, d: 0.2 },
@@ -186,13 +188,11 @@ export function prologuePages(): Panel[] {
         { x: 45, y: 56.5, w: 12, h: 8, t: '~', k: 'sfx', fs: 9, rot: -36, cls: 'drip', d: 1.5 },
         { x: 37, y: 62.5, w: 10, h: 7, t: '~', k: 'sfx', fs: 7, rot: -30, cls: 'drip', d: 1.6 },
         { x: 29, y: 67, w: 9, h: 6, t: '~', k: 'sfx', fs: 6, rot: -26, cls: 'drip', d: 1.7 },
-        { x: 32, y: 70, w: 9, h: 5, t: '……', k: 'white', fs: 3.6, rot: -8, d: 2 },
-        { x: 89, y: 70, w: 9, h: 5, t: '……', k: 'white', fs: 3.6, rot: 8, d: 2.1 },
+        { x: 34.5, y: 66.5, w: 4.5, h: 12, t: '……', k: 'white', v: true, fs: 3.6, d: 2 },
+        { x: 91, y: 66.5, w: 4.5, h: 12, t: '……', k: 'white', v: true, fs: 3.6, d: 2.1 },
         { x: 45, y: 84.5, w: 12, h: 10, t: '무슨 소리야\n빌릴 리가\n없잖아…', k: 'say', fs: 2.3, d: 2.4 },
         { x: 1.5, y: 88, w: 10.5, h: 9, t: '그래…?', k: 'say', fs: 2.6, d: 2.9 },
       ],
-      // 넘기기 전에 따로 뜨는 반전 카드(그림을 덮지 않는다)
-      twist: { beat: '그리고…', stamp: '빌렸다.', lines: [`빌린 돈 +${n(f.unit)}`, `정산마다 이자 +${n(f.per)}`] },
     },
     {
       id: 'p4', src: pg4, ar: 1005 / 1341, alt: '줄 공책의 손그림: 1배는 크게 올라야, 200배는 조금만 올라도 같은 이익. 진지한 다로미. 숲 마을 풍경, 도토리 버거 쟁반과 도토리 간판.',
@@ -227,9 +227,9 @@ export function prologuePages(): Panel[] {
         { x: 39.5, y: 46, w: 6, h: 5, t: '흐흐', k: 'say', fs: 2.8, d: 1.3 },
         { x: 22, y: 57, w: 13, h: 12, t: '할 수\n있어!', k: 'say', fs: 3.8, d: 1.45 },
         { x: 72.5, y: 76.5, w: 7, h: 4, t: '불끈', k: 'out', fs: 2.6, rot: 8, d: 1.75 },
-        { x: 84, y: 66, w: 10, h: 15, t: '이긴\n다!', k: 'say', fs: 3.8, rot: -6, d: 1.9 },
+        { x: 84, y: 66, w: 10, h: 15, t: '이긴다!', k: 'say', v: true, fs: 3.8, d: 1.9 },
         { x: 46, y: 81, w: 9, h: 6, t: '후욱', k: 'say', fs: 2.6, d: 2.05 },
-        { x: 0, y: 45, w: 17.5, h: 34, t: '이겨\n주겠\n어!', k: 'out', fs: 6.6, rot: -7, d: 2.4 },
+        { x: 1.5, y: 40, w: 16, h: 57, t: '이겨주겠어!', k: 'out', v: true, fs: 10.5, d: 2.4 },
         { x: 76, y: 50, w: 22, h: 6.5, t: '반드시', k: 'out', fs: 6.6, d: 2.9 },
         { x: 61, y: 79.4, w: 14, h: 4, t: '목표!', k: 'sfx', fs: 4.4, rot: -4, cls: 'ink', d: 3.2 },
         { x: 61, y: 84.5, w: 25, h: 7, t: `날다람쥐코인 200배\n빚 ${n(d.left + f.unit)} 다 갚기`, k: 'box', fs: 2.6, d: 3.3 },

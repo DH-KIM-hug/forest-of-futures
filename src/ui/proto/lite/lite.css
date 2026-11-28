@@ -66,8 +66,7 @@
 .manga-cut .mc-sfx { position: absolute; transform: rotate(var(--rot)); font-family: var(--dsp); font-weight: 400; font-size: var(--fs); line-height: 1; color: #1d1b19; white-space: nowrap; pointer-events: none;
   text-shadow: 3px 0 0 #fff, -3px 0 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 2.2px 2.2px 0 #fff, -2.2px 2.2px 0 #fff, 2.2px -2.2px 0 #fff, -2.2px -2.2px 0 #fff, 0 5px 0 rgba(0, 0, 0, .3);
   animation: mc-sfx .32s cubic-bezier(.2, 1.7, .4, 1) both; }
-/* 한글은 세로쓰기를 하지 않는다: 좁은 자리는 짧은 가로 줄(nl = 줄바꿈 그대로) */
-.manga-cut .mc-sfx.nl { white-space: pre; text-align: center; line-height: 1.02; }
+.manga-cut .mc-sfx.v { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: -.1em; }
 .manga-cut .mc-sfx.tag { color: #E23B3B; }
 .manga-cut .mc-sfx.heart { color: #B8212A; animation: mc-sfx .3s cubic-bezier(.2, 1.7, .4, 1) both, mc-beat var(--beat, .7s) ease-in-out .3s infinite; }
 .manga-cut .mc-sfx.slide { animation: mc-slide .9s cubic-bezier(.3, 0, .5, 1) both; }
@@ -83,8 +82,8 @@
 .manga-cut .mc-think { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; font-family: var(--dsp); font-size: 2.5cqw; line-height: 1.2; color: #1d1b19; word-break: keep-all; animation: mc-sfx .3s .25s both; }
 .manga-cut .mc-pnl { position: absolute; left: 50%; top: 13%; transform: translateX(-50%) rotate(-3deg); padding: 1% 3%; border: 3px solid #1d1b19; border-radius: 999px; background: #FFE27A; font-family: var(--dsp); font-weight: 400; font-size: 6cqw; color: var(--up, #D0584A); white-space: nowrap; animation: mc-sfx .34s .3s cubic-bezier(.2, 1.7, .4, 1) both; }
 
-/* 첫 실전 승리: 다짐(왼쪽 빈 띠에 짧은 가로 세 줄), 흑 흐끅 하하, WIN 상자와 잔액 */
-.manga-cut .mc-vow { position: absolute; left: 0; top: 3%; bottom: 3%; width: 22%; display: flex; align-items: center; justify-content: center; transform: rotate(-7deg); text-align: center; font-family: var(--dsp); font-weight: 400; font-size: 5.4cqw; line-height: 1.08; letter-spacing: -.04em; white-space: pre; color: #1d1b19;
+/* 첫 실전 승리: 세로 다짐(왼쪽 빈 띠), 흑 흐끅 하하, WIN 상자와 잔액 */
+.manga-cut .mc-vow { position: absolute; left: 1.5%; top: 3%; bottom: 3%; width: 15%; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: upright; font-family: var(--dsp); font-weight: 400; font-size: 5.6cqw; line-height: 1; letter-spacing: -.16em; white-space: nowrap; color: #1d1b19;
   text-shadow: 3px 0 0 #fff, -3px 0 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 0 0 0 #fff, 4px 4px 0 #E8C24A; animation: mc-slide .8s cubic-bezier(.3, 0, .5, 1) both; }
 .manga-cut .mc-sob { position: absolute; padding: .6% 1.6%; transform: rotate(var(--rot)); background: #fff; border: 2px solid #1d1b19; border-radius: 40% 60% 45% 55% / 55% 45% 60% 40%; font-family: var(--dsp); font-weight: 400; font-size: 3.4cqw; line-height: 1.1; color: #1d1b19; white-space: nowrap; box-shadow: 2px 2px 0 #1d1b19; animation: mc-sfx .26s cubic-bezier(.2, 1.7, .4, 1) both; }
 .manga-cut .mc-winbox { position: absolute; left: 67.5%; top: 66%; width: 30.5%; height: 31%; display: flex; flex-direction: column; justify-content: center; gap: 2%; padding: 1.6% 2.2%; border: 3px solid #1d1b19; border-radius: 6px; background: #FFF8E4; box-shadow: 3px 3px 0 #1d1b19; font-size: 2.15cqw; line-height: 1.15; color: #1d1b19; font-weight: 700; animation: mc-sfx .3s .45s both; }
@@ -111,7 +110,7 @@
 .ln-paper .ln-t.big { font-size: 21px; }
 .ln-paper .ln-t.sm { font-size: 11px; }
 .ln-paper .ln-t.red { fill: #C8553D; }
-.ln-paper .ln-vert { position: absolute; right: 21%; top: 4%; width: 15%; text-align: center; white-space: pre; transform: rotate(-5deg); font-family: var(--dsp); font-weight: 400; font-size: 3.4cqw; line-height: 1.15; color: #2A2A55; animation: lm-pop .3s .4s both; }
+.ln-paper .ln-vert { position: absolute; right: 21%; top: 4%; bottom: 4%; display: flex; align-items: center; writing-mode: vertical-rl; text-orientation: upright; font-family: var(--dsp); font-weight: 400; font-size: 3.6cqw; letter-spacing: -.12em; color: #2A2A55; animation: lm-pop .3s .4s both; }
 .ln-paper .ln-face { position: absolute; right: 1.5%; top: 18%; width: 19%; height: auto; border: 3px solid #1d1b19; border-radius: 4px; transform: rotate(3deg); box-shadow: 2px 3px 0 #1d1b19; }
 .ln-paper .ln-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
@@ -121,7 +120,10 @@
 /* 화면이 그리는 작은 흰 상자(장부 아래 글씨, 빌린 돈 등) */
 .lite-manga .lm-b.tag { background: #fff; border: 2px solid #1d1b19; border-radius: 3px; box-shadow: 2px 2px 0 #1d1b19; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-weight: 800; font-size: var(--fs); font-variant-numeric: tabular-nums; }
 
-/* ── 절망의 표제지(x_despair): 해설 두 칸, 하아, 로고, 파산 숫자 ── */
+/* ── 절망의 표제지(x_despair): 세로 기도, 해설 두 칸, 하아, 로고, 파산 숫자 ── */
+.lite-manga .lm-vpray { position: absolute; top: 4%; bottom: 4%; width: 10%; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: upright; font-family: var(--dsp); font-weight: 400; font-size: 5.4cqw; letter-spacing: -.08em; color: #fff; text-shadow: 0 0 10px rgba(160, 140, 255, .8), 3px 3px 0 #1d1b35; animation: lm-sfx .5s .2s both; }
+.lite-manga .lm-vpray.l { left: .6%; }
+.lite-manga .lm-vpray.r { right: .6%; animation-delay: .5s; }
 .lite-manga .lm-nar { position: absolute; margin: 0; display: flex; align-items: center; padding: 0 1%; font-size: 2.2cqw; font-weight: 700; line-height: 1.3; color: #1d1b19; word-break: keep-all; animation: lm-pop .3s both; }
 .lite-manga .lm-nar.a { left: 13.6%; top: 5%; width: 18.5%; height: 17%; animation-delay: .7s; }
 .lite-manga .lm-nar.b { left: 68.2%; top: 5%; width: 18.2%; height: 17%; animation-delay: 1.1s; }
@@ -132,7 +134,7 @@
 .lite-manga .lm-logo small { font-family: var(--dsp); font-size: 2.3cqw; color: #F3E7C6; letter-spacing: .1em; }
 .lite-manga .lm-facts { position: absolute; left: 12.5%; bottom: 4%; display: flex; flex-direction: column; gap: 2px; padding: 1% 1.6%; border: 2px solid #F3E7C6; border-radius: 4px; background: rgba(15, 14, 30, .82); color: #F3E7C6; font-size: 2cqw; font-weight: 700; font-variant-numeric: tabular-nums; animation: lm-pop .3s 1.7s both; }
 
-/* ── C1 평가손 기도: 세 칸을 위아래로(오른쪽 위, 누름은 지나간다) ── */
+/* ── C1 평가손 기도: 세로 세 칸(오른쪽 위, 누름은 지나간다) ── */
 .manga-cut.k-pray { left: auto; right: 6px; width: 66%; padding: 0; align-items: stretch; }
 .manga-cut .mc-strip { display: flex; flex-direction: column; gap: 5px; }
 .manga-cut .mc-strip .mc-panel { box-shadow: 0 6px 16px rgba(0, 0, 0, .45); }
@@ -140,10 +142,9 @@
 .manga-cut .mc-strip .s3 { animation-delay: .5s; }
 .manga-cut.night .mc-strip img { filter: brightness(.7) saturate(.85); }
 .manga-cut .mc-date { position: absolute; right: 2.5%; top: 4%; width: 26%; height: 23%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 3.4cqw; font-weight: 800; line-height: 1.2; color: #1d1b19; word-break: keep-all; }
-.manga-cut .mc-panel.pink { aspect-ratio: 3 / 1.3; display: grid; grid-template-columns: 25% 1fr 21%; align-items: center; background: radial-gradient(circle at 50% 50%, #FFD1EE 0, #FF5FB8 38%, #B0187A 100%); }
+.manga-cut .mc-panel.pink { aspect-ratio: 3 / 1.3; display: grid; grid-template-columns: 14% 1fr 14%; align-items: center; background: radial-gradient(circle at 50% 50%, #FFD1EE 0, #FF5FB8 38%, #B0187A 100%); }
 .manga-cut .mc-panel.pink::before { content: ''; position: absolute; inset: 0; background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 255, 255, .35) 0 3deg, transparent 3deg 12deg); mix-blend-mode: screen; }
-.manga-cut .mc-v { position: relative; justify-self: center; text-align: center; white-space: pre; transform: rotate(-6deg); font-family: var(--dsp); font-weight: 400; font-size: 4.8cqw; line-height: 1.08; color: #1d1b19; text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff; }
-.manga-cut .mc-v.r { font-size: 5.6cqw; transform: rotate(6deg); }
+.manga-cut .mc-v { position: relative; writing-mode: vertical-rl; text-orientation: upright; justify-self: center; font-family: var(--dsp); font-weight: 400; font-size: 5cqw; letter-spacing: -.12em; line-height: 1; color: #1d1b19; text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff; }
 .manga-cut .mc-eval { position: relative; display: flex; flex-direction: column; align-items: center; color: #fff; }
 .manga-cut .mc-eval small { font-size: 5cqw; font-weight: 800; letter-spacing: .1em; text-shadow: 0 2px 0 #7a0c52; }
 .manga-cut .mc-eval b { font-family: var(--dsp); font-weight: 400; font-size: 13cqw; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px #fff, 3px 3px 0 #7a0c52, -2px -2px 0 #7a0c52; animation: mc-beat 1.1s ease-in-out .5s infinite; }
@@ -165,8 +166,9 @@
   .lite-manga.calm .lp-stage.wide { justify-content: center; }
 }
 @keyframes lp-pan { from { translate: 0 0; } to { translate: calc(-100% + 100vw - 24px) 0; } }
-/* 글: 그림 % 자리(한글은 세로쓰기 금지, 좁은 자리는 \n 으로 짧은 가로 줄). say = 빈 풍선 안 대사, out = 흰 테 두른 검은 큰 글, white = 검은 테 흰 글(컬러 쪽), sfx = 굵은 효과음, hand = 공책 손글씨, box = 그림의 빈 상자 안 글 */
+/* 글: 그림 % 자리. say = 빈 풍선 안 대사, out = 흰 테 두른 검은 큰 글(세로면 v), white = 검은 테 흰 글(컬러 쪽), sfx = 굵은 효과음, hand = 공책 손글씨, box = 그림의 빈 상자 안 글 */
 .lite-manga .lp-w { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; font-family: var(--dsp); font-weight: 400; font-size: var(--fs); line-height: 1.18; color: #1d1b19; word-break: keep-all; white-space: pre-line; pointer-events: none; transform: rotate(var(--rot, 0deg)); animation: lm-pop .3s cubic-bezier(.2, 1.6, .4, 1) both; }
+.lite-manga .lp-w.v { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: -.1em; line-height: 1.05; }
 .lite-manga .lp-w.out { text-shadow: .09em 0 0 #fff, -.09em 0 0 #fff, 0 .09em 0 #fff, 0 -.09em 0 #fff, .07em .07em 0 #fff, -.07em .07em 0 #fff, .07em -.07em 0 #fff, -.07em -.07em 0 #fff; animation: lm-sfx .4s cubic-bezier(.2, 1.7, .4, 1) both; }
 .lite-manga .lp-w.white { color: #fff; text-shadow: .06em 0 0 #1d1b35, -.06em 0 0 #1d1b35, 0 .06em 0 #1d1b35, 0 -.06em 0 #1d1b35, .05em .05em 0 #1d1b35, -.05em .05em 0 #1d1b35, .05em -.05em 0 #1d1b35, -.05em -.05em 0 #1d1b35; animation: lm-sfx .5s both; }
 .lite-manga .lp-w.sfx { color: var(--c, #1d1b19); white-space: nowrap; text-shadow: .1em 0 0 #fff, -.1em 0 0 #fff, 0 .1em 0 #fff, 0 -.1em 0 #fff, .08em .08em 0 #fff, -.08em .08em 0 #fff, .08em -.08em 0 #fff, -.08em -.08em 0 #fff, 0 .18em 0 rgba(0, 0, 0, .25); animation: lm-sfx .36s cubic-bezier(.2, 1.7, .4, 1) both; }
@@ -201,7 +203,7 @@
 @keyframes lmEndIn { from { opacity: 0; transform: translateX(-50%) scale(1.8); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .lite-manga .lm-endbtn { animation: none; } }
 
-/* ── 프롤로그 5쪽을 넘길 때 뜨는 반전 카드: 어두워진 쪽 위의 크림 카드, 「그리고…」 다음 쾅 찍히는 「빌렸다.」(발도장), 엔진 숫자 두 줄 ── */
+/* 5쪽을 넘기기 전 반전 카드(「그리고…」 「빌렸다.」) */
 .lite-manga .lp-twist { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 0 22px; background: rgba(12, 10, 8, .66); animation: lm-fade .25s both; }
 .lite-manga .lt-card { position: relative; width: min(100%, 330px); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 18px 20px; background: #FFF8E4; border: 3px solid #1d1b19; border-radius: 14px; box-shadow: 5px 6px 0 #1d1b19; rotate: -1.5deg; animation: lm-slam .36s cubic-bezier(.2, 1.4, .4, 1) both; }
 .lite-manga .lt-beat { margin: 0; align-self: flex-start; font-family: var(--dsp); font-size: 22px; color: #625c53; animation: lm-fade .3s .15s both; }
@@ -212,4 +214,3 @@
 @keyframes lt-stamp { 0% { opacity: 0; scale: 2.6; } 70% { opacity: 1; scale: .94; } 100% { opacity: 1; scale: 1; } }
 .lite-manga.calm .lp-twist, .lite-manga.calm .lt-card, .lite-manga.calm .lt-beat, .lite-manga.calm .lt-stamp, .lite-manga.calm .lt-paw, .lite-manga.calm .lt-lines { animation: lm-fade .15s both; }
 .lite-manga .lp-twist ~ .lm-hint { z-index: 6; }
-.lite-manga.pages .lm-top { z-index: 6; }

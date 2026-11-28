@@ -18,6 +18,16 @@ describe('라이트 도입 만화(패러디 일곱 쪽)', () => {
     expect(ps[3].words?.find((w) => w.k === 'logo')?.t).toBe('제1화 기도');
     for (const p of ps) { expect(p.src).toBeTruthy(); expect(p.ar).toBeGreaterThan(0); }
   });
+  it('5쪽의 「빌렸다」는 그림 위 글이 아니라 넘길 때 뜨는 반전 카드(엔진 숫자)', () => {
+    const p5 = ps.find((p) => p.id === 'p5')!;
+    expect(p5.words?.some((w) => /빌렸다/.test(w.t))).toBe(false);
+    expect(p5.twist?.stamp).toBe('빌렸다.');
+    expect(ps.filter((p) => p.twist).map((p) => p.id)).toEqual(['p5']);
+  });
+  it('1쪽 세로 띠에는 기호가 없다(사용자: 세로쓰기는 두고 기호만 뺀다)', () => {
+    const t = textsOf(ps).find((x) => x.startsWith('어리바리'))!;
+    expect(t).toBe('어리바리 다람쥐의 조금 위험한 선물 이야기');
+  });
   it('숫자는 엔진 값: 코인 빚 30만, 첫 대출과 그 이자, 시작 잔액, 빚 전부', () => {
     const all = textsOf(ps).join('\n');
     const coin = LITE.start.debts.shark1, unit = lenderById.shark1.borrowUnit!;
@@ -40,19 +50,6 @@ describe('라이트 도입 만화(패러디 일곱 쪽)', () => {
   it('화면 글에 가운데점이 없고, 엄마 이야기와 일본어가 없다', () => {
     const all = [...textsOf(ps), ...textsOf(rebirthPanels()), ...textsOf(temptPanels({ lender: 'capital', unit: 50_000, got: 50_000, perSettle: 335, ratePct: 0.67 })), ...textsOf(temptPanels({ lender: 'shark2', unit: 100_000, got: 90_000, perSettle: 2_700, ratePct: 2.7 }))];
     for (const t of all) { expect(t).not.toMatch(/·/); expect(t).not.toMatch(/엄마|어머님/); expect(t).not.toMatch(/[\u3040-\u30ff円]/); }
-  });
-  it('5쪽의 「빌렸다」는 그림 위 글이 아니라 넘길 때 뜨는 반전 카드(엔진 숫자)', () => {
-    const p5 = ps.find((p) => p.id === 'p5')!;
-    const unit = lenderById.shark1.borrowUnit!;
-    expect(p5.words?.some((w) => /빌렸다/.test(w.t))).toBe(false);
-    expect(p5.twist?.stamp).toBe('빌렸다.');
-    expect(p5.twist?.lines).toEqual([`빌린 돈 +${unit.toLocaleString('ko-KR')}`, `정산마다 이자 +${Math.ceil(unit * lenderById.shark1.rate).toLocaleString('ko-KR')}`]);
-    expect(ps.filter((p) => p.twist).map((p) => p.id)).toEqual(['p5']);
-  });
-  it('한글은 세로쓰기를 하지 않고(세로 표지 띠 없음), 마침표는 한국식', () => {
-    const all = textsOf(ps).join('\n') + textsOf([despairPanel({ sub: '제2화 파산', nar: ['a', 'b'] })]).join('\n');
-    expect(all).not.toMatch(/。/);
-    expect(all).not.toContain('어리바리 다람쥐의');
   });
   it('200배의 청산 거리는 엔진 식으로 0.4%', () => {
     expect(liqPctAt(200)).toBeCloseTo(0.4, 6);

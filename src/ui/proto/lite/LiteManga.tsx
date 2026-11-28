@@ -39,7 +39,7 @@ function WordView({ w }: { w: Word }) {
       </svg>
     );
   }
-  const cls = 'lp-w ' + w.k + (w.cls ? ' ' + w.cls : '');
+  const cls = 'lp-w ' + w.k + (w.v ? ' v' : '') + (w.cls ? ' ' + w.cls : '');
   return <b className={cls} style={{ ...box, ['--fs' as string]: `${w.fs}cqw`, ['--rot' as string]: `${w.rot ?? 0}deg`, ...(w.c ? { color: w.c } : {}) }} aria-hidden="true">{w.t}</b>;
 }
 
