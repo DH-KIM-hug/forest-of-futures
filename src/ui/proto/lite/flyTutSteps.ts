@@ -52,7 +52,7 @@ export const FT_SHOW_LEV = 200;
 export const FT_STEPS: FtStep[] = [
   // ── 1. 날다람쥐코인이 무엇인가 ──
   { id: 'hi', kind: 'text', phase: 'pre', who: 'boss', line: () => '어서 와요, 다로미 씨. 제 거래소 구경 좀 하죠.' },
-  { id: 'fly', kind: 'text', phase: 'pre', who: 'boss', target: 'flyTab', line: () => '이게 날다람쥐코인. 제가 숲에서 만든 밈코인이에요.' },
+  { id: 'fly', kind: 'text', phase: 'pre', who: 'boss', target: 'flyTab', line: () => '이게 날다람쥐코인이에요.' },
   { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '요즘 숲에서 제일 핫한 코인이에요. 누구나 벌 수 있어요.' },
   { id: 'shape', kind: 'text', phase: 'pre', who: 'boss', target: 'wind', line: () => `빠르고, 교과서 모양을 그려요. 열에 ${tenth}은 속임수지만.` },
   // ── 2. 차트 읽기 ──
