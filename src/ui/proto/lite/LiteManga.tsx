@@ -118,6 +118,7 @@ export function LiteManga({ onDone, canSkip }: { onDone: () => void; canSkip: bo
           <img src={p.src} alt={p.alt} draggable={false} />
           {p.words?.map((w, wi) => <WordView key={wi} w={w} />)}
           <i className="lm-flash" aria-hidden="true" />
+          {last && <b className="lp-start" data-game-start aria-hidden="true"><span>GAME</span><span>START!</span></b>}
         </div>
       </div>
       <p className="lm-hint" aria-hidden="true">{last ? '눌러서 첫 거래' : '눌러서 넘기기'}</p>

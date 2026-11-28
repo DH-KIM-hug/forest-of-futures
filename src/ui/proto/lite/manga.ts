@@ -57,7 +57,6 @@ export function despairPanel(o: { sub: string; nar?: [string, string]; fresh?: b
       { x: 13, y: 73.6, w: 25, h: 9.6, t: nar[0], k: 'tag', fs: 3.2, d: 1.6 },
       { x: 3, y: 83, w: 25, h: 15.5, t: nar[1], k: 'tag', fs: 3.2, d: 2 },
       { x: 0, y: 52, w: 12, h: 22, t: '빌어라。', k: 'ghost', v: true, fs: 8, d: 0 },
-      ...(o.fresh ? [{ x: 42, y: 74.5, w: 56, h: 7, t: '신연재!!!', k: 'sfx' as const, cls: 'pink', fs: 9, rot: -3, d: 2.6 }] : []),
       broke ? { x: 40, y: 89, w: 58, h: 10.5, t: o.sub, k: 'logo', fs: 7, d: 2.3 } : { x: 38, y: 80.5, w: 60, h: 18, t: o.sub, k: 'logo', fs: 11, d: 2.3 },
       ...facts,
     ],
