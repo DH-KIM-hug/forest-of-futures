@@ -1158,6 +1158,3 @@
 .pr-hud .clock { white-space: nowrap; display: flex; align-items: center; gap: 4px; }
 @media (max-width: 380px) { .pr-hud .clock { font-size: 14px; } }
 
-/* 탭 그림(GPT): 둥근 그림이 원 자리를 통째로 채운다(테두리와 바탕은 그림의 것) */
-.pr-tabs .c:has(> img.tic) { background: none !important; border-color: transparent; }
-.pr-tabs .c > img.tic { width: calc(100% + 6px); height: calc(100% + 6px); object-fit: contain; pointer-events: none; }

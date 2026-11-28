@@ -1,89 +1,9 @@
-/* 거래소 그림 옷(주인 요청: "거래소 화면 svg말고 지피티로 뽑기").
-   그림은 GPT(codex)로 뽑은 것: docs/art/v5/ui/*.png → src/ui/proto/img/ui/*.webp (docs/art/v5/mkweb_ui.py).
-   숫자, 차트, 글은 그대로 코드가 그린다. 판(테두리가 있는 그림)은 9조각(border-image)이라 글 길이에 맞춰 늘어난다.
-   trade.css 뒤에 읽는다. 앞의 규칙(.pr .pt .x)보다 한 칸 더 구체적으로(.pr .pt-wrap .pt .x) 덮는다. 계좌 개설 앱(.pa)은 손대지 않는다. */
-
-/* 폰 뒤: 숲속 집 책상. 폰 안: 크림 종이 */
-.pr .pt-wrap:has(> .pt:not(.pa)) { background: #C98A4E url(./img/ui/bg_desk.webp) center top / cover no-repeat; padding-left: 9px; padding-right: 9px; }
-.pr .pt-wrap > .pt:not(.pa) { background: #FFF9EA url(./img/ui/screen_paper.webp) 0 0 / 256px 256px repeat; }
-
-/* 앱 머리: 「FRX 숲거래소」를 나무 간판에 */
-.pr .pt-wrap > .pt:not(.pa) > .pt-bar b {
-  display: inline-flex; align-items: center; height: 17px; padding: 0 9px 0 8px; color: #3A2418;
-  border: solid transparent; border-width: 0; border-image: url(./img/ui/plaque_header.webp) 22 18 18 16 fill / 5px 5px 4px 4px / 0 stretch;
-}
-
-/* 차트 판: 나무 테두리와 압정, 안은 종이. 차트 선은 그 위에 코드가 그린다 */
-.pr .pt-wrap .pt .pt-chart .plot {
-  border: 7px solid transparent; border-radius: 6px; background: #FFF9EA;
-  border-image: url(./img/ui/board_chart.webp) 44 42 44 40 fill / 9px / 0 stretch;
-}
-.pr .pt-wrap .pt.near .pt-chart .plot { box-shadow: 0 0 0 2.5px var(--red), 0 0 10px 2px rgba(200, 85, 61, .45); }
-
-/* 종목 꼬리표: 나무 패(고른 것은 크림 얼굴에 금빛 테) */
-.pr .pt-wrap .pt .pt-ct { background: transparent; border: 2px solid transparent; border-image: url(./img/ui/chip.webp) 14 fill / 7px / 0 stretch; --sh: none; }
-.pr .pt-wrap .pt .pt-ct.on { border-image: url(./img/ui/coin_plate_on.webp) 22 fill / 8px / 0 stretch; --sh: 0 2px 3px rgba(74, 50, 20, .25); }
-.pr .pt-wrap .pt .pt-ct.shut:not(.on) { background: transparent; border-image: url(./img/ui/coin_plate.webp) 22 fill / 8px / 0 stretch; }
-.pr .pt-wrap .pt .pt-ct.shut:not(.on) small.swg { color: #3A2418; }
-
-/* 배율: 나무 홈 위에 구슬처럼 꿰인 패. 고른 것은 도토리 손잡이 */
-.pr .pt-wrap .pt .pt-ruler { gap: 4px; }
-.pr .pt-wrap .pt .pt-ruler::before { display: block; content: ''; position: absolute; left: 2px; right: 2px; top: 50%; height: 8px; margin-top: -4px; border-radius: 4px; background: url(./img/ui/ruler_track.webp) center / 100% 100% no-repeat; }
-.pr .pt-wrap .pt .pt-ruler .nt { position: relative; background: transparent; border: 2px solid transparent; border-image: url(./img/ui/chip.webp) 14 fill / 7px / 0 stretch; }
-.pr .pt-wrap .pt .pt-ruler .nt.on { padding-left: 17px; border-image: url(./img/ui/coin_plate_on.webp) 22 fill / 8px / 0 stretch; --sh: 0 2px 3px rgba(74, 50, 20, .25); }
-.pr .pt-wrap .pt .pt-ruler .nt.on::before { content: ''; position: absolute; left: 3px; top: 50%; width: 16px; height: 19px; margin-top: -10px; background: url(./img/ui/knob_acorn.webp) center / contain no-repeat; }
-.pr .pt-wrap .pt .pt-ruler .nt.on.hot { border-image: url(./img/ui/btn_long.webp) 22 16 30 16 fill / 6px 5px 8px 5px / 0 stretch; }
-.pr .pt-wrap .pt .pt-ruler .nt.on.hot b { color: #3A2418; }
-.pr .pt-wrap .pt .pt-ruler .nt.locked { border: 1.5px dashed #8a7f62; border-image: none; background: rgba(246, 239, 216, .85); }
-
-/* 증거금 칩(과 출구 칩): 나무 패, 고른 것은 이끼색 칠 */
-.pr .pt-wrap .pt .pt-chip { background: transparent; border: 2px solid transparent; border-image: url(./img/ui/chip.webp) 14 fill / 7px / 0 stretch; --sh: none; }
-.pr .pt-wrap .pt .pt-chip.on { border: 2px solid transparent; border-image: url(./img/ui/chip_on.webp) 14 14 18 14 fill / 7px 7px 9px 7px / 0 stretch; --sh: none; }
-.pr .pt-wrap .pt .pt-chip.on small { color: #2E3A1E; }
-.pr .pt-wrap .pt .pt-chip.keep:not(.on) { outline: 1.8px dashed #C98A2B; outline-offset: -4px; }
-.pr .pt-wrap .pt .pt-chip:disabled { filter: grayscale(.5) opacity(.7); }
-
-/* 롱(빨강) · 숏(파랑) 칠한 나무 단추. 누르면 눌린 그림. 오르내림 색을 바꾼 설정(intl)에서는 예전 단추 그대로 */
-.pr .pt-wrap .pt:not([data-pc='intl']) .pt-orders .pt-btn:is(.long, .short) {
-  background: transparent; border: 3px solid transparent; --sh: 0 3px 6px rgba(74, 50, 20, .22); color: #2E1C10;
-  border-image: url(./img/ui/btn_long.webp) 22 16 32 16 fill / 9px 7px 13px 7px / 0 stretch;
-}
-.pr .pt-wrap .pt:not([data-pc='intl']) .pt-orders .pt-btn.short { border-image-source: url(./img/ui/btn_short.webp); }
-.pr .pt-wrap .pt:not([data-pc='intl']) .pt-orders .pt-btn.long:active:not(:disabled) { border-image-source: url(./img/ui/btn_long_down.webp); transform: translateY(2px); --sh: 0 1px 2px rgba(74, 50, 20, .2); }
-.pr .pt-wrap .pt:not([data-pc='intl']) .pt-orders .pt-btn.short:active:not(:disabled) { border-image-source: url(./img/ui/btn_short_down.webp); transform: translateY(2px); --sh: 0 1px 2px rgba(74, 50, 20, .2); }
-.pr .pt-wrap .pt:not([data-pc='intl']) .pt-orders .pt-btn:is(.long, .short):disabled { filter: grayscale(.85) opacity(.6); color: #2E1C10; }
-.pr .pt-wrap .pt:not([data-pc='intl']) .pt-orders .pt-btn:is(.long, .short) span { text-shadow: 0 1px 0 rgba(255, 240, 220, .55); }
-
-/* 포지션 카드: 테이프와 압정으로 붙인 종이 쪽지. 결과 카드: 나무 액자 */
-.pr .pt-wrap .pt .pt-pl:not(.res) {
-  background: #FFF6E0; background-clip: padding-box; border: 3px solid transparent; border-radius: 10px; box-shadow: 0 3px 6px rgba(74, 50, 20, .2);
-  border-image: url(./img/ui/panel_note.webp) 26 24 18 30 fill / 9px 8px 6px 10px / 3px 2px 2px 2px stretch;
-}
-/* 청산이 코앞(.call): 종이 가운데를 비워 붉은 숨쉬기(breatheRed 의 바탕색)가 보이게 */
-.pr .pt-wrap .pt .pt-pl.call:not(.res) {
-  border-image: url(./img/ui/panel_note.webp) 26 24 18 30 / 9px 8px 6px 10px / 3px 2px 2px 2px stretch;
-  outline: 3px solid var(--red); outline-offset: 4px;
-  animation: breatheRed .9s ease-in-out infinite alternate, artCall .9s ease-in-out infinite alternate;
-}
-/* 청산 직전(.edge): 심장 박동(edgeBeat)은 종이 그림 밖으로 조금만 보여서, 붉은 테가 함께 뛴다 */
-.pr .pt-wrap .pt.edge .pt-pl:not(.res) { outline: 3px solid var(--red); outline-offset: 4px; animation: edgeBeat .8s ease-in-out infinite, artCall .4s ease-in-out infinite alternate; }
-@keyframes artCall { from { outline-color: rgba(200, 85, 61, .35); } to { outline-color: rgba(200, 85, 61, 1); } }
-@media (prefers-reduced-motion: reduce) { .pr .pt-wrap .pt .pt-pl:not(.res) { animation: none !important; } }
-.pr .pt-wrap .pt .pt-pl.res {
-  background: #F2D9A8; background-clip: padding-box; border: 6px solid transparent; border-radius: 10px; box-shadow: 0 3px 7px rgba(74, 50, 20, .25);
-  border-image: url(./img/ui/plaque_result.webp) 34 30 30 32 fill / 10px / 2px stretch;
-}
-.pr .pt-wrap .pt .pt-pl.res.win { background: #F2D9A8; }
-.pr .pt-wrap .pt .pt-pl.res.legend { box-shadow: 0 0 0 3px #F3D774, 0 3px 7px rgba(74, 50, 20, .25); }
-.pr .pt-wrap .pt .pt-pl.res .stamp { background: rgba(255, 249, 234, .82); }
-.pr .pt-wrap .pt .pt-pl.res .sub, .pr .pt-wrap .pt .pt-pl.res .worth { color: #4A3826; }
-
-/* 종목 소개 카드(보기만): 나무 테의 종이 카드. 차트 자리 위에 뜬다 */
+/* 거래소 GPT 그림 옷(회차 U-59 전)은 사용자가 "너무 별로"라 걷었다(2026-11-28). 그림 파일은 img/ui 에 남겨 두고 쓰지 않는다. 여기엔 종목 소개 카드만 남는다 */
+/* 종목 소개 카드(보기만): 다른 카드와 같은 크림 카드. 차트 자리 위에 뜬다 */
 .pr .pt-wrap .pt .pt-coininfo {
   position: absolute; z-index: 6; left: 10px; right: 10px; top: 60px; max-height: calc(100% - 120px); overflow: auto;
   display: flex; flex-direction: column; gap: 7px; padding: 14px 14px 12px; color: #3A2418; cursor: pointer;
-  border: 9px solid transparent; border-image: url(./img/ui/info_card.webp) 52 44 130 44 fill / 13px 11px 32px 11px / 0 stretch;
-  filter: drop-shadow(0 6px 10px rgba(58, 36, 24, .35)); animation: popIn .26s cubic-bezier(.34, 1.56, .64, 1);
+  background: var(--card); border: 2.5px solid var(--o); border-radius: 16px; box-shadow: 0 0 0 3px #fff, 0 8px 16px rgba(40, 40, 20, .3); animation: popIn .26s cubic-bezier(.34, 1.56, .64, 1);
 }
 .pt-coininfo .ci-top { display: flex; align-items: center; gap: 10px; }
 .pt-coininfo .ci-nm { display: flex; flex-direction: column; min-width: 0; }
