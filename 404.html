@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#9AA7A8" />
+    <!-- 폰 브라우저의 자동 어두운 모드가 그림까지 어둡게 칠하지 않게(삼성 인터넷 · 크롬 자동 다크) -->
+    <meta name="color-scheme" content="only light" />
+    <style>:root { color-scheme: only light; }</style>
+    <title>선물의 숲</title>
+    <link rel="icon" type="image/webp" href="/forest-of-futures/art/hero_idle.webp" />
+    <script type="module" crossorigin src="/forest-of-futures/assets/index-D_53Oh22.js"></script>
+    <link rel="stylesheet" crossorigin href="/forest-of-futures/assets/index-B0w8VRlX.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- &new=1: 저장과 본 기록(프롤로그, 튜토리얼, 만화, 도감)을 지우고 완전히 처음부터. 랭킹 기기 번호(장부 번호의 씨앗)는 남기고, 이름은 지운다(처음의 차용증에서 다시 적는다).
+         지운 뒤 주소에서 new 를 빼서, 새로 고침해도 또 지우지 않는다 -->
+    <script>
+      (function () {
+        try {
+          var u = new URL(location.href);
+          if (u.searchParams.get('new') !== '1') return;
+          var keep = { 'fof.rank.device': 1 };
+          for (var i = localStorage.length - 1; i >= 0; i--) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('fof.') === 0 && !keep[k]) localStorage.removeItem(k);
+          }
+          u.searchParams.delete('new');
+          history.replaceState(null, '', u.toString());
+        } catch (e) {}
+      })();
+    </script>
+  </body>
+</html>
