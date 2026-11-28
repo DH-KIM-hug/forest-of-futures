@@ -261,6 +261,7 @@ export function MangaCut() {
           <Lt t="꿀꺽" x={58} y={70} fs={3.6} rot={10} />
         </>}
         {cut.kind === 'first' && w && <>
+          <b className="mc-vow" aria-hidden="true">이 빚 반드시 갚는다!</b>
           {[['흑', 25, 6, -10], ['흐끅', 54, 3, 8], ['아하핫', 70, 12, -6], ['하하!', 82, 34, 10], ['아핫!!', 20, 46, -12]].map(([t, x, y, r], i) => (
             <b key={i} className="mc-sob" style={{ left: `${x}%`, top: `${y}%`, ['--rot' as string]: `${r}deg`, animationDelay: `${0.1 + i * 0.12}s` }} aria-hidden="true">{t}</b>
           ))}
