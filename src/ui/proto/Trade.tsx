@@ -206,12 +206,20 @@ export function PChart({ market, hist, pos, win = 120, band = null, foot = null,
           {pats.filter((pt) => pt.to >= 0 && pt.from <= n - 1).map((pt) => <polyline key={'k' + pt.key} className="pat-sk" points={pt.pts.filter((q) => q.ago <= n - 1).map((q) => `${X(n - 1 - q.ago).toFixed(2)},${Y(q.p).toFixed(2)}`).join(' ')} />)}
           {n >= 2 && <path className="px" d={line} />}
         </svg>
-        {pats.filter((pt) => pt.to >= 0 && pt.from <= n - 1).map((pt) => {
-          const x0 = X(n - 1 - Math.min(pt.from, n - 1)), x1 = X(n - 1 - pt.to);
-          return (
-            <span key={pt.key} className={'pt-pat' + (pt.ok ? '' : ' fake') + (x1 > 80 ? ' lf' : x0 < 12 ? ' rt' : '')} data-pat={pt.label} style={{ left: `${x0}%`, width: `${Math.max(1, x1 - x0)}%` }} aria-hidden="true"><b>{pt.label}</b></span>
-          );
-        })}
+        {(() => {
+          // 이름표가 겹치면 더 최근 것만 남긴다(괄호는 그대로): 회차 16 평가 「상승 깃발 완」이 「박스권 아래로 이탈」에 덮였다
+          const vis = pats.filter((pt) => pt.to >= 0 && pt.from <= n - 1).map((pt) => ({ pt, x0: X(n - 1 - Math.min(pt.from, n - 1)), x1: X(n - 1 - pt.to) })).sort((a, b) => b.x1 - a.x1);
+          let room = 101;
+          return vis.map(({ pt, x0, x1 }) => {
+            const w = pt.label.length * 2.6 + 4;
+            const lx = x1 > 80 ? x1 - w : x0 < 12 ? x0 : (x0 + x1) / 2 - w / 2;
+            const show = lx + w <= room;
+            if (show) room = lx - 1;
+            return (
+              <span key={pt.key} className={'pt-pat' + (pt.ok ? '' : ' fake') + (x1 > 80 ? ' lf' : x0 < 12 ? ' rt' : '')} data-pat={pt.label} style={{ left: `${x0}%`, width: `${Math.max(1, x1 - x0)}%` }} aria-hidden="true">{show && <b>{pt.label}</b>}</span>
+            );
+          });
+        })()}
         {n >= 1 && <i className="dot" style={{ left: `${X(n - 1)}%`, top: `${Y(last)}%` }} />}
         {n < 12 && <span className="warm">시세를 모으는 중…</span>}
         <PhoneLane />
@@ -810,7 +818,7 @@ export function ProtoTrade() {
         aria-label={`바람 ${gw.word}${d ? ', 방금 ' + d.e.label : ''}`}>
         <span className={'gw g' + Math.min(3, Math.floor(gw.mul / 0.65))}><i className="bars" aria-hidden="true"><u /><u /><u /></i>{gw.word}<small>{Math.ceil(gw.leftSec / 60)}분</small></span>
         {d ? <span className="tl" data-pat-done={d.e.label}><b>방금</b> {d.e.label}<em className={d.e.ok ? (d.e.dir === 1 ? 'up' : 'down') : (d.e.dir === 1 ? 'down' : 'up')}>{(d.e.ok ? d.e.dir : -d.e.dir) === 1 ? '▲' : '▼'}</em></span>
-          : <span className="tl dim">1분 폭 평소 {gw.pct1m.toFixed(1)}%쯤<small>{wind.rec.n ? `교과서대로 ${wind.rec.ok}/${wind.rec.n}` : ''}</small></span>}
+          : <span className="tl dim">{wind.rec.n ? `지난 하루 끝난 모양 ${wind.rec.n}개, 교과서대로 ${wind.rec.ok}개` : '끝난 모양 없음'}</span>}
       </button>
     );
   })() : null;
