@@ -14,7 +14,7 @@ export type FtPhase = 'pre' | 'hold' | 'post';
 /** 비출 곳. 화면이 선택자로 찾는다(FlyTutorial.tsx TARGETS) */
 export type FtTarget =
   | 'flyTab' | 'quote' | 'wind' | 'chart' | 'orders' | 'lev50' | 'lev200' | 'mg25' | 'firstGo' | 'orderBtns'
-  | 'posNet' | 'posLiq' | 'close' | 'settle' | 'mapTab';
+  | 'posNet' | 'posLiq' | 'close' | 'settle' | 'loan';
 
 /** 대사에 끼우는 값(전부 엔진 값이거나 화면이 지금 본 값) */
 export interface FtCtx {
@@ -53,7 +53,7 @@ export const FT_STEPS: FtStep[] = [
   // ── 1. 날다람쥐코인이 무엇인가 ──
   { id: 'hi', kind: 'text', phase: 'pre', who: 'boss', line: () => '어서 와요, 다로미 씨. 제 거래소 구경 좀 하죠.' },
   { id: 'fly', kind: 'text', phase: 'pre', who: 'boss', target: 'flyTab', line: () => '이게 날다람쥐코인. 제가 숲에서 만든 밈코인이에요.' },
-  { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '숲에서 제일 빨리 오르내려요. 그래서 재밌죠.' },
+  { id: 'fake', kind: 'text', phase: 'pre', who: 'boss', target: 'quote', line: () => '요즘 숲에서 제일 핫한 코인이에요. 누구나 벌 수 있어요.' },
   { id: 'shape', kind: 'text', phase: 'pre', who: 'boss', target: 'wind', line: () => `빠르고, 교과서 모양을 그려요. 열에 ${tenth}은 속임수지만.` },
   // ── 2. 차트 읽기 ──
   { id: 'chart', kind: 'text', phase: 'pre', who: 'boss', target: 'chart', line: (c) => (c.candles ? '봉 하나가 잠깐 동안의 값. 오른쪽 끝이 지금 값이에요.' : '이 선이 값이에요. 오른쪽 끝 점이 지금 값.') },
@@ -82,7 +82,7 @@ export const FT_STEPS: FtStep[] = [
   { id: 'resultHero', kind: 'text', phase: 'post', who: 'hero', line: (c) => (c.closed && c.closed.pnl > 0 ? '이거… 되는데?' : '…다음 판은 다르다.') },
   // ── 9. 정산과 빚 ──
   { id: 'settle', kind: 'text', phase: 'post', who: 'boss', target: 'settle', line: (c) => (c.settled ? `방금 한 번 걷어 갔죠. 1분마다 이자 ${n(c.interest)}, 생활비 ${n(c.living)}.` : `이 막대가 차면 정산. 1분마다 이자 ${n(c.interest)}, 생활비 ${n(c.living)}.`) },
-  { id: 'map', kind: 'text', phase: 'post', who: 'boss', target: 'mapTab', line: () => '빚 갚기는 지도에서. 더 빌리는 것도요.' },
+  { id: 'loan', kind: 'text', phase: 'post', who: 'boss', target: 'loan', line: () => '빚 갚기와 더 빌리기는 여기, 대출에서요.' },
   { id: 'bye', kind: 'text', phase: 'post', who: 'boss', sfx: '쪼옥', line: () => '그럼 마음대로 해 봐요.' },
 ];
 
