@@ -1,5 +1,6 @@
 // 엔딩 카드·재산 명세서·기록관·전광판의 읽기 모델(시험: tests/ui/m9_records.test.ts).
 import { endings, endingById, heirloomDefs, houseDefs, legacy, lenderById, tipsData, traitById, wheelByCoin } from '../../engine/data';
+import { liteEndingById } from '../../engine/liteEndings';
 import { archiveEntry, previewEnding, type ArchiveEntry } from '../../engine/endings';
 import { canRetire, hanTotal, statement, treeStatus, type BranchCard } from '../../engine/generation';
 import { comma } from '../../engine/util';
@@ -129,7 +130,7 @@ export function albumModel(g: GameState, filter: string | null = null): AlbumMod
   return { lantern, entries: all, filtered: filter ? all.filter((e) => e.causes.includes(filter)) : all, count: `${archiveCount(g)} / ${endings.length}` };
 }
 export function lineageRows(g: GameState) {
-  return g.family.lineage.map((l) => ({ gen: l.gen, name: l.name, ending: endingById[l.endedBy]?.title ?? l.endedBy, id: l.endedBy, branch: BRANCH_LABEL[l.branch] ?? l.branch, peak: l.peak }));
+  return g.family.lineage.map((l) => ({ gen: l.gen, name: l.name, ending: endingById[l.endedBy]?.title ?? liteEndingById[l.endedBy]?.title ?? l.endedBy, id: l.endedBy, branch: BRANCH_LABEL[l.branch] ?? l.branch, peak: l.peak }));
 }
 export function tipBookRows(g: GameState) {
   const names: Record<string, string> = {};

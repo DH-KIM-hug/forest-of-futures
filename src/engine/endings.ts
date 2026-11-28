@@ -5,6 +5,7 @@ import { forecast } from './settlement';
 import { determineCause } from './bankruptcy';
 import { netWorth } from './selectors';
 import { act1On, act1Text } from './act1';
+import { chooseLiteEnding, recordLite, LITE_ENDING_TOTAL } from './liteEndings';
 import type { GameState, PendingEnding, PayId } from './types';
 
 type Snap = Record<string, any>;
@@ -167,6 +168,7 @@ export const fillLine = (line: string, snap: Snap): string => line.replace(/\{(\
 
 // ── 파산 -> 엔딩 확정 ───────────────────────────────────────────────────
 export function finalizeEnding(g: GameState, ctx: SnapCtx & { settleNo?: number }): PendingEnding {
+  if (g.run.lite) return finalizeLiteEnding(g, ctx);
   const run = g.run;
   const f = g.family;
   const snap = buildSnapshot(g, ctx);
@@ -204,6 +206,28 @@ export function finalizeEnding(g: GameState, ctx: SnapCtx & { settleNo?: number 
     nearMisses: misses, nextGen: { trait: trait?.name ?? null, trace: ending.trace, heirloom },
     collected: Object.keys(f.ledger).length, peakNetWorth: nw, settleNo: run.settleNo, offline: snap.offline === true,
     awayHours: snap.awayHours ?? null, snapshot: snap,
+  };
+  g.pendingEnding = pending;
+  return pending;
+}
+
+/** 라이트 생의 파산(engine/liteEndings.ts): 200개 엔딩 장부(family.ledger)는 건드리지 않고 라이트 도감(family.liteBook)에 적는다 */
+function finalizeLiteEnding(g: GameState, ctx: SnapCtx): PendingEnding {
+  const run = g.run;
+  const f = g.family;
+  const { ending, tags } = chooseLiteEnding(g);
+  f.liteBook ??= {};
+  const isNew = recordLite(f.liteBook, ending.id, f.generation);
+  const nw = Math.max(run.peakNetWorth, netWorth(run));
+  f.peakNetWorth = Math.max(f.peakNetWorth, nw);
+  f.lineage.push({ gen: f.generation, name: g.settings.name, endedBy: ending.id, branch: run.branch, peak: nw });
+  f.stats.bankruptcies = (f.stats.bankruptcies ?? 0) + 1;
+  f.stats.liqs = (f.stats.liqs ?? 0) + (run.stats.liqCount ?? 0);
+  const pending: PendingEnding = {
+    id: ending.id, cause: ctx.cause, isNew, via: isNew ? 'normal' : 'repeat', nth: f.liteBook[ending.id].count, title: ending.title, line: ending.lines.join(' '),
+    lastThree: run.eventLog.slice(-3), nearMisses: [], nextGen: { trait: null, trace: '', heirloom: null },
+    collected: Object.keys(f.liteBook).length, peakNetWorth: nw, settleNo: run.settleNo, offline: false, awayHours: null, snapshot: {},
+    lite: { lines: ending.lines, total: LITE_ENDING_TOTAL, tags, death: !!ending.death },
   };
   g.pendingEnding = pending;
   return pending;

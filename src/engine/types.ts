@@ -268,6 +268,8 @@ export interface FamilyState {
   skill: Record<string, number>;
   /** 길마다 3단계 둘 중 이번에 켤 것 */
   skillPick: Partial<Record<'A' | 'B' | 'C', string>>;
+  /** 라이트 엔딩 도감(engine/liteEndings.ts): 엔딩 id → 본 횟수, 처음 본 세대. 생과 저장을 넘어 남는다 */
+  liteBook?: Record<string, { count: number; firstAt: number }>;
 }
 
 export interface FuturesState {
@@ -391,6 +393,8 @@ export interface PendingEnding {
   offline: boolean;
   awayHours: number | null;
   snapshot: Record<string, any>;
+  /** 라이트 엔딩(engine/liteEndings.ts): 글 줄, 모은 수와 전체, 고를 때 본 꼬리표 */
+  lite?: { lines: string[]; total: number; tags: string[]; death: boolean };
 }
 
 export interface Settings {
