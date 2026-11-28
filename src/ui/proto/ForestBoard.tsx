@@ -107,7 +107,7 @@ export function ForestBoard() {
         )}
         {tab === 'trophy' && (
           <div className="fb-body" data-fb="trophy">
-            <p className="fb-lead">생을 넘어 남는 것. {have} / {TROPHIES.length}, 엔딩 장부 {Object.keys(g.family.ledger).length}개</p>
+            <p className="fb-lead">{have} / {TROPHIES.length}</p>
             <div className="fb-tro">
               {TROPHIES.map((t) => { const on = !!book[t.id]; return (
                 <button key={t.id} className={'tro' + (on ? ' on' : '')} data-tro={t.id} data-have={on ? 1 : 0} onClick={() => { play('ui_tap'); }} aria-label={on ? `${t.name}, ${book[t.id].gen}번째 생` : `잠김, ${t.how}`}>
